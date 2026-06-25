@@ -1,0 +1,11 @@
+services:
+  diaspora-onboarding:
+    build: .
+    container_name: diaspora-onboarding
+    ports:
+      - "10002:8010"
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped

@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.fernet_key
+uploads/
+*.enc
+*.analysis.enc
+.DS_Store
+.idea/

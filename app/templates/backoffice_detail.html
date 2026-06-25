@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Détail dossier diaspora</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root {
+            --red: #C90000;
+            --red-dark: #9E0000;
+            --black: #111111;
+            --white: #FFFFFF;
+            --gray-bg: #F4F6F9;
+            --border: #DADDE5;
+            --muted: #6B7280;
+            --green: #166534;
+            --orange: #B45309;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--gray-bg);
+            color: #111827;
+        }
+
+        .topbar {
+            background: var(--black);
+            color: var(--white);
+            padding: 18px 30px;
+            border-bottom: 4px solid var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .topbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 18px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 18px;
+        }
+
+        .header-card {
+            background: white;
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.07);
+            border-left: 6px solid var(--red);
+            margin-bottom: 20px;
+        }
+
+        .header-card h1 {
+            margin: 0;
+            color: var(--red);
+        }
+
+        .header-card p {
+            color: var(--muted);
+            margin-bottom: 0;
+        }
+
+        .grid-main {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 18px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.07);
+            margin-bottom: 18px;
+            border: 1px solid #EEF0F5;
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            color: #111827;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 13px;
+        }
+
+        .info {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            background: #FAFAFA;
+        }
+
+        .info label {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .info strong {
+            font-size: 14px;
+        }
+
+        .badge {
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-submitted {
+            background: #E0F2FE;
+            color: #075985;
+        }
+
+        .status-ok {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .status-review {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-alert {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .status-rejected {
+            background: #E5E7EB;
+            color: #374151;
+        }
+
+        .score-box {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            background: #FAFAFA;
+        }
+
+        .score-box span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .score-box strong {
+            display: block;
+            margin-top: 6px;
+            font-size: 25px;
+        }
+
+        .score-good {
+            color: var(--green);
+        }
+
+        .score-mid {
+            color: var(--orange);
+        }
+
+        .score-low {
+            color: #991B1B;
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+        }
+
+        .doc-card {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            background: #FAFAFA;
+        }
+
+        .doc-card img,
+        .doc-card video,
+        .doc-card iframe {
+            width: 100%;
+            max-height: 240px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-top: 10px;
+            background: #000000;
+        }
+
+        .doc-card iframe {
+            height: 240px;
+            object-fit: initial;
+            background: #FFFFFF;
+        }
+
+        .video-preview {
+            width: 100%;
+            max-height: 240px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #000000;
+            margin-top: 10px;
+        }
+
+        .document-type-pill {
+            display: inline-block;
+            background: #FEE2E2;
+            color: #991B1B;
+            border-radius: 18px;
+            padding: 5px 9px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+
+        .doc-status-pill {
+            display: inline-block;
+            border-radius: 18px;
+            padding: 5px 9px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .doc-authenticated {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .doc-review {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .doc-rejected {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .doc-uploaded {
+            background: #E0F2FE;
+            color: #075985;
+        }
+
+        .doc-unknown {
+            background: #E5E7EB;
+            color: #374151;
+        }
+
+
+        .regulatory-note {
+            background: #FFF7ED;
+            border: 1px solid #FDBA74;
+            color: #9A3412;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .doc-card a {
+            color: var(--red);
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        select, textarea, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            min-height: 110px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: var(--red);
+            color: white;
+            border: none;
+            border-radius: 9px;
+            padding: 12px 16px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: var(--red-dark);
+        }
+
+        .btn-dark {
+            background: #111827;
+        }
+
+        .btn-dark:hover {
+            background: #000000;
+        }
+
+        .btn-full {
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .message {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .alert-box {
+            background: #FEF2F2;
+            color: #991B1B;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #FECACA;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .print-btn {
+    background: #C90000;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 13px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 18px;
+}
+
+.print-btn:hover {
+    background: #9E0000;
+}
+
+@media print {
+    body {
+        background: white;
+    }
+
+    .no-print,
+    .btn,
+    .btn-dark,
+    .btn-full,
+    button,
+    textarea,
+    select,
+    input {
+        display: none !important;
+    }
+
+    .container {
+        max-width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .panel,
+    .header-card {
+        box-shadow: none;
+        border: 1px solid #DADDE5;
+        page-break-inside: avoid;
+    }
+
+    .grid-main {
+        display: block;
+    }
+
+    .documents-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .doc-card img,
+    .doc-card video,
+    .doc-card iframe {
+        max-height: 180px;
+        object-fit: contain;
+    }
+}
+
+
+        @media (max-width: 950px) {
+            .grid-main {
+                grid-template-columns: 1fr;
+            }
+
+            .documents-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar no-print">
+    <h2>Détail du dossier</h2>
+
+    <div>
+        <a href="/backoffice/applications">Retour dossiers</a>
+        <a href="/">Page client</a>
+        <button class="print-btn" onclick="exportDossierPdf()">Exporter PDF</button>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="header-card">
+        <h1 id="referenceTitle">Chargement du dossier...</h1>
+        <p id="clientSubtitle"></p>
+    </div>
+
+    <div class="grid-main">
+
+        <div>
+            <div class="panel">
+                <h3>Informations personnelles</h3>
+                <div class="info-grid" id="personalInfo"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Coordonnées et contacts</h3>
+                <div class="info-grid" id="contactInfo"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Compte souhaité</h3>
+                <div class="info-grid" id="accountInfo"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Qualification réglementaire</h3>
+                <div class="regulatory-note">
+                    Cette rubrique reprend les informations utiles à la qualification réglementaire :
+                    statut résident/non-résident, objet du compte, origine des fonds et RIB éventuel.
+                </div>
+                <div class="info-grid" id="regulatoryInfo"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Documents transmis</h3>
+                <div id="documentsContainer"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="panel">
+                <h3>Statut du dossier</h3>
+
+                <p>
+                    <span id="statusBadge" class="badge status-submitted">...</span>
+                </p>
+
+                <div class="score-box">
+                    <span>Score KYC</span>
+                    <strong id="kycScore">0%</strong>
+                </div>
+
+                <div class="score-box">
+                    <span>Score documentaire</span>
+                    <strong id="documentScore">0%</strong>
+                </div>
+
+                <div class="score-box">
+                    <span>Niveau de risque</span>
+                    <strong id="riskLevel">...</strong>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>BLACKMODULE</h3>
+
+                <div class="info">
+                    <label>Statut screening</label>
+                    <strong id="blackmoduleStatus">...</strong>
+                </div>
+
+                <br>
+
+                <div class="info">
+                    <label>Score</label>
+                    <strong id="blackmoduleScore">0</strong>
+                </div>
+
+                <div id="blackmoduleAlert"></div>
+
+                <button class="btn btn-dark btn-full" onclick="runBlackmoduleScreening()">
+                    Relancer le screening BLACKMODULE
+                </button>
+
+                <div id="screeningMessage" class="message"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Décision back-office</h3>
+
+                <label>Décision</label>
+                <select id="decision">
+                    <option value="APPROVED">Approuver le dossier</option>
+                    <option value="REJECTED">Rejeter le dossier</option>
+                    <option value="NEED_MORE_DOCUMENTS">Demander un complément</option>
+                    <option value="COMPLIANCE_REVIEW">Envoyer en revue conformité</option>
+                </select>
+
+                <br><br>
+
+                <label>Agent / utilisateur</label>
+                <input id="reviewedBy" placeholder="Nom de l’agent">
+
+                <br><br>
+
+                <label>Commentaire</label>
+                <textarea id="comment" placeholder="Observation, justification, pièces manquantes..."></textarea>
+
+                <button class="btn btn-full" onclick="submitDecision()">
+                    Enregistrer la décision
+                </button>
+
+                <div id="decisionMessage" class="message"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const APPLICATION_ID = {{ application_id }};
+    let currentApplication = null;
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function statusLabel(status) {
+        const labels = {
+            "SUBMITTED": "Soumis",
+            "AUTO_KYC_OK": "KYC automatique OK",
+            "AUTO_KYC_REVIEW": "KYC à revoir",
+            "BLACKMODULE_ALERT": "Alerte BLACKMODULE",
+            "COMPLIANCE_REVIEW": "Revue conformité",
+            "APPROVED": "Approuvé",
+            "REJECTED": "Rejeté",
+            "NEED_MORE_DOCUMENTS": "Complément demandé"
+        };
+
+        return labels[status] || status || "Non défini";
+    }
+
+    function statusClass(status) {
+        if (status === "APPROVED" || status === "AUTO_KYC_OK") {
+            return "status-ok";
+        }
+
+        if (status === "BLACKMODULE_ALERT") {
+            return "status-alert";
+        }
+
+        if (status === "REJECTED") {
+            return "status-rejected";
+        }
+
+        if (status === "COMPLIANCE_REVIEW" || status === "AUTO_KYC_REVIEW" || status === "NEED_MORE_DOCUMENTS") {
+            return "status-review";
+        }
+
+        return "status-submitted";
+    }
+
+    function scoreClass(score) {
+        const value = Number(score || 0);
+
+        if (value >= 70) {
+            return "score-good";
+        }
+
+        if (value >= 40) {
+            return "score-mid";
+        }
+
+        return "score-low";
+    }
+
+    function info(label, value) {
+        return `
+            <div class="info">
+                <label>${escapeHtml(label)}</label>
+                <strong>${escapeHtml(value || "Non renseigné")}</strong>
+            </div>
+        `;
+    }
+
+    function residencyStatusLabel(value) {
+        const labels = {
+            "RESIDENT": "Résident",
+            "NON_RESIDENT": "Non-résident"
+        };
+
+        return labels[value] || value || "Non renseigné";
+    }
+
+    function formatOtherValue(mainValue, otherValue) {
+        if (mainValue === "Autres" && otherValue) {
+            return `${mainValue} : ${otherValue}`;
+        }
+
+        return mainValue || otherValue || "";
+    }
+
+    async function loadDetail() {
+        const response = await fetch(`/api/backoffice/applications/${APPLICATION_ID}`);
+
+        if (!response.ok) {
+            document.getElementById("referenceTitle").innerText = "Dossier introuvable";
+            return;
+        }
+
+        const data = await response.json();
+        currentApplication = data.application;
+
+        renderApplication(data.application);
+        renderDocuments(data.documents || []);
+    }
+
+    function renderApplication(app) {
+        document.getElementById("referenceTitle").innerText = app.reference;
+        document.getElementById("clientSubtitle").innerText =
+            `${app.last_name || ""} ${app.first_name || ""} - ${app.email || ""}`;
+
+        const badge = document.getElementById("statusBadge");
+        badge.className = `badge ${statusClass(app.status)}`;
+        badge.innerText = statusLabel(app.status);
+
+        const kyc = document.getElementById("kycScore");
+        kyc.innerText = `${Number(app.kyc_score || 0)}%`;
+        kyc.className = scoreClass(app.kyc_score);
+
+        const docScore = document.getElementById("documentScore");
+        docScore.innerText = `${Number(app.document_score || 0)}%`;
+        docScore.className = scoreClass(app.document_score);
+
+        document.getElementById("riskLevel").innerText = app.risk_level || "NON_EVALUE";
+        document.getElementById("blackmoduleStatus").innerText = app.blackmodule_status || "NOT_SCREENED";
+        document.getElementById("blackmoduleScore").innerText = Number(app.blackmodule_score || 0);
+
+        if (app.blackmodule_alert) {
+            document.getElementById("blackmoduleAlert").innerHTML =
+                `<div class="alert-box">${escapeHtml(app.blackmodule_alert)}</div>`;
+        } else {
+            document.getElementById("blackmoduleAlert").innerHTML =
+                `<p class="muted">Aucune alerte enregistrée.</p>`;
+        }
+
+        document.getElementById("personalInfo").innerHTML =
+            info("Sexe", app.sex) +
+            info("Situation matrimoniale", app.marital_status) +
+            info("Nom d’usage / nom de famille", app.last_name) +
+            info("Nom de naissance / jeune fille", app.birth_name) +
+            info("Prénom(s)", app.first_name) +
+            info("Date de naissance", app.birth_date) +
+            info("Lieu de naissance", app.birth_place) +
+            info("Département de naissance", app.birth_department) +
+            info("Nationalité", app.nationality) +
+            info("Résidence", app.residence) +
+            info("Statut de résidence", residencyStatusLabel(app.residency_status)) +
+            info("Régime matrimonial", app.matrimonial_regime) +
+            info("Nom du père", app.father_name) +
+            info("Nom de la mère", app.mother_name);
+
+        document.getElementById("contactInfo").innerHTML =
+            info("Téléphone", app.phone) +
+            info("Email", app.email) +
+            info("Adresse / localisation", app.address_location) +
+            info("Boîte postale", app.postal_box) +
+            info("Contact 1", `${app.contact_person_1_name || ""} ${app.contact_person_1_phone || ""}`) +
+            info("Contact 2", `${app.contact_person_2_name || ""} ${app.contact_person_2_phone || ""}`);
+
+        document.getElementById("accountInfo").innerHTML =
+            info("Agence souhaitée", app.preferred_branch) +
+            info("Type de compte", app.account_type) +
+            info("RIB", app.rib) +
+            info("Numéro pièce", app.identity_document_number) +
+            info("Date délivrance pièce", app.identity_document_issue_date) +
+            info("Lieu délivrance pièce", app.identity_document_issue_place);
+
+        document.getElementById("regulatoryInfo").innerHTML =
+            info("Statut de résidence", residencyStatusLabel(app.residency_status)) +
+            info("Objet du compte", formatOtherValue(app.account_object, app.account_object_other)) +
+            info("Origine des fonds", formatOtherValue(app.funds_origin, app.funds_origin_other)) +
+            info("Détails complémentaires", app.account_purpose);
+    }
+
+    function renderDocuments(documents) {
+        const container = document.getElementById("documentsContainer");
+
+        if (!documents || documents.length === 0) {
+            container.innerHTML = `<p class="muted">Aucun document transmis pour ce dossier.</p>`;
+            return;
+        }
+
+        container.innerHTML = `<div class="documents-grid"></div>`;
+        const grid = container.querySelector(".documents-grid");
+
+        documents.forEach(doc => {
+            const fileUrl = doc.content_url || `/api/applications/documents/${doc.id}/content`;
+            const analysisUrl = doc.analysis_url || `/api/applications/documents/${doc.id}/analysis`;
+            const mimeType = doc.mime_type || "";
+            const verificationStatus = doc.verification_status || "UPLOADED";
+            let previewHtml = "";
+
+            if (mimeType.startsWith("video/")) {
+                previewHtml = `<video class="video-preview" src="${fileUrl}" controls></video>`;
+            } else if (mimeType === "application/pdf") {
+                previewHtml = `<iframe src="${fileUrl}" title="${escapeHtml(doc.document_type)}"></iframe>`;
+            } else if (mimeType.startsWith("image/")) {
+                previewHtml = `<img src="${fileUrl}" alt="${escapeHtml(doc.document_type)}" onerror="this.style.display='none'">`;
+            } else {
+                previewHtml = `<p class="muted">Aperçu non disponible pour ce type de fichier.</p>`;
+            }
+
+            grid.innerHTML += `
+                <div class="doc-card">
+                    <span class="document-type-pill">${documentTypeLabel(doc.document_type)}</span>
+                    <br>
+                    <span class="doc-status-pill ${documentStatusClass(verificationStatus)}">
+                        ${documentStatusLabel(verificationStatus)}
+                    </span>
+                    <p class="muted">${escapeHtml(doc.original_filename)}</p>
+                    <p class="muted">
+                        Score qualité : ${Number(doc.quality_score || 0)}%
+                        ${mimeType ? "| Type : " + escapeHtml(mimeType) : ""}
+                    </p>
+                    <a href="${fileUrl}" target="_blank">Ouvrir le document déchiffré</a>
+                    <br>
+                    <a href="${analysisUrl}" target="_blank">Voir analyse OCR / matching</a>
+                    ${previewHtml}
+                </div>
+            `;
+        });
+    }
+
+
+    function documentStatusLabel(status) {
+        const labels = {
+            "AUTHENTICATED": "Authentifié",
+            "REVIEW_REQUIRED": "Revue requise",
+            "QUALITY_REJECTED": "Qualité rejetée",
+            "UPLOADED": "Téléversé",
+            "OCR_REVIEW_REQUIRED": "OCR à revoir"
+        };
+
+        return labels[status] || status || "Non défini";
+    }
+
+    function documentStatusClass(status) {
+        if (status === "AUTHENTICATED") {
+            return "doc-authenticated";
+        }
+
+        if (status === "REVIEW_REQUIRED" || status === "OCR_REVIEW_REQUIRED") {
+            return "doc-review";
+        }
+
+        if (status === "QUALITY_REJECTED") {
+            return "doc-rejected";
+        }
+
+        if (status === "UPLOADED") {
+            return "doc-uploaded";
+        }
+
+        return "doc-unknown";
+    }
+
+    function documentTypeLabel(type) {
+        const labels = {
+            "IDENTITY_DOCUMENT": "Pièce d’identité",
+            "IDENTITY_DOCUMENT_PHOTO": "Pièce d’identité",
+            "IDENTITY_DOCUMENT_RECTO": "Pièce d’identité - recto",
+            "IDENTITY_DOCUMENT_VERSO": "Pièce d’identité - verso",
+            "IDENTITY_DOCUMENT_IMPORTED": "Pièce d’identité importée",
+
+            "PROOF_OF_ADDRESS_PHOTO": "Justificatif de domicile",
+            "ADDRESS_PROOF": "Justificatif de domicile",
+
+            "SELFIE": "Selfie / photo client",
+            "SELFIE_PHOTO": "Selfie photo",
+            "SELFIE_VIDEO": "Vidéo selfie / preuve de vie",
+            "SELFIE_IMPORTED": "Selfie importé",
+
+            "BIRTH_CERTIFICATE_PHOTO": "Acte de naissance / filiation",
+            "EMPLOYMENT_OR_SCHOOL_CERTIFICATE_PHOTO": "Fiche de paie / emploi / scolarité",
+            "TAX_COMPLIANCE_CERTIFICATE_PHOTO": "Attestation de conformité fiscale"
+        };
+
+        return labels[type] || type || "Document";
+    }
+
+
+    async function runBlackmoduleScreening() {
+        const message = document.getElementById("screeningMessage");
+        message.style.color = "#111827";
+        message.innerText = "Screening en cours...";
+
+        const response = await fetch(`/api/applications/${APPLICATION_ID}/screen-blackmodule`, {
+            method: "POST"
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            message.style.color = "#C90000";
+            message.innerText = "Erreur : " + error;
+            return;
+        }
+
+        const data = await response.json();
+
+        message.style.color = "#166534";
+        message.innerText = `Screening terminé. Nouveau statut : ${data.new_status}`;
+
+        await loadDetail();
+    }
+
+    async function submitDecision() {
+        const payload = {
+            decision: document.getElementById("decision").value,
+            reviewed_by: document.getElementById("reviewedBy").value.trim(),
+            comment: document.getElementById("comment").value.trim()
+        };
+
+        const message = document.getElementById("decisionMessage");
+
+        if (!payload.reviewed_by) {
+            message.style.color = "#C90000";
+            message.innerText = "Veuillez renseigner le nom de l’agent.";
+            return;
+        }
+
+        const response = await fetch(`/api/backoffice/applications/${APPLICATION_ID}/decision`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            message.style.color = "#C90000";
+            message.innerText = "Erreur : " + error;
+            return;
+        }
+
+        const data = await response.json();
+
+        message.style.color = "#166534";
+        message.innerText = `Décision enregistrée : ${data.decision}`;
+
+        await loadDetail();
+    }
+
+    function exportDossierPdf() {
+    const reference = currentApplication ? currentApplication.reference : "dossier";
+    document.title = `Dossier_${reference}`;
+    window.print();
+    }
+
+    loadDetail();
+
+</script>
+
+</body>
+</html>

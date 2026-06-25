@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Paramétrage des agences</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root {
+            --red: #C90000;
+            --red-dark: #9E0000;
+            --black: #111111;
+            --white: #FFFFFF;
+            --gray-bg: #F4F6F9;
+            --border: #DADDE5;
+            --muted: #6B7280;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--gray-bg);
+            color: #111827;
+        }
+
+        .header {
+            background: var(--black);
+            color: var(--white);
+            padding: 18px 30px;
+            border-bottom: 4px solid var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 25px auto;
+            background: var(--white);
+            border-radius: 14px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--red);
+        }
+
+        .form-box {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 25px;
+            background: #FAFAFA;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        button {
+            background: var(--red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: var(--red-dark);
+        }
+
+        .search {
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--black);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            border-bottom: 1px solid var(--border);
+            padding: 10px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .active {
+            background: #E8F7EE;
+            color: #166534;
+        }
+
+        .inactive {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .msg {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 850px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <strong>Paramétrage des agences</strong>
+    <a href="/backoffice/applications">Retour back-office</a>
+</div>
+
+<div class="container">
+    <h1>Agences First Bank</h1>
+
+    <div class="form-box">
+        <h3>Ajouter une agence</h3>
+
+        <div class="grid">
+            <input id="code" placeholder="Code agence, ex: AKWA">
+            <input id="name" placeholder="Nom agence, ex: FIRST BANK AKWA">
+            <input id="city" placeholder="Ville">
+            <select id="country">
+                <option value="Cameroun">Cameroun</option>
+                <option value="Côte d’Ivoire">Côte d’Ivoire</option>
+                <option value="Sénégal">Sénégal</option>
+                <option value="Sao Tomé">Sao Tomé</option>
+            </select>
+        </div>
+
+        <br>
+
+        <button onclick="createAgency()">Ajouter l’agence</button>
+
+        <div id="message" class="msg"></div>
+    </div>
+
+    <input class="search" id="search" placeholder="Rechercher par nom ou code..." oninput="loadAgencies()">
+
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Nom agence</th>
+                <th>Ville</th>
+                <th>Pays</th>
+                <th>Statut</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="agencyBody"></tbody>
+    </table>
+</div>
+
+<script>
+    async function loadAgencies() {
+        const q = document.getElementById("search").value;
+        const response = await fetch(`/api/agencies?q=${encodeURIComponent(q)}`);
+        const agencies = await response.json();
+
+        const body = document.getElementById("agencyBody");
+        body.innerHTML = "";
+
+        agencies.forEach(agency => {
+            body.innerHTML += `
+                <tr>
+                    <td>${agency.code}</td>
+                    <td>${agency.name}</td>
+                    <td>${agency.city || ""}</td>
+                    <td>${agency.country || ""}</td>
+                    <td>
+                        <span class="badge ${agency.active ? "active" : "inactive"}">
+                            ${agency.active ? "Active" : "Inactive"}
+                        </span>
+                    </td>
+                    <td>
+                        <button onclick="toggleAgency(${agency.id}, ${agency.active})">
+                            ${agency.active ? "Désactiver" : "Activer"}
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function createAgency() {
+        const payload = {
+            code: document.getElementById("code").value,
+            name: document.getElementById("name").value,
+            city: document.getElementById("city").value,
+            country: document.getElementById("country").value,
+            active: true
+        };
+
+        const response = await fetch("/api/agencies", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const message = document.getElementById("message");
+
+        if (!response.ok) {
+            const error = await response.text();
+            message.style.color = "#C90000";
+            message.innerText = "Erreur : " + error;
+            return;
+        }
+
+        message.style.color = "#166534";
+        message.innerText = "Agence ajoutée avec succès.";
+
+        document.getElementById("code").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("city").value = "";
+
+        loadAgencies();
+    }
+
+    async function toggleAgency(id, currentStatus) {
+        await fetch(`/api/agencies/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                active: !currentStatus
+            })
+        });
+
+        loadAgencies();
+    }
+
+    loadAgencies();
+</script>
+
+</body>
+</html>

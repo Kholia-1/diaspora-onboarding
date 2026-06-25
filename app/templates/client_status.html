@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Suivi de demande - First Diaspora Onboarding</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root {
+            --red: #C90000;
+            --red-dark: #9E0000;
+            --black: #111111;
+            --white: #FFFFFF;
+            --gray-bg: #F4F6F9;
+            --border: #DADDE5;
+            --muted: #6B7280;
+            --green: #166534;
+            --orange: #B45309;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--gray-bg);
+            color: #111827;
+        }
+
+        .topbar {
+            background: var(--black);
+            color: white;
+            padding: 18px 30px;
+            border-bottom: 4px solid var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 16px;
+        }
+
+        .container {
+            max-width: 950px;
+            margin: 30px auto;
+            padding: 0 18px;
+        }
+
+        .hero {
+            background: white;
+            border-radius: 16px;
+            padding: 26px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border-left: 6px solid var(--red);
+        }
+
+        .hero h1 {
+            margin-top: 0;
+            color: var(--red);
+        }
+
+        .hero p {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .search-box {
+            background: white;
+            margin-top: 20px;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 160px;
+            gap: 12px;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: var(--red);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: var(--red-dark);
+        }
+
+        .result {
+            display: none;
+            background: white;
+            margin-top: 20px;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        .result h2 {
+            margin-top: 0;
+            color: var(--red);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .info {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 13px;
+            background: #FAFAFA;
+        }
+
+        .info label {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .info strong {
+            font-size: 14px;
+        }
+
+        .badge {
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-submitted {
+            background: #E0F2FE;
+            color: #075985;
+        }
+
+        .status-ok {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .status-review {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .status-alert {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .status-rejected {
+            background: #E5E7EB;
+            color: #374151;
+        }
+
+        .message {
+            margin-top: 14px;
+            font-weight: bold;
+        }
+
+        .timeline {
+            margin-top: 22px;
+            border-left: 4px solid var(--border);
+            padding-left: 18px;
+        }
+
+        .timeline-item {
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: "";
+            width: 13px;
+            height: 13px;
+            background: var(--red);
+            border-radius: 50%;
+            position: absolute;
+            left: -26px;
+            top: 3px;
+        }
+
+        .timeline-item strong {
+            display: block;
+        }
+
+        .timeline-item span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 800px) {
+            .topbar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <strong>First Diaspora Onboarding</strong>
+
+    <div>
+        <a href="/">Ouvrir un compte</a>
+        <a href="/client/status">Suivi dossier</a>
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="hero">
+        <h1>Suivi de votre demande</h1>
+        <p>
+            Entrez la référence reçue après la soumission de votre dossier.
+            Pour plus de sécurité, vous pouvez aussi renseigner l’adresse email utilisée lors de la demande.
+        </p>
+    </div>
+
+    <div class="search-box">
+        <div class="grid">
+            <input id="reference" placeholder="Référence dossier, ex: DIA-20260625-ABC12345">
+            <input id="email" placeholder="Email utilisé lors de la demande">
+            <button onclick="checkStatus()">Vérifier</button>
+        </div>
+
+        <div id="message" class="message"></div>
+    </div>
+
+    <div id="result" class="result">
+        <h2 id="resultReference"></h2>
+
+        <p>
+            Statut actuel :
+            <span id="statusBadge" class="badge status-submitted"></span>
+        </p>
+
+        <div class="info-grid">
+            <div class="info">
+                <label>Client</label>
+                <strong id="fullName"></strong>
+            </div>
+
+            <div class="info">
+                <label>Email</label>
+                <strong id="clientEmail"></strong>
+            </div>
+
+            <div class="info">
+                <label>Agence choisie</label>
+                <strong id="preferredBranch"></strong>
+            </div>
+
+            <div class="info">
+                <label>Nationalité</label>
+                <strong id="nationality"></strong>
+            </div>
+
+            <div class="info">
+                <label>Score KYC</label>
+                <strong id="kycScore"></strong>
+            </div>
+
+            <div class="info">
+                <label>Score documents</label>
+                <strong id="documentScore"></strong>
+            </div>
+
+            <div class="info">
+                <label>Contrôle conformité</label>
+                <strong id="blackmoduleStatus"></strong>
+            </div>
+
+            <div class="info">
+                <label>Niveau de risque</label>
+                <strong id="riskLevel"></strong>
+            </div>
+        </div>
+
+        <div class="timeline" id="timeline"></div>
+    </div>
+
+</div>
+
+<script>
+    function escapeHtml(value) {
+        if (value === null || value === undefined) {
+            return "";
+        }
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function statusLabel(status) {
+        const labels = {
+            "SUBMITTED": "Dossier soumis",
+            "AUTO_KYC_OK": "KYC automatique validé",
+            "AUTO_KYC_REVIEW": "Dossier en vérification",
+            "BLACKMODULE_ALERT": "Contrôle conformité en cours",
+            "COMPLIANCE_REVIEW": "Revue conformité",
+            "APPROVED": "Dossier approuvé",
+            "REJECTED": "Dossier rejeté",
+            "NEED_MORE_DOCUMENTS": "Documents complémentaires demandés"
+        };
+
+        return labels[status] || status || "Non défini";
+    }
+
+    function statusClass(status) {
+        if (status === "APPROVED" || status === "AUTO_KYC_OK") {
+            return "status-ok";
+        }
+
+        if (status === "BLACKMODULE_ALERT") {
+            return "status-alert";
+        }
+
+        if (status === "REJECTED") {
+            return "status-rejected";
+        }
+
+        if (status === "COMPLIANCE_REVIEW" || status === "AUTO_KYC_REVIEW" || status === "NEED_MORE_DOCUMENTS") {
+            return "status-review";
+        }
+
+        return "status-submitted";
+    }
+
+    async function checkStatus() {
+        const reference = document.getElementById("reference").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const message = document.getElementById("message");
+        const result = document.getElementById("result");
+
+        result.style.display = "none";
+        message.innerText = "";
+
+        if (!reference) {
+            message.style.color = "#C90000";
+            message.innerText = "Veuillez renseigner la référence du dossier.";
+            return;
+        }
+
+        let url = `/api/applications/status/${encodeURIComponent(reference)}`;
+
+        if (email) {
+            url += `?email=${encodeURIComponent(email)}`;
+        }
+
+        message.style.color = "#111827";
+        message.innerText = "Recherche du dossier...";
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            const error = await response.text();
+            message.style.color = "#C90000";
+            message.innerText = "Erreur : " + error;
+            return;
+        }
+
+        const data = await response.json();
+
+        message.innerText = "";
+        renderResult(data);
+    }
+
+    function renderResult(data) {
+        const result = document.getElementById("result");
+
+        document.getElementById("resultReference").innerText = data.reference;
+
+        const badge = document.getElementById("statusBadge");
+        badge.innerText = statusLabel(data.status);
+        badge.className = `badge ${statusClass(data.status)}`;
+
+        document.getElementById("fullName").innerText = data.full_name || "Non renseigné";
+        document.getElementById("clientEmail").innerText = data.email || "Non renseigné";
+        document.getElementById("preferredBranch").innerText = data.preferred_branch || "Non renseignée";
+        document.getElementById("nationality").innerText = data.nationality || "Non renseignée";
+        document.getElementById("kycScore").innerText = `${Number(data.kyc_score || 0)}%`;
+        document.getElementById("documentScore").innerText = `${Number(data.document_score || 0)}%`;
+        document.getElementById("blackmoduleStatus").innerText = data.blackmodule_status || "Non contrôlé";
+        document.getElementById("riskLevel").innerText = data.risk_level || "Non évalué";
+
+        renderTimeline(data);
+
+        result.style.display = "block";
+    }
+
+    function renderTimeline(data) {
+        const timeline = document.getElementById("timeline");
+
+        let html = `
+            <div class="timeline-item">
+                <strong>Dossier soumis</strong>
+                <span>Votre demande a été enregistrée par la plateforme.</span>
+            </div>
+        `;
+
+        if (data.document_score >= 50) {
+            html += `
+                <div class="timeline-item">
+                    <strong>Documents reçus</strong>
+                    <span>Les documents transmis sont disponibles pour vérification.</span>
+                </div>
+            `;
+        }
+
+        if (data.blackmodule_status && data.blackmodule_status !== "NOT_SCREENED") {
+            html += `
+                <div class="timeline-item">
+                    <strong>Contrôle conformité</strong>
+                    <span>Le dossier a été transmis au contrôle de conformité.</span>
+                </div>
+            `;
+        }
+
+        if (data.status === "APPROVED") {
+            html += `
+                <div class="timeline-item">
+                    <strong>Dossier approuvé</strong>
+                    <span>Votre demande a été validée par la banque.</span>
+                </div>
+            `;
+        }
+
+        if (data.status === "NEED_MORE_DOCUMENTS") {
+            html += `
+                <div class="timeline-item">
+                    <strong>Complément demandé</strong>
+                    <span>${escapeHtml(data.review_comment || "La banque demande des informations ou documents complémentaires.")}</span>
+                </div>
+            `;
+        }
+
+        if (data.status === "REJECTED") {
+            html += `
+                <div class="timeline-item">
+                    <strong>Dossier rejeté</strong>
+                    <span>${escapeHtml(data.review_comment || "Votre demande n’a pas été retenue.")}</span>
+                </div>
+            `;
+        }
+
+        timeline.innerHTML = html;
+    }
+</script>
+
+</body>
+</html>

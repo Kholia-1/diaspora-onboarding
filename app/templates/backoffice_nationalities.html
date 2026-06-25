@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Paramétrage des nationalités</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root {
+            --red: #C90000;
+            --red-dark: #9E0000;
+            --black: #111111;
+            --white: #FFFFFF;
+            --gray-bg: #F4F6F9;
+            --border: #DADDE5;
+            --muted: #6B7280;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--gray-bg);
+            color: #111827;
+        }
+
+        .header {
+            background: var(--black);
+            color: var(--white);
+            padding: 18px 30px;
+            border-bottom: 4px solid var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 25px auto;
+            background: var(--white);
+            border-radius: 14px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--red);
+        }
+
+        .description {
+            color: var(--muted);
+            line-height: 1.6;
+            margin-bottom: 22px;
+        }
+
+        .form-box {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 25px;
+            background: #FAFAFA;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 180px 1fr 160px;
+            gap: 12px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        button {
+            background: var(--red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 11px 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: var(--red-dark);
+        }
+
+        .btn-secondary {
+            background: #111827;
+        }
+
+        .btn-secondary:hover {
+            background: #000000;
+        }
+
+        .search {
+            margin-bottom: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--black);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        td {
+            border-bottom: 1px solid var(--border);
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .active {
+            background: #E8F7EE;
+            color: #166534;
+        }
+
+        .inactive {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .msg {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-input {
+            margin-bottom: 6px;
+        }
+
+        @media (max-width: 850px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <strong>Paramétrage des nationalités</strong>
+
+    <div>
+        <a href="/backoffice/applications">Dossiers</a>
+        <a href="/backoffice/agencies">Agences</a>
+    </div>
+</div>
+
+<div class="container">
+    <h1>Nationalités</h1>
+
+    <p class="description">
+        Cette page permet d’ajouter, modifier, activer ou désactiver les nationalités disponibles
+        dans le formulaire d’ouverture de compte à distance.
+    </p>
+
+    <div class="form-box">
+        <h3>Ajouter une nationalité</h3>
+
+        <div class="grid">
+            <input id="code" placeholder="Code, ex: CM">
+            <input id="label" placeholder="Libellé, ex: Camerounaise">
+            <select id="active">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+        </div>
+
+        <br>
+
+        <button onclick="createNationality()">Ajouter la nationalité</button>
+
+        <div id="message" class="msg"></div>
+    </div>
+
+    <input class="search" id="search" placeholder="Rechercher par code ou libellé..." oninput="loadNationalities()">
+
+    <table>
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Nationalité</th>
+                <th>Statut</th>
+                <th style="width: 260px;">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody id="nationalityBody"></tbody>
+    </table>
+</div>
+
+<script>
+    let currentRows = [];
+
+    async function loadNationalities() {
+        const q = document.getElementById("search").value;
+
+        const response = await fetch(`/api/nationalities?q=${encodeURIComponent(q)}`);
+        const nationalities = await response.json();
+
+        currentRows = nationalities;
+
+        const body = document.getElementById("nationalityBody");
+        body.innerHTML = "";
+
+        nationalities.forEach(nationality => {
+            body.innerHTML += `
+                <tr id="row-${nationality.id}">
+                    <td>${nationality.code}</td>
+                    <td>${nationality.label}</td>
+                    <td>
+                        <span class="badge ${nationality.active ? "active" : "inactive"}">
+                            ${nationality.active ? "Active" : "Inactive"}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="actions">
+                            <button class="btn-secondary" onclick="showEditForm(${nationality.id})">Modifier</button>
+                            <button onclick="toggleNationality(${nationality.id}, ${nationality.active})">
+                                ${nationality.active ? "Désactiver" : "Activer"}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function createNationality() {
+        const payload = {
+            code: document.getElementById("code").value.trim(),
+            label: document.getElementById("label").value.trim(),
+            active: document.getElementById("active").value === "true"
+        };
+
+        const message = document.getElementById("message");
+
+        if (!payload.code || !payload.label) {
+            message.style.color = "#C90000";
+            message.innerText = "Le code et le libellé sont obligatoires.";
+            return;
+        }
+
+        const response = await fetch("/api/nationalities", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            message.style.color = "#C90000";
+            message.innerText = "Erreur : " + error;
+            return;
+        }
+
+        message.style.color = "#166534";
+        message.innerText = "Nationalité ajoutée avec succès.";
+
+        document.getElementById("code").value = "";
+        document.getElementById("label").value = "";
+        document.getElementById("active").value = "true";
+
+        loadNationalities();
+    }
+
+    function showEditForm(id) {
+        const nationality = currentRows.find(item => item.id === id);
+
+        if (!nationality) {
+            return;
+        }
+
+        const row = document.getElementById(`row-${id}`);
+
+        row.innerHTML = `
+            <td>
+                <input class="edit-input" id="edit-code-${id}" value="${nationality.code}">
+            </td>
+            <td>
+                <input class="edit-input" id="edit-label-${id}" value="${nationality.label}">
+            </td>
+            <td>
+                <select id="edit-active-${id}">
+                    <option value="true" ${nationality.active ? "selected" : ""}>Active</option>
+                    <option value="false" ${!nationality.active ? "selected" : ""}>Inactive</option>
+                </select>
+            </td>
+            <td>
+                <div class="actions">
+                    <button onclick="updateNationality(${id})">Enregistrer</button>
+                    <button class="btn-secondary" onclick="loadNationalities()">Annuler</button>
+                </div>
+            </td>
+        `;
+    }
+
+    async function updateNationality(id) {
+        const payload = {
+            code: document.getElementById(`edit-code-${id}`).value.trim(),
+            label: document.getElementById(`edit-label-${id}`).value.trim(),
+            active: document.getElementById(`edit-active-${id}`).value === "true"
+        };
+
+        const response = await fetch(`/api/nationalities/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const error = await response.text();
+            alert("Erreur : " + error);
+            return;
+        }
+
+        loadNationalities();
+    }
+
+    async function toggleNationality(id, currentStatus) {
+        await fetch(`/api/nationalities/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                active: !currentStatus
+            })
+        });
+
+        loadNationalities();
+    }
+
+    loadNationalities();
+</script>
+
+</body>
+</html>
