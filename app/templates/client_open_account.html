@@ -1110,20 +1110,20 @@
             };
         });
     </script>
-    <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady();"></script>
+    <script async src="/static/vendor/opencv/opencv.js" onload="onOpenCvReady();"></script>
 
     <script type="module">
-        import { FaceDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22";
+        import { FaceDetector, FilesetResolver } from "/static/vendor/mediapipe/tasks-vision/vision_bundle.mjs";
 
         window.MEDIAPIPE_FACE_READY = (async function () {
             try {
                 const vision = await FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+                    "/static/vendor/mediapipe/tasks-vision/wasm"
                 );
 
                 const detector = await FaceDetector.createFromOptions(vision, {
                     baseOptions: {
-                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+                        modelAssetPath: "/static/vendor/mediapipe/models/blaze_face_short_range.tflite"
                     },
                     runningMode: "VIDEO",
                     minDetectionConfidence: 0.60
@@ -1152,17 +1152,17 @@
 
     <!-- V10 - MediaPipe FaceLandmarker pour selfie intelligent selon machine à états KYC -->
     <script type="module">
-        import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22";
+        import { FaceLandmarker, FilesetResolver } from "/static/vendor/mediapipe/tasks-vision/vision_bundle.mjs";
 
         window.MEDIAPIPE_FACE_LANDMARKER_READY = (async function () {
             try {
                 const vision = await FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+                    "/static/vendor/mediapipe/tasks-vision/wasm"
                 );
 
                 const landmarker = await FaceLandmarker.createFromOptions(vision, {
                     baseOptions: {
-                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+                        modelAssetPath: "/static/vendor/mediapipe/models/face_landmarker.task",
                         delegate: "GPU"
                     },
                     runningMode: "VIDEO",
@@ -4779,7 +4779,7 @@ async function waitForOpenCv(timeoutMs = 6000) {
     return openCvDocumentDetectionReady;
 }
 
-async function waitForMediaPipeFaceDetector(timeoutMs = 5000) {
+async function waitForMediaPipeFaceDetector(timeoutMs = 20000) {
     if (!window.MEDIAPIPE_FACE_READY) {
         return false;
     }
@@ -8282,6 +8282,628 @@ if (v12OriginalV11SelfieState) {
     };
 }
 
+</script>
+
+
+<!-- STABILISATION_RECTO_VERSO_SELFIE_V23 -->
+<script>
+(function () {
+    const MARKER = "STABILISATION_RECTO_VERSO_SELFIE_V23";
+    console.log(MARKER + " chargé");
+
+    let pendingIdentityCapture = null;
+    let pendingSelfieCapture = null;
+    let originalOpenDocumentCamera = window.openDocumentCamera;
+
+    function addStabilisationStyles() {
+        if (document.getElementById("kycStabilisationStyles")) {
+            return;
+        }
+
+        const style = document.createElement("style");
+        style.id = "kycStabilisationStyles";
+        style.textContent = `
+            .kyc-review-modal {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 12000;
+                background: rgba(0,0,0,0.86);
+                padding: 18px;
+            }
+
+            .kyc-review-box {
+                max-width: 680px;
+                margin: 20px auto;
+                background: #fff;
+                border-radius: 18px;
+                overflow: hidden;
+                box-shadow: 0 20px 70px rgba(0,0,0,0.45);
+            }
+
+            .kyc-review-header {
+                background: #111;
+                color: #fff;
+                padding: 14px 18px;
+                font-weight: bold;
+                border-bottom: 4px solid #C90000;
+            }
+
+            .kyc-review-body {
+                padding: 16px;
+            }
+
+            .kyc-review-body p {
+                margin: 0 0 12px;
+                color: #374151;
+                line-height: 1.5;
+                font-size: 14px;
+            }
+
+            .kyc-review-img {
+                width: 100%;
+                max-height: 420px;
+                object-fit: contain;
+                background: #000;
+                border-radius: 12px;
+                border: 1px solid #DADDE5;
+            }
+
+            .kyc-review-actions {
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                padding: 0 16px 16px;
+            }
+
+            .kyc-review-actions button {
+                border: none;
+                border-radius: 10px;
+                padding: 12px 15px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+            .kyc-review-confirm {
+                background: #16A34A;
+                color: white;
+            }
+
+            .kyc-review-retake {
+                background: #C90000;
+                color: white;
+            }
+
+            .kyc-review-cancel {
+                background: #111827;
+                color: white;
+            }
+
+            .preview-card .preview-actions {
+                display: flex;
+                gap: 8px;
+                flex-wrap: wrap;
+                margin-top: 8px;
+            }
+
+            .preview-card .preview-actions button {
+                background: #C90000;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 8px 10px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+            .preview-card .preview-actions button.secondary {
+                background: #111827;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    function ensureReviewModal() {
+        addStabilisationStyles();
+
+        let modal = document.getElementById("kycReviewModal");
+
+        if (modal) {
+            return modal;
+        }
+
+        modal = document.createElement("div");
+        modal.id = "kycReviewModal";
+        modal.className = "kyc-review-modal";
+        modal.innerHTML = `
+            <div class="kyc-review-box">
+                <div class="kyc-review-header" id="kycReviewTitle">Vérification de la capture</div>
+                <div class="kyc-review-body">
+                    <p id="kycReviewMessage"></p>
+                    <img id="kycReviewImage" class="kyc-review-img" alt="Aperçu capture">
+                </div>
+                <div class="kyc-review-actions">
+                    <button type="button" class="kyc-review-confirm" id="kycReviewConfirmBtn">Confirmer</button>
+                    <button type="button" class="kyc-review-retake" id="kycReviewRetakeBtn">Reprendre</button>
+                    <button type="button" class="kyc-review-cancel" id="kycReviewCancelBtn">Annuler</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        return modal;
+    }
+
+    function showReviewModal(options) {
+        const modal = ensureReviewModal();
+        const title = document.getElementById("kycReviewTitle");
+        const message = document.getElementById("kycReviewMessage");
+        const img = document.getElementById("kycReviewImage");
+        const confirmBtn = document.getElementById("kycReviewConfirmBtn");
+        const retakeBtn = document.getElementById("kycReviewRetakeBtn");
+        const cancelBtn = document.getElementById("kycReviewCancelBtn");
+
+        if (img.dataset.url) {
+            URL.revokeObjectURL(img.dataset.url);
+        }
+
+        const url = URL.createObjectURL(options.file);
+        img.dataset.url = url;
+        img.src = url;
+
+        title.innerText = options.title;
+        message.innerText = options.message;
+
+        confirmBtn.onclick = options.onConfirm;
+        retakeBtn.onclick = options.onRetake;
+        cancelBtn.onclick = function () {
+            modal.style.display = "none";
+            if (typeof options.onCancel === "function") {
+                options.onCancel();
+            }
+        };
+
+        modal.style.display = "block";
+    }
+
+    function hideReviewModal() {
+        const modal = document.getElementById("kycReviewModal");
+        const img = document.getElementById("kycReviewImage");
+
+        if (img && img.dataset.url) {
+            URL.revokeObjectURL(img.dataset.url);
+            img.dataset.url = "";
+        }
+
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    function safeSetSmartMessage(id, message, state) {
+        if (typeof v10SetSmartMessage === "function") {
+            v10SetSmartMessage(id, message, state || "");
+            return;
+        }
+
+        if (typeof setSmartMessage === "function") {
+            setSmartMessage(id, message, state || "");
+            return;
+        }
+
+        const el = document.getElementById(id);
+        if (el) {
+            el.innerText = message;
+        }
+    }
+
+    function stopDocumentAuto() {
+        if (typeof stopDocumentSmartCapture === "function") {
+            stopDocumentSmartCapture();
+        }
+
+        if (typeof documentSmartInterval !== "undefined" && documentSmartInterval) {
+            clearInterval(documentSmartInterval);
+            documentSmartInterval = null;
+        }
+
+        if (typeof v10DocumentReadyFrames !== "undefined") {
+            v10DocumentReadyFrames = 0;
+        }
+
+        if (typeof documentGoodFrameCount !== "undefined") {
+            documentGoodFrameCount = 0;
+        }
+    }
+
+    function restartDocumentAuto() {
+        if (typeof v10DocumentReadyFrames !== "undefined") {
+            v10DocumentReadyFrames = 0;
+        }
+
+        if (typeof documentGoodFrameCount !== "undefined") {
+            documentGoodFrameCount = 0;
+        }
+
+        setTimeout(function () {
+            if (typeof startDocumentSmartCapture === "function") {
+                startDocumentSmartCapture();
+            }
+        }, 850);
+    }
+
+    function stopSelfieAuto() {
+        if (typeof stopSelfieSmartCapture === "function") {
+            stopSelfieSmartCapture();
+        }
+
+        if (typeof v11SelfieReadyFrames !== "undefined") {
+            v11SelfieReadyFrames = 0;
+        }
+
+        if (typeof selfieGoodFrameCount !== "undefined") {
+            selfieGoodFrameCount = 0;
+        }
+    }
+
+    function restartSelfieAuto() {
+        if (typeof v11SelfieReadyFrames !== "undefined") {
+            v11SelfieReadyFrames = 0;
+        }
+
+        if (typeof selfieGoodFrameCount !== "undefined") {
+            selfieGoodFrameCount = 0;
+        }
+
+        setTimeout(function () {
+            if (typeof startSelfieSmartCapture === "function") {
+                startSelfieSmartCapture();
+            }
+
+            if (typeof startV11SelfieSmartCapture === "function") {
+                startV11SelfieSmartCapture();
+            }
+        }, 850);
+    }
+
+    function getDocumentCrop(video, canvas) {
+        let crop = null;
+
+        if (typeof v10DocumentLastAnalysis !== "undefined" && v10DocumentLastAnalysis && v10DocumentLastAnalysis.crop) {
+            crop = v10DocumentLastAnalysis.crop;
+        } else if (typeof lastDocumentCheck !== "undefined" && lastDocumentCheck && lastDocumentCheck.metrics && lastDocumentCheck.metrics.crop) {
+            crop = lastDocumentCheck.metrics.crop;
+        }
+
+        if (crop && crop.cropWidth && crop.cropHeight) {
+            return {
+                sx: Math.max(0, crop.cropX || 0),
+                sy: Math.max(0, crop.cropY || 0),
+                sw: Math.min(video.videoWidth, crop.cropWidth),
+                sh: Math.min(video.videoHeight, crop.cropHeight)
+            };
+        }
+
+        return {
+            sx: 0,
+            sy: 0,
+            sw: video.videoWidth,
+            sh: video.videoHeight
+        };
+    }
+
+    function makeJpegFileFromCanvas(canvas, filename, quality, callback) {
+        canvas.toBlob(function (blob) {
+            if (!blob) {
+                return;
+            }
+
+            const file = new File([blob], filename, { type: "image/jpeg" });
+            callback(file);
+        }, "image/jpeg", quality || 0.92);
+    }
+
+    window.openDocumentCamera = async function (preferredSide) {
+        if (preferredSide) {
+            window.__preferredDocumentSideV23 = preferredSide;
+        }
+
+        if (typeof originalOpenDocumentCamera === "function") {
+            await originalOpenDocumentCamera();
+        }
+
+        const wantedSide = window.__preferredDocumentSideV23 || "recto";
+        window.__preferredDocumentSideV23 = null;
+
+        setTimeout(function () {
+            if (wantedSide === "verso" && documentNeedsBackSide && documentNeedsBackSide()) {
+                currentDocumentSide = "verso";
+            } else {
+                currentDocumentSide = "recto";
+            }
+
+            if (typeof updateSideIndicator === "function") {
+                updateSideIndicator();
+            }
+
+            safeSetSmartMessage(
+                "documentQualityMessage",
+                currentDocumentSide === "recto"
+                    ? "Capture du recto : l’image sera affichée pour confirmation avant validation."
+                    : "Capture du verso : l’image sera affichée pour confirmation avant validation.",
+                ""
+            );
+        }, 500);
+    };
+
+    window.captureDocumentSide = function (manual = true) {
+        const video = document.getElementById("documentVideo");
+        const canvas = document.getElementById("documentCanvas");
+
+        if (!video || !canvas || !video.videoWidth || !video.videoHeight) {
+            return;
+        }
+
+        const side = currentDocumentSide === "verso" ? "verso" : "recto";
+        const crop = getDocumentCrop(video, canvas);
+
+        canvas.width = Math.round(crop.sw);
+        canvas.height = Math.round(crop.sh);
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(
+            video,
+            crop.sx,
+            crop.sy,
+            crop.sw,
+            crop.sh,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+        makeJpegFileFromCanvas(
+            canvas,
+            side === "recto" ? "piece_recto.jpg" : "piece_verso.jpg",
+            0.92,
+            function (file) {
+                stopDocumentAuto();
+
+                pendingIdentityCapture = {
+                    side: side,
+                    file: file
+                };
+
+                showReviewModal({
+                    file: file,
+                    title: side === "recto" ? "Vérifier le recto" : "Vérifier le verso",
+                    message: side === "recto"
+                        ? "Contrôlez que le recto est net, complet, lisible et non coupé. Confirmez ou reprenez uniquement le recto."
+                        : "Contrôlez que le verso est net, complet, lisible et non coupé. Confirmez ou reprenez uniquement le verso.",
+                    onConfirm: function () {
+                        hideReviewModal();
+
+                        if (!pendingIdentityCapture) {
+                            return;
+                        }
+
+                        identityDocumentFiles.imported = null;
+
+                        if (pendingIdentityCapture.side === "recto") {
+                            identityDocumentFiles.recto = pendingIdentityCapture.file;
+                        } else {
+                            identityDocumentFiles.verso = pendingIdentityCapture.file;
+                        }
+
+                        pendingIdentityCapture = null;
+
+                        if (typeof updateIdentityCaptureStatus === "function") {
+                            updateIdentityCaptureStatus();
+                        }
+
+                        if (side === "recto" && typeof documentNeedsBackSide === "function" && documentNeedsBackSide()) {
+                            currentDocumentSide = "verso";
+
+                            if (typeof updateSideIndicator === "function") {
+                                updateSideIndicator();
+                            }
+
+                            safeSetSmartMessage(
+                                "documentQualityMessage",
+                                "Recto confirmé. Retournez maintenant la pièce pour capturer le verso.",
+                                "good"
+                            );
+
+                            restartDocumentAuto();
+                            return;
+                        }
+
+                        if (typeof closeDocumentCamera === "function") {
+                            closeDocumentCamera();
+                        }
+                    },
+                    onRetake: function () {
+                        hideReviewModal();
+                        pendingIdentityCapture = null;
+                        currentDocumentSide = side;
+
+                        if (typeof updateSideIndicator === "function") {
+                            updateSideIndicator();
+                        }
+
+                        safeSetSmartMessage(
+                            "documentQualityMessage",
+                            side === "recto"
+                                ? "Reprise du recto : replacez la pièce dans le cadre."
+                                : "Reprise du verso : replacez la pièce dans le cadre.",
+                            ""
+                        );
+
+                        restartDocumentAuto();
+                    },
+                    onCancel: function () {
+                        pendingIdentityCapture = null;
+                        restartDocumentAuto();
+                    }
+                });
+            }
+        );
+    };
+
+    window.createPreviewCard = function (label, file, side) {
+        const card = document.createElement("div");
+        card.className = "preview-card";
+
+        const url = URL.createObjectURL(file);
+
+        card.innerHTML = `
+            <strong>${label} confirmé</strong>
+            <img src="${url}" alt="${label}">
+            <div class="preview-actions">
+                <button type="button" onclick="retakeIdentitySide('${side}')">Reprendre ${label.toLowerCase()}</button>
+            </div>
+        `;
+
+        return card;
+    };
+
+    window.retakeIdentitySide = function (side) {
+        if (side === "recto") {
+            identityDocumentFiles.recto = null;
+        }
+
+        if (side === "verso") {
+            identityDocumentFiles.verso = null;
+        }
+
+        identityDocumentFiles.imported = null;
+
+        if (typeof updateIdentityCaptureStatus === "function") {
+            updateIdentityCaptureStatus();
+        }
+
+        currentDocumentSide = side === "verso" ? "verso" : "recto";
+        window.openDocumentCamera(currentDocumentSide);
+    };
+
+    window.captureSelfiePhoto = function (manual = true) {
+        const video = document.getElementById("selfieVideo");
+        const canvas = document.getElementById("selfieCanvas");
+
+        if (!video || !canvas || !video.videoWidth || !video.videoHeight) {
+            return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        makeJpegFileFromCanvas(canvas, "selfie_photo.jpg", 0.9, function (file) {
+            stopSelfieAuto();
+
+            pendingSelfieCapture = {
+                file: file
+            };
+
+            showReviewModal({
+                file: file,
+                title: "Vérifier le selfie",
+                message: "Contrôlez que le visage est bien centré, net, éclairé et entièrement visible. Confirmez ou reprenez le selfie.",
+                onConfirm: function () {
+                    hideReviewModal();
+
+                    if (!pendingSelfieCapture) {
+                        return;
+                    }
+
+                    selfieFiles = {
+                        photo: pendingSelfieCapture.file,
+                        video: null,
+                        imported: null
+                    };
+
+                    pendingSelfieCapture = null;
+
+                    if (typeof closeSelfieCamera === "function") {
+                        closeSelfieCamera();
+                    }
+
+                    if (typeof updateSelfieCaptureStatus === "function") {
+                        updateSelfieCaptureStatus();
+                    }
+                },
+                onRetake: function () {
+                    hideReviewModal();
+                    pendingSelfieCapture = null;
+
+                    safeSetSmartMessage(
+                        "selfieQualityMessage",
+                        "Reprise du selfie : recentrez le visage dans l’ovale.",
+                        ""
+                    );
+
+                    restartSelfieAuto();
+                },
+                onCancel: function () {
+                    pendingSelfieCapture = null;
+                    restartSelfieAuto();
+                }
+            });
+        });
+    };
+
+    window.retakeSelfiePhoto = function () {
+        selfieFiles = {
+            photo: null,
+            video: null,
+            imported: null
+        };
+
+        if (typeof updateSelfieCaptureStatus === "function") {
+            updateSelfieCaptureStatus();
+        }
+
+        if (typeof openSelfiePhotoCamera === "function") {
+            openSelfiePhotoCamera();
+        }
+    };
+
+    const originalUpdateSelfieCaptureStatus = window.updateSelfieCaptureStatus;
+
+    window.updateSelfieCaptureStatus = function () {
+        if (typeof originalUpdateSelfieCaptureStatus === "function") {
+            originalUpdateSelfieCaptureStatus();
+        }
+
+        const preview = document.getElementById("selfiePreview");
+
+        if (!preview || !selfieFiles || !selfieFiles.photo) {
+            return;
+        }
+
+        const existing = preview.querySelector(".selfie-retake-v23");
+
+        if (!existing) {
+            const box = document.createElement("div");
+            box.className = "preview-card selfie-retake-v23";
+            box.innerHTML = `
+                <div class="preview-actions">
+                    <button type="button" onclick="retakeSelfiePhoto()">Reprendre selfie</button>
+                </div>
+            `;
+            preview.appendChild(box);
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        addStabilisationStyles();
+    });
+})();
 </script>
 
 </body>
