@@ -8,12 +8,8 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/")
-def home(request: Request):
-    return templates.TemplateResponse(
-        request,
-        "client_open_account.html"
-    )
-
+async def portal_home_page(request: Request):
+    return templates.TemplateResponse(request, "portal_home.html", {"request": request})
 
 @router.get("/client/open-account")
 def client_open_account(request: Request):
@@ -66,7 +62,16 @@ def client_status(request: Request):
 async def open_account_page(request: Request):
     return templates.TemplateResponse(request, "client_open_account.html", {"request": request})
 
-
 @router.get("/service-unavailable")
 async def service_unavailable_page(request: Request):
     return templates.TemplateResponse(request, "service_unavailable.html", {"request": request})
+
+
+@router.get("/")
+async def portal_home_page(request: Request):
+    return templates.TemplateResponse(request, "portal_home.html", {"request": request})
+
+
+@router.get("/client/open-account")
+async def client_open_account_page(request: Request):
+    return templates.TemplateResponse(request, "client_open_account.html", {"request": request})
