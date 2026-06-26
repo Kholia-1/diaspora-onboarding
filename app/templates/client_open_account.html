@@ -1528,7 +1528,7 @@
                     </div>
 
                     <div>
-                        <label>Tranche de revenus (FCFA) <span class="required">*</span></label>
+                        <label>Tranche de revenus <span class="required">*</span></label>
                         <select name="income_range_ui" required>
                             <option value="">Sélectionnez...</option>
                             <option value="0 - 100 000">0 - 100 000</option>
@@ -1537,6 +1537,17 @@
                             <option value="500 001 - 1 000 000">500 001 - 1 000 000</option>
                             <option value="Plus de 1 000 000">Plus de 1 000 000</option>
                         </select>
+                    <label>Devise du revenu <span class="required">*</span></label>
+                    <select name="income_currency" required>
+                        <option value="">Sélectionner...</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="XAF">XAF - Franc CFA</option>
+                        <option value="USD">USD - Dollar américain</option>
+                        <option value="GBP">GBP - Livre sterling</option>
+                        <option value="CAD">CAD - Dollar canadien</option>
+                        <option value="CHF">CHF - Franc suisse</option>
+                        <option value="OTHER">Autre</option>
+                    </select>
                     </div>
                 </div>
             </div>
@@ -1593,6 +1604,12 @@
                     Renseignez le RIB si le client dispose déjà d’une référence bancaire ou d’un compte existant.
                 </span>
                 <input name="rib" placeholder="Ex : 10001 00001 12345678901 97">
+
+                <label>Document RIB / IBAN</label>
+                <input type="file" id="rib_document" accept="image/*,application/pdf">
+                <small style="display:block;color:#7a686d;margin-top:6px;">
+                    Si vous avez déjà un compte dans une autre banque, importez le document RIB afin de vérifier le numéro saisi avec l’OCR.
+                </small>
             </div>
 
             <div>
@@ -1714,9 +1731,12 @@
                     </div>
 
                     <div class="photo-card">
-                        <label>Photo du justificatif de domicile</label>
-                        <input type="file" id="address_photo" accept="image/*" capture="environment">
-                        <small>Facture, attestation ou document officiel indiquant l’adresse.</small>
+                        <label>Justificatif de revenu obligatoire</label>
+                        <input type="file" id="income_proof" accept="image/*,application/pdf">
+                        <small>
+                            Importez un bulletin de salaire, une attestation de revenus, un relevé bancaire,
+                            un contrat de travail, un avis d’imposition ou tout document permettant de justifier les revenus.
+                        </small>
                     </div>
 
                     <div class="photo-card">
@@ -2520,7 +2540,7 @@ Nom de naissance : ${getFormValue(form, "birth_name_ui")}
 NIU : ${getFormValue(form, "niu_ui")}
 Type de pièce : ${getFormValue(form, "document_type_ui")}
 Profession : ${getFormValue(form, "profession_ui")}
-Tranche de revenus : ${getFormValue(form, "income_range_ui")}
+Tranche de revenus : ${getFormValue(form, "income_range_ui")}\nDevise du revenu : ${getFormValue(form, "income_currency")}
 Devise : ${getFormValue(form, "currency_ui")}
 Code de parrainage : ${getFormValue(form, "referral_code_ui")}
 Package : ${getFormValue(form, "selected_package_ui")}
@@ -2619,7 +2639,8 @@ Package : ${getFormValue(form, "selected_package_ui")}
             resultBox.innerHTML = "Dossier créé. Envoi et authentification des documents en cours...";
 
             await uploadIdentityDocuments(applicationId);
-            await uploadPhoto(applicationId, "PROOF_OF_ADDRESS_PHOTO", "address_photo");
+            await uploadPhoto(applicationId, "INCOME_PROOF", "income_proof");
+            await uploadPhoto(applicationId, "RIB_DOCUMENT", "rib_document");
             await uploadSelfieDocument(applicationId);
             await uploadPhoto(applicationId, "BIRTH_CERTIFICATE_PHOTO", "birth_certificate_photo");
             await uploadPhoto(applicationId, "EMPLOYMENT_OR_SCHOOL_CERTIFICATE_PHOTO", "employment_school_photo");
@@ -8904,6 +8925,32 @@ if (v12OriginalV11SelfieState) {
         addStabilisationStyles();
     });
 })();
+</script>
+
+
+<!-- VALIDATION_REVENU_RIB_V25 -->
+<script>
+document.addEventListener("submit", function (event) {
+    const incomeProof = document.getElementById("income_proof");
+    const ribInput = document.querySelector('[name="rib"]');
+    const ribDocument = document.getElementById("rib_document");
+
+    if (incomeProof && (!incomeProof.files || incomeProof.files.length === 0)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        alert("Le justificatif de revenu est obligatoire. Veuillez importer le document avant de soumettre.");
+        incomeProof.scrollIntoView({ behavior: "smooth", block: "center" });
+        return false;
+    }
+
+    if (ribInput && ribInput.value.trim() && ribDocument && (!ribDocument.files || ribDocument.files.length === 0)) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        alert("Vous avez renseigné un RIB. Veuillez importer le document RIB correspondant pour vérification OCR.");
+        ribDocument.scrollIntoView({ behavior: "smooth", block: "center" });
+        return false;
+    }
+}, true);
 </script>
 
 </body>

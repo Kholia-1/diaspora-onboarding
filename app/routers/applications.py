@@ -142,8 +142,8 @@ def calculate_document_score(application: AccountApplication, uploaded_document_
             "IDENTITY_DOCUMENT_IMPORTED",
         },
         {
-            "PROOF_OF_ADDRESS_PHOTO",
-            "ADDRESS_PROOF",
+            "INCOME_PROOF",
+            "INCOME_PROOF",
         },
         {
             "SELFIE",
@@ -152,6 +152,11 @@ def calculate_document_score(application: AccountApplication, uploaded_document_
             "SELFIE_IMPORTED",
         },
     ]
+
+    if application.rib:
+        required_groups.append({
+            "RIB_DOCUMENT",
+        })
 
     if application.residency_status == "NON_RESIDENT":
         required_groups.extend([
@@ -233,6 +238,8 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
         identity_document_issue_place=payload.identity_document_issue_place,
 
         rib=payload.rib,
+        income_range=payload.income_range,
+        income_currency=payload.income_currency,
         account_object=payload.account_object,
         account_object_other=payload.account_object_other,
         funds_origin=payload.funds_origin,

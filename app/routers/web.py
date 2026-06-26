@@ -61,3 +61,12 @@ def client_status(request: Request):
         request,
         "client_status.html"
     )
+
+@router.get("/open-account")
+async def open_account_page(request: Request):
+    return templates.TemplateResponse(request, "client_open_account.html", {"request": request})
+
+
+@router.get("/service-unavailable")
+async def service_unavailable_page(request: Request):
+    return templates.TemplateResponse(request, "service_unavailable.html", {"request": request})

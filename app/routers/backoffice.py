@@ -66,6 +66,8 @@ def get_application_detail(application_id: int, db: Session = Depends(get_db)):
             "identity_document_issue_date": application.identity_document_issue_date,
             "identity_document_issue_place": application.identity_document_issue_place,
             "rib": application.rib,
+            "income_range": application.income_range,
+            "income_currency": application.income_currency,
             "account_object": application.account_object,
             "account_object_other": application.account_object_other,
             "funds_origin": application.funds_origin,

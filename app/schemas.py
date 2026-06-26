@@ -38,6 +38,8 @@ class ApplicationCreate(BaseModel):
     identity_document_issue_place: Optional[str] = None
 
     rib: Optional[str] = None
+    income_range: Optional[str] = None
+    income_currency: Optional[str] = None
 
     account_object: Optional[str] = None
     account_object_other: Optional[str] = None

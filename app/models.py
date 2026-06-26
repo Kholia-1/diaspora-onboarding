@@ -46,6 +46,8 @@ class AccountApplication(Base):
     identity_document_issue_place = Column(String(150), nullable=True)
 
     rib = Column(String(100), nullable=True)
+    income_range = Column(String(100), nullable=True)
+    income_currency = Column(String(20), nullable=True)
 
     account_object = Column(String(150), nullable=True)
     account_object_other = Column(Text, nullable=True)

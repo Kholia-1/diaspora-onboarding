@@ -403,6 +403,99 @@ def match_ocr_with_application(ocr_text: str, application: Any) -> dict[str, Any
     }
 
 
+
+
+def normalize_rib_for_matching(value: str | None) -> str:
+    import re
+    return re.sub(r"\D+", "", value or "")
+
+
+def match_rib_with_application(ocr_text: str, application: Any) -> dict[str, Any]:
+    import re
+    from difflib import SequenceMatcher
+
+    expected = normalize_rib_for_matching(getattr(application, "rib", None))
+    numbers = re.findall(r"[0-9][0-9\s\-\.]{5,}[0-9]", ocr_text or "")
+    candidates = sorted({normalize_rib_for_matching(x) for x in numbers if normalize_rib_for_matching(x)}, key=len, reverse=True)
+
+    checks = [{
+        "field": "rib",
+        "expected": expected,
+        "detected_candidates": candidates[:8],
+        "status": "NOT_CHECKED",
+        "score": 0,
+    }]
+
+    if not expected:
+        checks[0]["status"] = "NO_RIB_PROVIDED"
+        return {
+            "match_score": 0,
+            "match_status": "OCR_REVIEW_REQUIRED",
+            "checks": checks,
+        }
+
+    best_score = 0
+    best_candidate = ""
+
+    for candidate in candidates:
+        if expected in candidate or candidate in expected:
+            best_score = 100
+            best_candidate = candidate
+            break
+
+        score = int(SequenceMatcher(None, expected, candidate).ratio() * 100)
+        if score > best_score:
+            best_score = score
+            best_candidate = candidate
+
+    checks[0]["detected"] = best_candidate
+    checks[0]["score"] = best_score
+
+    if best_score >= 90:
+        checks[0]["status"] = "MATCH"
+        status = "MATCH_OK"
+    elif best_score >= 65:
+        checks[0]["status"] = "PARTIAL_MATCH"
+        status = "PARTIAL_MATCH"
+    else:
+        checks[0]["status"] = "MISMATCH"
+        status = "MISMATCH"
+
+    return {
+        "match_score": best_score,
+        "match_status": status,
+        "checks": checks,
+    }
+
+
+def match_income_document(ocr_text: str) -> dict[str, Any]:
+    text = (ocr_text or "").strip()
+    keywords = [
+        "salaire", "salary", "revenu", "income", "bulletin", "paie",
+        "pay", "employeur", "contrat", "tax", "impôt", "bank statement",
+        "relevé", "attestation"
+    ]
+
+    found = [kw for kw in keywords if kw.lower() in text.lower()]
+    score = 70 if found else (40 if len(text) > 30 else 0)
+
+    if score >= 60:
+        status = "PARTIAL_MATCH"
+    else:
+        status = "OCR_REVIEW_REQUIRED"
+
+    return {
+        "match_score": score,
+        "match_status": status,
+        "checks": [{
+            "field": "income_proof",
+            "expected": "Justificatif de revenu",
+            "detected_keywords": found,
+            "status": "DOCUMENT_READABLE" if found else "REVIEW_REQUIRED",
+            "score": score,
+        }],
+    }
+
 def analyze_document_content(content: bytes, mime_type: str | None, document_type: str, application: Any) -> dict[str, Any]:
     quality = assess_image_quality(content, mime_type)
 
@@ -414,11 +507,20 @@ def analyze_document_content(content: bytes, mime_type: str | None, document_typ
         "IDENTITY_DOCUMENT_IMPORTED",
         "BIRTH_CERTIFICATE_PHOTO",
         "IDENTITY_WITH_FILIATION",
+        "INCOME_PROOF",
+        "RIB_DOCUMENT",
     }
 
     if should_ocr:
         ocr = extract_text_with_tesseract(content, mime_type)
-        matching = match_ocr_with_application(ocr.get("text", ""), application)
+        ocr_text = ocr.get("text", "")
+
+        if document_type == "RIB_DOCUMENT":
+            matching = match_rib_with_application(ocr_text, application)
+        elif document_type == "INCOME_PROOF":
+            matching = match_income_document(ocr_text)
+        else:
+            matching = match_ocr_with_application(ocr_text, application)
     else:
         ocr = {
             "supported": False,
