@@ -21,6 +21,8 @@ from app.services.document_auth_service import (
 )
 
 
+from app.services.notification_service import notify_application_submitted
+
 router = APIRouter(
     prefix="/api/applications",
     tags=["Parcours Client Diaspora"]

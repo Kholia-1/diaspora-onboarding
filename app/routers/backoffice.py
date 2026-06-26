@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import AccountApplication, ApplicationDocument
 from app.schemas import ApplicationResponse, BackOfficeDecision
+from app.services.notification_service import notify_application_status_changed
 
 
 router = APIRouter(
