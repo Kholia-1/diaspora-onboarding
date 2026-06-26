@@ -1,0 +1,72 @@
+from fastapi import APIRouter, Request
+from fastapi.templating import Jinja2Templates
+
+
+router = APIRouter(tags=["Interface Web"])
+
+templates = Jinja2Templates(directory="app/templates")
+
+
+@router.get("/")
+def home(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "client_open_account.html"
+    )
+
+
+@router.get("/client/open-account")
+def client_open_account(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "client_open_account.html"
+    )
+
+
+@router.get("/backoffice/applications")
+def backoffice_applications(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "backoffice_applications.html"
+    )
+
+
+@router.get("/backoffice/applications/{application_id}")
+def backoffice_application_detail(request: Request, application_id: int):
+    return templates.TemplateResponse(
+        request,
+        "backoffice_detail.html",
+        {
+            "application_id": application_id
+        }
+    )
+
+@router.get("/backoffice/agencies")
+def backoffice_agencies(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "backoffice_agencies.html"
+    )
+
+@router.get("/backoffice/nationalities")
+def backoffice_nationalities(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "backoffice_nationalities.html"
+    )
+
+@router.get("/client/status")
+def client_status(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "client_status.html"
+    )
+
+@router.get("/open-account")
+async def open_account_page(request: Request):
+    return templates.TemplateResponse("client_open_account.html", {"request": request})
+
+
+@router.get("/service-unavailable")
+async def service_unavailable_page(request: Request):
+    return templates.TemplateResponse("service_unavailable.html", {"request": request})

@@ -78,9 +78,6 @@ def get_application_detail(application_id: int, db: Session = Depends(get_db)):
             "is_pep": application.is_pep,
             "pep_details": application.pep_details,
             "status": application.status,
-        "client_message": application.client_message,
-        "final_rib": application.final_rib,
-        "account_number": application.account_number,
             "risk_level": application.risk_level,
             "kyc_score": application.kyc_score,
             "document_score": application.document_score,
@@ -88,10 +85,7 @@ def get_application_detail(application_id: int, db: Session = Depends(get_db)):
             "blackmodule_score": application.blackmodule_score,
             "blackmodule_alert": application.blackmodule_alert,
             "review_decision": application.review_decision,
-            "review_comment": application.review_comment,
-            "client_message": application.client_message,
-            "final_rib": application.final_rib,
-            "account_number": application.account_number
+            "review_comment": application.review_comment
         },
         "documents": [
             {
@@ -130,8 +124,7 @@ def decide_application(
         "APPROVED",
         "REJECTED",
         "NEED_MORE_DOCUMENTS",
-        "COMPLIANCE_REVIEW",
-        "ACCOUNT_OPENED"
+        "COMPLIANCE_REVIEW"
     ]
 
     if payload.decision not in allowed:
@@ -143,9 +136,6 @@ def decide_application(
     application.review_decision = payload.decision
     application.reviewed_by = payload.reviewed_by
     application.review_comment = payload.comment
-    application.client_message = payload.client_message
-    application.final_rib = payload.final_rib
-    application.account_number = payload.account_number
     application.reviewed_at = datetime.utcnow()
     application.status = payload.decision
 

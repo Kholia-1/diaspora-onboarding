@@ -115,6 +115,9 @@ class BackOfficeDecision(BaseModel):
     decision: str
     reviewed_by: str
     comment: Optional[str] = None
+    client_message: Optional[str] = None
+    final_rib: Optional[str] = None
+    account_number: Optional[str] = None
 
 
 class AgencyCreate(BaseModel):

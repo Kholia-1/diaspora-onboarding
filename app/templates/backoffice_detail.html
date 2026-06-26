@@ -425,6 +425,72 @@
             }
         }
     </style>
+
+<style>
+    .compliance-panel-v30 {
+        margin: 18px 0;
+        padding: 18px;
+        border-radius: 18px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    .compliance-panel-v30 h3 {
+        margin: 0 0 12px;
+        color: #111827;
+    }
+
+    .compliance-grid-v30 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+
+    .compliance-item-v30 {
+        padding: 14px;
+        border-radius: 14px;
+        background: #f9fafb;
+        border: 1px solid #edf0f3;
+    }
+
+    .compliance-item-v30 strong {
+        display: block;
+        font-size: 22px;
+        color: #C90000;
+        margin-bottom: 4px;
+    }
+
+    .compliance-item-v30 span {
+        color: #6b7280;
+        font-size: 13px;
+    }
+
+    .bo-extra-field-v30 {
+        margin-top: 12px;
+    }
+
+    .bo-extra-field-v30 label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .bo-extra-field-v30 input,
+    .bo-extra-field-v30 textarea {
+        width: 100%;
+        padding: 11px 12px;
+        border-radius: 10px;
+        border: 1px solid #d1d5db;
+        font-family: inherit;
+    }
+
+    .bo-extra-field-v30 textarea {
+        min-height: 85px;
+        resize: vertical;
+    }
+</style>
+
 </head>
 
 <body>
@@ -434,7 +500,7 @@
 
     <div>
         <a href="/backoffice/applications">Retour dossiers</a>
-        <a href="/">Page client</a>
+        
         <button class="print-btn" onclick="exportDossierPdf()">Exporter PDF</button>
     </div>
 </div>
@@ -475,6 +541,7 @@
 
             <div class="panel">
                 <h3>Documents transmis</h3>
+                <div id="complianceSummaryContainer"></div>
                 <div id="documentsContainer"></div>
             </div>
         </div>
@@ -532,7 +599,8 @@
 
                 <label>Décision</label>
                 <select id="decision">
-                    <option value="APPROVED">Approuver le dossier</option>
+                    <option value="ACCOUNT_OPENED">Compte ouvert / RIB attribué</option>
+                        <option value="APPROVED">Approuver le dossier</option>
                     <option value="REJECTED">Rejeter le dossier</option>
                     <option value="NEED_MORE_DOCUMENTS">Demander un complément</option>
                     <option value="COMPLIANCE_REVIEW">Envoyer en revue conformité</option>
@@ -551,6 +619,22 @@
                 <button class="btn btn-full" onclick="submitDecision()">
                     Enregistrer la décision
                 </button>
+
+                
+                <div class="bo-extra-field-v30">
+                    <label>Numéro de compte attribué</label>
+                    <input id="accountNumber" placeholder="Ex : 10001-00001-12345678901">
+                </div>
+
+                <div class="bo-extra-field-v30">
+                    <label>RIB final Afriland à communiquer au client</label>
+                    <textarea id="finalRib" placeholder="Saisir ou coller le RIB final attribué au client"></textarea>
+                </div>
+
+                <div class="bo-extra-field-v30">
+                    <label>Message au client</label>
+                    <textarea id="clientMessage" placeholder="Ex : Votre dossier est conforme. Votre compte a été ouvert avec succès."></textarea>
+                </div>
 
                 <div id="decisionMessage" class="message"></div>
             </div>
@@ -664,6 +748,7 @@
 
         renderApplication(data.application);
         renderDocuments(data.documents || []);
+        renderComplianceSummaryV30(data);
     }
 
     function renderApplication(app) {
@@ -722,10 +807,21 @@
         document.getElementById("accountInfo").innerHTML =
             info("Agence souhaitée", app.preferred_branch) +
             info("Type de compte", app.account_type) +
-            info("RIB", app.rib) +
+            info("RIB fourni par le client", app.rib) +
+            info("Numéro compte attribué", app.account_number) +
+            info("RIB final Afriland", app.final_rib) +
+            info("Message client", app.client_message) +
             info("Numéro pièce", app.identity_document_number) +
             info("Date délivrance pièce", app.identity_document_issue_date) +
             info("Lieu délivrance pièce", app.identity_document_issue_place);
+
+        const accountNumberField = document.getElementById("accountNumber");
+        const finalRibField = document.getElementById("finalRib");
+        const clientMessageField = document.getElementById("clientMessage");
+
+        if (accountNumberField) accountNumberField.value = app.account_number || "";
+        if (finalRibField) finalRibField.value = app.final_rib || "";
+        if (clientMessageField) clientMessageField.value = app.client_message || "";
 
         document.getElementById("regulatoryInfo").innerHTML =
             info("Statut de résidence", residencyStatusLabel(app.residency_status)) +
@@ -871,7 +967,10 @@
         const payload = {
             decision: document.getElementById("decision").value,
             reviewed_by: document.getElementById("reviewedBy").value.trim(),
-            comment: document.getElementById("comment").value.trim()
+            comment: document.getElementById("comment").value.trim(),
+            client_message: document.getElementById("clientMessage") ? document.getElementById("clientMessage").value.trim() : "",
+            final_rib: document.getElementById("finalRib") ? document.getElementById("finalRib").value.trim() : "",
+            account_number: document.getElementById("accountNumber") ? document.getElementById("accountNumber").value.trim() : ""
         };
 
         const message = document.getElementById("decisionMessage");
@@ -913,6 +1012,122 @@
 
     loadDetail();
 
+</script>
+
+
+<script>
+async function safeFetchJsonV30(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        return await response.json();
+    } catch (e) {
+        return null;
+    }
+}
+
+function statusTextV30(status) {
+    const labels = {
+        "MATCH_OK": "Conforme",
+        "PARTIAL_MATCH": "Partiel",
+        "MISMATCH": "Non conforme",
+        "OCR_REVIEW_REQUIRED": "OCR à revoir",
+        "NOT_REQUIRED": "Non requis",
+        "AUTHENTICATED": "Authentifié",
+        "REVIEW_REQUIRED": "Revue requise",
+        "UPLOADED": "Téléversé"
+    };
+    return labels[status] || status || "Non défini";
+}
+
+async function renderComplianceSummaryV30(data) {
+    const container = document.getElementById("complianceSummaryContainer");
+    if (!container) return;
+
+    const app = data.application || {};
+    const docs = data.documents || [];
+
+    let ribScore = null;
+    let ribStatus = "Non évalué";
+    let incomeScore = null;
+    let incomeStatus = "Non évalué";
+    let identityScore = null;
+    let identityStatus = "Non évalué";
+
+    for (const doc of docs) {
+        const analysis = await safeFetchJsonV30(doc.analysis_url);
+        const matching = analysis && analysis.matching ? analysis.matching : null;
+
+        if (doc.document_type === "RIB_DOCUMENT" && matching) {
+            ribScore = Number(matching.match_score || 0);
+            ribStatus = statusTextV30(matching.match_status);
+        }
+
+        if (doc.document_type === "INCOME_PROOF" && matching) {
+            incomeScore = Number(matching.match_score || 0);
+            incomeStatus = statusTextV30(matching.match_status);
+        }
+
+        if ((doc.document_type || "").startsWith("IDENTITY_DOCUMENT") && matching) {
+            const score = Number(matching.match_score || 0);
+            if (identityScore === null || score > identityScore) {
+                identityScore = score;
+                identityStatus = statusTextV30(matching.match_status);
+            }
+        }
+    }
+
+    const kycScore = Number(app.kyc_score || 0);
+    const docScore = Number(app.document_score || 0);
+    const blackmoduleScore = app.blackmodule_status === "BLACKMODULE_ALERT" ? 0 : 100;
+
+    const components = [kycScore, docScore, blackmoduleScore];
+
+    if (identityScore !== null) components.push(identityScore);
+    if (ribScore !== null) components.push(ribScore);
+    if (incomeScore !== null) components.push(incomeScore);
+
+    const globalScore = Math.round(
+        components.reduce((a, b) => a + b, 0) / Math.max(components.length, 1)
+    );
+
+    container.innerHTML = `
+        <div class="compliance-panel-v30">
+            <h3>Conformité automatique du dossier</h3>
+            <div class="compliance-grid-v30">
+                <div class="compliance-item-v30">
+                    <strong>${globalScore}%</strong>
+                    <span>Taux de conformité global</span>
+                </div>
+
+                <div class="compliance-item-v30">
+                    <strong>${identityScore !== null ? identityScore + "%" : "N/A"}</strong>
+                    <span>Identité OCR : ${identityStatus}</span>
+                </div>
+
+                <div class="compliance-item-v30">
+                    <strong>${ribScore !== null ? ribScore + "%" : "N/A"}</strong>
+                    <span>RIB OCR : ${ribStatus}</span>
+                </div>
+
+                <div class="compliance-item-v30">
+                    <strong>${incomeScore !== null ? incomeScore + "%" : "N/A"}</strong>
+                    <span>Revenu OCR : ${incomeStatus}</span>
+                </div>
+
+                <div class="compliance-item-v30">
+                    <strong>${docScore}%</strong>
+                    <span>Complétude documentaire</span>
+                </div>
+
+                <div class="compliance-item-v30">
+                    <strong>${app.blackmodule_status || "N/A"}</strong>
+                    <span>Statut BlackModule</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
 </script>
 
 </body>

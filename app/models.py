@@ -75,6 +75,9 @@ class AccountApplication(Base):
     reviewed_by = Column(String(100), nullable=True)
     review_decision = Column(String(60), nullable=True)
     review_comment = Column(Text, nullable=True)
+    client_message = Column(Text, nullable=True)
+    final_rib = Column(Text, nullable=True)
+    account_number = Column(String(100), nullable=True)
     reviewed_at = Column(DateTime, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
