@@ -15,9 +15,22 @@ from cryptography.fernet import Fernet
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 FERNET_KEY_FILE = PROJECT_ROOT / ".fernet_key"
 
-# Chemin trouvé sur ton poste Windows.
-# La variable d'environnement TESSERACT_CMD reste prioritaire si tu changes de machine.
-DEFAULT_TESSERACT_EXE = r"C:\Users\etienne_bello\AppData\Local\Programs\Tesseract-OCR\tesseract.exe"
+# Chemin Tesseract — défini uniquement via variable d'environnement TESSERACT_CMD.
+# Ne jamais mettre de chemin absolu en dur ici : ça casserait Docker/Linux/CI.
+#
+# Utilisation :
+#   Windows dev  : set TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+#   Docker/Linux : Tesseract est dans le PATH, aucune variable nécessaire.
+#   Production   : définir TESSERACT_CMD= vide ou ne pas la définir.
+#
+# Fallbacks automatiques dans configure_tesseract() :
+#   1. TESSERACT_CMD (variable d'environnement — toujours prioritaire)
+#   2. Chemins Windows standards (Program Files, Program Files x86)
+#   3. PATH système (Linux/Docker)
+DEFAULT_TESSERACT_WINDOWS_PATHS = [
+    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+]
 
 
 def get_or_create_fernet() -> Fernet:
@@ -46,8 +59,14 @@ def decrypt_bytes(data: bytes) -> bytes:
 
 def configure_tesseract() -> str | None:
     """
-    Configure pytesseract avec le chemin Windows détecté.
-    Retourne le chemin utilisé, ou None si Tesseract est uniquement disponible via PATH.
+    Configure pytesseract avec le bon chemin Tesseract selon l'environnement.
+
+    Ordre de priorité :
+    1. Variable d'environnement TESSERACT_CMD (toujours prioritaire)
+    2. Chemins Windows standards (Program Files)
+    3. PATH système — Linux/Docker : Tesseract installé via apt, aucune config nécessaire.
+
+    Retourne le chemin utilisé, ou None si Tesseract est trouvé dans le PATH.
     """
     try:
         import pytesseract  # type: ignore
@@ -55,10 +74,8 @@ def configure_tesseract() -> str | None:
         return None
 
     candidates = [
-        os.getenv("TESSERACT_CMD"),
-        DEFAULT_TESSERACT_EXE,
-        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        os.getenv("TESSERACT_CMD"),          # 1. Variable d'env — toujours prioritaire
+        *DEFAULT_TESSERACT_WINDOWS_PATHS,    # 2. Chemins Windows standards
     ]
 
     for candidate in candidates:
@@ -69,6 +86,7 @@ def configure_tesseract() -> str | None:
                 os.environ.setdefault("TESSDATA_PREFIX", str(tessdata_dir))
             return candidate
 
+    # 3. Aucun chemin absolu trouvé → Tesseract doit être dans le PATH (Linux/Docker)
     return None
 
 
