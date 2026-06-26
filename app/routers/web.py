@@ -75,3 +75,8 @@ async def portal_home_page(request: Request):
 @router.get("/client/open-account")
 async def client_open_account_page(request: Request):
     return templates.TemplateResponse(request, "client_open_account.html", {"request": request})
+
+
+@router.get("/backoffice/packages")
+async def backoffice_packages_page(request: Request):
+    return templates.TemplateResponse(request, "backoffice_packages.html", {"request": request})

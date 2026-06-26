@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Configuration des packages</title>
+<style>
+body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;margin:0;color:#111827}
+.page{max-width:1000px;margin:auto;padding:28px}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px}
+a{color:#c90000;text-decoration:none;font-weight:bold}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 8px 22px rgba(15,23,42,.06)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+label{display:block;font-weight:700;margin:10px 0 6px}
+input,textarea{width:100%;box-sizing:border-box;padding:11px;border:1px solid #d1d5db;border-radius:10px}
+textarea{min-height:70px}
+button{background:#c90000;color:#fff;border:0;border-radius:12px;padding:13px 18px;font-weight:bold;cursor:pointer}
+.msg{margin-top:12px;font-weight:bold}
+@media(max-width:700px){.row{grid-template-columns:1fr}.top{display:block}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="top">
+<div><h1>Configuration des packages</h1><p>Modifiez les packages affiches dans le formulaire d'ouverture de compte.</p></div>
+<a href="/backoffice/applications">Retour back-office</a>
+</div>
+<div id="packages"><div class="card">Chargement des packages...</div></div>
+<button onclick="savePackages()">Enregistrer les packages</button>
+<div id="message" class="msg"></div>
+</div>
+<script>
+let packages=[];
+function defaults(){return[
+{code:"BUDGET",name:"Package Budget",description:"Destine aux petites bourses",services:["SMS First","Carte Fellow","SARA Banking"],active:true},
+{code:"BUSINESS",name:"Package Business",description:"Pour les professionnels",services:["SMS First","Assurance","Decouvert permanent","Carte Visa Classique"],active:true},
+{code:"ECO",name:"Package Eco",description:"L'essentiel au meilleur prix",services:["SMS First","Assurance","SARA Banking"],active:true}
+];}
+function esc(v){return String(v||"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c];});}
+function render(){
+ const c=document.getElementById("packages"); c.innerHTML="";
+ if(!packages.length){packages=defaults();}
+ packages.forEach(function(p,i){
+  c.innerHTML+=`\<div class="card"\>
+   \<div class="head"\>\<h2>${esc(p.name)}\</h2>\<label>\<input style="width:auto" type="checkbox" id="active_${i}" ${p.active!==false?"checked":""}> Actif\</label>\</div>
+   \<div class="row"\>
+    \<div\>\<label>Code\</label>\<input id="code_${i}" value="${esc(p.code)}"\>\</div>
+    \<div\>\<label>Nom\</label>\<input id="name_${i}" value="${esc(p.name)}"\>\</div>
+   \</div>
+   \<label>Description\</label>\<textarea id="description_${i}">${esc(p.description)}\</textarea>
+   \<label>Services inclus - un service par ligne\</label>\<textarea id="services_${i}">${esc((p.services||[]).join("\\n"))}\</textarea>
+  \</div>`;
+ });
+}
+async function loadPackages(){
+ const msg=document.getElementById("message");
+ try{
+  const r=await fetch("/api/backoffice/packages");
+  if(!r.ok){packages=defaults();render();msg.style.color="#b45309";msg.innerText="API indisponible, packages par defaut affiches.";return;}
+  const d=await r.json(); packages=d.packages||defaults(); render();
+ }catch(e){packages=defaults();render();msg.style.color="#b45309";msg.innerText="Erreur de chargement, packages par defaut affiches.";}
+}
+async function savePackages(){
+ const msg=document.getElementById("message");
+ const updated=packages.map(function(p,i){return{
+  code:document.getElementById("code_"+i).value.trim(),
+  name:document.getElementById("name_"+i).value.trim(),
+  description:document.getElementById("description_"+i).value.trim(),
+  services:document.getElementById("services_"+i).value.split("\\n").map(x=>x.trim()).filter(Boolean),
+  active:document.getElementById("active_"+i).checked
+ };});
+ msg.style.color="#6b7280"; msg.innerText="Enregistrement en cours...";
+ try{
+  const r=await fetch("/api/backoffice/packages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({packages:updated})});
+  if(!r.ok){msg.style.color="#c90000";msg.innerText="Erreur lors de l'enregistrement.";return;}
+  const d=await r.json(); packages=d.packages||updated; render(); msg.style.color="#166534"; msg.innerText="Packages enregistres avec succes.";
+ }catch(e){msg.style.color="#c90000"; msg.innerText="Erreur de connexion lors de l'enregistrement.";}
+}
+loadPackages();
+</script>
+</body>
+</html>

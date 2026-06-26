@@ -1,6 +1,8 @@
+from pathlib import Path
+import json
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -78,6 +80,9 @@ def get_application_detail(application_id: int, db: Session = Depends(get_db)):
             "is_pep": application.is_pep,
             "pep_details": application.pep_details,
             "status": application.status,
+        "client_message": application.client_message,
+        "final_rib": application.final_rib,
+        "account_number": application.account_number,
         "client_message": application.client_message,
         "final_rib": application.final_rib,
         "account_number": application.account_number,
@@ -181,6 +186,10 @@ def dashboard_summary(db: Session = Depends(get_db)):
         AccountApplication.status == "REJECTED"
     ).count()
 
+    account_opened = db.query(AccountApplication).filter(
+        AccountApplication.status == "ACCOUNT_OPENED"
+    ).count()
+
     compliance_review = db.query(AccountApplication).filter(
         AccountApplication.status == "COMPLIANCE_REVIEW"
     ).count()
@@ -191,5 +200,88 @@ def dashboard_summary(db: Session = Depends(get_db)):
         "alertes_blackmodule": blackmodule_alerts,
         "revue_conformite": compliance_review,
         "dossiers_approuves": approved,
-        "dossiers_rejetes": rejected
+        "dossiers_rejetes": rejected,
+        "comptes_ouverts": account_opened
+    }
+
+PACKAGES_CONFIG_PATH = Path("data/packages.json")
+
+DEFAULT_PACKAGES = [
+    {
+        "code": "BUDGET",
+        "name": "Package Budget",
+        "description": "Destiné aux petites bourses",
+        "services": ["SMS First", "Carte Fellow", "SARA Banking"],
+        "active": True
+    },
+    {
+        "code": "BUSINESS",
+        "name": "Package Business",
+        "description": "Pour les professionnels",
+        "services": ["SMS First", "Assurance", "Découvert permanent", "Carte Visa Classique"],
+        "active": True
+    },
+    {
+        "code": "ECO",
+        "name": "Package Eco",
+        "description": "L’essentiel au meilleur prix",
+        "services": ["SMS First", "Assurance", "SARA Banking"],
+        "active": True
+    }
+]
+
+
+def ensure_packages_config():
+    PACKAGES_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    if not PACKAGES_CONFIG_PATH.exists():
+        PACKAGES_CONFIG_PATH.write_text(
+            json.dumps({"packages": DEFAULT_PACKAGES}, ensure_ascii=False, indent=2),
+            encoding="utf-8"
+        )
+
+    return json.loads(PACKAGES_CONFIG_PATH.read_text(encoding="utf-8"))
+
+
+@router.get("/packages")
+def get_packages_config():
+    return ensure_packages_config()
+
+
+@router.post("/packages")
+def save_packages_config(payload: dict = Body(...)):
+    packages = payload.get("packages")
+
+    if not isinstance(packages, list):
+        raise HTTPException(status_code=400, detail="Le champ packages doit être une liste.")
+
+    cleaned = []
+
+    for item in packages:
+        name = str(item.get("name") or "").strip()
+        code = str(item.get("code") or name.upper().replace(" ", "_")).strip()
+        description = str(item.get("description") or "").strip()
+        active = bool(item.get("active", True))
+        services = item.get("services") or []
+
+        if isinstance(services, str):
+            services = [x.strip() for x in services.split(",") if x.strip()]
+
+        cleaned.append({
+            "code": code,
+            "name": name,
+            "description": description,
+            "services": services,
+            "active": active
+        })
+
+    PACKAGES_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PACKAGES_CONFIG_PATH.write_text(
+        json.dumps({"packages": cleaned}, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+
+    return {
+        "message": "Configuration des packages enregistrée",
+        "packages": cleaned
     }

@@ -8953,5 +8953,52 @@ document.addEventListener("submit", function (event) {
 }, true);
 </script>
 
+
+<!-- PACKAGES_DYNAMIC_V34 -->
+<script>
+(function(){
+    function esc(v){
+        return String(v || "").replace(/[&<>"']/g, function(c){
+            return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c];
+        });
+    }
+
+    async function loadPackagesV34(){
+        try{
+            const res = await fetch("/api/backoffice/packages");
+            if(!res.ok) return;
+
+            const data = await res.json();
+            const packages = (data.packages || []).filter(function(p){ return p.active !== false; });
+
+            const grid = document.querySelector(".package-grid");
+            const hidden = document.querySelector('[name="selected_package_ui"]');
+
+            if(!grid || !hidden || packages.length === 0) return;
+
+            grid.innerHTML = packages.map(function(pkg, index){
+                const tags = (pkg.services || []).map(function(service){
+                    return '<span class="tag">' + esc(service) + '</span>';
+                }).join(" ");
+
+                return `
+                    <div class="package-card ${index === 0 ? "selected" : ""}" onclick="selectPackage(this, '${esc(pkg.name)}')">
+                        <h4>${esc(pkg.name)}</h4>
+                        <p>${esc(pkg.description)}</p>
+                        ${tags}
+                    </div>
+                `;
+            }).join("");
+
+            hidden.value = packages[0].name || "";
+        }catch(e){
+            console.log("Packages dynamiques indisponibles", e);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadPackagesV34);
+})();
+</script>
+
 </body>
 </html>
