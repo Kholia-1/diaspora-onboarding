@@ -1,11 +1,22 @@
 services:
   diaspora-onboarding:
     build: .
+    image: diaspora-onboarding:latest
     container_name: diaspora-onboarding
     ports:
       - "10002:8010"
     env_file:
       - .env
+    environment:
+      # Base SQLite persistée dans le volume ./data (et non dans l'image)
+      DATABASE_URL: "sqlite:////app/data/diaspora_onboarding.db"
     volumes:
-      - ./uploads:/app/uploads
+      - ./uploads:/app/uploads     # documents chiffrés (.enc)
+      - ./data:/app/data           # base SQLite persistée
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8010/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3

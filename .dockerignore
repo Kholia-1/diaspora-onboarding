@@ -1,0 +1,16 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+.env
+.fernet_key
+uploads
+data
+*.enc
+*.analysis.enc
+diaspora_onboarding.db
+.DS_Store
+.idea
+README*.md
+deploy.sh

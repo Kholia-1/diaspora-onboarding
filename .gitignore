@@ -4,6 +4,7 @@ __pycache__/
 .env
 .fernet_key
 uploads/
+data/
 *.enc
 *.analysis.enc
 .DS_Store
