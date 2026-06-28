@@ -2619,6 +2619,7 @@ Package : ${getFormValue(form, "selected_package_ui")}
             resultBox.innerHTML = "Dossier créé. Envoi et authentification des documents en cours...";
 
             await uploadIdentityDocuments(applicationId);
+            await uploadManagerExtraDocuments(applicationId);
             await uploadPhoto(applicationId, "PROOF_OF_ADDRESS_PHOTO", "address_photo");
             await uploadSelfieDocument(applicationId);
             await uploadPhoto(applicationId, "BIRTH_CERTIFICATE_PHOTO", "birth_certificate_photo");
@@ -8750,6 +8751,432 @@ document.addEventListener("DOMContentLoaded", function () {
     initCountryCodeSearch();
     setTimeout(initCountryCodeSearch, 500);
     setTimeout(initCountryCodeSearch, 1200);
+});
+</script>
+
+
+<!-- MANAGER_FORM_MODIF4_REAL_CAMERA_INCOME_RIB -->
+<style>
+.manager-camera-docs {
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #fffafa;
+}
+
+.manager-camera-docs .camera-doc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.manager-camera-docs .camera-doc-card {
+    padding: 16px;
+    border: 1px dashed #c90000;
+    border-radius: 12px;
+    background: #ffffff;
+}
+
+.manager-camera-docs label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #111827;
+}
+
+.manager-camera-docs .doc-help {
+    margin: 0 0 12px;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.manager-camera-docs .required-doc {
+    color: #c90000;
+    font-weight: 700;
+}
+
+.manager-camera-docs .doc-action-btn {
+    width: 100%;
+}
+
+.manager-doc-preview {
+    margin-top: 12px;
+    display: none;
+}
+
+.manager-doc-preview img {
+    max-width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+.manager-real-camera-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 13000;
+    background: rgba(0,0,0,0.65);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.manager-real-camera-box {
+    width: min(760px, 96vw);
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.manager-real-camera-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #c90000;
+    color: #fff;
+    padding: 14px 18px;
+    font-weight: bold;
+}
+
+.manager-real-camera-header button {
+    background: #fff;
+    color: #c90000;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.manager-real-camera-stage {
+    position: relative;
+    background: #111827;
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.manager-real-camera-stage video {
+    width: 100%;
+    max-height: 62vh;
+    object-fit: contain;
+    background: #111827;
+}
+
+.manager-real-camera-frame {
+    position: absolute;
+    width: 78%;
+    aspect-ratio: 1.586;
+    border: 3px dashed #c90000;
+    border-radius: 14px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.34);
+    pointer-events: none;
+}
+
+.manager-real-camera-instruction {
+    margin: 0;
+    padding: 14px 18px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.manager-real-camera-actions {
+    display: flex;
+    gap: 10px;
+    padding: 0 18px 18px;
+}
+
+.manager-real-camera-actions button {
+    flex: 1;
+}
+
+.manager-real-camera-error {
+    padding: 0 18px 18px;
+    color: #c90000;
+    font-weight: bold;
+}
+
+@media(max-width: 800px) {
+    .manager-camera-docs .camera-doc-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-real-camera-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerRealCameraDocsInstalled === true) return;
+    window.managerRealCameraDocsInstalled = true;
+
+    window.managerExtraDocumentFiles = window.managerExtraDocumentFiles || {
+        INCOME_PROOF: null,
+        RIB_DOCUMENT: null
+    };
+
+    let managerExtraDocStream = null;
+    let managerExtraDocCurrentType = null;
+
+    function insertManagerDocsBlock() {
+        if (document.getElementById("managerExtraDocsBlock")) return;
+
+        const addressInput = document.getElementById("address_photo");
+        const identityStatus = document.getElementById("identityCaptureStatus");
+
+        let anchor = null;
+
+        if (addressInput) {
+            anchor =
+                addressInput.closest(".full") ||
+                addressInput.closest(".form-group") ||
+                addressInput.closest(".field") ||
+                addressInput.closest("div");
+        }
+
+        if (!anchor && identityStatus) {
+            anchor =
+                identityStatus.closest(".full") ||
+                identityStatus.closest(".form-group") ||
+                identityStatus.closest(".field") ||
+                identityStatus.closest("div");
+        }
+
+        if (!anchor) {
+            console.log("MODIF4 REAL CAMERA : point d’insertion introuvable.");
+            return;
+        }
+
+        const block = document.createElement("div");
+        block.id = "managerExtraDocsBlock";
+        block.className = "manager-camera-docs full";
+        block.innerHTML = `
+            <div class="sub-title">Documents complémentaires obligatoires</div>
+            <p class="doc-help">
+                Photographiez les pièces permettant de justifier l’activité/revenu du client et son relevé d’identification bancaire.
+            </p>
+
+            <div class="camera-doc-grid">
+                <div class="camera-doc-card">
+                    <label>
+                        Preuve de justification de revenu / activité du client
+                        <span class="required-doc">*</span>
+                    </label>
+                    <p class="doc-help">
+                        Bulletin de salaire, attestation employeur, contrat de travail,
+                        registre de commerce, justificatif fiscal ou attestation d’activité.
+                    </p>
+
+                    <button type="button" class="doc-action-btn" onclick="openManagerExtraDocumentCamera('INCOME_PROOF')">
+                        📷 Photographier la preuve de revenu / activité
+                    </button>
+
+                    <div id="incomeProofCaptureStatus" class="capture-status">
+                        Aucune photo capturée.
+                    </div>
+
+                    <div id="incomeProofPreview" class="manager-doc-preview"></div>
+                </div>
+
+                <div class="camera-doc-card">
+                    <label>
+                        Relevé d’identification bancaire - RIB
+                        <span class="required-doc">*</span>
+                    </label>
+                    <p class="doc-help">
+                        Photographiez le relevé d’identification bancaire ou la preuve du RIB du client.
+                    </p>
+
+                    <button type="button" class="doc-action-btn" onclick="openManagerExtraDocumentCamera('RIB_DOCUMENT')">
+                        📷 Photographier le RIB
+                    </button>
+
+                    <div id="ribDocumentCaptureStatus" class="capture-status">
+                        Aucune photo capturée.
+                    </div>
+
+                    <div id="ribDocumentPreview" class="manager-doc-preview"></div>
+                </div>
+            </div>
+        `;
+
+        anchor.insertAdjacentElement("afterend", block);
+    }
+
+    function insertManagerCameraModal() {
+        if (document.getElementById("managerRealCameraModal")) return;
+
+        const modal = document.createElement("div");
+        modal.id = "managerRealCameraModal";
+        modal.className = "manager-real-camera-modal";
+        modal.innerHTML = `
+            <div class="manager-real-camera-box">
+                <div class="manager-real-camera-header">
+                    <span id="managerRealCameraTitle">Photographier le document</span>
+                    <button type="button" onclick="closeManagerExtraDocumentCamera()">Fermer</button>
+                </div>
+
+                <div class="manager-real-camera-stage">
+                    <video id="managerRealCameraVideo" autoplay playsinline muted></video>
+                    <div class="manager-real-camera-frame"></div>
+                </div>
+
+                <p id="managerRealCameraInstruction" class="manager-real-camera-instruction">
+                    Placez le document dans le cadre puis cliquez sur capturer.
+                </p>
+
+                <div class="manager-real-camera-actions">
+                    <button type="button" class="doc-action-btn" onclick="captureManagerExtraDocumentPhoto()">
+                        📸 Capturer la photo
+                    </button>
+
+                    <button type="button" class="doc-action-btn secondary" onclick="closeManagerExtraDocumentCamera()">
+                        Annuler
+                    </button>
+                </div>
+
+                <div id="managerRealCameraError" class="manager-real-camera-error"></div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    function getDocLabel(documentType) {
+        if (documentType === "INCOME_PROOF") return "Preuve de revenu / activité";
+        if (documentType === "RIB_DOCUMENT") return "Relevé d’identification bancaire - RIB";
+        return "Document";
+    }
+
+    function getStatusId(documentType) {
+        return documentType === "INCOME_PROOF" ? "incomeProofCaptureStatus" : "ribDocumentCaptureStatus";
+    }
+
+    function getPreviewId(documentType) {
+        return documentType === "INCOME_PROOF" ? "incomeProofPreview" : "ribDocumentPreview";
+    }
+
+    window.openManagerExtraDocumentCamera = async function(documentType) {
+        insertManagerCameraModal();
+
+        managerExtraDocCurrentType = documentType;
+
+        const modal = document.getElementById("managerRealCameraModal");
+        const video = document.getElementById("managerRealCameraVideo");
+        const errorBox = document.getElementById("managerRealCameraError");
+        const title = document.getElementById("managerRealCameraTitle");
+        const instruction = document.getElementById("managerRealCameraInstruction");
+
+        errorBox.innerText = "";
+        title.innerText = "Photographier : " + getDocLabel(documentType);
+        instruction.innerText = "Placez le document entièrement dans le cadre, sans reflet, puis cliquez sur capturer.";
+
+        try {
+            managerExtraDocStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: "environment" },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
+            });
+
+            video.srcObject = managerExtraDocStream;
+            modal.style.display = "flex";
+        } catch (error) {
+            errorBox.innerText = "Impossible d’ouvrir la caméra. Vérifiez l’autorisation caméra du navigateur.";
+            modal.style.display = "flex";
+        }
+    };
+
+    window.closeManagerExtraDocumentCamera = function() {
+        const modal = document.getElementById("managerRealCameraModal");
+        const video = document.getElementById("managerRealCameraVideo");
+
+        if (managerExtraDocStream) {
+            managerExtraDocStream.getTracks().forEach(track => track.stop());
+            managerExtraDocStream = null;
+        }
+
+        if (video) {
+            video.srcObject = null;
+        }
+
+        if (modal) {
+            modal.style.display = "none";
+        }
+    };
+
+    window.captureManagerExtraDocumentPhoto = function() {
+        const video = document.getElementById("managerRealCameraVideo");
+        const errorBox = document.getElementById("managerRealCameraError");
+
+        if (!video || !video.videoWidth || !video.videoHeight) {
+            errorBox.innerText = "Caméra non prête. Attendez une seconde puis réessayez.";
+            return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(function(blob) {
+            if (!blob) {
+                errorBox.innerText = "Impossible de capturer la photo.";
+                return;
+            }
+
+            const safeType = managerExtraDocCurrentType || "DOCUMENT";
+            const fileName = safeType.toLowerCase() + "_" + Date.now() + ".jpg";
+
+            const file = new File([blob], fileName, { type: "image/jpeg" });
+
+            window.managerExtraDocumentFiles[safeType] = file;
+
+            const status = document.getElementById(getStatusId(safeType));
+            const preview = document.getElementById(getPreviewId(safeType));
+
+            if (status) {
+                status.className = "capture-status success";
+                status.innerText = "📷 " + getDocLabel(safeType) + " photographié ✓";
+            }
+
+            if (preview) {
+                const url = URL.createObjectURL(file);
+                preview.style.display = "block";
+                preview.innerHTML = `<img src="${url}" alt="${getDocLabel(safeType)} capturé">`;
+            }
+
+            closeManagerExtraDocumentCamera();
+        }, "image/jpeg", 0.92);
+    };
+
+    window.uploadManagerExtraDocuments = async function(applicationId) {
+        if (!window.managerExtraDocumentFiles.INCOME_PROOF) {
+            throw new Error("Veuillez photographier la preuve de justification de revenu / activité du client.");
+        }
+
+        if (!window.managerExtraDocumentFiles.RIB_DOCUMENT) {
+            throw new Error("Veuillez photographier le relevé d’identification bancaire - RIB.");
+        }
+
+        await uploadFileObject(applicationId, "INCOME_PROOF", window.managerExtraDocumentFiles.INCOME_PROOF);
+        await uploadFileObject(applicationId, "RIB_DOCUMENT", window.managerExtraDocumentFiles.RIB_DOCUMENT);
+    };
+
+    insertManagerDocsBlock();
+    insertManagerCameraModal();
+
+    console.log("MANAGER_FORM_MODIF4_REAL_CAMERA_INCOME_RIB actif.");
 });
 </script>
 
