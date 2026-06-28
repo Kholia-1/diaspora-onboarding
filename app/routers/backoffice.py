@@ -71,6 +71,8 @@ def get_application_detail(application_id: int, db: Session = Depends(get_db)):
             "rib": application.rib,
             "income_range": application.income_range,
             "income_currency": application.income_currency,
+            "activity_sector": application.activity_sector,
+            "activity_sector_code": application.activity_sector_code,
             "account_object": application.account_object,
             "account_object_other": application.account_object_other,
             "funds_origin": application.funds_origin,

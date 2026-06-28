@@ -40,6 +40,10 @@ class ApplicationCreate(BaseModel):
     rib: Optional[str] = None
     income_range: Optional[str] = None
     income_currency: Optional[str] = None
+    activity_sector: Optional[str] = None
+    activity_sector_code: Optional[str] = None
+    sector_of_activity: Optional[str] = None
+    economic_sector: Optional[str] = None
 
     account_object: Optional[str] = None
     account_object_other: Optional[str] = None
