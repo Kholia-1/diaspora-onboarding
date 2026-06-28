@@ -491,73 +491,6 @@
     }
 </style>
 
-
-<style>
-    .compliance-panel-v31 {
-        margin: 18px 0;
-        padding: 18px;
-        border-radius: 18px;
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
-    }
-
-    .compliance-panel-v31 h3 {
-        margin: 0 0 12px;
-        color: #111827;
-    }
-
-    .compliance-grid-v31 {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 12px;
-    }
-
-    .compliance-item-v31 {
-        padding: 14px;
-        border-radius: 14px;
-        background: #f9fafb;
-        border: 1px solid #edf0f3;
-    }
-
-    .compliance-item-v31 strong {
-        display: block;
-        font-size: 22px;
-        color: #C90000;
-        margin-bottom: 4px;
-    }
-
-    .compliance-item-v31 span {
-        color: #6b7280;
-        font-size: 13px;
-        line-height: 1.35;
-    }
-
-    .bo-extra-field-v31 {
-        margin-top: 12px;
-    }
-
-    .bo-extra-field-v31 label {
-        display: block;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-
-    .bo-extra-field-v31 input,
-    .bo-extra-field-v31 textarea {
-        width: 100%;
-        padding: 11px 12px;
-        border-radius: 10px;
-        border: 1px solid #d1d5db;
-        font-family: inherit;
-    }
-
-    .bo-extra-field-v31 textarea {
-        min-height: 85px;
-        resize: vertical;
-    }
-</style>
-
 </head>
 
 <body>
@@ -802,122 +735,7 @@
         return mainValue || otherValue || "";
     }
 
-    
-async function safeFetchJsonV31(url) {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) return null;
-        return await response.json();
-    } catch (e) {
-        return null;
-    }
-}
-
-function statusTextV31(status) {
-    const labels = {
-        "MATCH_OK": "Conforme",
-        "PARTIAL_MATCH": "Partiel",
-        "MISMATCH": "Non conforme",
-        "OCR_REVIEW_REQUIRED": "OCR à revoir",
-        "NOT_REQUIRED": "Non requis",
-        "AUTHENTICATED": "Authentifié",
-        "REVIEW_REQUIRED": "Revue requise",
-        "UPLOADED": "Téléversé",
-        "QUALITY_REJECTED": "Qualité rejetée"
-    };
-    return labels[status] || status || "Non défini";
-}
-
-async function renderComplianceSummaryV31(data) {
-    const container = document.getElementById("complianceSummaryContainer");
-    if (!container) return;
-
-    const app = data.application || {};
-    const docs = data.documents || [];
-
-    let ribScore = null;
-    let ribStatus = "Non évalué";
-    let incomeScore = null;
-    let incomeStatus = "Non évalué";
-    let identityScore = null;
-    let identityStatus = "Non évalué";
-
-    for (const doc of docs) {
-        const analysis = await safeFetchJsonV31(doc.analysis_url);
-        const matching = analysis && analysis.matching ? analysis.matching : null;
-
-        if (doc.document_type === "RIB_DOCUMENT" && matching) {
-            ribScore = Number(matching.match_score || 0);
-            ribStatus = statusTextV31(matching.match_status);
-        }
-
-        if (doc.document_type === "INCOME_PROOF" && matching) {
-            incomeScore = Number(matching.match_score || 0);
-            incomeStatus = statusTextV31(matching.match_status);
-        }
-
-        if ((doc.document_label || doc.document_type || "").startsWith("IDENTITY_DOCUMENT") && matching) {
-            const score = Number(matching.match_score || 0);
-            if (identityScore === null || score > identityScore) {
-                identityScore = score;
-                identityStatus = statusTextV31(matching.match_status);
-            }
-        }
-    }
-
-    const kycScore = Number(app.kyc_score || 0);
-    const docScore = Number(app.document_score || 0);
-    const blackmoduleScore = app.blackmodule_status === "BLACKMODULE_ALERT" ? 0 : 100;
-
-    const components = [kycScore, docScore, blackmoduleScore];
-
-    if (identityScore !== null) components.push(identityScore);
-    if (ribScore !== null) components.push(ribScore);
-    if (incomeScore !== null) components.push(incomeScore);
-
-    const globalScore = Math.round(
-        components.reduce((a, b) => a + b, 0) / Math.max(components.length, 1)
-    );
-
-    container.innerHTML = `
-        <div class="compliance-panel-v31">
-            <h3>Conformité automatique du dossier</h3>
-            <div class="compliance-grid-v31">
-                <div class="compliance-item-v31">
-                    <strong>${globalScore}%</strong>
-                    <span>Taux de conformité global</span>
-                </div>
-
-                <div class="compliance-item-v31">
-                    <strong>${identityScore !== null ? identityScore + "%" : "N/A"}</strong>
-                    <span>Identité OCR : ${identityStatus}</span>
-                </div>
-
-                <div class="compliance-item-v31">
-                    <strong>${ribScore !== null ? ribScore + "%" : "N/A"}</strong>
-                    <span>RIB OCR : ${ribStatus}</span>
-                </div>
-
-                <div class="compliance-item-v31">
-                    <strong>${incomeScore !== null ? incomeScore + "%" : "N/A"}</strong>
-                    <span>Revenu OCR : ${incomeStatus}</span>
-                </div>
-
-                <div class="compliance-item-v31">
-                    <strong>${docScore}%</strong>
-                    <span>Complétude documentaire</span>
-                </div>
-
-                <div class="compliance-item-v31">
-                    <strong>${app.blackmodule_status || "N/A"}</strong>
-                    <span>Statut BlackModule</span>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-async function loadDetail() {
+    async function loadDetail() {
         const response = await fetch(`/api/backoffice/applications/${APPLICATION_ID}`);
 
         if (!response.ok) {
@@ -930,7 +748,6 @@ async function loadDetail() {
 
         renderApplication(data.application);
         renderDocuments(data.documents || []);
-        await renderComplianceSummaryV31(data);
         renderComplianceSummaryV30(data);
     }
 
@@ -1251,7 +1068,7 @@ async function renderComplianceSummaryV30(data) {
             incomeStatus = statusTextV30(matching.match_status);
         }
 
-        if ((doc.document_label || doc.document_type || "").startsWith("IDENTITY_DOCUMENT") && matching) {
+        if ((doc.document_type || "").startsWith("IDENTITY_DOCUMENT") && matching) {
             const score = Number(matching.match_score || 0);
             if (identityScore === null || score > identityScore) {
                 identityScore = score;

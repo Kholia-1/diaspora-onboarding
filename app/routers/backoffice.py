@@ -11,6 +11,31 @@ from app.schemas import ApplicationResponse, BackOfficeDecision
 from app.services.notification_service import notify_application_status_changed
 
 
+
+def get_document_type_label(document_type: str) -> str:
+    labels = {
+        "IDENTITY_DOCUMENT": "Pièce d’identité officielle",
+        "IDENTITY_DOCUMENT_PHOTO": "Pièce d’identité officielle",
+        "IDENTITY_DOCUMENT_RECTO": "Pièce d’identité officielle - Recto",
+        "IDENTITY_DOCUMENT_VERSO": "Pièce d’identité officielle - Verso",
+        "IDENTITY_DOCUMENT_IMPORTED": "Pièce d’identité officielle importée",
+
+        "PROOF_OF_ADDRESS_PHOTO": "Justificatif de domicile",
+
+        "INCOME_PROOF": "Preuve de justification de revenu / activité",
+        "RIB_DOCUMENT": "Relevé d’identification bancaire - RIB",
+
+        "SELFIE_PHOTO": "Selfie / preuve de vie - Photo",
+        "SELFIE_VIDEO": "Selfie / preuve de vie - Vidéo",
+        "SELFIE_IMPORTED": "Selfie importé",
+
+        "BIRTH_CERTIFICATE_PHOTO": "Acte de naissance ou pièce avec filiation",
+        "EMPLOYMENT_OR_SCHOOL_CERTIFICATE_PHOTO": "Fiche de paie / attestation d’emploi / scolarité",
+        "TAX_COMPLIANCE_CERTIFICATE_PHOTO": "Attestation de conformité fiscale",
+    }
+
+    return labels.get(document_type, document_type or "Document")
+
 router = APIRouter(
     prefix="/api/backoffice",
     tags=["Back Office"]
@@ -105,6 +130,8 @@ def get_application_detail(application_id: int, db: Session = Depends(get_db)):
             {
                 "id": doc.id,
                 "document_type": doc.document_type,
+                "document_type_code": doc.document_type,
+                "document_label": get_document_type_label(doc.document_type),
                 "original_filename": doc.original_filename,
                 "mime_type": doc.mime_type,
                 "verification_status": doc.verification_status,
