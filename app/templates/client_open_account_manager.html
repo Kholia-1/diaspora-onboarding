@@ -1528,7 +1528,7 @@
                     </div>
 
                     <div>
-                        <label>Tranche de revenus (FCFA) <span class="required">*</span></label>
+                        <label>Tranche de revenus <span class="required">*</span></label>
                         <select name="income_range_ui" required>
                             <option value="">Sélectionnez...</option>
                             <option value="0 - 100 000">0 - 100 000</option>
@@ -10333,6 +10333,514 @@ document.addEventListener("DOMContentLoaded", function () {
     insertNonResidentCameraModal();
 
     console.log("MANAGER_FORM_MODIF9_NONRESIDENT_DOC_BUTTONS actif.");
+});
+</script>
+
+
+<!-- MANAGER_FORM_MODIF10_INCOME_CURRENCY -->
+<style>
+.manager-income-currency-box {
+    margin-top: 12px;
+}
+
+.manager-income-currency-box label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #111827;
+}
+
+.manager-income-currency-box select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 14px;
+}
+
+.manager-income-currency-help {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.4;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerIncomeCurrencyInstalled === true) return;
+    window.managerIncomeCurrencyInstalled = true;
+
+    function normalizeText(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase();
+    }
+
+    function isValidIncomeField(field) {
+        if (!field) return false;
+
+        const type = normalizeText(field.type);
+        const id = normalizeText(field.id);
+        const name = normalizeText(field.name);
+
+        if (type === "file" || type === "hidden" || type === "button" || type === "submit") {
+            return false;
+        }
+
+        if (id.includes("income_proof") || name.includes("income_proof")) {
+            return false;
+        }
+
+        if (id.includes("currency") || name.includes("currency")) {
+            return false;
+        }
+
+        return true;
+    }
+
+    function findIncomeRangeField() {
+        const directSelectors = [
+            "#income_range",
+            "#monthly_income_range",
+            "#revenue_range",
+            "#salary_range",
+            "#income_bracket",
+            '[name="income_range"]',
+            '[name="monthly_income_range"]',
+            '[name="revenue_range"]',
+            '[name="salary_range"]',
+            '[name="income_bracket"]'
+        ];
+
+        for (const selector of directSelectors) {
+            const field = document.querySelector(selector);
+            if (isValidIncomeField(field)) return field;
+        }
+
+        // Recherche par label visible : "Tranche de revenu", "Revenu", etc.
+        const labels = Array.from(document.querySelectorAll("label"));
+
+        for (const label of labels) {
+            const txt = normalizeText(label.textContent);
+
+            if (
+                txt.includes("tranche de revenu") ||
+                txt.includes("tranche revenu") ||
+                txt.includes("revenu mensuel") ||
+                txt.includes("revenu")
+            ) {
+                const forId = label.getAttribute("for");
+
+                if (forId && isValidIncomeField(document.getElementById(forId))) {
+                    return document.getElementById(forId);
+                }
+
+                const box =
+                    label.closest(".form-group") ||
+                    label.closest(".field") ||
+                    label.closest(".full") ||
+                    label.parentElement;
+
+                if (box) {
+                    const field = Array.from(box.querySelectorAll("select, input"))
+                        .find(isValidIncomeField);
+
+                    if (field) return field;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function insertIncomeCurrency() {
+        if (document.getElementById("income_currency")) return;
+
+        const incomeField = findIncomeRangeField();
+
+        if (!incomeField) {
+            console.log("MODIF10 : champ tranche de revenu introuvable.");
+            return;
+        }
+
+        const wrapper =
+            incomeField.closest(".form-group") ||
+            incomeField.closest(".field") ||
+            incomeField.closest(".full") ||
+            incomeField.closest("div") ||
+            incomeField.parentElement;
+
+        if (!wrapper) {
+            console.log("MODIF10 : conteneur tranche de revenu introuvable.");
+            return;
+        }
+
+        const box = document.createElement("div");
+        box.id = "managerIncomeCurrencyBox";
+        box.className = "manager-income-currency-box";
+        box.innerHTML = `
+            <label for="income_currency">
+                Devise de la tranche de revenu <span class="required-doc">*</span>
+            </label>
+
+            <select id="income_currency" name="income_currency" required>
+                <option value="XAF" selected>FCFA - XAF</option>
+                <option value="EUR">Euro - EUR</option>
+                <option value="USD">Dollar US - USD</option>
+            </select>
+
+            <div class="manager-income-currency-help">
+                Sélectionnez la devise correspondant à la tranche de revenu déclarée par le client.
+            </div>
+        `;
+
+        wrapper.insertAdjacentElement("afterend", box);
+
+        console.log("MANAGER_FORM_MODIF10_INCOME_CURRENCY actif.");
+    }
+
+    function ensureCurrencyBeforeSubmit() {
+        const form = document.querySelector("form");
+
+        if (!form || form.dataset.managerIncomeCurrencySubmit === "1") return;
+
+        form.dataset.managerIncomeCurrencySubmit = "1";
+
+        form.addEventListener("submit", function () {
+            const currency = document.getElementById("income_currency");
+
+            if (currency && !currency.value) {
+                currency.value = "XAF";
+            }
+        }, true);
+    }
+
+    insertIncomeCurrency();
+    ensureCurrencyBeforeSubmit();
+
+    setTimeout(insertIncomeCurrency, 500);
+    setTimeout(insertIncomeCurrency, 1500);
+});
+</script>
+
+
+<!-- MANAGER_FORM_MODIF10B_INCOME_LABEL_SYNC -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerIncomeLabelSyncInstalled === true) return;
+    window.managerIncomeLabelSyncInstalled = true;
+
+    function normalizeText(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase();
+    }
+
+    function cleanIncomeLabels() {
+        document.querySelectorAll("label").forEach(function(label) {
+            const txt = normalizeText(label.textContent);
+
+            if (txt.includes("tranche") && txt.includes("revenu") && txt.includes("fcfa")) {
+                label.textContent = label.textContent
+                    .replace(/\s*\(?FCFA\)?/gi, "")
+                    .replace(/\s+$/g, "");
+            }
+        });
+    }
+
+    function addIncomeHelpText() {
+        if (document.getElementById("managerIncomeRangeCurrencyHelp")) return;
+
+        const labels = Array.from(document.querySelectorAll("label"));
+        let incomeLabel = null;
+
+        for (const label of labels) {
+            const txt = normalizeText(label.textContent);
+            if (txt.includes("tranche") && txt.includes("revenu")) {
+                incomeLabel = label;
+                break;
+            }
+        }
+
+        if (!incomeLabel) return;
+
+        const box =
+            incomeLabel.closest(".form-group") ||
+            incomeLabel.closest(".field") ||
+            incomeLabel.closest(".full") ||
+            incomeLabel.parentElement;
+
+        if (!box) return;
+
+        const help = document.createElement("div");
+        help.id = "managerIncomeRangeCurrencyHelp";
+        help.style.marginTop = "6px";
+        help.style.color = "#6b7280";
+        help.style.fontSize = "13px";
+        help.innerText = "La devise de cette tranche est sélectionnée dans le champ Devise de la tranche de revenu.";
+
+        box.appendChild(help);
+    }
+
+    cleanIncomeLabels();
+    addIncomeHelpText();
+
+    setTimeout(cleanIncomeLabels, 500);
+    setTimeout(addIncomeHelpText, 500);
+    setTimeout(cleanIncomeLabels, 1500);
+
+    console.log("MANAGER_FORM_MODIF10B_INCOME_LABEL_SYNC actif.");
+});
+</script>
+
+
+<!-- MANAGER_FORM_MODIF10C_INCOME_RANGE_CONVERSION -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerIncomeRangeConversionInstalled === true) return;
+    window.managerIncomeRangeConversionInstalled = true;
+
+    const INCOME_CURRENCY_RATES = {
+        XAF: {
+            label: "FCFA",
+            rate: 1,
+            roundTo: 1
+        },
+        EUR: {
+            label: "EUR",
+            rate: 655.957,
+            roundTo: 10
+        },
+        USD: {
+            label: "USD",
+            rate: 600,
+            roundTo: 10
+        }
+    };
+
+    function normalizeText(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase();
+    }
+
+    function formatNumber(value) {
+        const rounded = Math.round(value);
+        return String(rounded).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    }
+
+    function roundAmount(value, roundTo) {
+        if (!roundTo || roundTo <= 1) return Math.round(value);
+        return Math.round(value / roundTo) * roundTo;
+    }
+
+    function parseAmount(raw) {
+        const cleaned = String(raw || "").replace(/[^\d]/g, "");
+        if (!cleaned) return null;
+        return parseInt(cleaned, 10);
+    }
+
+    function convertIncomeLabel(baseLabel, currency) {
+        const rule = INCOME_CURRENCY_RATES[currency] || INCOME_CURRENCY_RATES.XAF;
+
+        let converted = String(baseLabel || "")
+            .replace(/\s*(FCFA|XAF|EUR|USD|\$|€)\s*/gi, "")
+            .trim();
+
+        if (currency === "XAF") {
+            return converted + " FCFA";
+        }
+
+        converted = converted.replace(/\d[\d\s.,]*/g, function(match) {
+            const amountXaf = parseAmount(match);
+
+            if (amountXaf === null) return match;
+
+            const amountConverted = roundAmount(amountXaf / rule.rate, rule.roundTo);
+            return formatNumber(amountConverted);
+        });
+
+        return converted + " " + rule.label;
+    }
+
+    function findIncomeRangeField() {
+        const directSelectors = [
+            "#income_range",
+            "#monthly_income_range",
+            "#revenue_range",
+            "#salary_range",
+            "#income_bracket",
+            '[name="income_range"]',
+            '[name="monthly_income_range"]',
+            '[name="revenue_range"]',
+            '[name="salary_range"]',
+            '[name="income_bracket"]'
+        ];
+
+        for (const selector of directSelectors) {
+            const field = document.querySelector(selector);
+            if (field && field.tagName && field.tagName.toLowerCase() === "select") {
+                return field;
+            }
+        }
+
+        const labels = Array.from(document.querySelectorAll("label"));
+
+        for (const label of labels) {
+            const txt = normalizeText(label.textContent);
+
+            if (txt.includes("tranche") && txt.includes("revenu")) {
+                const forId = label.getAttribute("for");
+
+                if (forId) {
+                    const field = document.getElementById(forId);
+                    if (field && field.tagName && field.tagName.toLowerCase() === "select") {
+                        return field;
+                    }
+                }
+
+                const box =
+                    label.closest(".form-group") ||
+                    label.closest(".field") ||
+                    label.closest(".full") ||
+                    label.parentElement;
+
+                if (box) {
+                    const field = Array.from(box.querySelectorAll("select"))
+                        .find(function(select) {
+                            const id = normalizeText(select.id);
+                            const name = normalizeText(select.name);
+
+                            return !id.includes("currency") && !name.includes("currency");
+                        });
+
+                    if (field) return field;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function ensureHiddenBaseField(incomeSelect) {
+        let hidden = document.getElementById("income_range_base_xaf");
+
+        if (!hidden) {
+            hidden = document.createElement("input");
+            hidden.type = "hidden";
+            hidden.id = "income_range_base_xaf";
+            hidden.name = "income_range_base_xaf";
+            incomeSelect.insertAdjacentElement("afterend", hidden);
+        }
+
+        return hidden;
+    }
+
+    function saveBaseOptions(incomeSelect) {
+        Array.from(incomeSelect.options).forEach(function(option) {
+            if (!option.dataset.baseXafText) {
+                const cleanBase = String(option.textContent || option.value || "")
+                    .replace(/\s*(FCFA|XAF|EUR|USD|\$|€)\s*/gi, "")
+                    .trim();
+
+                option.dataset.baseXafText = cleanBase;
+                option.dataset.baseXafValue = cleanBase;
+            }
+        });
+    }
+
+    function updateIncomeRangeByCurrency() {
+        const incomeSelect = findIncomeRangeField();
+        const currencySelect = document.getElementById("income_currency");
+
+        if (!incomeSelect || !currencySelect) {
+            console.log("MODIF10C : champ tranche ou devise introuvable.");
+            return;
+        }
+
+        saveBaseOptions(incomeSelect);
+
+        const selectedIndex = incomeSelect.selectedIndex;
+        const currency = currencySelect.value || "XAF";
+        const hiddenBase = ensureHiddenBaseField(incomeSelect);
+
+        Array.from(incomeSelect.options).forEach(function(option) {
+            const baseText = option.dataset.baseXafText || option.textContent || option.value || "";
+            const convertedLabel = convertIncomeLabel(baseText, currency);
+
+            option.textContent = convertedLabel;
+            option.value = convertedLabel;
+        });
+
+        if (selectedIndex >= 0 && incomeSelect.options[selectedIndex]) {
+            incomeSelect.selectedIndex = selectedIndex;
+            hiddenBase.value = incomeSelect.options[selectedIndex].dataset.baseXafText || "";
+        }
+
+        const oldHelp = document.getElementById("managerIncomeConversionHelp");
+        if (oldHelp) oldHelp.remove();
+
+        const help = document.createElement("div");
+        help.id = "managerIncomeConversionHelp";
+        help.style.marginTop = "6px";
+        help.style.color = "#6b7280";
+        help.style.fontSize = "13px";
+
+        if (currency === "XAF") {
+            help.innerText = "Les tranches sont affichées en FCFA.";
+        } else if (currency === "EUR") {
+            help.innerText = "Les tranches sont converties depuis les montants FCFA avec le taux indicatif 1 EUR = 655.957 FCFA.";
+        } else if (currency === "USD") {
+            help.innerText = "Les tranches sont converties depuis les montants FCFA avec un taux indicatif de démonstration 1 USD = 600 FCFA.";
+        }
+
+        incomeSelect.insertAdjacentElement("afterend", help);
+
+        console.log("MODIF10C : tranches de revenu adaptées en", currency);
+    }
+
+    function installListeners() {
+        const incomeSelect = findIncomeRangeField();
+        const currencySelect = document.getElementById("income_currency");
+
+        if (!incomeSelect || !currencySelect) return;
+
+        saveBaseOptions(incomeSelect);
+
+        if (currencySelect.dataset.managerIncomeConversionListener !== "1") {
+            currencySelect.dataset.managerIncomeConversionListener = "1";
+            currencySelect.addEventListener("change", updateIncomeRangeByCurrency);
+        }
+
+        if (incomeSelect.dataset.managerIncomeBaseListener !== "1") {
+            incomeSelect.dataset.managerIncomeBaseListener = "1";
+            incomeSelect.addEventListener("change", function() {
+                const hiddenBase = ensureHiddenBaseField(incomeSelect);
+                const selected = incomeSelect.options[incomeSelect.selectedIndex];
+
+                if (selected) {
+                    hiddenBase.value = selected.dataset.baseXafText || "";
+                }
+            });
+        }
+
+        updateIncomeRangeByCurrency();
+    }
+
+    installListeners();
+
+    setTimeout(installListeners, 500);
+    setTimeout(installListeners, 1500);
+
+    console.log("MANAGER_FORM_MODIF10C_INCOME_RANGE_CONVERSION actif.");
 });
 </script>
 
