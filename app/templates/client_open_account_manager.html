@@ -9816,5 +9816,525 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+
+<!-- MANAGER_FORM_MODIF8_RESIDENCE_AUTO_STATUS -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerResidenceAutoStatusInstalled === true) return;
+    window.managerResidenceAutoStatusInstalled = true;
+
+    function normalizeText(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase();
+    }
+
+    function findResidenceCountryField() {
+        const selectors = [
+            "#residence_country",
+            "#country_of_residence",
+            "#country_residence",
+            "#pays_residence",
+            "#residency_country",
+            '[name="residence_country"]',
+            '[name="country_of_residence"]',
+            '[name="country_residence"]',
+            '[name="pays_residence"]',
+            '[name="residency_country"]'
+        ];
+
+        for (const selector of selectors) {
+            const el = document.querySelector(selector);
+            if (el) return el;
+        }
+
+        // Recherche de secours par le label visible "Pays de résidence"
+        const labels = Array.from(document.querySelectorAll("label"));
+        for (const label of labels) {
+            const txt = normalizeText(label.textContent);
+
+            if (txt.includes("pays de residence") || txt.includes("residence")) {
+                const forId = label.getAttribute("for");
+
+                if (forId && document.getElementById(forId)) {
+                    return document.getElementById(forId);
+                }
+
+                const box =
+                    label.closest(".form-group") ||
+                    label.closest(".field") ||
+                    label.closest(".full") ||
+                    label.parentElement;
+
+                if (box) {
+                    const field = box.querySelector("select, input");
+                    if (field && field.id !== "residency_status" && field.name !== "residency_status") {
+                        return field;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function getFieldDisplayValue(field) {
+        if (!field) return "";
+
+        if (field.tagName && field.tagName.toLowerCase() === "select") {
+            const selected = field.options[field.selectedIndex];
+            return selected ? (selected.textContent || selected.value || "") : field.value;
+        }
+
+        return field.value || "";
+    }
+
+    function isCameroonResidence(value) {
+        const v = normalizeText(value);
+
+        return (
+            v === "cameroun" ||
+            v === "cameroon" ||
+            v.includes("cameroun") ||
+            v.includes("cameroon")
+        );
+    }
+
+    function applyResidenceStatus() {
+        const countryField = findResidenceCountryField();
+        const statusField = document.getElementById("residency_status") || document.querySelector('[name="residency_status"]');
+        const nonResidentBox = document.getElementById("nonResidentDocuments");
+
+        if (!countryField || !statusField) {
+            console.log("MODIF8 : champ pays de résidence ou residency_status introuvable.");
+            return;
+        }
+
+        const residenceCountry = getFieldDisplayValue(countryField);
+        const cameroon = isCameroonResidence(residenceCountry);
+
+        statusField.value = cameroon ? "RESIDENT" : "NON_RESIDENT";
+
+        if (nonResidentBox) {
+            nonResidentBox.style.display = cameroon ? "none" : "";
+        }
+
+        if (typeof toggleNonResidentDocuments === "function") {
+            try {
+                toggleNonResidentDocuments();
+            } catch(e) {}
+        }
+
+        console.log("MODIF8 : pays résidence =", residenceCountry, "=>", statusField.value);
+    }
+
+    function installResidenceListeners() {
+        const countryField = findResidenceCountryField();
+
+        if (!countryField || countryField.dataset.managerResidenceAutoStatus === "1") return;
+
+        countryField.dataset.managerResidenceAutoStatus = "1";
+
+        countryField.addEventListener("change", applyResidenceStatus);
+        countryField.addEventListener("input", applyResidenceStatus);
+        countryField.addEventListener("blur", applyResidenceStatus);
+
+        const form = countryField.closest("form") || document.querySelector("form");
+        if (form && form.dataset.managerResidenceSubmitCheck !== "1") {
+            form.dataset.managerResidenceSubmitCheck = "1";
+            form.addEventListener("submit", applyResidenceStatus, true);
+        }
+    }
+
+    installResidenceListeners();
+    applyResidenceStatus();
+
+    setTimeout(function () {
+        installResidenceListeners();
+        applyResidenceStatus();
+    }, 500);
+
+    setTimeout(function () {
+        installResidenceListeners();
+        applyResidenceStatus();
+    }, 1500);
+
+    console.log("MANAGER_FORM_MODIF8_RESIDENCE_AUTO_STATUS actif.");
+});
+</script>
+
+
+<!-- MANAGER_FORM_MODIF9_NONRESIDENT_DOC_BUTTONS -->
+<style>
+.manager-nonresident-actions {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.manager-nonresident-actions .doc-action-btn {
+    width: 100%;
+}
+
+.manager-nonresident-status {
+    margin-top: 10px;
+}
+
+.manager-nonresident-preview {
+    margin-top: 12px;
+    display: none;
+}
+
+.manager-nonresident-preview img {
+    max-width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+.manager-nonresident-camera-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 13600;
+    background: rgba(0,0,0,0.65);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.manager-nonresident-camera-box {
+    width: min(760px, 96vw);
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.manager-nonresident-camera-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #c90000;
+    color: #fff;
+    padding: 14px 18px;
+    font-weight: bold;
+}
+
+.manager-nonresident-camera-header button {
+    background: #fff;
+    color: #c90000;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.manager-nonresident-camera-stage {
+    position: relative;
+    background: #111827;
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.manager-nonresident-camera-stage video {
+    width: 100%;
+    max-height: 62vh;
+    object-fit: contain;
+    background: #111827;
+}
+
+.manager-nonresident-camera-frame {
+    position: absolute;
+    width: 78%;
+    aspect-ratio: 1.586;
+    border: 3px dashed #c90000;
+    border-radius: 14px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.34);
+    pointer-events: none;
+}
+
+.manager-nonresident-camera-instruction {
+    margin: 0;
+    padding: 14px 18px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.manager-nonresident-camera-actions {
+    display: flex;
+    gap: 10px;
+    padding: 0 18px 18px;
+}
+
+.manager-nonresident-camera-actions button {
+    flex: 1;
+}
+
+.manager-nonresident-camera-error {
+    padding: 0 18px 18px;
+    color: #c90000;
+    font-weight: bold;
+}
+
+@media(max-width: 800px) {
+    .manager-nonresident-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-nonresident-camera-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerModif9NonResidentDocButtonsInstalled === true) return;
+    window.managerModif9NonResidentDocButtonsInstalled = true;
+
+    let nonResidentCameraStream = null;
+    let currentNonResidentInputId = null;
+
+    const NON_RESIDENT_DOCS = {
+        birth_certificate_photo: {
+            label: "Acte de naissance ou pièce avec filiation",
+            photoButton: "📷 Photographier l’acte de naissance / pièce avec filiation",
+            importButton: "📁 Importer l’acte de naissance / pièce avec filiation",
+            filePrefix: "acte_naissance_filiation"
+        },
+        employment_school_photo: {
+            label: "Fiche de paie / attestation d’emploi / scolarité",
+            photoButton: "📷 Photographier la fiche de paie / attestation",
+            importButton: "📁 Importer la fiche de paie / attestation",
+            filePrefix: "emploi_scolarite"
+        },
+        tax_compliance_photo: {
+            label: "Attestation de conformité fiscale",
+            photoButton: "📷 Photographier l’attestation fiscale",
+            importButton: "📁 Importer l’attestation fiscale",
+            filePrefix: "conformite_fiscale"
+        }
+    };
+
+    function setupNonResidentDocumentInput(inputId, config) {
+        const input = document.getElementById(inputId);
+
+        if (!input || input.dataset.managerNonResidentEnhanced === "1") return;
+
+        input.dataset.managerNonResidentEnhanced = "1";
+        input.style.display = "none";
+        input.setAttribute("accept", "image/*,.pdf");
+
+        const actions = document.createElement("div");
+        actions.id = inputId + "_actions";
+        actions.className = "manager-nonresident-actions";
+        actions.innerHTML = `
+            <button type="button" class="doc-action-btn" onclick="openManagerNonResidentCamera('${inputId}')">
+                ${config.photoButton}
+            </button>
+
+            <button type="button" class="doc-action-btn secondary" onclick="importManagerNonResidentDocument('${inputId}')">
+                ${config.importButton}
+            </button>
+        `;
+
+        const status = document.createElement("div");
+        status.id = inputId + "_status";
+        status.className = "capture-status manager-nonresident-status";
+        status.innerText = "Aucun document ajouté.";
+
+        const preview = document.createElement("div");
+        preview.id = inputId + "_preview";
+        preview.className = "manager-nonresident-preview";
+
+        input.insertAdjacentElement("beforebegin", actions);
+        input.insertAdjacentElement("afterend", status);
+        status.insertAdjacentElement("afterend", preview);
+
+        input.addEventListener("change", function () {
+            updateNonResidentDocumentStatus(inputId, "importé");
+        });
+    }
+
+    function updateNonResidentDocumentStatus(inputId, mode) {
+        const input = document.getElementById(inputId);
+        const status = document.getElementById(inputId + "_status");
+        const preview = document.getElementById(inputId + "_preview");
+        const config = NON_RESIDENT_DOCS[inputId];
+
+        if (!input || !status || !config) return;
+
+        if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+
+            status.className = "capture-status success manager-nonresident-status";
+            status.innerText = "✅ " + config.label + " " + mode + " : " + file.name;
+
+            if (preview && file.type && file.type.startsWith("image/")) {
+                const url = URL.createObjectURL(file);
+                preview.style.display = "block";
+                preview.innerHTML = `<img src="${url}" alt="${config.label}">`;
+            } else if (preview) {
+                preview.style.display = "none";
+                preview.innerHTML = "";
+            }
+        } else {
+            status.className = "capture-status manager-nonresident-status";
+            status.innerText = "Aucun document ajouté.";
+        }
+    }
+
+    function insertNonResidentCameraModal() {
+        if (document.getElementById("managerNonResidentCameraModal")) return;
+
+        const modal = document.createElement("div");
+        modal.id = "managerNonResidentCameraModal";
+        modal.className = "manager-nonresident-camera-modal";
+        modal.innerHTML = `
+            <div class="manager-nonresident-camera-box">
+                <div class="manager-nonresident-camera-header">
+                    <span id="managerNonResidentCameraTitle">Photographier le document</span>
+                    <button type="button" onclick="closeManagerNonResidentCamera()">Fermer</button>
+                </div>
+
+                <div class="manager-nonresident-camera-stage">
+                    <video id="managerNonResidentCameraVideo" autoplay playsinline muted></video>
+                    <div class="manager-nonresident-camera-frame"></div>
+                </div>
+
+                <p id="managerNonResidentCameraInstruction" class="manager-nonresident-camera-instruction">
+                    Placez le document entièrement dans le cadre puis cliquez sur capturer.
+                </p>
+
+                <div class="manager-nonresident-camera-actions">
+                    <button type="button" class="doc-action-btn" onclick="captureManagerNonResidentDocument()">
+                        📸 Capturer la photo
+                    </button>
+
+                    <button type="button" class="doc-action-btn secondary" onclick="closeManagerNonResidentCamera()">
+                        Annuler
+                    </button>
+                </div>
+
+                <div id="managerNonResidentCameraError" class="manager-nonresident-camera-error"></div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    window.importManagerNonResidentDocument = function(inputId) {
+        const input = document.getElementById(inputId);
+        if (input) input.click();
+    };
+
+    window.openManagerNonResidentCamera = async function(inputId) {
+        insertNonResidentCameraModal();
+
+        const config = NON_RESIDENT_DOCS[inputId];
+
+        currentNonResidentInputId = inputId;
+
+        const modal = document.getElementById("managerNonResidentCameraModal");
+        const video = document.getElementById("managerNonResidentCameraVideo");
+        const errorBox = document.getElementById("managerNonResidentCameraError");
+        const title = document.getElementById("managerNonResidentCameraTitle");
+        const instruction = document.getElementById("managerNonResidentCameraInstruction");
+
+        if (title && config) title.innerText = "Photographier : " + config.label;
+        if (instruction) instruction.innerText = "Placez le document entièrement dans le cadre, sans reflet, puis cliquez sur capturer.";
+        if (errorBox) errorBox.innerText = "";
+
+        try {
+            nonResidentCameraStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: "environment" },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
+            });
+
+            video.srcObject = nonResidentCameraStream;
+            modal.style.display = "flex";
+        } catch (error) {
+            if (errorBox) {
+                errorBox.innerText = "Impossible d’ouvrir la caméra. Vérifiez l’autorisation caméra du navigateur.";
+            }
+            modal.style.display = "flex";
+        }
+    };
+
+    window.closeManagerNonResidentCamera = function() {
+        const modal = document.getElementById("managerNonResidentCameraModal");
+        const video = document.getElementById("managerNonResidentCameraVideo");
+
+        if (nonResidentCameraStream) {
+            nonResidentCameraStream.getTracks().forEach(track => track.stop());
+            nonResidentCameraStream = null;
+        }
+
+        if (video) video.srcObject = null;
+        if (modal) modal.style.display = "none";
+    };
+
+    window.captureManagerNonResidentDocument = function() {
+        const video = document.getElementById("managerNonResidentCameraVideo");
+        const errorBox = document.getElementById("managerNonResidentCameraError");
+        const input = document.getElementById(currentNonResidentInputId);
+        const config = NON_RESIDENT_DOCS[currentNonResidentInputId];
+
+        if (!video || !video.videoWidth || !video.videoHeight) {
+            if (errorBox) errorBox.innerText = "Caméra non prête. Attendez une seconde puis réessayez.";
+            return;
+        }
+
+        if (!input || !config) {
+            if (errorBox) errorBox.innerText = "Champ document introuvable.";
+            return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(function(blob) {
+            if (!blob) {
+                if (errorBox) errorBox.innerText = "Impossible de capturer la photo.";
+                return;
+            }
+
+            const file = new File([blob], config.filePrefix + "_" + Date.now() + ".jpg", {
+                type: "image/jpeg"
+            });
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            input.files = dataTransfer.files;
+
+            updateNonResidentDocumentStatus(currentNonResidentInputId, "photographié");
+            closeManagerNonResidentCamera();
+        }, "image/jpeg", 0.92);
+    };
+
+    Object.keys(NON_RESIDENT_DOCS).forEach(function(inputId) {
+        setupNonResidentDocumentInput(inputId, NON_RESIDENT_DOCS[inputId]);
+    });
+
+    insertNonResidentCameraModal();
+
+    console.log("MANAGER_FORM_MODIF9_NONRESIDENT_DOC_BUTTONS actif.");
+});
+</script>
+
 </body>
 </html>
