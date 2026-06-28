@@ -11179,5 +11179,155 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+
+<!-- MANAGER_FORM_FLOW_ACCOUNT_TYPE -->
+<style>
+.manager-account-type-banner {
+    margin: 18px 0;
+    padding: 16px 18px;
+    border-radius: 14px;
+    border-left: 5px solid #c90000;
+    background: #fff5f5;
+    color: #111827;
+}
+
+.manager-account-type-banner strong {
+    color: #c90000;
+}
+
+.manager-account-type-banner .hint {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.45;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerFlowAccountTypeInstalled === true) return;
+    window.managerFlowAccountTypeInstalled = true;
+
+    function getAccountTypeFromFlow() {
+        const params = new URLSearchParams(window.location.search);
+        const fromUrl = params.get("account_type");
+        const fromStorage = localStorage.getItem("diaspora_account_type");
+
+        return fromUrl || fromStorage || "PERSONAL";
+    }
+
+    function getAccountTypeLabel(type) {
+        if (type === "BUSINESS") return "Compte entreprise";
+        return "Compte personnel";
+    }
+
+    function insertAccountTypeBanner() {
+        if (document.getElementById("managerAccountTypeBanner")) return;
+
+        const type = getAccountTypeFromFlow();
+        const label = getAccountTypeLabel(type);
+
+        const form = document.querySelector("form");
+        if (!form) return;
+
+        const banner = document.createElement("div");
+        banner.id = "managerAccountTypeBanner";
+        banner.className = "manager-account-type-banner";
+
+        if (type === "BUSINESS") {
+            banner.innerHTML = `
+                <strong>Type de demande : ${label}</strong>
+                <div class="hint">
+                    Le client a choisi une ouverture de compte entreprise.
+                    Cette première version affiche le choix dans le formulaire.
+                    Les champs spécifiques entreprise seront ajoutés dans l’étape suivante.
+                </div>
+            `;
+        } else {
+            banner.innerHTML = `
+                <strong>Type de demande : ${label}</strong>
+                <div class="hint">
+                    Le client a choisi une ouverture de compte personnel.
+                </div>
+            `;
+        }
+
+        form.insertAdjacentElement("afterbegin", banner);
+
+        const hiddenAccountType = document.createElement("input");
+        hiddenAccountType.type = "hidden";
+        hiddenAccountType.id = "account_type";
+        hiddenAccountType.name = "account_type";
+        hiddenAccountType.value = type;
+
+        const hiddenCustomerType = document.createElement("input");
+        hiddenCustomerType.type = "hidden";
+        hiddenCustomerType.id = "customer_type";
+        hiddenCustomerType.name = "customer_type";
+        hiddenCustomerType.value = type === "BUSINESS" ? "CORPORATE" : "INDIVIDUAL";
+
+        const hiddenApplicationType = document.createElement("input");
+        hiddenApplicationType.type = "hidden";
+        hiddenApplicationType.id = "application_type";
+        hiddenApplicationType.name = "application_type";
+        hiddenApplicationType.value = type;
+
+        form.appendChild(hiddenAccountType);
+        form.appendChild(hiddenCustomerType);
+        form.appendChild(hiddenApplicationType);
+
+        console.log("FLOW ACCOUNT TYPE :", type);
+    }
+
+    function patchPayloadWithAccountType() {
+        if (window.managerAccountTypePayloadPatched === true) return;
+        window.managerAccountTypePayloadPatched = true;
+
+        const originalFetch = window.fetch;
+
+        window.fetch = async function(resource, init) {
+            try {
+                const url = typeof resource === "string" ? resource : String(resource && resource.url || "");
+
+                if (
+                    init &&
+                    init.method &&
+                    String(init.method).toUpperCase() === "POST" &&
+                    url.includes("/api/applications") &&
+                    !url.includes("/documents") &&
+                    init.body &&
+                    typeof init.body === "string"
+                ) {
+                    const accountType = document.getElementById("account_type");
+                    const customerType = document.getElementById("customer_type");
+                    const applicationType = document.getElementById("application_type");
+
+                    const body = JSON.parse(init.body);
+
+                    body.account_type = accountType ? accountType.value : "PERSONAL";
+                    body.customer_type = customerType ? customerType.value : "INDIVIDUAL";
+                    body.application_type = applicationType ? applicationType.value : "PERSONAL";
+
+                    init = Object.assign({}, init, {
+                        body: JSON.stringify(body)
+                    });
+
+                    console.log("Type de compte ajouté au payload :", body.account_type);
+                }
+            } catch(e) {
+                console.log("Patch type compte ignoré", e);
+            }
+
+            return originalFetch(resource, init);
+        };
+    }
+
+    insertAccountTypeBanner();
+    patchPayloadWithAccountType();
+
+    console.log("MANAGER_FORM_FLOW_ACCOUNT_TYPE actif.");
+});
+</script>
+
 </body>
 </html>

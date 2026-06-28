@@ -149,3 +149,8 @@ async def get_active_activity_sectors():
 
     return clean
 
+
+@router.get("/open-account-flow-test")
+async def open_account_flow_test_page(request: Request):
+    return templates.TemplateResponse(request, "client_open_account_flow_test.html", {"request": request})
+

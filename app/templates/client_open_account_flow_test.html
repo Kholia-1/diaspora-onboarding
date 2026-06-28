@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Démarrage ouverture de compte - Diaspora</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        :root {
+            --red: #c90000;
+            --red-dark: #9f0000;
+            --gold: #f4b000;
+            --bg: #f4f6f9;
+            --text: #111827;
+            --muted: #6b7280;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 28px 18px 60px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            color: white;
+            border-radius: 22px;
+            padding: 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.18);
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: 30px;
+        }
+
+        .hero p {
+            margin: 0;
+            max-width: 760px;
+            line-height: 1.6;
+            opacity: 0.96;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .step {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            font-size: 14px;
+        }
+
+        .step strong {
+            display: block;
+            color: var(--red);
+            margin-bottom: 4px;
+        }
+
+        .section {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-top: 20px;
+        }
+
+        .section h2 {
+            margin: 0 0 8px;
+            font-size: 22px;
+        }
+
+        .section-desc {
+            margin: 0 0 20px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .choice-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .choice-card {
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            background: #fff;
+        }
+
+        .choice-card:hover {
+            border-color: var(--red);
+            transform: translateY(-2px);
+        }
+
+        .choice-card.active {
+            border-color: var(--red);
+            background: #fff5f5;
+            box-shadow: 0 14px 30px rgba(201,0,0,0.12);
+        }
+
+        .choice-card h3 {
+            margin: 0 0 8px;
+            font-size: 20px;
+        }
+
+        .choice-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .doc-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .doc-item {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            background: #fcfcfd;
+        }
+
+        .doc-item strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .doc-item span {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .notice {
+            margin-top: 18px;
+            background: #fff7db;
+            border-left: 5px solid var(--gold);
+            padding: 14px;
+            border-radius: 12px;
+            color: #6b4b00;
+            line-height: 1.5;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: 0;
+            border-radius: 12px;
+            padding: 13px 18px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .btn-primary {
+            background: var(--red);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--red-dark);
+        }
+
+        .btn-secondary {
+            background: #111827;
+            color: white;
+        }
+
+        .btn-light {
+            background: white;
+            color: var(--red);
+            border: 1px solid var(--red);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media(max-width: 800px) {
+            .steps,
+            .choice-grid,
+            .doc-list {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 24px;
+            }
+
+            .hero h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="hero">
+        <h1>Démarrer une ouverture de compte</h1>
+        <p>
+            Avant d’accéder au formulaire complet, choisissez le type de compte souhaité.
+            Le système vous indiquera les pièces nécessaires afin de préparer le dossier.
+        </p>
+    </div>
+
+    <div class="steps">
+        <div class="step">
+            <strong>1. Type de compte</strong>
+            Personnel ou entreprise
+        </div>
+        <div class="step">
+            <strong>2. Pièces requises</strong>
+            Liste affichée automatiquement
+        </div>
+        <div class="step">
+            <strong>3. Analyse OCR</strong>
+            Pré-remplissage à venir
+        </div>
+        <div class="step">
+            <strong>4. Validation</strong>
+            Le client corrige et confirme
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Quel type de compte voulez-vous ouvrir ?</h2>
+        <p class="section-desc">
+            Cette sélection permet d’adapter la liste des documents à fournir.
+        </p>
+
+        <div class="choice-grid">
+            <div id="personalCard" class="choice-card" onclick="selectAccountType('PERSONAL')">
+                <h3>Compte personnel</h3>
+                <p>
+                    Pour un particulier souhaitant ouvrir un compte à son nom.
+                </p>
+            </div>
+
+            <div id="businessCard" class="choice-card" onclick="selectAccountType('BUSINESS')">
+                <h3>Compte entreprise</h3>
+                <p>
+                    Pour une société, une activité formalisée ou une personne morale.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="documentsSection" class="section hidden">
+        <h2 id="documentsTitle">Pièces nécessaires</h2>
+        <p id="documentsDesc" class="section-desc"></p>
+
+        <div id="documentsList" class="doc-list"></div>
+
+        <div class="notice">
+            Dans cette première version test, cette page affiche la liste des pièces à préparer.
+            L’étape suivante permettra de charger les documents ici, lancer l’OCR, puis pré-remplir automatiquement le formulaire.
+        </div>
+
+        <div class="actions">
+            <button type="button" class="btn btn-primary" onclick="continueToForm()">
+                Continuer vers le formulaire
+            </button>
+
+            <button type="button" class="btn btn-light" onclick="resetChoice()">
+                Changer le type de compte
+            </button>
+
+            <button type="button" class="btn btn-secondary" onclick="goBackPortal()">
+                Retour au portail
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedAccountType = null;
+
+const PERSONAL_DOCS = [
+    {
+        title: "Pièce d’identité officielle",
+        desc: "CNI, passeport, carte consulaire ou titre de séjour. Recto et verso si nécessaire."
+    },
+    {
+        title: "Justificatif de domicile",
+        desc: "Facture, attestation de résidence ou document équivalent."
+    },
+    {
+        title: "Preuve de revenu / activité",
+        desc: "Bulletin de salaire, attestation employeur, justificatif fiscal, contrat, registre de commerce ou attestation d’activité."
+    },
+    {
+        title: "Relevé d’identification bancaire - RIB",
+        desc: "RIB ou preuve de coordonnées bancaires existantes si disponible ou exigée."
+    },
+    {
+        title: "Selfie / preuve de vie",
+        desc: "Selfie obligatoire et vidéo preuve de vie selon le parcours."
+    },
+    {
+        title: "Documents non-résident",
+        desc: "Si le pays de résidence est différent du Cameroun : acte de naissance, attestation emploi/scolarité, conformité fiscale."
+    }
+];
+
+const BUSINESS_DOCS = [
+    {
+        title: "RCCM / registre de commerce",
+        desc: "Document officiel d’immatriculation de l’entreprise."
+    },
+    {
+        title: "NIU / numéro fiscal de l’entreprise",
+        desc: "Identifiant fiscal ou justificatif d’immatriculation fiscale."
+    },
+    {
+        title: "Statuts de l’entreprise",
+        desc: "Statuts signés ou document constitutif de la société."
+    },
+    {
+        title: "Pièce d’identité du représentant légal",
+        desc: "CNI, passeport ou titre de séjour du dirigeant ou mandataire."
+    },
+    {
+        title: "Justificatif du siège / localisation",
+        desc: "Plan de localisation, facture, bail ou attestation de siège."
+    },
+    {
+        title: "Mandat ou pouvoir du signataire",
+        desc: "Document requis si le signataire n’est pas le représentant légal direct."
+    },
+    {
+        title: "Bénéficiaires effectifs",
+        desc: "Informations et pièces relatives aux bénéficiaires effectifs de l’entreprise."
+    },
+    {
+        title: "Attestation de conformité fiscale",
+        desc: "Document fiscal selon les exigences de la banque."
+    }
+];
+
+function selectAccountType(type) {
+    selectedAccountType = type;
+
+    document.getElementById("personalCard").classList.toggle("active", type === "PERSONAL");
+    document.getElementById("businessCard").classList.toggle("active", type === "BUSINESS");
+
+    const section = document.getElementById("documentsSection");
+    const title = document.getElementById("documentsTitle");
+    const desc = document.getElementById("documentsDesc");
+    const list = document.getElementById("documentsList");
+
+    const docs = type === "PERSONAL" ? PERSONAL_DOCS : BUSINESS_DOCS;
+
+    title.innerText = type === "PERSONAL"
+        ? "Pièces nécessaires pour un compte personnel"
+        : "Pièces nécessaires pour un compte entreprise";
+
+    desc.innerText = type === "PERSONAL"
+        ? "Préparez ces documents avant de continuer vers le formulaire d’ouverture de compte personnel."
+        : "Préparez ces documents avant de continuer vers le formulaire d’ouverture de compte entreprise.";
+
+    list.innerHTML = docs.map(function(doc) {
+        return `
+            <div class="doc-item">
+                <strong>${doc.title}</strong>
+                <span>${doc.desc}</span>
+            </div>
+        `;
+    }).join("");
+
+    section.classList.remove("hidden");
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function resetChoice() {
+    selectedAccountType = null;
+    document.getElementById("personalCard").classList.remove("active");
+    document.getElementById("businessCard").classList.remove("active");
+    document.getElementById("documentsSection").classList.add("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function continueToForm() {
+    if (!selectedAccountType) {
+        alert("Veuillez choisir le type de compte.");
+        return;
+    }
+
+    localStorage.setItem("diaspora_account_type", selectedAccountType);
+
+    const url = "/open-account-test?v=25&account_type=" + encodeURIComponent(selectedAccountType);
+    window.location.href = url;
+}
+
+function goBackPortal() {
+    window.location.href = "/?v=24";
+}
+</script>
+</body>
+</html>
