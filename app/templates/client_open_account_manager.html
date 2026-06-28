@@ -10844,5 +10844,340 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+
+<!-- MANAGER_FORM_MODIF11_ACTIVITY_SECTOR -->
+<style>
+.manager-sector-box {
+    margin-top: 12px;
+}
+
+.manager-sector-box label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #111827;
+}
+
+.manager-sector-search {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.manager-sector-box select {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 14px;
+}
+
+.manager-sector-help {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.4;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerActivitySectorInstalled === true) return;
+    window.managerActivitySectorInstalled = true;
+
+    let managerSectors = [];
+
+    function normalizeText(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase();
+    }
+
+    function findProfessionField() {
+        const directSelectors = [
+            "#profession",
+            "#occupation",
+            "#job_title",
+            '[name="profession"]',
+            '[name="occupation"]',
+            '[name="job_title"]'
+        ];
+
+        for (const selector of directSelectors) {
+            const field = document.querySelector(selector);
+            if (field) return field;
+        }
+
+        const labels = Array.from(document.querySelectorAll("label"));
+
+        for (const label of labels) {
+            const txt = normalizeText(label.textContent);
+
+            if (txt.includes("profession")) {
+                const forId = label.getAttribute("for");
+
+                if (forId && document.getElementById(forId)) {
+                    return document.getElementById(forId);
+                }
+
+                const box =
+                    label.closest(".form-group") ||
+                    label.closest(".field") ||
+                    label.closest(".full") ||
+                    label.parentElement;
+
+                if (box) {
+                    const field = box.querySelector("input, select, textarea");
+                    if (field) return field;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function insertSectorField() {
+        if (document.getElementById("activity_sector")) return;
+
+        const professionField = findProfessionField();
+
+        if (!professionField) {
+            console.log("MODIF11 : champ Profession introuvable.");
+            return;
+        }
+
+        const wrapper =
+            professionField.closest(".form-group") ||
+            professionField.closest(".field") ||
+            professionField.closest(".full") ||
+            professionField.closest("div") ||
+            professionField.parentElement;
+
+        if (!wrapper) {
+            console.log("MODIF11 : conteneur Profession introuvable.");
+            return;
+        }
+
+        const box = document.createElement("div");
+        box.id = "managerActivitySectorBox";
+        box.className = "manager-sector-box";
+        box.innerHTML = `
+            <label for="activity_sector">
+                Secteur d’activité <span class="required-doc">*</span>
+            </label>
+
+            <input
+                type="text"
+                id="activity_sector_search"
+                class="manager-sector-search"
+                placeholder="Rechercher un secteur : commerce, santé, BTP, finance..."
+                autocomplete="off"
+            >
+
+            <select id="activity_sector" name="activity_sector" required>
+                <option value="">Chargement des secteurs...</option>
+            </select>
+
+            <input type="hidden" id="activity_sector_code" name="activity_sector_code">
+            <input type="hidden" id="sector_of_activity" name="sector_of_activity">
+            <input type="hidden" id="economic_sector" name="economic_sector">
+
+            <div class="manager-sector-help">
+                La liste est chargée depuis le système de la banque.
+            </div>
+        `;
+
+        wrapper.insertAdjacentElement("afterend", box);
+    }
+
+    function renderSectorOptions(filterText = "") {
+        const select = document.getElementById("activity_sector");
+        const hiddenCode = document.getElementById("activity_sector_code");
+        const hiddenSector = document.getElementById("sector_of_activity");
+        const hiddenEconomic = document.getElementById("economic_sector");
+
+        if (!select) return;
+
+        const previousValue = select.value;
+        const filter = normalizeText(filterText);
+
+        select.innerHTML = "";
+
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Sélectionner le secteur d’activité";
+        select.appendChild(defaultOption);
+
+        managerSectors
+            .filter(function(item) {
+                const label = normalizeText((item.code || "") + " " + (item.name || ""));
+                return !filter || label.includes(filter);
+            })
+            .forEach(function(item) {
+                const option = document.createElement("option");
+                option.value = item.name;
+                option.dataset.code = item.code;
+                option.textContent = item.name;
+                select.appendChild(option);
+            });
+
+        if (previousValue) {
+            const found = Array.from(select.options).find(function(option) {
+                return option.value === previousValue;
+            });
+
+            if (found) {
+                select.value = previousValue;
+            }
+        }
+
+        function syncHiddenFields() {
+            const selected = select.options[select.selectedIndex];
+            const code = selected ? selected.dataset.code || "" : "";
+            const name = select.value || "";
+
+            if (hiddenCode) hiddenCode.value = code;
+            if (hiddenSector) hiddenSector.value = name;
+            if (hiddenEconomic) hiddenEconomic.value = name;
+        }
+
+        select.onchange = syncHiddenFields;
+        syncHiddenFields();
+    }
+
+    async function loadSectors() {
+        const select = document.getElementById("activity_sector");
+
+        if (!select) return;
+
+        try {
+            const response = await fetch("/api/sectors/active");
+
+            if (!response.ok) {
+                throw new Error("Erreur API secteurs : " + response.status);
+            }
+
+            const data = await response.json();
+            managerSectors = Array.isArray(data) ? data : [];
+
+            if (managerSectors.length === 0) {
+                select.innerHTML = '<option value="">Aucun secteur disponible</option>';
+                return;
+            }
+
+            renderSectorOptions("");
+            console.log("MODIF11 : secteurs chargés =", managerSectors.length);
+        } catch (error) {
+            console.log("MODIF11 : impossible de charger les secteurs", error);
+            select.innerHTML = '<option value="">Erreur de chargement des secteurs</option>';
+        }
+    }
+
+    function installSectorSearch() {
+        const search = document.getElementById("activity_sector_search");
+
+        if (!search || search.dataset.managerSectorSearch === "1") return;
+
+        search.dataset.managerSectorSearch = "1";
+
+        search.addEventListener("input", function () {
+            renderSectorOptions(search.value);
+        });
+    }
+
+    function addSubmitValidation() {
+        const form = document.querySelector("form");
+
+        if (!form || form.dataset.managerSectorSubmitValidation === "1") return;
+
+        form.dataset.managerSectorSubmitValidation = "1";
+
+        form.addEventListener("submit", function(event) {
+            const sector = document.getElementById("activity_sector");
+
+            if (sector && !sector.value) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                alert("Veuillez sélectionner le secteur d’activité du client.");
+
+                sector.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                });
+
+                return false;
+            }
+        }, true);
+    }
+
+    function patchApplicationPayloadWithSector() {
+        if (window.managerSectorFetchPatched === true) return;
+        window.managerSectorFetchPatched = true;
+
+        const originalFetch = window.fetch;
+
+        window.fetch = async function(resource, init) {
+            try {
+                const url = typeof resource === "string" ? resource : String(resource && resource.url || "");
+
+                if (
+                    init &&
+                    init.method &&
+                    String(init.method).toUpperCase() === "POST" &&
+                    url.includes("/api/applications") &&
+                    !url.includes("/documents") &&
+                    init.body &&
+                    typeof init.body === "string"
+                ) {
+                    const sector = document.getElementById("activity_sector");
+                    const sectorCode = document.getElementById("activity_sector_code");
+
+                    if (sector && sector.value) {
+                        const body = JSON.parse(init.body);
+
+                        body.activity_sector = sector.value;
+                        body.activity_sector_code = sectorCode ? sectorCode.value : "";
+                        body.sector_of_activity = sector.value;
+                        body.economic_sector = sector.value;
+
+                        init = Object.assign({}, init, {
+                            body: JSON.stringify(body)
+                        });
+
+                        console.log("MODIF11 : secteur ajouté au dossier :", sector.value);
+                    }
+                }
+            } catch(e) {
+                console.log("MODIF11 : patch payload secteur ignoré", e);
+            }
+
+            return originalFetch(resource, init);
+        };
+    }
+
+    insertSectorField();
+    installSectorSearch();
+    addSubmitValidation();
+    patchApplicationPayloadWithSector();
+    loadSectors();
+
+    setTimeout(function () {
+        insertSectorField();
+        installSectorSearch();
+        loadSectors();
+    }, 800);
+
+    console.log("MANAGER_FORM_MODIF11_ACTIVITY_SECTOR actif.");
+});
+</script>
+
 </body>
 </html>

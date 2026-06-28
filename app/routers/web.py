@@ -86,3 +86,66 @@ async def backoffice_packages_page(request: Request):
 async def open_account_test_page(request: Request):
     return templates.TemplateResponse(request, "client_open_account_manager.html", {"request": request})
 
+@router.get("/api/sectors/active")
+async def get_active_activity_sectors():
+    from pathlib import Path
+    import json
+
+    sectors_file = Path("data/bank_sectors.json")
+
+    if not sectors_file.exists():
+        return []
+
+    try:
+        sectors = json.loads(sectors_file.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+    clean = []
+    for item in sectors:
+        if not isinstance(item, dict):
+            continue
+
+        code = str(item.get("code", "")).strip()
+        name = str(item.get("name", "")).strip()
+
+        if code and name:
+            clean.append({
+                "code": code,
+                "name": name
+            })
+
+    return clean
+
+# MANAGER_API_ACTIVITY_SECTORS
+@router.get("/api/sectors/active")
+async def get_active_activity_sectors():
+    from pathlib import Path
+    import json
+
+    sectors_file = Path("data/bank_sectors.json")
+
+    if not sectors_file.exists():
+        return []
+
+    try:
+        sectors = json.loads(sectors_file.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+    clean = []
+    for item in sectors:
+        if not isinstance(item, dict):
+            continue
+
+        code = str(item.get("code", "")).strip()
+        name = str(item.get("name", "")).strip()
+
+        if code and name:
+            clean.append({
+                "code": code,
+                "name": name
+            })
+
+    return clean
+
