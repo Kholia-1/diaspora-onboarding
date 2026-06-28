@@ -9599,5 +9599,222 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+
+<!-- MANAGER_FORM_MODIF7_SELFIE_SAFE -->
+<style>
+.manager-selfie-required-note {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-left: 4px solid #c90000;
+    background: #fff5f5;
+    color: #7f1d1d;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+}
+
+.manager-video-timer {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 8px;
+}
+
+.manager-hide-selfie-import-only {
+    display: none !important;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerSelfieSafeInstalled === true) return;
+    window.managerSelfieSafeInstalled = true;
+
+    const MAX_VIDEO_SECONDS = 5;
+
+    function ensureSelfieSectionVisible() {
+        const selfieStatus = document.getElementById("selfieCaptureStatus");
+        const selfieModal = document.getElementById("selfieModal");
+
+        if (selfieStatus) {
+            let el = selfieStatus;
+            for (let i = 0; i < 5 && el; i++) {
+                if (el.style && el.style.display === "none") {
+                    el.style.display = "";
+                }
+                el = el.parentElement;
+            }
+        }
+
+        if (selfieModal) {
+            selfieModal.style.display = "none";
+        }
+    }
+
+    function addSelfieRequiredNote() {
+        const selfieStatus = document.getElementById("selfieCaptureStatus");
+
+        if (!selfieStatus || document.getElementById("managerSelfieRequiredNote")) return;
+
+        const note = document.createElement("div");
+        note.id = "managerSelfieRequiredNote";
+        note.className = "manager-selfie-required-note";
+        note.innerText = "Selfie obligatoire : le client doit absolument capturer un selfie réel. L’import simple du selfie n’est pas accepté.";
+
+        selfieStatus.insertAdjacentElement("beforebegin", note);
+    }
+
+    function hideOnlySelfieImportControls() {
+        // On ne cache plus les grands blocs parents.
+        // On cache uniquement les contrôles dont le texte parle explicitement d'import selfie.
+        document.querySelectorAll("button, a, label").forEach(function(el){
+            const txt = (el.textContent || "").toLowerCase();
+
+            if (
+                txt.includes("selfie") &&
+                (txt.includes("import") || txt.includes("importer"))
+            ) {
+                el.classList.add("manager-hide-selfie-import-only");
+            }
+        });
+
+        document.querySelectorAll('input[type="file"]').forEach(function(input){
+            const id = (input.id || "").toLowerCase();
+            const name = (input.name || "").toLowerCase();
+
+            if (
+                id.includes("selfie") ||
+                name.includes("selfie")
+            ) {
+                input.required = false;
+                input.disabled = true;
+                input.classList.add("manager-hide-selfie-import-only");
+            }
+        });
+
+        try {
+            if (typeof selfieFiles !== "undefined") {
+                selfieFiles.imported = null;
+            }
+        } catch(e) {}
+    }
+
+    function forceSelfiePhotoMandatoryUpload() {
+        try {
+            uploadSelfieDocument = async function(applicationId) {
+                if (typeof selfieFiles === "undefined") {
+                    throw new Error("Module selfie indisponible.");
+                }
+
+                selfieFiles.imported = null;
+
+                if (!selfieFiles.photo) {
+                    throw new Error("Veuillez obligatoirement capturer le selfie du client.");
+                }
+
+                await uploadFileObject(applicationId, "SELFIE_PHOTO", selfieFiles.photo);
+
+                if (selfieFiles.video) {
+                    await uploadFileObject(applicationId, "SELFIE_VIDEO", selfieFiles.video);
+                }
+            };
+
+            console.log("SELFIE_SAFE : selfie photo obligatoire.");
+        } catch(e) {
+            console.log("SELFIE_SAFE : surcharge uploadSelfieDocument impossible", e);
+        }
+    }
+
+    function addSubmitValidation() {
+        const form = document.querySelector("form");
+
+        if (!form || form.dataset.managerSelfieSafeValidation === "1") return;
+
+        form.dataset.managerSelfieSafeValidation = "1";
+
+        form.addEventListener("submit", function(event){
+            try {
+                if (typeof selfieFiles !== "undefined") {
+                    selfieFiles.imported = null;
+
+                    if (!selfieFiles.photo) {
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        alert("Veuillez obligatoirement capturer le selfie du client avant de soumettre le formulaire.");
+
+                        const selfieStatus = document.getElementById("selfieCaptureStatus");
+                        if (selfieStatus) {
+                            selfieStatus.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+
+                        return false;
+                    }
+                }
+            } catch(e) {}
+        }, true);
+    }
+
+    function installVideoAutoStop() {
+        if (!window.MediaRecorder || window.MediaRecorder.prototype._managerSafeAutoStopPatched) return;
+
+        const originalStart = window.MediaRecorder.prototype.start;
+
+        window.MediaRecorder.prototype.start = function() {
+            const recorder = this;
+
+            originalStart.apply(recorder, arguments);
+
+            setTimeout(function(){
+                try {
+                    if (recorder && recorder.state === "recording") {
+                        recorder.stop();
+                        console.log("SELFIE_SAFE : vidéo arrêtée automatiquement après 5 secondes.");
+                    }
+                } catch(e) {}
+            }, MAX_VIDEO_SECONDS * 1000);
+        };
+
+        window.MediaRecorder.prototype._managerSafeAutoStopPatched = true;
+    }
+
+    function addVideoTimerInfo() {
+        const selfieModal = document.getElementById("selfieModal");
+
+        if (!selfieModal || document.getElementById("managerVideoTimerInfo")) return;
+
+        const actions = selfieModal.querySelector(".camera-actions") || selfieModal.querySelector("button")?.parentElement;
+
+        const info = document.createElement("div");
+        info.id = "managerVideoTimerInfo";
+        info.className = "manager-video-timer";
+        info.innerText = "Vidéo preuve de vie : l’enregistrement se coupe automatiquement après 5 secondes.";
+
+        if (actions) {
+            actions.insertAdjacentElement("beforebegin", info);
+        } else {
+            selfieModal.appendChild(info);
+        }
+    }
+
+    ensureSelfieSectionVisible();
+    addSelfieRequiredNote();
+    hideOnlySelfieImportControls();
+    forceSelfiePhotoMandatoryUpload();
+    addSubmitValidation();
+    installVideoAutoStop();
+    addVideoTimerInfo();
+
+    setTimeout(ensureSelfieSectionVisible, 500);
+    setTimeout(hideOnlySelfieImportControls, 500);
+    setTimeout(ensureSelfieSectionVisible, 1500);
+
+    console.log("MANAGER_FORM_MODIF7_SELFIE_SAFE actif.");
+});
+</script>
+
 </body>
 </html>
