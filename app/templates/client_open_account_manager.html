@@ -1683,7 +1683,7 @@
                     <div class="photo-card">
                         <label>Pièce d’identité officielle</label>
                         <small>
-                            Photographiez ou importez votre pièce. Pour une CNI ou une carte consulaire,
+                            Photographiez votre pièce. Pour une CNI ou une carte consulaire,
                             le recto et le verso sont requis. Pour un passeport, une seule page suffit.
                         </small>
 
@@ -3479,7 +3479,7 @@ Package : ${getFormValue(form, "selected_package_ui")}
                 : `🪪 ${type} — document capturé ✓`;
         } else if (identityDocumentFiles.recto && documentNeedsBackSide()) {
             status.className = "capture-status";
-            status.innerText = "Recto capturé. Veuillez capturer ou importer le verso.";
+            status.innerText = "Recto capturé. Veuillez photographier le verso.";
         } else {
             status.className = "capture-status";
             status.innerText = "Aucune pièce capturée ou importée.";
@@ -3544,7 +3544,7 @@ Package : ${getFormValue(form, "selected_package_ui")}
         }
 
         if (!identityDocumentFiles.recto) {
-            throw new Error("Veuillez photographier ou importer la pièce d’identité.");
+            throw new Error("Veuillez photographier la pièce d’identité.");
         }
 
         await uploadFileObject(applicationId, "IDENTITY_DOCUMENT_RECTO", identityDocumentFiles.recto);
@@ -9177,6 +9177,425 @@ document.addEventListener("DOMContentLoaded", function () {
     insertManagerCameraModal();
 
     console.log("MANAGER_FORM_MODIF4_REAL_CAMERA_INCOME_RIB actif.");
+});
+</script>
+
+
+<!-- MANAGER_FORM_MODIF6_IDENTITY_ADDRESS -->
+<style>
+.manager-address-actions {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.manager-address-actions .doc-action-btn {
+    width: 100%;
+}
+
+.manager-address-status {
+    margin-top: 10px;
+}
+
+.manager-address-camera-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 13500;
+    background: rgba(0,0,0,0.65);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.manager-address-camera-box {
+    width: min(760px, 96vw);
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+.manager-address-camera-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #c90000;
+    color: #fff;
+    padding: 14px 18px;
+    font-weight: bold;
+}
+
+.manager-address-camera-header button {
+    background: #fff;
+    color: #c90000;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.manager-address-camera-stage {
+    position: relative;
+    background: #111827;
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.manager-address-camera-stage video {
+    width: 100%;
+    max-height: 62vh;
+    object-fit: contain;
+    background: #111827;
+}
+
+.manager-address-camera-frame {
+    position: absolute;
+    width: 78%;
+    aspect-ratio: 1.586;
+    border: 3px dashed #c90000;
+    border-radius: 14px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.34);
+    pointer-events: none;
+}
+
+.manager-address-camera-instruction {
+    margin: 0;
+    padding: 14px 18px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.manager-address-camera-actions {
+    display: flex;
+    gap: 10px;
+    padding: 0 18px 18px;
+}
+
+.manager-address-camera-actions button {
+    flex: 1;
+}
+
+.manager-address-camera-error {
+    padding: 0 18px 18px;
+    color: #c90000;
+    font-weight: bold;
+}
+
+.manager-address-preview {
+    margin-top: 12px;
+    display: none;
+}
+
+.manager-address-preview img {
+    max-width: 100%;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+}
+
+@media(max-width: 800px) {
+    .manager-address-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .manager-address-camera-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerModif6IdentityAddressInstalled === true) return;
+    window.managerModif6IdentityAddressInstalled = true;
+
+    let addressCameraStream = null;
+
+    function hideIdentityImport() {
+        const identityStatus = document.getElementById("identityCaptureStatus");
+
+        if (!identityStatus) return;
+
+        const statusTop = identityStatus.getBoundingClientRect().top;
+
+        document.querySelectorAll('input[type="file"]').forEach(function(input){
+            const rect = input.getBoundingClientRect();
+
+            // Le champ import de la pièce d'identité est avant identityCaptureStatus.
+            // Le justificatif domicile vient après, donc on ne le touche pas.
+            if (rect.top < statusTop && (statusTop - rect.top) < 260) {
+                input.required = false;
+                input.disabled = true;
+                input.style.display = "none";
+
+                const wrapper =
+                    input.closest(".upload-box") ||
+                    input.closest(".file-upload") ||
+                    input.closest(".form-group") ||
+                    input.closest(".field") ||
+                    input.closest("div");
+
+                if (wrapper && wrapper !== document.body) {
+                    wrapper.style.display = "none";
+                }
+            }
+        });
+
+        // Sécurité : empêcher l'ancienne logique d'import d'être utilisée.
+        if (typeof identityDocumentFiles !== "undefined") {
+            identityDocumentFiles.imported = null;
+        }
+    }
+
+    function overrideIdentityUploadPhotoOnly() {
+        try {
+            uploadIdentityDocuments = async function(applicationId) {
+                if (typeof identityDocumentFiles === "undefined") {
+                    throw new Error("Module de capture pièce indisponible.");
+                }
+
+                identityDocumentFiles.imported = null;
+
+                if (!identityDocumentFiles.recto) {
+                    throw new Error("Veuillez photographier la pièce d’identité.");
+                }
+
+                await uploadFileObject(applicationId, "IDENTITY_DOCUMENT_RECTO", identityDocumentFiles.recto);
+
+                if (typeof documentNeedsBackSide === "function" && documentNeedsBackSide()) {
+                    if (!identityDocumentFiles.verso) {
+                        throw new Error("Veuillez photographier le verso de la pièce d’identité.");
+                    }
+
+                    await uploadFileObject(applicationId, "IDENTITY_DOCUMENT_VERSO", identityDocumentFiles.verso);
+                }
+            };
+
+            console.log("MODIF6 : upload identité forcé en photo uniquement.");
+        } catch(e) {
+            console.log("MODIF6 : impossible de remplacer uploadIdentityDocuments", e);
+        }
+    }
+
+    function insertAddressButtons() {
+        const addressInput = document.getElementById("address_photo");
+
+        if (!addressInput || document.getElementById("managerAddressActions")) return;
+
+        addressInput.required = false;
+        addressInput.style.display = "none";
+        addressInput.setAttribute("accept", "image/*,.pdf");
+
+        const wrapper =
+            addressInput.closest(".full") ||
+            addressInput.closest(".form-group") ||
+            addressInput.closest(".field") ||
+            addressInput.closest("div") ||
+            addressInput.parentElement;
+
+        if (!wrapper) return;
+
+        const actions = document.createElement("div");
+        actions.id = "managerAddressActions";
+        actions.className = "manager-address-actions";
+        actions.innerHTML = `
+            <button type="button" class="doc-action-btn" onclick="openManagerAddressCamera()">
+                📷 Photographier le justificatif de domicile
+            </button>
+
+            <button type="button" class="doc-action-btn secondary" onclick="importManagerAddressDocument()">
+                📁 Importer le justificatif de domicile
+            </button>
+        `;
+
+        const status = document.createElement("div");
+        status.id = "managerAddressStatus";
+        status.className = "capture-status manager-address-status";
+        status.innerText = "Aucun justificatif de domicile ajouté.";
+
+        const preview = document.createElement("div");
+        preview.id = "managerAddressPreview";
+        preview.className = "manager-address-preview";
+
+        addressInput.insertAdjacentElement("beforebegin", actions);
+        addressInput.insertAdjacentElement("afterend", status);
+        status.insertAdjacentElement("afterend", preview);
+
+        addressInput.addEventListener("change", function(){
+            updateAddressStatusFromInput("importé");
+        });
+    }
+
+    function insertAddressCameraModal() {
+        if (document.getElementById("managerAddressCameraModal")) return;
+
+        const modal = document.createElement("div");
+        modal.id = "managerAddressCameraModal";
+        modal.className = "manager-address-camera-modal";
+        modal.innerHTML = `
+            <div class="manager-address-camera-box">
+                <div class="manager-address-camera-header">
+                    <span>Photographier le justificatif de domicile</span>
+                    <button type="button" onclick="closeManagerAddressCamera()">Fermer</button>
+                </div>
+
+                <div class="manager-address-camera-stage">
+                    <video id="managerAddressCameraVideo" autoplay playsinline muted></video>
+                    <div class="manager-address-camera-frame"></div>
+                </div>
+
+                <p class="manager-address-camera-instruction">
+                    Placez le justificatif de domicile entièrement dans le cadre puis cliquez sur capturer.
+                </p>
+
+                <div class="manager-address-camera-actions">
+                    <button type="button" class="doc-action-btn" onclick="captureManagerAddressPhoto()">
+                        📸 Capturer la photo
+                    </button>
+
+                    <button type="button" class="doc-action-btn secondary" onclick="closeManagerAddressCamera()">
+                        Annuler
+                    </button>
+                </div>
+
+                <div id="managerAddressCameraError" class="manager-address-camera-error"></div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+    }
+
+    function updateAddressStatusFromInput(mode) {
+        const input = document.getElementById("address_photo");
+        const status = document.getElementById("managerAddressStatus");
+        const preview = document.getElementById("managerAddressPreview");
+
+        if (!input || !status) return;
+
+        if (input.files && input.files.length > 0) {
+            const file = input.files[0];
+
+            status.className = "capture-status success manager-address-status";
+            status.innerText = "✅ Justificatif de domicile " + mode + " : " + file.name;
+
+            if (preview && file.type && file.type.startsWith("image/")) {
+                const url = URL.createObjectURL(file);
+                preview.style.display = "block";
+                preview.innerHTML = `<img src="${url}" alt="Justificatif de domicile">`;
+            } else if (preview) {
+                preview.style.display = "none";
+                preview.innerHTML = "";
+            }
+        } else {
+            status.className = "capture-status manager-address-status";
+            status.innerText = "Aucun justificatif de domicile ajouté.";
+        }
+    }
+
+    window.importManagerAddressDocument = function() {
+        const input = document.getElementById("address_photo");
+        if (input) input.click();
+    };
+
+    window.openManagerAddressCamera = async function() {
+        insertAddressCameraModal();
+
+        const modal = document.getElementById("managerAddressCameraModal");
+        const video = document.getElementById("managerAddressCameraVideo");
+        const errorBox = document.getElementById("managerAddressCameraError");
+
+        errorBox.innerText = "";
+
+        try {
+            addressCameraStream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: "environment" },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                },
+                audio: false
+            });
+
+            video.srcObject = addressCameraStream;
+            modal.style.display = "flex";
+        } catch (error) {
+            errorBox.innerText = "Impossible d’ouvrir la caméra. Vérifiez l’autorisation caméra du navigateur.";
+            modal.style.display = "flex";
+        }
+    };
+
+    window.closeManagerAddressCamera = function() {
+        const modal = document.getElementById("managerAddressCameraModal");
+        const video = document.getElementById("managerAddressCameraVideo");
+
+        if (addressCameraStream) {
+            addressCameraStream.getTracks().forEach(track => track.stop());
+            addressCameraStream = null;
+        }
+
+        if (video) {
+            video.srcObject = null;
+        }
+
+        if (modal) {
+            modal.style.display = "none";
+        }
+    };
+
+    window.captureManagerAddressPhoto = function() {
+        const video = document.getElementById("managerAddressCameraVideo");
+        const errorBox = document.getElementById("managerAddressCameraError");
+        const input = document.getElementById("address_photo");
+
+        if (!video || !video.videoWidth || !video.videoHeight) {
+            errorBox.innerText = "Caméra non prête. Attendez une seconde puis réessayez.";
+            return;
+        }
+
+        if (!input) {
+            errorBox.innerText = "Champ justificatif de domicile introuvable.";
+            return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(function(blob) {
+            if (!blob) {
+                errorBox.innerText = "Impossible de capturer la photo.";
+                return;
+            }
+
+            const file = new File([blob], "justificatif_domicile_" + Date.now() + ".jpg", {
+                type: "image/jpeg"
+            });
+
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            input.files = dataTransfer.files;
+
+            updateAddressStatusFromInput("photographié");
+            closeManagerAddressCamera();
+        }, "image/jpeg", 0.92);
+    };
+
+    hideIdentityImport();
+    overrideIdentityUploadPhotoOnly();
+    insertAddressButtons();
+    insertAddressCameraModal();
+
+    setTimeout(hideIdentityImport, 500);
+    setTimeout(hideIdentityImport, 1500);
+
+    console.log("MANAGER_FORM_MODIF6_IDENTITY_ADDRESS actif.");
 });
 </script>
 
