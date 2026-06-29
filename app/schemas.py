@@ -42,6 +42,8 @@ class ApplicationCreate(BaseModel):
     income_currency: Optional[str] = None
     activity_sector: Optional[str] = None
     activity_sector_code: Optional[str] = None
+    activity_subsector: Optional[str] = None
+    activity_subsector_code: Optional[str] = None
     sector_of_activity: Optional[str] = None
     economic_sector: Optional[str] = None
 

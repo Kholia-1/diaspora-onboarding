@@ -50,6 +50,8 @@ class AccountApplication(Base):
     income_currency = Column(String(20), nullable=True)
     activity_sector = Column(String(255), nullable=True)
     activity_sector_code = Column(String(100), nullable=True)
+    activity_subsector = Column(String(255), nullable=True)
+    activity_subsector_code = Column(String(100), nullable=True)
 
     account_object = Column(String(150), nullable=True)
     account_object_other = Column(Text, nullable=True)

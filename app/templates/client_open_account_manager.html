@@ -1491,12 +1491,12 @@
                     <div>
                         <label>Type de pièce <span class="required">*</span></label>
                         <select name="document_type_ui" required>
-                            <option value="">Sélectionnez...</option>
-                            <option value="Carte nationale d'identité">Carte nationale d’identité</option>
-                            <option value="Passeport">Passeport</option>
-                            <option value="Titre de séjour">Titre de séjour</option>
-                            <option value="Carte consulaire">Carte consulaire</option>
-                        </select>
+    <option value="">Sélectionnez...</option>
+    <option value="Carte nationale d’identité">Carte nationale d’identité</option>
+    <option value="Passeport">Passeport</option>
+    <option value="Titre de séjour">Titre de séjour</option>
+    <option value="Carte consulaire">Carte consulaire</option>
+</select>
                     </div>
 
                     <div>
@@ -11256,8 +11256,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const hiddenAccountType = document.createElement("input");
         hiddenAccountType.type = "hidden";
-        hiddenAccountType.id = "account_type";
-        hiddenAccountType.name = "account_type";
+        hiddenAccountType.id = "onboarding_account_type";
+        hiddenAccountType.name = "onboarding_account_type";
         hiddenAccountType.value = type;
 
         const hiddenCustomerType = document.createElement("input");
@@ -11298,13 +11298,13 @@ document.addEventListener("DOMContentLoaded", function () {
                     init.body &&
                     typeof init.body === "string"
                 ) {
-                    const accountType = document.getElementById("account_type");
+                    const accountType = document.getElementById("onboarding_account_type");
                     const customerType = document.getElementById("customer_type");
                     const applicationType = document.getElementById("application_type");
 
                     const body = JSON.parse(init.body);
 
-                    body.account_type = accountType ? accountType.value : "PERSONAL";
+                    body.onboarding_account_type = accountType ? accountType.value : "PERSONAL";
                     body.customer_type = customerType ? customerType.value : "INDIVIDUAL";
                     body.application_type = applicationType ? applicationType.value : "PERSONAL";
 
@@ -11312,7 +11312,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         body: JSON.stringify(body)
                     });
 
-                    console.log("Type de compte ajouté au payload :", body.account_type);
+                    console.log("Type de demande ajouté au payload :", body.onboarding_account_type);
                 }
             } catch(e) {
                 console.log("Patch type compte ignoré", e);
@@ -11327,6 +11327,812 @@ document.addEventListener("DOMContentLoaded", function () {
 
     console.log("MANAGER_FORM_FLOW_ACCOUNT_TYPE actif.");
 });
+</script>
+
+
+<!-- MANAGER_FORM_OCR_PREFILL_V1 -->
+<style>
+.ocr-prefill-banner {
+    margin: 16px 0;
+    padding: 15px 18px;
+    border-radius: 14px;
+    border-left: 5px solid #ffcc00;
+    background: #fffbea;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.ocr-prefill-banner strong {
+    color: #b45309;
+}
+
+.ocr-prefill-banner .ocr-prefill-small {
+    margin-top: 6px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.ocr-prefilled-field {
+    outline: 2px solid rgba(255, 204, 0, 0.75) !important;
+    background-color: #fffbea !important;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerOcrPrefillInstalled === true) return;
+    window.managerOcrPrefillInstalled = true;
+
+    function getOcrStore() {
+        try {
+            return JSON.parse(localStorage.getItem("diaspora_pre_onboarding_ocr") || "{}");
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function normalizeDate(value) {
+        if (!value) return "";
+
+        const v = String(value).trim();
+
+        // dd/mm/yyyy -> yyyy-mm-dd pour input type=date
+        const m1 = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (m1) {
+            return `${m1[3]}-${m1[2]}-${m1[1]}`;
+        }
+
+        // yyyy-mm-dd déjà correct
+        const m2 = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m2) {
+            return v;
+        }
+
+        return v;
+    }
+
+    function normalizeSex(value) {
+        if (!value) return "";
+
+        const v = String(value).trim().toUpperCase();
+
+        if (v === "M" || v === "MALE" || v === "MASCULIN") return "M";
+        if (v === "F" || v === "FEMALE" || v === "FEMININ" || v === "FÉMININ") return "F";
+
+        return v;
+    }
+
+    function findField(candidates) {
+        for (const name of candidates) {
+            let el =
+                document.getElementById(name) ||
+                document.querySelector(`[name="${name}"]`) ||
+                document.querySelector(`[data-field="${name}"]`);
+
+            if (el) return el;
+        }
+
+        return null;
+    }
+
+    function setField(candidates, value, options = {}) {
+        if (value === undefined || value === null || value === "") return false;
+
+        const el = findField(candidates);
+        if (!el) return false;
+
+        // Ne pas écraser une valeur déjà saisie ou déjà remplie
+        if (!options.force && el.value && String(el.value).trim() !== "") {
+            return false;
+        }
+
+        let finalValue = value;
+
+        if (options.date === true) {
+            finalValue = normalizeDate(value);
+        }
+
+        if (options.sex === true) {
+            finalValue = normalizeSex(value);
+        }
+
+        el.value = finalValue;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+        el.classList.add("ocr-prefilled-field");
+
+        return true;
+    }
+
+    function insertPrefillBanner(count, prefill) {
+        if (document.getElementById("ocrPrefillBanner")) return;
+
+        const form = document.querySelector("form");
+        if (!form) return;
+
+        const banner = document.createElement("div");
+        banner.id = "ocrPrefillBanner";
+        banner.className = "ocr-prefill-banner";
+
+        banner.innerHTML = `
+            <strong>Préremplissage OCR appliqué</strong><br>
+            ${count} champ(s) ont été préremplis à partir des documents analysés.
+            <div class="ocr-prefill-small">
+                Les informations restent modifiables avant validation finale du dossier.
+            </div>
+        `;
+
+        form.insertAdjacentElement("afterbegin", banner);
+    }
+
+    function applyOcrPrefill() {
+        const store = getOcrStore();
+        const prefill = store.prefill || {};
+
+        if (!prefill || Object.keys(prefill).length === 0) {
+            console.log("Aucune donnée OCR à préremplir.");
+            return;
+        }
+
+        let filled = 0;
+
+        const lastName = prefill.last_name || prefill.surname;
+        const firstName = prefill.first_name || prefill.given_names;
+        const fullName = prefill.full_name;
+        const identityNumber =
+            prefill.identity_document_number ||
+            prefill.cni_number ||
+            prefill.passport_number;
+
+        if (setField(["last_name", "surname", "nom", "customer_last_name", "lastname"], lastName)) filled++;
+        if (setField(["first_name", "given_names", "prenom", "prénom", "customer_first_name", "firstname"], firstName)) filled++;
+
+        // Si le formulaire a un champ nom complet
+        if (setField(["full_name", "nom_complet", "customer_full_name", "complete_name"], fullName)) filled++;
+
+        if (setField(["birth_date", "date_of_birth", "date_naissance"], prefill.birth_date, { date: true })) filled++;
+        if (setField(["place_of_birth", "birth_place", "lieu_naissance"], prefill.place_of_birth)) filled++;
+        if (setField(["nationality", "nationalite", "nationalité"], prefill.nationality)) filled++;
+        if (setField(["sex", "gender", "sexe"], prefill.sex, { sex: true })) filled++;
+
+        if (setField(["profession", "occupation", "job_title"], prefill.profession)) filled++;
+
+        if (setField(["identity_document_number", "document_number", "id_number", "cni_number", "passport_number"], identityNumber)) filled++;
+        if (setField(["identity_issue_date", "issue_date", "date_delivrance"], prefill.identity_issue_date, { date: true })) filled++;
+        if (setField(["identity_expiry_date", "expiry_date", "date_expiration"], prefill.identity_expiry_date, { date: true })) filled++;
+
+        if (setField(["email", "email_address"], prefill.email)) filled++;
+        if (setField(["phone", "phone_number", "mobile_phone", "telephone", "téléphone"], prefill.phone)) filled++;
+
+        if (setField(["niu", "tax_identification_number", "fiscal_number", "numero_fiscal", "numéro_fiscal"], prefill.niu || prefill.tax_identification_number)) filled++;
+
+        if (setField(["rib", "iban", "bank_account_number", "iban_or_account_number"], prefill.rib || prefill.iban_or_account_number)) filled++;
+
+        if (setField(["company_name", "business_name", "raison_sociale"], prefill.company_name)) filled++;
+        if (setField(["rccm", "rccm_number", "business_registration_number"], prefill.rccm)) filled++;
+
+        if (filled > 0) {
+            insertPrefillBanner(filled, prefill);
+            console.log("Préremplissage OCR appliqué :", filled, prefill);
+        } else {
+            console.log("Données OCR trouvées, mais aucun champ correspondant dans le formulaire :", prefill);
+        }
+    }
+
+    // Petit délai pour laisser les autres scripts du formulaire créer/modifier les champs.
+    setTimeout(applyOcrPrefill, 700);
+
+    console.log("MANAGER_FORM_OCR_PREFILL_V1 actif.");
+});
+</script>
+
+
+<!-- MANAGER_FORM_OCR_PREFILL_V2_EXACT_FIELDS -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.managerOcrPrefillV2Installed === true) return;
+    window.managerOcrPrefillV2Installed = true;
+
+    function getOcrStoreV2() {
+        try {
+            return JSON.parse(localStorage.getItem("diaspora_pre_onboarding_ocr") || "{}");
+        } catch (e) {
+            return {};
+        }
+    }
+
+    function normalizeDateV2(value) {
+        if (!value) return "";
+
+        const v = String(value).trim();
+
+        const m1 = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (m1) return `${m1[3]}-${m1[2]}-${m1[1]}`;
+
+        const m2 = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (m2) return v;
+
+        return v;
+    }
+
+    function normalizeNationalityV2(value) {
+        if (!value) return "";
+
+        const v = String(value).trim().toUpperCase();
+
+        if (
+            v.includes("CAMEROON") ||
+            v.includes("CAMEROUN") ||
+            v.includes("CAMEROONIAN")
+        ) {
+            return "Cameroun";
+        }
+
+        return value;
+    }
+
+    function normalizeSexV2(value) {
+        if (!value) return "";
+
+        const v = String(value).trim().toUpperCase();
+
+        if (v === "M" || v.includes("MALE") || v.includes("MASCULIN") || v.includes("HOMME")) {
+            return "M";
+        }
+
+        if (v === "F" || v.includes("FEMALE") || v.includes("FEMININ") || v.includes("FÉMININ") || v.includes("FEMME")) {
+            return "F";
+        }
+
+        return value;
+    }
+
+    function getFieldByNameOrIdV2(key) {
+        return document.querySelector(`[name="${key}"]`) || document.getElementById(key);
+    }
+
+    function markOcrFieldV2(el) {
+        if (!el) return;
+        el.classList.add("ocr-prefilled-field");
+        el.setAttribute("data-ocr-prefilled", "true");
+    }
+
+    function setInputV2(key, value, options = {}) {
+        if (value === undefined || value === null || value === "") return false;
+
+        const el = getFieldByNameOrIdV2(key);
+        if (!el) return false;
+
+        if (!options.force && el.value && String(el.value).trim() !== "") {
+            return false;
+        }
+
+        let finalValue = value;
+
+        if (options.date) finalValue = normalizeDateV2(value);
+        if (options.nationality) finalValue = normalizeNationalityV2(value);
+        if (options.sex) finalValue = normalizeSexV2(value);
+
+        el.value = finalValue;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+        markOcrFieldV2(el);
+
+        return true;
+    }
+
+    function setSelectSmartV2(key, value, keywords = []) {
+        if (value === undefined || value === null || value === "") return false;
+
+        const el = getFieldByNameOrIdV2(key);
+        if (!el || el.tagName !== "SELECT") return false;
+
+        if (el.value && String(el.value).trim() !== "") return false;
+
+        const wanted = String(value).trim().toUpperCase();
+        const allKeywords = [wanted].concat(keywords.map(k => String(k).toUpperCase()));
+
+        for (const opt of Array.from(el.options)) {
+            const optValue = String(opt.value || "").trim().toUpperCase();
+            const optText = String(opt.textContent || "").trim().toUpperCase();
+
+            if (allKeywords.includes(optValue) || allKeywords.includes(optText)) {
+                el.value = opt.value;
+                el.dispatchEvent(new Event("change", { bubbles: true }));
+                markOcrFieldV2(el);
+                return true;
+            }
+
+            if (allKeywords.some(k => k && (optText.includes(k) || optValue.includes(k)))) {
+                el.value = opt.value;
+                el.dispatchEvent(new Event("change", { bubbles: true }));
+                markOcrFieldV2(el);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    function updateNationalitySearchV2(value) {
+        if (!value) return false;
+
+        const normalized = normalizeNationalityV2(value);
+
+        let filled = false;
+
+        if (setInputV2("nationality", normalized, { nationality: true, force: true })) {
+            filled = true;
+        }
+
+        const search = document.getElementById("nationalitySearch");
+        if (search && (!search.value || search.value.trim() === "")) {
+            search.value = normalized;
+            search.dispatchEvent(new Event("input", { bubbles: true }));
+            search.dispatchEvent(new Event("change", { bubbles: true }));
+            markOcrFieldV2(search);
+            filled = true;
+        }
+
+        return filled;
+    }
+
+    function normalizeDocTextV2(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[’']/g, "")
+            .trim()
+            .toUpperCase();
+    }
+
+    function forceDocumentTypeV2(targetType) {
+        const el = getFieldByNameOrIdV2("document_type_ui");
+        if (!el || el.tagName !== "SELECT") return false;
+
+        const target = normalizeDocTextV2(targetType);
+
+        for (const opt of Array.from(el.options)) {
+            const optValue = normalizeDocTextV2(opt.value);
+            const optText = normalizeDocTextV2(opt.textContent);
+
+            if (target === "CNI") {
+                if (
+                    optText.includes("CARTE NATIONALE") ||
+                    optText.includes("IDENTITE") ||
+                    optValue.includes("CARTE NATIONALE") ||
+                    optValue.includes("IDENTITE")
+                ) {
+                    el.value = opt.value;
+                    el.dispatchEvent(new Event("change", { bubbles: true }));
+                    markOcrFieldV2(el);
+                    return true;
+                }
+            }
+
+            if (target === "PASSPORT") {
+                if (
+                    optText.includes("PASSEPORT") ||
+                    optText.includes("PASSPORT") ||
+                    optValue.includes("PASSEPORT") ||
+                    optValue.includes("PASSPORT")
+                ) {
+                    el.value = opt.value;
+                    el.dispatchEvent(new Event("change", { bubbles: true }));
+                    markOcrFieldV2(el);
+                    return true;
+                }
+            }
+
+            if (target === "RESIDENCE_PERMIT") {
+                if (
+                    optText.includes("TITRE DE SEJOUR") ||
+                    optText.includes("TITRE DE SÉJOUR") ||
+                    optValue.includes("TITRE DE SEJOUR") ||
+                    optValue.includes("TITRE DE SÉJOUR")
+                ) {
+                    el.value = opt.value;
+                    el.dispatchEvent(new Event("change", { bubbles: true }));
+                    markOcrFieldV2(el);
+                    return true;
+                }
+            }
+
+            if (target === "CONSULAR_CARD") {
+                if (
+                    optText.includes("CARTE CONSULAIRE") ||
+                    optValue.includes("CARTE CONSULAIRE")
+                ) {
+                    el.value = opt.value;
+                    el.dispatchEvent(new Event("change", { bubbles: true }));
+                    markOcrFieldV2(el);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    function setDocumentTypeV2(prefill) {
+        const store = getOcrStoreV2();
+        const selectedType = String(store.identity_document_type || "").toUpperCase();
+
+        // Priorité absolue au choix explicite du client.
+        if (selectedType === "CNI") return forceDocumentTypeV2("CNI");
+        if (selectedType === "PASSPORT") return forceDocumentTypeV2("PASSPORT");
+        if (selectedType === "RESIDENCE_PERMIT") return forceDocumentTypeV2("RESIDENCE_PERMIT");
+        if (selectedType === "CONSULAR_CARD") return forceDocumentTypeV2("CONSULAR_CARD");
+
+        // Fallback uniquement si aucun choix explicite n’existe.
+        const textSource = JSON.stringify(prefill || {}).toUpperCase();
+
+        if (
+            prefill.passport_number ||
+            textSource.includes("PASSPORT") ||
+            textSource.includes("PASSEPORT")
+        ) {
+            return forceDocumentTypeV2("PASSPORT");
+        }
+
+        if (
+            prefill.cni_number ||
+            prefill.identity_document_number ||
+            textSource.includes("CNI") ||
+            textSource.includes("IDENTITY_DOCUMENT")
+        ) {
+            return forceDocumentTypeV2("CNI");
+        }
+
+        return false;
+    }
+
+    function applyOcrPrefillV2() {
+        const store = getOcrStoreV2();
+        const prefill = store.prefill || {};
+
+        if (!prefill || Object.keys(prefill).length === 0) {
+            console.log("OCR V2 : aucune donnée disponible.");
+            return;
+        }
+
+        let filled = 0;
+
+        const lastName = prefill.last_name || prefill.surname;
+        const firstName = prefill.first_name || prefill.given_names;
+        const identityNumber =
+            prefill.identity_document_number ||
+            prefill.cni_number ||
+            prefill.passport_number;
+
+        if (setInputV2("last_name", lastName)) filled++;
+        if (setInputV2("first_name", firstName)) filled++;
+        if (setInputV2("birth_date", prefill.birth_date, { date: true })) filled++;
+        if (setInputV2("birth_place", prefill.place_of_birth)) filled++;
+        if (updateNationalitySearchV2(prefill.nationality)) filled++;
+        if (setSelectSmartV2("sex", normalizeSexV2(prefill.sex), ["MASCULIN", "MALE", "HOMME"])) filled++;
+
+        if (setInputV2("identity_document_number", identityNumber)) filled++;
+        if (setInputV2("identity_document_issue_date", prefill.identity_issue_date, { date: true })) filled++;
+        if (setInputV2("identity_document_issue_place", prefill.identity_issue_place || prefill.issue_place)) filled++;
+
+        if (setDocumentTypeV2(prefill)) filled++;
+
+        if (setInputV2("niu_ui", prefill.niu || prefill.tax_identification_number)) filled++;
+        if (setInputV2("email", prefill.email)) filled++;
+
+        // Le champ téléphone visible est phone_local, mais on ne force pas encore
+        // car il faut découper indicatif + numéro local.
+        if (setInputV2("rib", prefill.rib || prefill.iban_or_account_number)) filled++;
+
+        if (setSelectSmartV2("profession_ui", prefill.profession, [prefill.profession || ""])) filled++;
+
+        if (filled > 0) {
+            let banner = document.getElementById("ocrPrefillBanner");
+
+            if (banner) {
+                banner.innerHTML = `
+                    <strong>Préremplissage OCR appliqué</strong><br>
+                    ${filled} champ(s) supplémentaires ont été vérifiés ou préremplis avec les vrais champs du formulaire.
+                    <div class="ocr-prefill-small">
+                        Source nom/date : ${prefill.identity_name_source || "OCR"} / ${prefill.identity_dates_source || "OCR"}.
+                        Les informations restent modifiables avant validation finale.
+                    </div>
+                `;
+            }
+
+            console.log("OCR V2 exact fields appliqué :", filled, prefill);
+        } else {
+            console.log("OCR V2 : données trouvées mais aucun champ supplémentaire rempli.", prefill);
+        }
+    }
+
+    setTimeout(applyOcrPrefillV2, 1400);
+
+    console.log("MANAGER_FORM_OCR_PREFILL_V2_EXACT_FIELDS actif.");
+});
+</script>
+
+
+
+
+
+
+<!-- MANAGER_FORM_SUBSECTOR_ACTIVITY_V3_NO_RESET -->
+<style>
+  .subsector-block {
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid #d8dee9;
+    border-radius: 10px;
+    background: #f8fafc;
+  }
+
+  .subsector-block label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .subsector-block select {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+  }
+
+  .subsector-help {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #64748b;
+  }
+</style>
+
+<script>
+(function () {
+  const MARKER = "MANAGER_FORM_SUBSECTOR_ACTIVITY_V3_NO_RESET";
+  let allSubsectors = [];
+  let lastSectorSignature = null;
+
+  function normalize(value) {
+    return String(value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/['’`]/g, "")
+      .replace(/&/g, "et")
+      .replace(/[^a-zA-Z0-9]+/g, " ")
+      .toLowerCase()
+      .trim();
+  }
+
+  function unique(values) {
+    return Array.from(new Set(values.map(v => String(v || "").trim()).filter(Boolean)));
+  }
+
+  function getSectorCandidates() {
+    const candidates = [];
+
+    const selectors = [
+      '[name="activity_sector_code"]',
+      '#activity_sector_code',
+      '[name="activity_sector"]',
+      '#activity_sector',
+      '[name="activity_sector_search"]',
+      '#activity_sector_search'
+    ];
+
+    selectors.forEach(function (selector) {
+      document.querySelectorAll(selector).forEach(function (field) {
+        if (field.value) candidates.push(field.value);
+
+        if (field.tagName === "SELECT") {
+          const opt = field.options[field.selectedIndex];
+          if (opt) {
+            if (opt.value) candidates.push(opt.value);
+            if (opt.textContent) candidates.push(opt.textContent);
+            if (opt.dataset.code) candidates.push(opt.dataset.code);
+            if (opt.dataset.label) candidates.push(opt.dataset.label);
+          }
+        }
+      });
+    });
+
+    const labels = Array.from(document.querySelectorAll("label"));
+    const sectorLabel = labels.find(function (el) {
+      const t = normalize(el.textContent);
+      return t.includes("secteur") && t.includes("activite") && !t.includes("sous");
+    });
+
+    if (sectorLabel) {
+      const container =
+        sectorLabel.closest(".form-group, .mb-3, .col-md-6, .col-md-12, .field, div") ||
+        sectorLabel.parentElement;
+
+      if (container) {
+        container.querySelectorAll("input, select, textarea").forEach(function (field) {
+          if (field.value) candidates.push(field.value);
+
+          if (field.tagName === "SELECT") {
+            const opt = field.options[field.selectedIndex];
+            if (opt) {
+              if (opt.value) candidates.push(opt.value);
+              if (opt.textContent) candidates.push(opt.textContent);
+              if (opt.dataset.code) candidates.push(opt.dataset.code);
+              if (opt.dataset.label) candidates.push(opt.dataset.label);
+            }
+          }
+        });
+      }
+    }
+
+    return unique(candidates);
+  }
+
+  function sectorSignature() {
+    return getSectorCandidates().map(normalize).sort().join("|");
+  }
+
+  function ensureSubsectorBlock() {
+    let select = document.getElementById("activity_subsector_select");
+    if (select) return select;
+
+    const labels = Array.from(document.querySelectorAll("label"));
+    const sectorLabel = labels.find(function (el) {
+      const t = normalize(el.textContent);
+      return t.includes("secteur") && t.includes("activite") && !t.includes("sous");
+    });
+
+    const container = sectorLabel
+      ? (sectorLabel.closest(".form-group, .mb-3, .col-md-6, .col-md-12, .field, div") || sectorLabel.parentElement)
+      : null;
+
+    const block = document.createElement("div");
+    block.className = "subsector-block";
+    block.innerHTML = `
+      <label for="activity_subsector_select">Sous-secteur d’activité</label>
+
+      <select id="activity_subsector_select">
+        <option value="">Sélectionnez d’abord un secteur d’activité</option>
+      </select>
+
+      <input type="hidden" id="activity_subsector" name="activity_subsector" value="">
+      <input type="hidden" id="activity_subsector_code" name="activity_subsector_code" value="">
+
+      <div class="subsector-help" id="activity_subsector_help">
+        Le sous-secteur est filtré automatiquement selon le secteur d’activité choisi.
+      </div>
+    `;
+
+    if (container && container.parentNode) {
+      container.insertAdjacentElement("afterend", block);
+    } else {
+      const form = document.querySelector("form");
+      if (form) form.appendChild(block);
+      else document.body.appendChild(block);
+    }
+
+    select = document.getElementById("activity_subsector_select");
+
+    select.addEventListener("change", function () {
+      const hiddenLabel = document.getElementById("activity_subsector");
+      const hiddenCode = document.getElementById("activity_subsector_code");
+      const selected = select.options[select.selectedIndex];
+
+      hiddenCode.value = select.value || "";
+      hiddenLabel.value = selected ? (selected.dataset.label || selected.textContent || "") : "";
+
+      console.log(MARKER, "Sous-secteur sélectionné:", hiddenLabel.value, hiddenCode.value);
+    });
+
+    return select;
+  }
+
+  function matchSubsectorToSector(item, sectorCandidates) {
+    const itemSectorCode = normalize(item.sector_code);
+    const itemSectorLabel = normalize(item.sector);
+
+    return sectorCandidates.some(function (candidate) {
+      const c = normalize(candidate);
+
+      return (
+        c === itemSectorCode ||
+        c === itemSectorLabel ||
+        itemSectorCode.includes(c) ||
+        c.includes(itemSectorCode) ||
+        itemSectorLabel.includes(c) ||
+        c.includes(itemSectorLabel)
+      );
+    });
+  }
+
+  function refreshSubsectorsBecauseSectorChanged() {
+    const select = ensureSubsectorBlock();
+    const hiddenLabel = document.getElementById("activity_subsector");
+    const hiddenCode = document.getElementById("activity_subsector_code");
+    const help = document.getElementById("activity_subsector_help");
+
+    const previousValue = select.value;
+    const sectorCandidates = getSectorCandidates();
+
+    select.innerHTML = "";
+    hiddenLabel.value = "";
+    hiddenCode.value = "";
+
+    if (sectorCandidates.length === 0) {
+      select.disabled = true;
+      select.innerHTML = '<option value="">Sélectionnez d’abord un secteur d’activité</option>';
+      if (help) help.textContent = "Aucun secteur d’activité détecté pour l’instant.";
+      return;
+    }
+
+    const filtered = allSubsectors.filter(function (item) {
+      return matchSubsectorToSector(item, sectorCandidates);
+    });
+
+    if (filtered.length === 0) {
+      select.disabled = true;
+      select.innerHTML = '<option value="">Aucun sous-secteur trouvé pour ce secteur</option>';
+      if (help) help.textContent = "Aucun sous-secteur correspondant au secteur sélectionné.";
+      return;
+    }
+
+    select.disabled = false;
+    select.innerHTML = '<option value="">Sélectionnez un sous-secteur</option>';
+
+    filtered.forEach(function (item) {
+      const option = document.createElement("option");
+      option.value = item.code || "";
+      option.textContent = item.label || "";
+      option.dataset.label = item.label || "";
+      select.appendChild(option);
+    });
+
+    // Si le secteur n’a pas changé réellement et que l’ancienne valeur existe encore, on la conserve.
+    if (previousValue && Array.from(select.options).some(opt => opt.value === previousValue)) {
+      select.value = previousValue;
+      const selected = select.options[select.selectedIndex];
+      hiddenCode.value = select.value || "";
+      hiddenLabel.value = selected ? (selected.dataset.label || selected.textContent || "") : "";
+    }
+
+    if (help) help.textContent = filtered.length + " sous-secteur(s) disponible(s).";
+
+    console.log(MARKER, "Secteur détecté:", sectorCandidates, "Sous-secteurs:", filtered.length);
+  }
+
+  async function init() {
+    try {
+      ensureSubsectorBlock();
+
+      const response = await fetch("/api/subsectors/active?v=" + Date.now(), { cache: "no-store" });
+      if (!response.ok) throw new Error("Erreur chargement /api/subsectors/active");
+
+      allSubsectors = await response.json();
+
+      lastSectorSignature = sectorSignature();
+      refreshSubsectorsBecauseSectorChanged();
+
+      // Vérifie le secteur, mais ne recharge que si le secteur change vraiment.
+      setInterval(function () {
+        const currentSignature = sectorSignature();
+
+        if (currentSignature !== lastSectorSignature) {
+          lastSectorSignature = currentSignature;
+          refreshSubsectorsBecauseSectorChanged();
+        }
+      }, 700);
+
+      console.log(MARKER, "chargé:", allSubsectors.length);
+    } catch (error) {
+      console.error(MARKER, error);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
 </script>
 
 </body>

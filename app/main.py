@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.database import Base, engine, SessionLocal
-from app.routers import applications, backoffice, web, agencies, nationalities, countries
+from app.routers import applications, backoffice, web, agencies, nationalities, countries, pre_onboarding
 from app.services.agency_seed import seed_agencies
 from app.services.nationality_seed import seed_nationalities
 from app.services.country_seed import seed_countries
@@ -54,3 +54,14 @@ def health():
         "status": "UP",
         "application": "First Diaspora Onboarding"
     }
+
+app.include_router(pre_onboarding.router)
+
+# WhatsApp Callbell router
+from app.routers import whatsapp as whatsapp_router
+app.include_router(whatsapp_router.router)
+
+# Sous-secteurs d'activité router
+from app.routers import subsectors as subsectors_router
+app.include_router(subsectors_router.router)
+
