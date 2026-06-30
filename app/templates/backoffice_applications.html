@@ -601,5 +601,25 @@
     refreshData();
 </script>
 
+
+<script>
+/* BACKOFFICE_PREVENT_JSON_NAVIGATION_V1 */
+(function () {
+  document.addEventListener("click", function (event) {
+    const link = event.target.closest ? event.target.closest("a") : null;
+
+    if (!link) return;
+
+    const href = link.getAttribute("href") || "";
+
+    if (href.startsWith("/api/backoffice/applications/")) {
+      event.preventDefault();
+      const cleanHref = href.replace("/api/backoffice/applications/", "/backoffice/applications/");
+      window.location.href = cleanHref;
+    }
+  }, true);
+})();
+</script>
+
 </body>
 </html>

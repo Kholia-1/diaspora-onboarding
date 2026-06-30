@@ -1,3 +1,13 @@
+
+<!-- MANAGER_FORM_PRE_SESSION_BOX_V1 -->
+<div id="pre-session-box" class="pre-session-box hidden">
+  <strong>Documents préchargés depuis le pré-onboarding</strong>
+  <div id="pre-session-message">Vérification des documents capturés...</div>
+  <ul id="pre-session-documents"></ul>
+</div>
+
+<input type="hidden" id="pre_onboarding_session_id" name="pre_onboarding_session_id" value="">
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -1188,6 +1198,39 @@
             return result && result.faceLandmarks ? result.faceLandmarks : [];
         };
     </script>
+
+
+<style>
+  /* MANAGER_FORM_PRE_SESSION_DISPLAY_V1 */
+  .pre-session-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 16px;
+    padding: 15px 18px;
+    margin: 16px 0;
+    color: #1e3a8a;
+  }
+
+  .pre-session-box strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #1e40af;
+  }
+
+  .pre-session-box.hidden {
+    display: none;
+  }
+
+  .pre-session-box ul {
+    margin: 10px 0 0;
+    padding-left: 20px;
+  }
+
+  .pre-session-box li {
+    margin: 4px 0;
+    font-size: 14px;
+  }
+</style>
 
 </head>
 
@@ -10104,20 +10147,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const NON_RESIDENT_DOCS = {
         birth_certificate_photo: {
             label: "Acte de naissance ou pièce avec filiation",
-            photoButton: "📷 Photographier l’acte de naissance / pièce avec filiation",
-            importButton: "📁 Importer l’acte de naissance / pièce avec filiation",
+            photoButton: "📷 Photographier",
+            importButton: "📁 Importer",
             filePrefix: "acte_naissance_filiation"
         },
         employment_school_photo: {
             label: "Fiche de paie / attestation d’emploi / scolarité",
-            photoButton: "📷 Photographier la fiche de paie / attestation",
-            importButton: "📁 Importer la fiche de paie / attestation",
+            photoButton: "📷 Photographier",
+            importButton: "📁 Importer",
             filePrefix: "emploi_scolarite"
         },
         tax_compliance_photo: {
             label: "Attestation de conformité fiscale",
-            photoButton: "📷 Photographier l’attestation fiscale",
-            importButton: "📁 Importer l’attestation fiscale",
+            photoButton: "📷 Photographier",
+            importButton: "📁 Importer",
             filePrefix: "conformite_fiscale"
         }
     };
@@ -12135,5 +12178,367 @@ document.addEventListener("DOMContentLoaded", function () {
 })();
 </script>
 
+
+<script>
+  /* MANAGER_FORM_PRE_SESSION_JS_V1 */
+  (function () {
+    function getParam(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    function labelDocumentType(type) {
+      const labels = {
+        CNI_RECTO: "CNI recto",
+        CNI_VERSO: "CNI verso",
+        PASSPORT_DOCUMENT: "Passeport",
+        RESIDENCE_PERMIT_RECTO: "Titre de séjour recto",
+        RESIDENCE_PERMIT_VERSO: "Titre de séjour verso",
+        CONSULAR_CARD_RECTO: "Carte consulaire recto",
+        CONSULAR_CARD_VERSO: "Carte consulaire verso",
+        ADDRESS_PROOF: "Justificatif de résidence",
+        INCOME_PROOF: "Justificatif d’activité / revenus",
+        RIB_DOCUMENT: "RIB ou coordonnées bancaires",
+        BUSINESS_REGISTRATION: "Document d’existence entreprise",
+        TAX_DOCUMENT: "Identification fiscale",
+        CLIENT_PHOTO: "Photo client",
+        CLIENT_VIDEO: "Vidéo client"
+      };
+
+      return labels[type] || type || "Document";
+    }
+
+    async function loadPreOnboardingSession() {
+      const sessionId =
+        getParam("pre_session") ||
+        localStorage.getItem("diaspora_pre_onboarding_session_id") ||
+        "";
+
+      if (!sessionId) {
+        return;
+      }
+
+      const hiddenInput = document.getElementById("pre_onboarding_session_id");
+      const box = document.getElementById("pre-session-box");
+      const message = document.getElementById("pre-session-message");
+      const list = document.getElementById("pre-session-documents");
+
+      if (hiddenInput) {
+        hiddenInput.value = sessionId;
+      }
+
+      if (!box || !message || !list) {
+        return;
+      }
+
+      box.classList.remove("hidden");
+      message.textContent = "Vérification des documents capturés...";
+
+      try {
+        const response = await fetch("/api/pre-onboarding/session/" + encodeURIComponent(sessionId));
+
+        if (!response.ok) {
+          throw new Error("Erreur " + response.status);
+        }
+
+        const data = await response.json();
+        const allDocs = data.documents || [];
+
+        const latestByType = {};
+
+        allDocs.forEach(function (doc) {
+          const type = doc.document_type || "UNKNOWN";
+          const created = doc.created_at || "";
+
+          if (!latestByType[type] || created >= (latestByType[type].created_at || "")) {
+            latestByType[type] = doc;
+          }
+        });
+
+        const docs = Object.values(latestByType);
+
+        if (!docs.length) {
+          message.textContent = "Aucun document temporaire trouvé pour cette session.";
+          list.innerHTML = "";
+          return;
+        }
+
+        message.textContent = docs.length + " type(s) de document prêt(s) à être rattaché(s) au dossier final. Les reprises précédentes sont masquées.";
+
+        list.innerHTML = docs.map(function (doc) {
+          const sizeKo = Math.round((doc.size || 0) / 1024);
+          return "<li>" + labelDocumentType(doc.document_type) + " — " + sizeKo + " Ko</li>";
+        }).join("");
+      } catch (error) {
+        console.error(error);
+        message.textContent = "Impossible de vérifier les documents préchargés pour le moment.";
+        list.innerHTML = "";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadPreOnboardingSession);
+  })();
+</script>
+
+
+<script>
+  /* MANAGER_FORM_SEND_PRE_SESSION_FETCH_PATCH_V1 */
+  (function () {
+    const originalFetch = window.fetch;
+
+    window.fetch = function (input, init) {
+      try {
+        const url = typeof input === "string" ? input : (input && input.url ? input.url : "");
+        const method = init && init.method ? String(init.method).toUpperCase() : "GET";
+
+        const isCreateApplication =
+          method === "POST" &&
+          /\/api\/applications\/?$/.test(url);
+
+        if (isCreateApplication && init && init.body && typeof init.body === "string") {
+          const sessionId =
+            new URLSearchParams(window.location.search).get("pre_session") ||
+            localStorage.getItem("diaspora_pre_onboarding_session_id") ||
+            "";
+
+          if (sessionId) {
+            const payload = JSON.parse(init.body);
+            payload.pre_onboarding_session_id = sessionId;
+
+            init = Object.assign({}, init, {
+              body: JSON.stringify(payload)
+            });
+          }
+        }
+      } catch (error) {
+        console.warn("Pré-session non injectée dans la demande:", error);
+      }
+
+      return originalFetch.call(this, input, init);
+    };
+  })();
+</script>
+
 </body>
 </html>
+
+<script>
+/* MANAGER_FORM_DOCUMENT_PRELOAD_CAMERA_DOCS_V12 */
+(function () {
+  if (window.__documentPreloadCameraDocsV12) return;
+  window.__documentPreloadCameraDocsV12 = true;
+
+  function norm(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[’']/g, "'");
+  }
+
+  function getSessionId() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("pre_session") || localStorage.getItem("diaspora_pre_onboarding_session_id") || "";
+  }
+
+  function latestByType(docs) {
+    const latest = {};
+
+    (docs || []).forEach(function (doc) {
+      const t = String(doc.document_type || "").trim().toUpperCase();
+      const created = String(doc.created_at || "");
+
+      if (!t) return;
+
+      if (!latest[t] || created >= String(latest[t].created_at || "")) {
+        latest[t] = doc;
+      }
+    });
+
+    return latest;
+  }
+
+  function hasAny(latest, types) {
+    return types.some(function (t) {
+      return !!latest[String(t).toUpperCase()];
+    });
+  }
+
+  function findCard(keywords, selectorList) {
+    const selectors = selectorList || [
+      ".camera-doc-card",
+      ".photo-card"
+    ];
+
+    const cards = Array.from(document.querySelectorAll(selectors.join(",")));
+
+    let best = null;
+    let bestLength = Infinity;
+
+    cards.forEach(function (card) {
+      const text = norm(card.textContent);
+
+      const ok = keywords.some(function (keyword) {
+        return text.includes(norm(keyword));
+      });
+
+      if (ok && text.length < bestLength) {
+        best = card;
+        bestLength = text.length;
+      }
+    });
+
+    return best;
+  }
+
+  function removeOldBadges(card) {
+    if (!card) return;
+
+    card.querySelectorAll(
+      ".preloaded-final-v12-badge, .preloaded-final-v11-badge, .income-rib-exact-v10-badge, .income-rib-green-v9-badge, .preloaded-clean-v8-badge"
+    ).forEach(function (el) {
+      el.remove();
+    });
+  }
+
+  function markPreloaded(card, message) {
+    if (!card) return;
+
+    removeOldBadges(card);
+
+    card.style.background = "#f0fdf4";
+    card.style.border = "1px solid #86efac";
+    card.style.borderRadius = "14px";
+
+    card.querySelectorAll("button").forEach(function (btn) {
+      const text = norm(btn.textContent);
+
+      if (
+        text.includes("photographier") ||
+        text.includes("importer") ||
+        text.includes("filmer") ||
+        text.includes("capturer")
+      ) {
+        btn.style.display = "none";
+        btn.disabled = true;
+      }
+    });
+
+    card.querySelectorAll('input[type="file"]').forEach(function (input) {
+      input.required = false;
+      input.disabled = true;
+      input.style.display = "none";
+    });
+
+    card.querySelectorAll(".capture-status, .field-message, .helper, .hint, .manager-doc-preview").forEach(function (el) {
+      const text = norm(el.textContent);
+
+      if (
+        text.includes("aucune photo") ||
+        text.includes("aucun document") ||
+        text.includes("aucun fichier")
+      ) {
+        el.style.display = "none";
+      }
+    });
+
+    const badge = document.createElement("div");
+    badge.className = "preloaded-final-v12-badge";
+    badge.innerHTML = "✅ " + message;
+
+    badge.style.marginTop = "10px";
+    badge.style.padding = "10px 12px";
+    badge.style.borderRadius = "12px";
+    badge.style.background = "#ecfdf5";
+    badge.style.border = "1px solid #bbf7d0";
+    badge.style.color = "#166534";
+    badge.style.fontWeight = "800";
+    badge.style.fontSize = "13px";
+
+    card.appendChild(badge);
+  }
+
+  function applyPreloaded(latest) {
+    window.preloadedDocumentTypes = latest || {};
+
+    if (hasAny(latest, [
+      "CNI_RECTO",
+      "CNI_VERSO",
+      "PASSPORT_DOCUMENT",
+      "RESIDENCE_PERMIT_RECTO",
+      "RESIDENCE_PERMIT_VERSO",
+      "CONSULAR_CARD_RECTO",
+      "CONSULAR_CARD_VERSO",
+      "IDENTITY_DOCUMENT_RECTO",
+      "IDENTITY_DOCUMENT_VERSO",
+      "IDENTITY_DOCUMENT_IMPORTED"
+    ])) {
+      markPreloaded(
+        findCard(["Pièce d’identité officielle", "Pièce d'identité officielle"], [".photo-card"]),
+        "Pièce d’identité déjà préchargée depuis le pré-onboarding."
+      );
+    }
+
+    if (latest.ADDRESS_PROOF) {
+      markPreloaded(
+        findCard(["Photo du justificatif de domicile"], [".photo-card"]),
+        "Justificatif de domicile déjà préchargé depuis le pré-onboarding."
+      );
+    }
+
+    if (latest.INCOME_PROOF) {
+      markPreloaded(
+        findCard([
+          "Preuve de justification de revenu / activité du client",
+          "Preuve de justification de revenu",
+          "revenu / activité du client"
+        ], [".camera-doc-card", ".photo-card"]),
+        "Justificatif d’activité / revenus déjà préchargé depuis le pré-onboarding."
+      );
+    }
+
+    if (latest.RIB_DOCUMENT) {
+      markPreloaded(
+        findCard([
+          "Relevé d’identification bancaire - RIB",
+          "Relevé d'identification bancaire - RIB",
+          "RIB"
+        ], [".camera-doc-card", ".photo-card"]),
+        "RIB ou coordonnées bancaires déjà préchargé depuis le pré-onboarding."
+      );
+    }
+
+    if (hasAny(latest, ["CLIENT_PHOTO", "CLIENT_VIDEO", "SELFIE_PHOTO", "SELFIE_VIDEO"])) {
+      markPreloaded(
+        findCard(["Selfie / preuve de vie"], [".photo-card"]),
+        "Photo ou vidéo client déjà préchargée depuis le pré-onboarding."
+      );
+    }
+  }
+
+  async function loadPreloaded() {
+    const sessionId = getSessionId();
+    if (!sessionId) return;
+
+    try {
+      const response = await fetch("/api/pre-onboarding/session/" + encodeURIComponent(sessionId));
+
+      if (!response.ok) {
+        throw new Error("Erreur session " + response.status);
+      }
+
+      const data = await response.json();
+      const latest = latestByType(data.documents || []);
+
+      applyPreloaded(latest);
+      setTimeout(function () { applyPreloaded(latest); }, 800);
+      setTimeout(function () { applyPreloaded(latest); }, 1800);
+      setTimeout(function () { applyPreloaded(latest); }, 3000);
+    } catch (error) {
+      console.warn("Chargement documents préchargés impossible:", error);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadPreloaded);
+})();
+</script>

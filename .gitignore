@@ -9,3 +9,15 @@ data/
 *.analysis.enc
 .DS_Store
 .idea/
+# Sauvegardes locales générées pendant les corrections
+*.bak*
+*.bak_*
+backups/
+backups_html/
+app/templates.bak_document_labels/
+client_open_account_manager.html
+
+# Secrets / variables locales
+.env
+.env.*
+*.env

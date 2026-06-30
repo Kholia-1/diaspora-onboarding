@@ -5,6 +5,7 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 
 
 class ApplicationCreate(BaseModel):
+    pre_onboarding_session_id: Optional[str] = None
     last_name: str
     first_name: str
     birth_date: Optional[date] = None

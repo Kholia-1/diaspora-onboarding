@@ -1,428 +1,3001 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Démarrage ouverture de compte - Diaspora</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ouverture de compte - Préparation du dossier</title>
 
-    <style>
-        :root {
-            --red: #c90000;
-            --red-dark: #9f0000;
-            --gold: #f4b000;
-            --bg: #f4f6f9;
-            --text: #111827;
-            --muted: #6b7280;
-            --border: #e5e7eb;
-        }
+  <style>
+    :root {
+      --red: #b5121b;
+      --dark-red: #8f0e15;
+      --gold: #f4b400;
+      --green: #12805c;
+      --blue: #1d4ed8;
+      --bg: #f4f6f9;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --white: #ffffff;
+      --border: #e5e7eb;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    * { box-sizing: border-box; }
 
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-        }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg, #f7f8fb 0%, #ffffff 52%, #fff7e0 100%);
+      color: var(--text);
+    }
 
-        .page {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 28px 18px 60px;
-        }
+    .topbar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 18px 7%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
 
-        .hero {
-            background: linear-gradient(135deg, var(--red), var(--red-dark));
-            color: white;
-            border-radius: 22px;
-            padding: 32px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.18);
-        }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
 
-        .hero h1 {
-            margin: 0 0 10px;
-            font-size: 30px;
-        }
+    .brand-logo {
+      width: 180px;
+      height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      flex: 0 0 auto;
+    }
 
-        .hero p {
-            margin: 0;
-            max-width: 760px;
-            line-height: 1.6;
-            opacity: 0.96;
-        }
+    .brand-logo img {
+      width: 180px;
+      height: 78px;
+      object-fit: contain;
+      transform: scale(1.45);
+      transform-origin: center center;
+    }
 
-        .steps {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin: 24px 0;
-        }
+    .brand h1 {
+      margin: 0;
+      font-size: 19px;
+      color: var(--red);
+    }
 
-        .step {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 14px;
-            font-size: 14px;
-        }
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
 
-        .step strong {
-            display: block;
-            color: var(--red);
-            margin-bottom: 4px;
-        }
+    .topbar a {
+      text-decoration: none;
+      color: var(--red);
+      border: 1px solid #f0c3c6;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      background: #fff;
+    }
 
-        .section {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 24px;
-            margin-top: 20px;
-        }
+    .page {
+      padding: 34px 7% 70px;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 26px;
+      align-items: start;
+    }
 
-        .section h2 {
-            margin: 0 0 8px;
-            font-size: 22px;
-        }
+    .panel {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
 
-        .section-desc {
-            margin: 0 0 20px;
-            color: var(--muted);
-            line-height: 1.55;
-        }
+    .intro {
+      padding: 32px;
+    }
 
-        .choice-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-        }
+    .badge {
+      display: inline-flex;
+      background: #fff3cd;
+      color: #7a4d00;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 18px;
+    }
 
-        .choice-card {
-            border: 2px solid var(--border);
-            border-radius: 18px;
-            padding: 22px;
-            cursor: pointer;
-            transition: 0.2s ease;
-            background: #fff;
-        }
+    h2 {
+      margin: 0;
+      font-size: clamp(30px, 4.5vw, 46px);
+      line-height: 1.05;
+      color: #111827;
+    }
 
-        .choice-card:hover {
-            border-color: var(--red);
-            transform: translateY(-2px);
-        }
+    h2 span { color: var(--red); }
 
-        .choice-card.active {
-            border-color: var(--red);
-            background: #fff5f5;
-            box-shadow: 0 14px 30px rgba(201,0,0,0.12);
-        }
+    .intro-text {
+      margin-top: 18px;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15px;
+    }
 
-        .choice-card h3 {
-            margin: 0 0 8px;
-            font-size: 20px;
-        }
+    .steps {
+      display: grid;
+      gap: 12px;
+      margin-top: 24px;
+    }
 
-        .choice-card p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.5;
-        }
+    .step {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: #fafafa;
+    }
 
-        .doc-list {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-top: 16px;
-        }
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: var(--red);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
 
-        .doc-item {
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 14px;
-            background: #fcfcfd;
-        }
+    .step strong {
+      display: block;
+      margin-bottom: 4px;
+    }
 
-        .doc-item strong {
-            display: block;
-            margin-bottom: 6px;
-        }
+    .step span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
 
-        .doc-item span {
-            color: var(--muted);
-            font-size: 13px;
-            line-height: 1.45;
-        }
+    .workspace {
+      padding: 28px;
+    }
 
-        .notice {
-            margin-top: 18px;
-            background: #fff7db;
-            border-left: 5px solid var(--gold);
-            padding: 14px;
-            border-radius: 12px;
-            color: #6b4b00;
-            line-height: 1.5;
-        }
+    .workspace h3 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      color: #111827;
+    }
 
-        .actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-            flex-wrap: wrap;
-        }
+    .workspace > p {
+      color: var(--muted);
+      margin: 0 0 22px;
+      line-height: 1.6;
+    }
 
-        .btn {
-            border: 0;
-            border-radius: 12px;
-            padding: 13px 18px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 15px;
-        }
+    .account-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
 
-        .btn-primary {
-            background: var(--red);
-            color: white;
-        }
+    .account-card {
+      border: 2px solid var(--border);
+      border-radius: 22px;
+      padding: 18px;
+      cursor: pointer;
+      background: white;
+      transition: 0.18s ease;
+    }
 
-        .btn-primary:hover {
-            background: var(--red-dark);
-        }
+    .account-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+    }
 
-        .btn-secondary {
-            background: #111827;
-            color: white;
-        }
+    .account-card.active {
+      border-color: var(--red);
+      background: #fffafa;
+      box-shadow: 0 14px 28px rgba(181, 18, 27, 0.14);
+    }
 
-        .btn-light {
-            background: white;
-            color: var(--red);
-            border: 1px solid var(--red);
-        }
+    .account-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 16px;
+      background: #fff3cd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
 
-        .hidden {
-            display: none;
-        }
+    .account-card h4 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
 
-        @media(max-width: 800px) {
-            .steps,
-            .choice-grid,
-            .doc-list {
-                grid-template-columns: 1fr;
-            }
+    .account-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
 
-            .hero {
-                padding: 24px;
-            }
+    .section-box {
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: #fbfdff;
+      padding: 20px;
+      margin-top: 18px;
+    }
 
-            .hero h1 {
-                font-size: 24px;
-            }
-        }
-    </style>
+    .section-box h4 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+
+    .section-box p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    select {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 14px;
+      background: white;
+    }
+
+    .doc-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .doc-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+
+    .doc-card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .doc-card span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .doc-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: none;
+      text-decoration: none;
+      min-height: 42px;
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: white;
+      box-shadow: 0 10px 22px rgba(181, 18, 27, 0.18);
+    }
+
+    .btn-light {
+      background: white;
+      color: var(--red);
+      border: 1px solid #f0c3c6;
+    }
+
+    .btn-blue {
+      background: #eff6ff;
+      color: var(--blue);
+      border: 1px solid #bfdbfe;
+    }
+
+    .btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .doc-status {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .doc-status.ok {
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .doc-status.error {
+      color: var(--red);
+      font-weight: 800;
+    }
+
+    .doc-status.warning {
+      color: #b45309;
+      font-weight: 800;
+    }
+
+    .summary {
+      margin-top: 16px;
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .summary strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .actions-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-top: 24px;
+      flex-wrap: wrap;
+    }
+
+    .selected-label {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .selected-label strong {
+      color: var(--text);
+    }
+
+
+    /* PREONBOARDING_PHOTO_VIDEO_CSS_V1 */
+    .media-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .media-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .media-card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .media-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      margin-bottom: 12px;
+    }
+
+    @media(max-width: 640px) {
+      .media-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+
+    /* PREONBOARDING_REAL_CAMERA_CSS_V1 */
+    .camera-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.82);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 18px;
+    }
+
+    .camera-overlay.show {
+      display: flex;
+    }
+
+    .camera-box {
+      width: min(760px, 100%);
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+    }
+
+    .camera-box h3 {
+      margin: 0 0 10px;
+      color: #111827;
+    }
+
+    .camera-box p {
+      margin: 0 0 14px;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .camera-video {
+      width: 100%;
+      max-height: 62vh;
+      background: #000000;
+      border-radius: 18px;
+      object-fit: contain;
+    }
+
+    .camera-actions {
+      margin-top: 16px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+
+    /* PREONBOARDING_SMART_FRAME_AUTO_MANUAL_CSS_V1 */
+    .smart-camera-stage {
+      position: relative;
+      width: 100%;
+      background: #000;
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .smart-camera-stage .camera-video {
+      display: block;
+      width: 100%;
+      max-height: 62vh;
+      background: #000;
+      object-fit: contain;
+    }
+
+    .smart-frame {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border: 4px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.36);
+      pointer-events: none;
+    }
+
+    .smart-frame.identity {
+      width: 88%;
+      aspect-ratio: 1.58 / 1;
+      border-radius: 18px;
+    }
+
+    .smart-frame.document {
+      width: 82%;
+      height: 88%;
+      border-radius: 16px;
+    }
+
+    .smart-frame.face {
+      width: min(76%, 350px);
+      aspect-ratio: 3 / 4;
+      border-radius: 50% / 42%;
+    }
+
+    .smart-corner {
+      position: absolute;
+      width: 34px;
+      height: 34px;
+      border-color: #f4b400;
+      border-style: solid;
+    }
+
+    .smart-corner.tl {
+      top: -4px;
+      left: -4px;
+      border-width: 6px 0 0 6px;
+      border-radius: 14px 0 0 0;
+    }
+
+    .smart-corner.tr {
+      top: -4px;
+      right: -4px;
+      border-width: 6px 6px 0 0;
+      border-radius: 0 14px 0 0;
+    }
+
+    .smart-corner.bl {
+      bottom: -4px;
+      left: -4px;
+      border-width: 0 0 6px 6px;
+      border-radius: 0 0 0 14px;
+    }
+
+    .smart-corner.br {
+      bottom: -4px;
+      right: -4px;
+      border-width: 0 6px 6px 0;
+      border-radius: 0 0 14px 0;
+    }
+
+    .smart-guidance {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      background: rgba(17, 24, 39, 0.82);
+      color: white;
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 13px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .smart-auto-panel {
+      margin-top: 12px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .smart-auto-panel span {
+      font-size: 13px;
+      color: #374151;
+      font-weight: 800;
+    }
+
+    .smart-auto-btn {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .smart-auto-btn.off {
+      background: #f3f4f6;
+      color: #6b7280;
+      border-color: #d1d5db;
+    }
+
+
+    /* PREONBOARDING_CAPTURE_REVIEW_CSS_V1 */
+    .capture-review-image {
+      width: 100%;
+      max-height: 64vh;
+      object-fit: contain;
+      background: #000;
+      border-radius: 18px;
+      display: block;
+    }
+
+    .capture-review-note {
+      background: #eff6ff;
+      color: #1e3a8a;
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+
+
+    /* PREONBOARDING_SCROLL_DOCUMENTS_CSS_V1 */
+    #documents-section {
+      scroll-margin-top: 24px;
+    }
+
+    #documents-section.documents-focus {
+      border-color: #b5121b;
+      box-shadow: 0 0 0 4px rgba(181, 18, 27, 0.08);
+      transition: 0.25s ease;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .footer {
+      padding: 22px 7%;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      background: white;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    @media(max-width: 980px) {
+      .page { grid-template-columns: 1fr; }
+      .account-grid { grid-template-columns: 1fr; }
+    }
+
+    @media(max-width: 640px) {
+      .topbar { flex-direction: column; align-items: flex-start; }
+      .brand-logo, .brand-logo img { width: 130px; height: 60px; }
+      .doc-card { grid-template-columns: 1fr; }
+      .doc-actions { justify-content: flex-start; }
+    }
+  
+    /* PREONBOARDING_FORCE_SCROLL_DOCUMENTS_V2_CSS */
+    #documents-section {
+      scroll-margin-top: 20px;
+    }
+
+    #documents-section.documents-focus {
+      border-color: #b5121b !important;
+      box-shadow: 0 0 0 5px rgba(181, 18, 27, 0.12) !important;
+      transition: 0.25s ease;
+    }
+
+</style>
 </head>
+
 <body>
-<div class="page">
-    <div class="hero">
-        <h1>Démarrer une ouverture de compte</h1>
-        <p>
-            Avant d’accéder au formulaire complet, choisissez le type de compte souhaité.
-            Le système vous indiquera les pièces nécessaires afin de préparer le dossier.
-        </p>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-logo">
+        <img src="/static/bank-logo.png" alt="Afriland First Bank">
+      </div>
+      <div>
+        <h1>Ouverture de compte</h1>
+        <p>Préparation du dossier client</p>
+      </div>
     </div>
 
-    <div class="steps">
+    <a href="/">Retour accueil</a>
+  </header>
+
+  <main class="page">
+    <section class="panel intro">
+      <div class="badge">Pré-onboarding intelligent</div>
+      <h2>Préparer le dossier avant le <span>formulaire</span></h2>
+
+      <p class="intro-text">
+        Le client choisit le type de compte, prépare les documents requis, puis le système effectue une première lecture OCR.
+        Les informations détectées sont préchargées dans le formulaire d’ouverture de compte.
+      </p>
+
+      <div class="steps">
         <div class="step">
-            <strong>1. Type de compte</strong>
-            Personnel ou entreprise
+          <div class="step-number">1</div>
+          <div>
+            <strong>Choisir le type de compte</strong>
+            <span>Compte personnel ou compte entreprise.</span>
+          </div>
         </div>
+
         <div class="step">
-            <strong>2. Pièces requises</strong>
-            Liste affichée automatiquement
+          <div class="step-number">2</div>
+          <div>
+            <strong>Importer ou photographier les documents</strong>
+            <span>Pièce d’identité, justificatifs, RIB ou documents entreprise.</span>
+          </div>
         </div>
+
         <div class="step">
-            <strong>3. Analyse OCR</strong>
-            Pré-remplissage à venir
+          <div class="step-number">3</div>
+          <div>
+            <strong>OCR et préchargement</strong>
+            <span>Le système extrait les informations utiles sans afficher de texte technique.</span>
+          </div>
         </div>
+
         <div class="step">
-            <strong>4. Validation</strong>
-            Le client corrige et confirme
+          <div class="step-number">4</div>
+          <div>
+            <strong>Continuer vers le formulaire</strong>
+            <span>Les champs détectés sont préremplis dans le formulaire client.</span>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <section class="panel workspace">
+      <h3>Type de compte à créer</h3>
+      <p>Sélectionnez d’abord le type de compte souhaité par le client.</p>
+
+      <div class="account-grid">
+        <article class="account-card" data-account-type="PERSONAL">
+          <div class="account-icon">👤</div>
+          <h4>Compte personnel</h4>
+          <p>Pour un particulier de la diaspora souhaitant ouvrir un compte à distance.</p>
+        </article>
+
+        <article class="account-card" data-account-type="BUSINESS">
+          <div class="account-icon">🏢</div>
+          <h4>Compte entreprise</h4>
+          <p>Pour une société, un entrepreneur ou une structure représentée par un mandataire.</p>
+        </article>
+      </div>
+
+      <div class="section-box">
+        <h4>Type de document d’identité</h4>
+        <p>Choisissez le document principal à analyser pour précharger les informations du formulaire.</p>
+
+        <label for="identity_doc_type">Document d’identité</label>
+        <select id="identity_doc_type">
+          <option value="CNI">Carte Nationale d’Identité</option>
+          <option value="PASSPORT">Passeport</option>
+          <option value="RESIDENCE_PERMIT">Titre de séjour</option>
+          <option value="CONSULAR_CARD">Carte consulaire</option>
+        </select>
+      </div>
+
+      <div class="section-box" id="documents-section">
+        <h4>Documents à fournir</h4>
+        <p>Importez ou photographiez les documents. Les données exploitables seront préchargées vers le formulaire.</p>
+
+        <div class="doc-list" id="doc-list"></div>
+      </div>
+
+      <div class="section-box">
+        <!-- PREONBOARDING_PHOTO_VIDEO_SECTION_V1 -->
+        <h4>Photos / Vidéos du client</h4>
+        <p>Cette partie permet de capturer une photo ou une vidéo complémentaire du client pour le dossier.</p>
+
+        <div class="media-grid">
+          <div class="media-card">
+            <strong>Photo du client</strong>
+            <span>Prendre une photo du client ou du demandeur.</span>
+
+            <input
+              id="client-photo-input"
+              type="file"
+              accept="image/*"
+              capture="user"
+              onchange="window.handleMediaFile('CLIENT_PHOTO', this.files[0])"
+            >
+
+            <button class="btn btn-blue" type="button" onclick="window.openCameraForClientPhoto()">Prendre une photo</button>
+            <div class="doc-status" id="status-CLIENT_PHOTO">Aucune photo prise</div>
+          </div>
+
+          <div class="media-card">
+            <strong>Vidéo du client</strong>
+            <span>Prendre une courte vidéo de vérification du client.</span>
+
+            <input
+              id="client-video-input"
+              type="file"
+              accept="video/*"
+              capture="user"
+              onchange="window.handleMediaFile('CLIENT_VIDEO', this.files[0])"
+            >
+
+            <button class="btn btn-blue" type="button" onclick="window.openVideoRecorderForClient()">Prendre une vidéo</button>
+            <div class="doc-status" id="status-CLIENT_VIDEO">Aucune vidéo prise</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="summary" id="ocr-summary">
+        <strong>Préchargement OCR</strong>
+        Aucun document analysé pour l’instant.
+      </div>
+
+      <div class="actions-bottom">
+        <div class="selected-label" id="selected-label">
+          Type de compte sélectionné : <strong>Aucun</strong>
+        </div>
+
+        <div>
+          <a class="btn btn-light" href="/">Retour</a>
+          <button class="btn btn-primary" id="continue-btn" disabled>Continuer vers le formulaire</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <!-- PREONBOARDING_REAL_CAMERA_MODAL_V1 -->
+  <div id="real-camera-modal" class="camera-overlay">
+    <div class="camera-box">
+      <h3 id="real-camera-title">Photographier le document</h3>
+      <p id="real-camera-help">Cadrez correctement le document, évitez le flou et les reflets, puis capturez la photo.</p>
+      <video id="real-camera-video" class="camera-video" autoplay playsinline></video>
+
+      <div class="camera-actions">
+        <button class="btn btn-light" type="button" onclick="window.closeRealCamera()">Annuler</button>
+        <button class="btn btn-primary" type="button" onclick="window.captureRealCameraPhoto()">Capturer la photo</button>
+      </div>
     </div>
+  </div>
 
-    <div class="section">
-        <h2>Quel type de compte voulez-vous ouvrir ?</h2>
-        <p class="section-desc">
-            Cette sélection permet d’adapter la liste des documents à fournir.
-        </p>
+  <div id="real-video-modal" class="camera-overlay">
+    <div class="camera-box">
+      <h3>Enregistrer une vidéo du client</h3>
+      <p>Enregistrez une courte vidéo claire du client. Durée conseillée : 3 à 10 secondes.</p>
+      <video id="real-video-preview" class="camera-video" autoplay muted playsinline></video>
 
-        <div class="choice-grid">
-            <div id="personalCard" class="choice-card" onclick="selectAccountType('PERSONAL')">
-                <h3>Compte personnel</h3>
-                <p>
-                    Pour un particulier souhaitant ouvrir un compte à son nom.
-                </p>
+      <div class="camera-actions">
+        <button class="btn btn-light" type="button" onclick="window.closeRealVideoCamera()">Annuler</button>
+        <button class="btn btn-blue" id="video-start-btn" type="button" onclick="window.startClientVideoRecording()">Démarrer</button>
+        <button class="btn btn-primary" id="video-stop-btn" type="button" onclick="window.stopClientVideoRecording()" disabled>Arrêter</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>© Afriland First Bank — Diaspora Onboarding</span>
+    <span>Pré-onboarding OCR avec préchargement formulaire</span>
+  </footer>
+
+  <script>
+    (function () {
+      const labels = {
+        PERSONAL: "Compte personnel",
+        BUSINESS: "Compte entreprise"
+      };
+
+      const docsByAccount = {
+        PERSONAL: {
+          CNI: [
+            ["CNI_RECTO", "CNI recto", "Photographiez ou importez le recto de la CNI."],
+            ["CNI_VERSO", "CNI verso", "Photographiez ou importez le verso de la CNI."],
+            ["ADDRESS_PROOF", "Justificatif de résidence", "Document de résidence ou adresse."],
+            ["INCOME_PROOF", "Justificatif d’activité / revenus", "Document professionnel ou preuve de revenu."],
+            ["RIB_DOCUMENT", "RIB ou coordonnées bancaires", "RIB ou document bancaire."]
+          ],
+          PASSPORT: [
+            ["PASSPORT_DOCUMENT", "Passeport", "Page d’identité du passeport."],
+            ["ADDRESS_PROOF", "Justificatif de résidence", "Document de résidence ou adresse."],
+            ["INCOME_PROOF", "Justificatif d’activité / revenus", "Document professionnel ou preuve de revenu."],
+            ["RIB_DOCUMENT", "RIB ou coordonnées bancaires", "RIB ou document bancaire."]
+          ],
+          RESIDENCE_PERMIT: [
+            ["RESIDENCE_PERMIT_RECTO", "Titre de séjour recto", "Recto du titre de séjour."],
+            ["RESIDENCE_PERMIT_VERSO", "Titre de séjour verso", "Verso du titre de séjour."],
+            ["ADDRESS_PROOF", "Justificatif de résidence", "Document de résidence ou adresse."],
+            ["INCOME_PROOF", "Justificatif d’activité / revenus", "Document professionnel ou preuve de revenu."],
+            ["RIB_DOCUMENT", "RIB ou coordonnées bancaires", "RIB ou document bancaire."]
+          ],
+          CONSULAR_CARD: [
+            ["CONSULAR_CARD_RECTO", "Carte consulaire recto", "Recto de la carte consulaire."],
+            ["CONSULAR_CARD_VERSO", "Carte consulaire verso", "Verso de la carte consulaire."],
+            ["ADDRESS_PROOF", "Justificatif de résidence", "Document de résidence ou adresse."],
+            ["INCOME_PROOF", "Justificatif d’activité / revenus", "Document professionnel ou preuve de revenu."],
+            ["RIB_DOCUMENT", "RIB ou coordonnées bancaires", "RIB ou document bancaire."]
+          ]
+        },
+        BUSINESS: {
+          CNI: [
+            ["CNI_RECTO", "Pièce d’identité représentant - recto", "Document du représentant légal."],
+            ["CNI_VERSO", "Pièce d’identité représentant - verso", "Document du représentant légal."],
+            ["BUSINESS_REGISTRATION", "Document d’existence entreprise", "RCCM, registre ou document équivalent."],
+            ["TAX_DOCUMENT", "Identification fiscale", "NIU ou numéro fiscal."],
+            ["RIB_DOCUMENT", "RIB ou coordonnées bancaires", "Document bancaire de référence."]
+          ],
+          PASSPORT: [
+            ["PASSPORT_DOCUMENT", "Passeport du représentant", "Page d’identité du passeport."],
+            ["BUSINESS_REGISTRATION", "Document d’existence entreprise", "RCCM, registre ou document équivalent."],
+            ["TAX_DOCUMENT", "Identification fiscale", "NIU ou numéro fiscal."],
+            ["RIB_DOCUMENT", "RIB ou coordonnées bancaires", "Document bancaire de référence."]
+          ],
+          RESIDENCE_PERMIT: [
+            ["RESIDENCE_PERMIT_RECTO", "Titre de séjour représentant - recto", "Recto du titre de séjour."],
+            ["RESIDENCE_PERMIT_VERSO", "Titre de séjour représentant - verso", "Verso du titre de séjour."],
+            ["BUSINESS_REGISTRATION", "Document d’existence entreprise", "RCCM, registre ou document équivalent."],
+            ["TAX_DOCUMENT", "Identification fiscale", "NIU ou numéro fiscal."],
+            ["RIB_DOCUMENT", "RIB ou coordonnées bancaires", "Document bancaire de référence."]
+          ],
+          CONSULAR_CARD: [
+            ["CONSULAR_CARD_RECTO", "Carte consulaire représentant - recto", "Recto de la carte consulaire."],
+            ["CONSULAR_CARD_VERSO", "Carte consulaire représentant - verso", "Verso de la carte consulaire."],
+            ["BUSINESS_REGISTRATION", "Document d’existence entreprise", "RCCM, registre ou document équivalent."],
+            ["TAX_DOCUMENT", "Identification fiscale", "NIU ou numéro fiscal."],
+            ["RIB_DOCUMENT", "RIB ou coordonnées bancaires", "Document bancaire de référence."]
+          ]
+        }
+      };
+
+      let selectedType = null;
+      let ocrResults = {};
+      let analyzedCount = 0;
+
+      const cards = document.querySelectorAll(".account-card");
+      const identityType = document.getElementById("identity_doc_type");
+      const docList = document.getElementById("doc-list");
+      const selectedLabel = document.getElementById("selected-label");
+      const continueBtn = document.getElementById("continue-btn");
+      const summary = document.getElementById("ocr-summary");
+
+      function clearOcrMemory() {
+        ocrResults = {};
+        analyzedCount = 0;
+        localStorage.removeItem("diaspora_pre_onboarding_ocr");
+      }
+
+      function getDocs() {
+        if (!selectedType) return [];
+        const idType = identityType.value || "CNI";
+        return docsByAccount[selectedType][idType] || [];
+      }
+
+      function renderDocs() {
+        
+        const docs = getDocs();
+
+        if (!docList) {
+          console.error("Bloc doc-list introuvable");
+          return;
+        }
+    
+
+        if (!selectedType) {
+          docList.innerHTML = `
+            <div class="doc-card">
+              <div>
+                <strong>Type de compte non sélectionné</strong>
+                <span>Choisissez compte personnel ou entreprise pour afficher les documents requis.</span>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        docList.innerHTML = docs.map(function (doc) {
+          const code = doc[0];
+          const label = doc[1];
+          const desc = doc[2];
+
+          return `
+            <div class="doc-card" id="doc-card-${code}">
+              <div>
+                <strong>${label}</strong>
+                <span>${desc}</span>
+                <div class="doc-status" id="status-${code}">Non analysé</div>
+                <input
+                  id="import-${code}"
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onchange="window.handleDocumentFile('${code}', this.files[0])"
+                >
+
+                <input
+                  id="camera-${code}"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onchange="window.handleDocumentFile('${code}', this.files[0])"
+                >
+              </div>
+              <div class="doc-actions">
+                <button class="btn btn-light" type="button" onclick="document.getElementById('import-${code}').click()">Importer</button>
+                <button class="btn btn-blue" type="button" onclick="window.openCameraForDocument('${code}')">Photographier</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      function updateSummary() {
+        if (analyzedCount === 0) {
+          summary.innerHTML = "<strong>Préchargement OCR</strong>Aucun document analysé pour l’instant.";
+          return;
+        }
+
+        const fields = collectExtractedFields();
+        const detected = [];
+
+        if (fields.last_name || fields.surname) detected.push("Nom");
+        if (fields.first_name || fields.given_names) detected.push("Prénom");
+        if (fields.birth_date) detected.push("Date de naissance");
+        if (fields.birth_place) detected.push("Lieu de naissance");
+        if (fields.nationality) detected.push("Nationalité");
+        if (fields.identity_document_number) detected.push("Numéro de document");
+        if (fields.rib) detected.push("RIB");
+
+        summary.innerHTML =
+          "<strong>Préchargement OCR</strong>" +
+          analyzedCount + " document(s) analysé(s). " +
+          (detected.length ? "Informations détectées : " + detected.join(", ") + "." : "Aucune information structurée détectée pour l’instant.");
+      }
+
+      function collectExtractedFields() {
+        const merged = {};
+
+        Object.keys(ocrResults).forEach(function (docType) {
+          const item = ocrResults[docType] || {};
+          const fields = item.extracted_fields || item.fields || {};
+
+          Object.keys(fields).forEach(function (key) {
+            if (fields[key] && !merged[key]) {
+              merged[key] = fields[key];
+            }
+          });
+        });
+
+        return merged;
+      }
+
+      function persistOcrResults() {
+        const payload = {
+          account_type: selectedType,
+          identity_document_type: identityType.value,
+          results: ocrResults,
+          extracted_fields: collectExtractedFields(),
+          updated_at: new Date().toISOString()
+        };
+
+        localStorage.setItem("diaspora_pre_onboarding_ocr", JSON.stringify(payload));
+        localStorage.setItem("diaspora_account_type", selectedType || "");
+        localStorage.setItem("onboarding_account_type", selectedType || "");
+        localStorage.setItem("diaspora_identity_document_type", identityType.value || "");
+      }
+
+
+      /* PREONBOARDING_SMART_CAPTURE_V1 */
+      function fileSizeMb(file) {
+        return file.size / 1024 / 1024;
+      }
+
+      function loadImageForQuality(file) {
+        return new Promise(function (resolve, reject) {
+          const img = new Image();
+          const url = URL.createObjectURL(file);
+
+          img.onload = function () {
+            URL.revokeObjectURL(url);
+            resolve(img);
+          };
+
+          img.onerror = function () {
+            URL.revokeObjectURL(url);
+            reject(new Error("Image illisible"));
+          };
+
+          img.src = url;
+        });
+      }
+
+      async function analyzeImageQuality(file, target) {
+        const result = {
+          ok: true,
+          score: 100,
+          messages: [],
+          width: 0,
+          height: 0
+        };
+
+        if (!file || !file.type || !file.type.startsWith("image/")) {
+          result.ok = true;
+          result.messages.push("Fichier non image : contrôle qualité image ignoré.");
+          return result;
+        }
+
+        if (fileSizeMb(file) > 10) {
+          result.score -= 30;
+          result.messages.push("Image trop lourde.");
+        }
+
+        const img = await loadImageForQuality(file);
+        result.width = img.width;
+        result.height = img.height;
+
+        const minWidth = target === "selfie" ? 480 : 900;
+        const minHeight = target === "selfie" ? 480 : 550;
+
+        if (img.width < minWidth || img.height < minHeight) {
+          result.score -= 35;
+          result.messages.push("Résolution insuffisante.");
+        }
+
+        const maxCanvasWidth = 640;
+        const scale = Math.min(1, maxCanvasWidth / img.width);
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const data = ctx.getImageData(0, 0, w, h).data;
+        const gray = new Uint8Array(w * h);
+
+        let sum = 0;
+
+        for (let i = 0, j = 0; i < data.length; i += 4, j++) {
+          const g = Math.round((data[i] * 0.299) + (data[i + 1] * 0.587) + (data[i + 2] * 0.114));
+          gray[j] = g;
+          sum += g;
+        }
+
+        const avg = sum / gray.length;
+
+        let contrastSum = 0;
+        for (let i = 0; i < gray.length; i += 3) {
+          contrastSum += Math.abs(gray[i] - avg);
+        }
+
+        const contrast = contrastSum / Math.ceil(gray.length / 3);
+
+        let sharpnessSum = 0;
+        let sharpnessCount = 0;
+
+        for (let y = 1; y < h - 1; y += 2) {
+          for (let x = 1; x < w - 1; x += 2) {
+            const idx = y * w + x;
+            const dx = Math.abs(gray[idx] - gray[idx + 1]);
+            const dy = Math.abs(gray[idx] - gray[idx + w]);
+            sharpnessSum += dx + dy;
+            sharpnessCount += 2;
+          }
+        }
+
+        const sharpness = sharpnessSum / Math.max(1, sharpnessCount);
+
+        const minSharpness = target === "selfie" ? 6 : 8;
+        const minContrast = target === "selfie" ? 18 : 20;
+
+        if (avg < 45) {
+          result.score -= 25;
+          result.messages.push("Photo trop sombre.");
+        }
+
+        if (avg > 230) {
+          result.score -= 25;
+          result.messages.push("Photo trop éclairée.");
+        }
+
+        if (contrast < minContrast) {
+          result.score -= 20;
+          result.messages.push("Contraste insuffisant.");
+        }
+
+        if (sharpness < minSharpness) {
+          result.score -= 30;
+          result.messages.push("Photo probablement floue.");
+        }
+
+        result.score = Math.max(0, Math.min(100, Math.round(result.score)));
+        result.ok = result.score >= 60;
+
+        if (result.ok && result.messages.length === 0) {
+          result.messages.push("Qualité correcte.");
+        }
+
+        return result;
+      }
+
+      function loadVideoMetadata(file) {
+        return new Promise(function (resolve, reject) {
+          const video = document.createElement("video");
+          const url = URL.createObjectURL(file);
+
+          video.preload = "metadata";
+
+          video.onloadedmetadata = function () {
+            URL.revokeObjectURL(url);
+            resolve({
+              duration: video.duration || 0,
+              width: video.videoWidth || 0,
+              height: video.videoHeight || 0
+            });
+          };
+
+          video.onerror = function () {
+            URL.revokeObjectURL(url);
+            reject(new Error("Vidéo illisible"));
+          };
+
+          video.src = url;
+        });
+      }
+
+      async function analyzeVideoQuality(file) {
+        const result = {
+          ok: true,
+          score: 100,
+          messages: []
+        };
+
+        if (!file || !file.type || !file.type.startsWith("video/")) {
+          result.ok = false;
+          result.score = 0;
+          result.messages.push("Le fichier sélectionné n’est pas une vidéo.");
+          return result;
+        }
+
+        if (fileSizeMb(file) > 35) {
+          result.score -= 35;
+          result.messages.push("Vidéo trop lourde.");
+        }
+
+        const meta = await loadVideoMetadata(file);
+
+        if (meta.duration < 2) {
+          result.score -= 40;
+          result.messages.push("Vidéo trop courte.");
+        }
+
+        if (meta.duration > 20) {
+          result.score -= 25;
+          result.messages.push("Vidéo trop longue.");
+        }
+
+        if (meta.width < 480 || meta.height < 360) {
+          result.score -= 25;
+          result.messages.push("Résolution vidéo insuffisante.");
+        }
+
+        result.score = Math.max(0, Math.min(100, Math.round(result.score)));
+        result.ok = result.score >= 60;
+
+        if (result.ok && result.messages.length === 0) {
+          result.messages.push("Vidéo correcte.");
+        }
+
+        return result;
+      }
+
+      async function uploadForOcr(documentType, file) {
+        const status = document.getElementById("status-" + documentType);
+
+        if (!file) return;
+
+        if (!selectedType) {
+          status.textContent = "Choisissez d’abord le type de compte.";
+          status.className = "doc-status error";
+          return;
+        }
+
+        status.textContent = "Contrôle qualité de la photo...";
+        status.className = "doc-status";
+
+        if (file && file.type && file.type.startsWith("image/")) {
+          try {
+            const quality = await analyzeImageQuality(file, "document");
+
+            if (!quality.ok) {
+              status.textContent = "Photo refusée : " + quality.messages.join(" ") + " Reprenez une photo plus nette, bien cadrée et bien éclairée.";
+              status.className = "doc-status error";
+              return;
+            }
+
+            status.textContent = "Qualité photo validée (" + quality.score + "/100). Analyse OCR en cours...";
+            status.className = "doc-status ok";
+          } catch (qualityError) {
+            console.error(qualityError);
+            status.textContent = "Impossible de contrôler la qualité de la photo. Reprenez la capture ou importez le document.";
+            status.className = "doc-status error";
+            return;
+          }
+        } else {
+          status.textContent = "Analyse OCR en cours...";
+          status.className = "doc-status";
+        }
+
+        const formData = new FormData();
+        formData.append("account_type", selectedType);
+        formData.append("document_type", documentType);
+        formData.append("file", file);
+
+        try {
+          const response = await fetch("/api/pre-onboarding/ocr", {
+            method: "POST",
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error("Erreur OCR " + response.status);
+          }
+
+          const data = await response.json();
+
+          ocrResults[documentType] = data;
+          analyzedCount = Object.keys(ocrResults).length;
+
+          persistOcrResults();
+          updateSummary();
+
+          status.textContent = "Document analysé et données préparées pour le formulaire.";
+          status.className = "doc-status ok";
+        } catch (error) {
+          console.error(error);
+          status.textContent = "Analyse non disponible. Le document pourra être traité au back-office.";
+          status.className = "doc-status error";
+        }
+      }
+
+      window.handleDocumentFile = uploadForOcr;
+
+      function handleMediaFile(mediaType, file) {
+        if (!file) return;
+
+        const status = document.getElementById("status-" + mediaType);
+
+        const stored = JSON.parse(localStorage.getItem("diaspora_pre_onboarding_media") || "{}");
+
+        stored[mediaType] = {
+          file_name: file.name,
+          file_type: file.type,
+          size: file.size,
+          captured_at: new Date().toISOString()
+        };
+
+        localStorage.setItem("diaspora_pre_onboarding_media", JSON.stringify(stored));
+
+        if (status) {
+          if (mediaType === "CLIENT_PHOTO") {
+            status.textContent = "Photo prise et prête pour le dossier.";
+          } else if (mediaType === "CLIENT_VIDEO") {
+            status.textContent = "Vidéo prise et prête pour le dossier.";
+          } else {
+            status.textContent = "Fichier prêt pour le dossier.";
+          }
+
+          status.className = "doc-status ok";
+        }
+      }
+
+      window.handleMediaFile = handleMediaFile;
+
+
+      /* PREONBOARDING_SMART_MEDIA_OVERRIDE_V1 */
+      window.handleMediaFile = async function (mediaType, file) {
+        if (!file) return;
+
+        const status = document.getElementById("status-" + mediaType);
+
+        if (status) {
+          status.textContent = "Contrôle qualité en cours...";
+          status.className = "doc-status";
+        }
+
+        try {
+          if (mediaType === "CLIENT_PHOTO") {
+            const photoQuality = await analyzeImageQuality(file, "selfie");
+
+            if (!photoQuality.ok) {
+              if (status) {
+                status.textContent = "Photo client refusée : " + photoQuality.messages.join(" ") + " Reprenez une photo plus nette et bien éclairée.";
+                status.className = "doc-status error";
+              }
+              return;
+            }
+          }
+
+          if (mediaType === "CLIENT_VIDEO") {
+            const videoQuality = await analyzeVideoQuality(file);
+
+            if (!videoQuality.ok) {
+              if (status) {
+                status.textContent = "Vidéo refusée : " + videoQuality.messages.join(" ") + " Reprenez une courte vidéo claire.";
+                status.className = "doc-status error";
+              }
+              return;
+            }
+          }
+
+          const stored = JSON.parse(localStorage.getItem("diaspora_pre_onboarding_media") || "{}");
+
+          stored[mediaType] = {
+            file_name: file.name,
+            file_type: file.type,
+            size: file.size,
+            captured_at: new Date().toISOString(),
+            quality_checked: true
+          };
+
+          localStorage.setItem("diaspora_pre_onboarding_media", JSON.stringify(stored));
+
+          if (status) {
+            if (mediaType === "CLIENT_PHOTO") {
+              status.textContent = "Photo client validée et prête pour le dossier.";
+            } else if (mediaType === "CLIENT_VIDEO") {
+              status.textContent = "Vidéo client validée et prête pour le dossier.";
+            } else {
+              status.textContent = "Fichier validé et prêt pour le dossier.";
+            }
+
+            status.className = "doc-status ok";
+          }
+        } catch (error) {
+          console.error(error);
+
+          if (status) {
+            status.textContent = "Contrôle impossible. Reprenez la capture avec une meilleure qualité.";
+            status.className = "doc-status error";
+          }
+        }
+      };
+
+
+
+      function selectType(type) {
+        const previousType = selectedType;
+        selectedType = type;
+
+        cards.forEach(function (card) {
+          card.classList.toggle("active", card.dataset.accountType === type);
+        });
+
+        if (previousType !== type) {
+          clearOcrMemory();
+          createFreshPreOnboardingSessionId();
+        }
+
+        localStorage.setItem("diaspora_account_type", type);
+        localStorage.setItem("onboarding_account_type", type);
+
+        selectedLabel.innerHTML = 'Type de compte sélectionné : <strong>' + labels[type] + '</strong>';
+        continueBtn.disabled = false;
+
+  
+      /* PREONBOARDING_REAL_CAMERA_JS_V1 */
+      let realCameraStream = null;
+      let realCameraTarget = null;
+      let realCameraMode = null;
+
+      async function openRealCamera(mode, target, title, helpText) {
+        realCameraMode = mode;
+        realCameraTarget = target;
+
+        const modal = document.getElementById("real-camera-modal");
+        const video = document.getElementById("real-camera-video");
+        const titleBox = document.getElementById("real-camera-title");
+        const helpBox = document.getElementById("real-camera-help");
+
+        titleBox.textContent = title;
+        helpBox.textContent = helpText;
+
+        try {
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error("Caméra non supportée par ce navigateur");
+          }
+
+          const facingMode = mode === "client_photo" ? "user" : "environment";
+
+          realCameraStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: facingMode },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+
+          video.srcObject = realCameraStream;
+          modal.classList.add("show");
+        } catch (error) {
+          console.error(error);
+
+          alert("Impossible d'ouvrir directement la caméra. Le navigateur va ouvrir l'import de fichier.");
+
+          if (mode === "document" && target) {
+            const fallback = document.getElementById("camera-" + target);
+            if (fallback) fallback.click();
+          }
+
+          if (mode === "client_photo") {
+            const fallbackPhoto = document.getElementById("client-photo-input");
+            if (fallbackPhoto) fallbackPhoto.click();
+          }
+        }
+      }
+
+      function stopRealCameraStream() {
+        if (realCameraStream) {
+          realCameraStream.getTracks().forEach(function (track) {
+            track.stop();
+          });
+        }
+
+        realCameraStream = null;
+      }
+
+      window.closeRealCamera = function () {
+        const modal = document.getElementById("real-camera-modal");
+        modal.classList.remove("show");
+        stopRealCameraStream();
+        realCameraTarget = null;
+        realCameraMode = null;
+      };
+
+      window.openCameraForDocument = function (documentType) {
+        openRealCamera(
+          "document",
+          documentType,
+          "Photographier le document",
+          "Placez la pièce dans le cadre, utilisez une bonne lumière, puis capturez la photo."
+        );
+      };
+
+      window.openCameraForClientPhoto = function () {
+        openRealCamera(
+          "client_photo",
+          "CLIENT_PHOTO",
+          "Prendre une photo du client",
+          "Placez le visage du client au centre, avec une bonne lumière, puis capturez la photo."
+        );
+      };
+
+      window.captureRealCameraPhoto = async function () {
+        const video = document.getElementById("real-camera-video");
+
+        if (!video || !video.videoWidth || !video.videoHeight) {
+          alert("La caméra n'est pas encore prête.");
+          return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(async function (blob) {
+          if (!blob) {
+            alert("Impossible de capturer la photo.");
+            return;
+          }
+
+          const fileName = realCameraMode === "client_photo"
+            ? "photo_client.jpg"
+            : String(realCameraTarget || "document") + ".jpg";
+
+          const capturedFile = new File([blob], fileName, { type: "image/jpeg" });
+
+          const mode = realCameraMode;
+          const target = realCameraTarget;
+
+          window.closeRealCamera();
+
+          if (mode === "document") {
+            await uploadForOcr(target, capturedFile);
+          }
+
+          if (mode === "client_photo") {
+            await window.handleMediaFile("CLIENT_PHOTO", capturedFile);
+          }
+        }, "image/jpeg", 0.92);
+      };
+
+      let clientVideoStream = null;
+      let clientVideoRecorder = null;
+      let clientVideoChunks = [];
+      let clientVideoAutoStop = null;
+
+      window.openVideoRecorderForClient = async function () {
+        const modal = document.getElementById("real-video-modal");
+        const video = document.getElementById("real-video-preview");
+        const startBtn = document.getElementById("video-start-btn");
+        const stopBtn = document.getElementById("video-stop-btn");
+
+        try {
+          if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error("Caméra vidéo non supportée");
+          }
+
+          clientVideoStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { ideal: "user" },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: true
+          });
+
+          video.srcObject = clientVideoStream;
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+          modal.classList.add("show");
+        } catch (error) {
+          console.error(error);
+          alert("Impossible d'ouvrir directement la caméra vidéo. Le navigateur va ouvrir l'import de fichier.");
+
+          const fallbackVideo = document.getElementById("client-video-input");
+          if (fallbackVideo) fallbackVideo.click();
+        }
+      };
+
+      window.startClientVideoRecording = function () {
+        if (!clientVideoStream) {
+          alert("Caméra vidéo non prête.");
+          return;
+        }
+
+        const startBtn = document.getElementById("video-start-btn");
+        const stopBtn = document.getElementById("video-stop-btn");
+
+        clientVideoChunks = [];
+
+        let options = {};
+        if (window.MediaRecorder && MediaRecorder.isTypeSupported("video/webm;codecs=vp8,opus")) {
+          options = { mimeType: "video/webm;codecs=vp8,opus" };
+        }
+
+        clientVideoRecorder = new MediaRecorder(clientVideoStream, options);
+
+        clientVideoRecorder.ondataavailable = function (event) {
+          if (event.data && event.data.size > 0) {
+            clientVideoChunks.push(event.data);
+          }
+        };
+
+        clientVideoRecorder.onstop = async function () {
+          const videoBlob = new Blob(clientVideoChunks, { type: clientVideoRecorder.mimeType || "video/webm" });
+          const videoFile = new File([videoBlob], "video_client.webm", { type: videoBlob.type });
+
+          window.closeRealVideoCamera();
+
+          await window.handleMediaFile("CLIENT_VIDEO", videoFile);
+        };
+
+        clientVideoRecorder.start();
+
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+
+        clientVideoAutoStop = setTimeout(function () {
+          if (clientVideoRecorder && clientVideoRecorder.state === "recording") {
+            clientVideoRecorder.stop();
+          }
+        }, 12000);
+      };
+
+      window.stopClientVideoRecording = function () {
+        if (clientVideoAutoStop) {
+          clearTimeout(clientVideoAutoStop);
+          clientVideoAutoStop = null;
+        }
+
+        if (clientVideoRecorder && clientVideoRecorder.state === "recording") {
+          clientVideoRecorder.stop();
+        }
+      };
+
+      window.closeRealVideoCamera = function () {
+        const modal = document.getElementById("real-video-modal");
+
+        if (clientVideoAutoStop) {
+          clearTimeout(clientVideoAutoStop);
+          clientVideoAutoStop = null;
+        }
+
+        if (clientVideoRecorder && clientVideoRecorder.state === "recording") {
+          clientVideoRecorder.stop();
+        }
+
+        if (clientVideoStream) {
+          clientVideoStream.getTracks().forEach(function (track) {
+            track.stop();
+          });
+        }
+
+        clientVideoStream = null;
+        clientVideoRecorder = null;
+        clientVideoChunks = [];
+
+        modal.classList.remove("show");
+
+        const startBtn = document.getElementById("video-start-btn");
+        const stopBtn = document.getElementById("video-stop-btn");
+
+        if (startBtn) startBtn.disabled = false;
+        if (stopBtn) stopBtn.disabled = true;
+      };
+
+
+
+      /* PREONBOARDING_TEMP_FILE_SAVE_V1 */
+
+      /* PREONBOARDING_FRESH_SESSION_ON_TYPE_V1 */
+      function createFreshPreOnboardingSessionId() {
+        const key = "diaspora_pre_onboarding_session_id";
+
+        let sessionId = "";
+
+        if (window.crypto && window.crypto.randomUUID) {
+          sessionId = window.crypto.randomUUID();
+        } else {
+          sessionId = "pre_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+        }
+
+        localStorage.setItem(key, sessionId);
+        localStorage.removeItem("diaspora_pre_onboarding_saved_documents");
+        localStorage.removeItem("diaspora_pre_onboarding_media");
+        localStorage.removeItem("diaspora_pre_onboarding_ocr");
+
+        return sessionId;
+      }
+
+      function getPreOnboardingSessionId() {
+        const key = "diaspora_pre_onboarding_session_id";
+        let sessionId = localStorage.getItem(key);
+
+        if (!sessionId) {
+          if (window.crypto && window.crypto.randomUUID) {
+            sessionId = window.crypto.randomUUID();
+          } else {
+            sessionId = "pre_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+          }
+
+          localStorage.setItem(key, sessionId);
+        }
+
+        return sessionId;
+      }
+
+      function rememberSavedDocument(documentType, data) {
+        const key = "diaspora_pre_onboarding_saved_documents";
+        const saved = JSON.parse(localStorage.getItem(key) || "{}");
+
+        saved[documentType] = data;
+
+        localStorage.setItem(key, JSON.stringify(saved));
+
+        const ocrPayload = JSON.parse(localStorage.getItem("diaspora_pre_onboarding_ocr") || "{}");
+        ocrPayload.pre_onboarding_session_id = getPreOnboardingSessionId();
+        ocrPayload.saved_documents = saved;
+        localStorage.setItem("diaspora_pre_onboarding_ocr", JSON.stringify(ocrPayload));
+      }
+
+      async function savePreOnboardingFile(documentType, file) {
+        if (!file) return null;
+
+        const sessionId = getPreOnboardingSessionId();
+
+        const formData = new FormData();
+        formData.append("session_id", sessionId);
+        formData.append("account_type", selectedType || localStorage.getItem("diaspora_account_type") || "UNKNOWN");
+        formData.append("document_type", documentType);
+        formData.append("file", file);
+
+        const response = await fetch("/api/pre-onboarding/save-file", {
+          method: "POST",
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error("Sauvegarde temporaire impossible : " + response.status);
+        }
+
+        const data = await response.json();
+        rememberSavedDocument(documentType, data);
+        return data;
+      }
+
+      const originalUploadForOcr = uploadForOcr;
+
+      uploadForOcr = async function(documentType, file) {
+        const status = document.getElementById("status-" + documentType);
+
+        await originalUploadForOcr(documentType, file);
+
+        const statusText = status ? (status.textContent || "") : "";
+        const rejectedByQuality =
+          statusText.includes("Photo refusée") ||
+          statusText.includes("Impossible de contrôler") ||
+          statusText.includes("Choisissez d’abord");
+
+        if (rejectedByQuality) {
+          return;
+        }
+
+        try {
+          if (status) {
+            status.textContent = statusText + " Sauvegarde du document...";
+            status.className = "doc-status ok";
+          }
+
+          await savePreOnboardingFile(documentType, file);
+
+          if (status) {
+            status.textContent = "Document analysé et sauvegardé pour le dossier.";
+            status.className = "doc-status ok";
+          }
+        } catch (error) {
+          console.error(error);
+
+          if (status) {
+            status.textContent = "Document analysé, mais sauvegarde temporaire impossible.";
+            status.className = "doc-status error";
+          }
+        }
+      };
+
+      window.handleDocumentFile = uploadForOcr;
+
+      const originalMediaHandler = window.handleMediaFile;
+
+      window.handleMediaFile = async function(mediaType, file) {
+        if (!file) return;
+
+        await originalMediaHandler(mediaType, file);
+
+        const status = document.getElementById("status-" + mediaType);
+
+        if (status && status.classList.contains("error")) {
+          return;
+        }
+
+        try {
+          if (status) {
+            status.textContent = "Média validé. Sauvegarde en cours...";
+            status.className = "doc-status ok";
+          }
+
+          await savePreOnboardingFile(mediaType, file);
+
+          if (status) {
+            if (mediaType === "CLIENT_PHOTO") {
+              status.textContent = "Photo client validée et sauvegardée pour le dossier.";
+            } else if (mediaType === "CLIENT_VIDEO") {
+              status.textContent = "Vidéo client validée et sauvegardée pour le dossier.";
+            } else {
+              status.textContent = "Média validé et sauvegardé pour le dossier.";
+            }
+
+            status.className = "doc-status ok";
+          }
+        } catch (error) {
+          console.error(error);
+
+          if (status) {
+            status.textContent = "Média validé, mais sauvegarde temporaire impossible.";
+            status.className = "doc-status error";
+          }
+        }
+      };
+
+
+
+      /* PREONBOARDING_DOCUMENT_UPLOAD_NON_BLOCKING_FINAL_V1 */
+      uploadForOcr = async function(documentType, file) {
+        const status = document.getElementById("status-" + documentType);
+
+        if (!file) {
+          return;
+        }
+
+        if (!selectedType) {
+          if (status) {
+            status.textContent = "Choisissez d’abord le type de compte.";
+            status.className = "doc-status error";
+          }
+          return;
+        }
+
+        if (status) {
+          status.textContent = "Contrôle de la photo...";
+          status.className = "doc-status";
+        }
+
+        // Contrôle qualité indicatif seulement : il ne bloque plus l'OCR
+        if (file.type && file.type.startsWith("image/") && typeof analyzeImageQuality === "function") {
+          try {
+            const quality = await analyzeImageQuality(file, "document");
+
+            if (status) {
+              if (quality.score < 45) {
+                status.textContent =
+                  "Qualité moyenne (" + quality.score + "/100) : " +
+                  quality.messages.join(" ") +
+                  " OCR lancé quand même.";
+                status.className = "doc-status warning";
+              } else {
+                status.textContent =
+                  "Qualité acceptable (" + quality.score + "/100). Analyse OCR en cours...";
+                status.className = "doc-status ok";
+              }
+            }
+          } catch (qualityError) {
+            console.warn("Contrôle qualité ignoré:", qualityError);
+
+            if (status) {
+              status.textContent = "Contrôle qualité ignoré. Analyse OCR en cours...";
+              status.className = "doc-status warning";
+            }
+          }
+        } else {
+          if (status) {
+            status.textContent = "Analyse OCR en cours...";
+            status.className = "doc-status";
+          }
+        }
+
+        let ocrDone = false;
+
+        try {
+          const formData = new FormData();
+          formData.append("account_type", selectedType);
+          formData.append("document_type", documentType);
+          formData.append("file", file);
+
+          const response = await fetch("/api/pre-onboarding/ocr", {
+            method: "POST",
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error("Erreur OCR " + response.status);
+          }
+
+          const data = await response.json();
+
+          ocrResults[documentType] = data;
+          analyzedCount = Object.keys(ocrResults).length;
+
+          persistOcrResults();
+          updateSummary();
+
+          ocrDone = true;
+
+          if (status) {
+            status.textContent = "Document analysé. Sauvegarde du fichier...";
+            status.className = "doc-status ok";
+          }
+        } catch (ocrError) {
+          console.warn("OCR non disponible:", ocrError);
+
+          if (status) {
+            status.textContent = "OCR non disponible pour ce document. Sauvegarde du fichier quand même...";
+            status.className = "doc-status warning";
+          }
+        }
+
+        try {
+          if (typeof savePreOnboardingFile === "function") {
+            await savePreOnboardingFile(documentType, file);
+          }
+
+          if (status) {
+            if (ocrDone) {
+              status.textContent = "Document analysé et sauvegardé pour le dossier.";
+            } else {
+              status.textContent = "Document sauvegardé pour le dossier. OCR à vérifier au back-office.";
+            }
+            status.className = "doc-status ok";
+          }
+        } catch (saveError) {
+          console.error("Sauvegarde temporaire impossible:", saveError);
+
+          if (status) {
+            if (ocrDone) {
+              status.textContent = "Document analysé, mais sauvegarde temporaire impossible.";
+            } else {
+              status.textContent = "Document capturé, mais OCR et sauvegarde temporaire indisponibles.";
+            }
+            status.className = "doc-status error";
+          }
+        }
+      };
+
+      window.handleDocumentFile = uploadForOcr;
+
+
+
+      /* PREONBOARDING_SMART_FRAME_AUTO_MANUAL_JS_V1 */
+      let smartAutoCaptureEnabled = true;
+      let smartAutoMonitorTimer = null;
+      let smartStableCounter = 0;
+      let smartAutoLocked = false;
+      let smartAutoStartReadyAt = 0;
+
+      function smartDocumentProfile(mode, target) {
+        target = String(target || "").toUpperCase();
+
+        if (mode === "client_photo" || target === "CLIENT_PHOTO") {
+          return {
+            frame: "face",
+            target: "selfie",
+            title: "Placez le visage dans le cadre",
+            help: "Centrez le visage, regardez la caméra et gardez une bonne lumière."
+          };
+        }
+
+        if (
+          target.includes("CNI") ||
+          target.includes("CARD") ||
+          target.includes("PERMIT") ||
+          target.includes("RIB")
+        ) {
+          return {
+            frame: "identity",
+            target: "document",
+            title: "Placez la pièce dans le cadre",
+            help: "Cadrez toute la pièce, évitez les reflets et gardez-la stable."
+          };
+        }
+
+        if (
+          target.includes("PASSPORT") ||
+          target.includes("ADDRESS") ||
+          target.includes("INCOME") ||
+          target.includes("BUSINESS") ||
+          target.includes("TAX")
+        ) {
+          return {
+            frame: "document",
+            target: "document",
+            title: "Placez le document dans le cadre",
+            help: "Cadrez le document complet, bien droit et bien éclairé."
+          };
+        }
+
+        return {
+          frame: "document",
+          target: "document",
+          title: "Placez le document dans le cadre",
+          help: "Cadrez le document complet avant la capture."
+        };
+      }
+
+      function smartWrapVideo(video) {
+        if (!video) return null;
+
+        if (video.parentElement && video.parentElement.classList.contains("smart-camera-stage")) {
+          return video.parentElement;
+        }
+
+        const stage = document.createElement("div");
+        stage.className = "smart-camera-stage";
+
+        video.parentNode.insertBefore(stage, video);
+        stage.appendChild(video);
+
+        return stage;
+      }
+
+      function smartBuildFrame(stage, profile) {
+        if (!stage) return;
+
+        stage.querySelectorAll(".smart-frame, .smart-guidance").forEach(function (el) {
+          el.remove();
+        });
+
+        const frame = document.createElement("div");
+        frame.className = "smart-frame " + profile.frame;
+
+        ["tl", "tr", "bl", "br"].forEach(function (pos) {
+          const corner = document.createElement("div");
+          corner.className = "smart-corner " + pos;
+          frame.appendChild(corner);
+        });
+
+        const guidance = document.createElement("div");
+        guidance.className = "smart-guidance";
+        guidance.textContent = profile.help;
+
+        stage.appendChild(frame);
+        stage.appendChild(guidance);
+      }
+
+      function smartEnsureAutoPanel(modal, typeLabel) {
+        if (!modal) return;
+
+        let panel = modal.querySelector(".smart-auto-panel");
+
+        if (!panel) {
+          panel = document.createElement("div");
+          panel.className = "smart-auto-panel";
+
+          panel.innerHTML = `
+            <span id="smart-auto-text">Capture automatique activée</span>
+            <button class="smart-auto-btn" id="smart-auto-toggle" type="button">Auto ON</button>
+          `;
+
+          const actions = modal.querySelector(".camera-actions");
+          if (actions) {
+            actions.parentNode.insertBefore(panel, actions);
+          }
+        }
+
+        const text = modal.querySelector("#smart-auto-text");
+        const btn = modal.querySelector("#smart-auto-toggle");
+
+        function refresh() {
+          if (text) {
+            text.textContent = smartAutoCaptureEnabled
+              ? typeLabel + " — capture automatique activée"
+              : typeLabel + " — capture manuelle uniquement";
+          }
+
+          if (btn) {
+            btn.textContent = smartAutoCaptureEnabled ? "Auto ON" : "Auto OFF";
+            btn.classList.toggle("off", !smartAutoCaptureEnabled);
+          }
+        }
+
+        if (btn && !btn.dataset.bound) {
+          btn.dataset.bound = "1";
+          btn.addEventListener("click", function () {
+            smartAutoCaptureEnabled = !smartAutoCaptureEnabled;
+            smartStableCounter = 0;
+            smartAutoLocked = false;
+            refresh();
+          });
+        }
+
+        refresh();
+      }
+
+      function smartVideoToFile(video, name) {
+        return new Promise(function (resolve, reject) {
+          if (!video || !video.videoWidth || !video.videoHeight) {
+            reject(new Error("Vidéo non prête"));
+            return;
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          canvas.toBlob(function (blob) {
+            if (!blob) {
+              reject(new Error("Capture impossible"));
+              return;
+            }
+
+            resolve(new File([blob], name || "capture.jpg", { type: "image/jpeg" }));
+          }, "image/jpeg", 0.92);
+        });
+      }
+
+      function smartStopAutoMonitor() {
+        if (smartAutoMonitorTimer) {
+          clearInterval(smartAutoMonitorTimer);
+          smartAutoMonitorTimer = null;
+        }
+
+        smartStableCounter = 0;
+        smartAutoLocked = false;
+      }
+
+      function smartStartAutoPhotoMonitor(mode, target) {
+        smartStopAutoMonitor();
+        smartAutoStartReadyAt = Date.now() + 3500;
+
+        const profile = smartDocumentProfile(mode, target);
+        const video = document.getElementById("real-camera-video");
+        const modal = document.getElementById("real-camera-modal");
+        const guidance = modal ? modal.querySelector(".smart-guidance") : null;
+
+        smartAutoMonitorTimer = setInterval(async function () {
+          if (!smartAutoCaptureEnabled || smartAutoLocked) return;
+          if (Date.now() < smartAutoStartReadyAt) return;
+          if (!video || !video.videoWidth || !video.videoHeight) return;
+
+          try {
+            const file = await smartVideoToFile(video, String(target || "capture") + "_auto.jpg");
+            const quality = await analyzeImageQuality(file, profile.target);
+
+            if (quality.score >= 35) {
+              smartStableCounter += 1;
+
+              if (guidance) {
+                const remaining = Math.max(0, 6 - smartStableCounter);
+                guidance.textContent = remaining > 0
+                  ? "Image acceptable. Capture automatique dans " + remaining + "..."
+                  : "Capture automatique...";
+              }
+
+              if (smartStableCounter >= 6) {
+                smartAutoLocked = true;
+                smartStopAutoMonitor();
+
+                if (typeof window.captureRealCameraPhoto === "function") {
+                  window.captureRealCameraPhoto();
+                }
+              }
+            } else {
+              smartStableCounter = 0;
+
+              if (guidance) {
+                guidance.textContent =
+                  "Améliorez le cadrage ou la lumière. Score actuel : " +
+                  quality.score +
+                  "/100.";
+              }
+            }
+          } catch (error) {
+            smartStableCounter = 0;
+          }
+        }, 950);
+      }
+
+      const smartOriginalOpenCameraForDocument = window.openCameraForDocument;
+      window.openCameraForDocument = function (documentType) {
+        smartStopAutoMonitor();
+
+        if (typeof smartOriginalOpenCameraForDocument === "function") {
+          smartOriginalOpenCameraForDocument(documentType);
+        }
+
+        setTimeout(function () {
+          const modal = document.getElementById("real-camera-modal");
+          const video = document.getElementById("real-camera-video");
+          const profile = smartDocumentProfile("document", documentType);
+
+          const stage = smartWrapVideo(video);
+          smartBuildFrame(stage, profile);
+          smartEnsureAutoPanel(modal, "Document");
+
+          const title = document.getElementById("real-camera-title");
+          const help = document.getElementById("real-camera-help");
+
+          if (title) title.textContent = profile.title;
+          if (help) help.textContent = "Capture automatique ou manuelle. " + profile.help;
+
+          const manualBtn = modal ? modal.querySelector('button[onclick="window.captureRealCameraPhoto()"]') : null;
+          if (manualBtn) manualBtn.textContent = "Capture manuelle";
+
+          smartStartAutoPhotoMonitor("document", documentType);
+        }, 700);
+      };
+
+      const smartOriginalOpenCameraForClientPhoto = window.openCameraForClientPhoto;
+      window.openCameraForClientPhoto = function () {
+        smartStopAutoMonitor();
+
+        if (typeof smartOriginalOpenCameraForClientPhoto === "function") {
+          smartOriginalOpenCameraForClientPhoto();
+        }
+
+        setTimeout(function () {
+          const modal = document.getElementById("real-camera-modal");
+          const video = document.getElementById("real-camera-video");
+          const profile = smartDocumentProfile("client_photo", "CLIENT_PHOTO");
+
+          const stage = smartWrapVideo(video);
+          smartBuildFrame(stage, profile);
+          smartEnsureAutoPanel(modal, "Photo client");
+
+          const title = document.getElementById("real-camera-title");
+          const help = document.getElementById("real-camera-help");
+
+          if (title) title.textContent = profile.title;
+          if (help) help.textContent = "Capture automatique ou manuelle. " + profile.help;
+
+          const manualBtn = modal ? modal.querySelector('button[onclick="window.captureRealCameraPhoto()"]') : null;
+          if (manualBtn) manualBtn.textContent = "Capture manuelle";
+
+          smartStartAutoPhotoMonitor("client_photo", "CLIENT_PHOTO");
+        }, 700);
+      };
+
+      const smartOriginalCloseRealCamera = window.closeRealCamera;
+      window.closeRealCamera = function () {
+        smartStopAutoMonitor();
+
+        if (typeof smartOriginalCloseRealCamera === "function") {
+          smartOriginalCloseRealCamera();
+        }
+      };
+
+      const smartOriginalOpenVideoRecorderForClient = window.openVideoRecorderForClient;
+      window.openVideoRecorderForClient = function () {
+        if (typeof smartOriginalOpenVideoRecorderForClient === "function") {
+          smartOriginalOpenVideoRecorderForClient();
+        }
+
+        setTimeout(function () {
+          const modal = document.getElementById("real-video-modal");
+          const video = document.getElementById("real-video-preview");
+
+          const profile = {
+            frame: "face",
+            help: "Placez le visage dans le cadre avant de démarrer la vidéo."
+          };
+
+          const stage = smartWrapVideo(video);
+          smartBuildFrame(stage, profile);
+          smartEnsureAutoPanel(modal, "Vidéo client");
+
+          const guidance = modal ? modal.querySelector(".smart-guidance") : null;
+
+          if (guidance) {
+            guidance.textContent = "Placez le visage dans le cadre. Démarrage manuel ou automatique.";
+          }
+
+          if (smartAutoCaptureEnabled) {
+            let count = 6;
+            const timer = setInterval(function () {
+              if (!smartAutoCaptureEnabled) {
+                clearInterval(timer);
+                return;
+              }
+
+              if (guidance) {
+                guidance.textContent = "Vidéo automatique dans " + count + "...";
+              }
+
+              count -= 1;
+
+              if (count < 0) {
+                clearInterval(timer);
+
+                if (typeof window.startClientVideoRecording === "function") {
+                  window.startClientVideoRecording();
+                }
+              }
+            }, 1000);
+          }
+        }, 700);
+      };
+
+
+
+      /* PREONBOARDING_CAPTURE_REVIEW_RETAKE_V1 */
+      let pendingCaptureFile = null;
+      let pendingCaptureMode = null;
+      let pendingCaptureTarget = null;
+      let pendingCaptureUrl = null;
+
+      function ensureCaptureReviewModal() {
+        let modal = document.getElementById("capture-review-modal");
+
+        if (modal) {
+          return modal;
+        }
+
+        modal = document.createElement("div");
+        modal.id = "capture-review-modal";
+        modal.className = "camera-overlay";
+
+        modal.innerHTML = `
+          <div class="camera-box">
+            <h3>Vérifier la capture</h3>
+            <p>Vérifiez que l’image est lisible, complète et bien cadrée avant de valider.</p>
+
+            <img id="capture-review-image" class="capture-review-image" alt="Aperçu de la capture">
+
+            <div class="capture-review-note">
+              Si la pièce est coupée, floue ou mal cadrée, cliquez sur Reprendre.
             </div>
 
-            <div id="businessCard" class="choice-card" onclick="selectAccountType('BUSINESS')">
-                <h3>Compte entreprise</h3>
-                <p>
-                    Pour une société, une activité formalisée ou une personne morale.
-                </p>
+            <div class="camera-actions">
+              <button class="btn btn-light" type="button" onclick="window.retakeCapturedPhoto()">Reprendre</button>
+              <button class="btn btn-primary" type="button" onclick="window.validateCapturedPhoto()">Valider la capture</button>
             </div>
-        </div>
-    </div>
+          </div>
+        `;
 
-    <div id="documentsSection" class="section hidden">
-        <h2 id="documentsTitle">Pièces nécessaires</h2>
-        <p id="documentsDesc" class="section-desc"></p>
+        document.body.appendChild(modal);
+        return modal;
+      }
 
-        <div id="documentsList" class="doc-list"></div>
+      function closeCaptureReviewModal() {
+        const modal = document.getElementById("capture-review-modal");
 
-        <div class="notice">
-            Dans cette première version test, cette page affiche la liste des pièces à préparer.
-            L’étape suivante permettra de charger les documents ici, lancer l’OCR, puis pré-remplir automatiquement le formulaire.
-        </div>
+        if (modal) {
+          modal.classList.remove("show");
+        }
 
-        <div class="actions">
-            <button type="button" class="btn btn-primary" onclick="continueToForm()">
-                Continuer vers le formulaire
-            </button>
+        if (pendingCaptureUrl) {
+          URL.revokeObjectURL(pendingCaptureUrl);
+          pendingCaptureUrl = null;
+        }
+      }
 
-            <button type="button" class="btn btn-light" onclick="resetChoice()">
-                Changer le type de compte
-            </button>
+      function showCaptureReview(file, mode, target) {
+        pendingCaptureFile = file;
+        pendingCaptureMode = mode;
+        pendingCaptureTarget = target;
 
-            <button type="button" class="btn btn-secondary" onclick="goBackPortal()">
-                Retour au portail
-            </button>
-        </div>
-    </div>
-</div>
+        const modal = ensureCaptureReviewModal();
+        const image = document.getElementById("capture-review-image");
+
+        if (pendingCaptureUrl) {
+          URL.revokeObjectURL(pendingCaptureUrl);
+        }
+
+        pendingCaptureUrl = URL.createObjectURL(file);
+
+        if (image) {
+          image.src = pendingCaptureUrl;
+        }
+
+        modal.classList.add("show");
+      }
+
+      window.captureRealCameraPhoto = async function () {
+        const video = document.getElementById("real-camera-video");
+
+        if (!video || !video.videoWidth || !video.videoHeight) {
+          alert("La caméra n'est pas encore prête.");
+          return;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(function (blob) {
+          if (!blob) {
+            alert("Impossible de capturer la photo.");
+            return;
+          }
+
+          const mode = realCameraMode;
+          const target = realCameraTarget;
+
+          const fileName = mode === "client_photo"
+            ? "photo_client.jpg"
+            : String(target || "document") + ".jpg";
+
+          const capturedFile = new File([blob], fileName, { type: "image/jpeg" });
+
+          smartStopAutoMonitor();
+
+          if (typeof window.closeRealCamera === "function") {
+            window.closeRealCamera();
+          }
+
+          showCaptureReview(capturedFile, mode, target);
+        }, "image/jpeg", 0.92);
+      };
+
+      window.retakeCapturedPhoto = function () {
+        const mode = pendingCaptureMode;
+        const target = pendingCaptureTarget;
+
+        closeCaptureReviewModal();
+
+        pendingCaptureFile = null;
+        pendingCaptureMode = null;
+        pendingCaptureTarget = null;
+
+        if (mode === "document" && target) {
+          window.openCameraForDocument(target);
+          return;
+        }
+
+        if (mode === "client_photo") {
+          window.openCameraForClientPhoto();
+          return;
+        }
+      };
+
+      window.validateCapturedPhoto = async function () {
+        const file = pendingCaptureFile;
+        const mode = pendingCaptureMode;
+        const target = pendingCaptureTarget;
+
+        closeCaptureReviewModal();
+
+        pendingCaptureFile = null;
+        pendingCaptureMode = null;
+        pendingCaptureTarget = null;
+
+        if (!file) {
+          alert("Aucune capture à valider.");
+          return;
+        }
+
+        if (mode === "document") {
+          await uploadForOcr(target, file);
+          return;
+        }
+
+        if (mode === "client_photo") {
+          await window.handleMediaFile("CLIENT_PHOTO", file);
+          return;
+        }
+      };
+
+
+      renderDocs();
+        updateSummary();
+      }
+
+      cards.forEach(function (card) {
+        card.addEventListener("click", function () {
+          selectType(card.dataset.accountType);
+        });
+      });
+
+      identityType.addEventListener("change", function () {
+        clearOcrMemory();
+        localStorage.setItem("diaspora_identity_document_type", identityType.value || "");
+        renderDocs();
+        updateSummary();
+      });
+
+      continueBtn.addEventListener("click", function () {
+        if (!selectedType) return;
+
+        persistOcrResults();
+
+        
+        const preSessionId = getPreOnboardingSessionId();
+        window.location.href = "/open-account-test?account_type=" + encodeURIComponent(selectedType) + "&pre_session=" + encodeURIComponent(preSessionId);
+
+      });
+
+      renderDocs();
+      updateSummary();
+    })();
+  </script>
+
+  <script>
+    /* PREONBOARDING_FORCE_CONTINUE_BUTTON_V1 */
+    (function () {
+      function getParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
+
+      function getSelectedAccountType() {
+        let type =
+          localStorage.getItem("diaspora_account_type") ||
+          localStorage.getItem("onboarding_account_type") ||
+          getParam("account_type") ||
+          "";
+
+        const activeCard = document.querySelector(".account-card.active");
+        if (!type && activeCard) {
+          type = activeCard.getAttribute("data-account-type") || "";
+        }
+
+        type = String(type || "").toUpperCase();
+
+        if (type !== "PERSONAL" && type !== "BUSINESS") {
+          return "";
+        }
+
+        return type;
+      }
+
+      function getOrCreatePreSessionId() {
+        const key = "diaspora_pre_onboarding_session_id";
+        let sessionId = localStorage.getItem(key);
+
+        if (!sessionId) {
+          if (window.crypto && window.crypto.randomUUID) {
+            sessionId = window.crypto.randomUUID();
+          } else {
+            sessionId = "pre_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+          }
+
+          localStorage.setItem(key, sessionId);
+        }
+
+        return sessionId;
+      }
+
+      function forceEnableContinueButton() {
+        const btn = document.getElementById("continue-btn");
+        if (!btn) return;
+
+        const type = getSelectedAccountType();
+
+        if (type) {
+          btn.disabled = false;
+          btn.removeAttribute("disabled");
+          btn.style.pointerEvents = "auto";
+          btn.style.opacity = "1";
+        }
+      }
+
+      function goToFinalForm(event) {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+          event.stopImmediatePropagation();
+        }
+
+        const type = getSelectedAccountType();
+
+        if (!type) {
+          alert("Veuillez d’abord choisir le type de compte : personnel ou entreprise.");
+          return false;
+        }
+
+        const sessionId = getOrCreatePreSessionId();
+
+        localStorage.setItem("diaspora_account_type", type);
+        localStorage.setItem("onboarding_account_type", type);
+
+        window.location.href =
+          "/open-account-test?account_type=" +
+          encodeURIComponent(type) +
+          "&pre_session=" +
+          encodeURIComponent(sessionId);
+
+        return false;
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        forceEnableContinueButton();
+
+        const btn = document.getElementById("continue-btn");
+        if (btn) {
+          btn.addEventListener("click", goToFinalForm, true);
+        }
+
+        let tries = 0;
+        const timer = setInterval(function () {
+          forceEnableContinueButton();
+          tries += 1;
+
+          if (tries >= 10) {
+            clearInterval(timer);
+          }
+        }, 500);
+      });
+
+      document.addEventListener("click", function (event) {
+        const card = event.target.closest ? event.target.closest(".account-card") : null;
+
+        if (card) {
+          const type = card.getAttribute("data-account-type") || "";
+          if (type) {
+            localStorage.setItem("diaspora_account_type", type);
+            localStorage.setItem("onboarding_account_type", type);
+          }
+
+          setTimeout(forceEnableContinueButton, 100);
+        }
+
+        const btn = event.target.closest ? event.target.closest("#continue-btn") : null;
+
+        if (btn) {
+          goToFinalForm(event);
+        }
+      }, true);
+    })();
+  </script>
+
+
+  <script>
+    /* PREONBOARDING_SCROLL_TO_DOCUMENTS_V1 */
+    (function () {
+      function scrollToDocumentsSection() {
+        const section = document.getElementById("documents-section");
+
+        if (!section) {
+          return;
+        }
+
+        section.scrollIntoView({
+    (function () {
+      function scrollToDocumentsSection() {
+        const section = document.getElementById("documents-section");
+
+          behavior: "smooth",
+          block: "start"
+        });
+
+        section.classList.add("documents-focus");
+
+        setTimeout(function () {
+          section.classList.remove("documents-focus");
+        }, 1800);
+      }
+
+      document.addEventListener("click", function (event) {
+        const card = event.target.closest ? event.target.closest(".account-card") : null;
+
+        if (!card) {
+          return;
+        }
+
+        setTimeout(scrollToDocumentsSection, 350);
+      }, true);
+    })();
+  </script>
+
 
 <script>
-let selectedAccountType = null;
+  /* PREONBOARDING_FORCE_SCROLL_DOCUMENTS_V2_JS */
+  (function () {
+    function findDocumentsSection() {
+      let section = document.getElementById("documents-section");
 
-const PERSONAL_DOCS = [
-    {
-        title: "Pièce d’identité officielle",
-        desc: "CNI, passeport, carte consulaire ou titre de séjour. Recto et verso si nécessaire."
-    },
-    {
-        title: "Justificatif de domicile",
-        desc: "Facture, attestation de résidence ou document équivalent."
-    },
-    {
-        title: "Preuve de revenu / activité",
-        desc: "Bulletin de salaire, attestation employeur, justificatif fiscal, contrat, registre de commerce ou attestation d’activité."
-    },
-    {
-        title: "Relevé d’identification bancaire - RIB",
-        desc: "RIB ou preuve de coordonnées bancaires existantes si disponible ou exigée."
-    },
-    {
-        title: "Selfie / preuve de vie",
-        desc: "Selfie obligatoire et vidéo preuve de vie selon le parcours."
-    },
-    {
-        title: "Documents non-résident",
-        desc: "Si le pays de résidence est différent du Cameroun : acte de naissance, attestation emploi/scolarité, conformité fiscale."
+      if (section) {
+        return section;
+      }
+
+      const titles = Array.from(document.querySelectorAll("h4, h3, h2"));
+
+      const title = titles.find(function (el) {
+        return (el.textContent || "").trim().toLowerCase().includes("documents à fournir");
+      });
+
+      if (!title) {
+        return null;
+      }
+
+      section = title.closest(".section-box") || title.parentElement;
+
+      if (section) {
+        section.id = "documents-section";
+      }
+
+      return section;
     }
-];
 
-const BUSINESS_DOCS = [
-    {
-        title: "RCCM / registre de commerce",
-        desc: "Document officiel d’immatriculation de l’entreprise."
-    },
-    {
-        title: "NIU / numéro fiscal de l’entreprise",
-        desc: "Identifiant fiscal ou justificatif d’immatriculation fiscale."
-    },
-    {
-        title: "Statuts de l’entreprise",
-        desc: "Statuts signés ou document constitutif de la société."
-    },
-    {
-        title: "Pièce d’identité du représentant légal",
-        desc: "CNI, passeport ou titre de séjour du dirigeant ou mandataire."
-    },
-    {
-        title: "Justificatif du siège / localisation",
-        desc: "Plan de localisation, facture, bail ou attestation de siège."
-    },
-    {
-        title: "Mandat ou pouvoir du signataire",
-        desc: "Document requis si le signataire n’est pas le représentant légal direct."
-    },
-    {
-        title: "Bénéficiaires effectifs",
-        desc: "Informations et pièces relatives aux bénéficiaires effectifs de l’entreprise."
-    },
-    {
-        title: "Attestation de conformité fiscale",
-        desc: "Document fiscal selon les exigences de la banque."
-    }
-];
+    function forceScrollToDocuments() {
+      const section = findDocumentsSection();
 
-function selectAccountType(type) {
-    selectedAccountType = type;
-
-    document.getElementById("personalCard").classList.toggle("active", type === "PERSONAL");
-    document.getElementById("businessCard").classList.toggle("active", type === "BUSINESS");
-
-    const section = document.getElementById("documentsSection");
-    const title = document.getElementById("documentsTitle");
-    const desc = document.getElementById("documentsDesc");
-    const list = document.getElementById("documentsList");
-
-    const docs = type === "PERSONAL" ? PERSONAL_DOCS : BUSINESS_DOCS;
-
-    title.innerText = type === "PERSONAL"
-        ? "Pièces nécessaires pour un compte personnel"
-        : "Pièces nécessaires pour un compte entreprise";
-
-    desc.innerText = type === "PERSONAL"
-        ? "Préparez ces documents avant de continuer vers le formulaire d’ouverture de compte personnel."
-        : "Préparez ces documents avant de continuer vers le formulaire d’ouverture de compte entreprise.";
-
-    list.innerHTML = docs.map(function(doc) {
-        return `
-            <div class="doc-item">
-                <strong>${doc.title}</strong>
-                <span>${doc.desc}</span>
-            </div>
-        `;
-    }).join("");
-
-    section.classList.remove("hidden");
-    section.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function resetChoice() {
-    selectedAccountType = null;
-    document.getElementById("personalCard").classList.remove("active");
-    document.getElementById("businessCard").classList.remove("active");
-    document.getElementById("documentsSection").classList.add("hidden");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function continueToForm() {
-    if (!selectedAccountType) {
-        alert("Veuillez choisir le type de compte.");
+      if (!section) {
+        console.warn("Section Documents à fournir introuvable");
         return;
+      }
+
+      const top = section.getBoundingClientRect().top + window.pageYOffset - 16;
+
+      window.scrollTo({
+        top: top,
+        behavior: "smooth"
+      });
+
+      section.classList.add("documents-focus");
+
+      setTimeout(function () {
+        section.classList.remove("documents-focus");
+      }, 2200);
     }
 
-    localStorage.setItem("diaspora_account_type", selectedAccountType);
+    function afterAccountTypeSelected() {
+      setTimeout(forceScrollToDocuments, top,
+        behavior: "smooth"
+      });
 
-    const url = "/open-account-test?v=25&account_type=" + encodeURIComponent(selectedAccountType);
-    window.location.href = url;
-}
+      section.classList.add("documents-focus");
 
-function goBackPortal() {
-    window.location.href = "/?v=24";
-}
+      setTimeout(function () {
+        section.classList.remove("documents-focus");
+      }, 2200);
+    }
+
+    function afterAccount 250);
+      setTimeout(forceScrollToDocuments, 700);
+      setTimeout(forceScrollToDocuments, 1200);
+    }
+
+    function bindAccountCards() {
+      const cards = document.querySelectorAll(".account-card");
+
+      cards.forEach(function (card) {
+        if (card.dataset.scrollBound === "1") {
+          return;
+        }
+
+        card.dataset.scrollBound = "1";
+
+        ["click", "touchend", "pointerup"].forEach(function (eventName) {
+          card.addEventListener(eventName, function () {
+            afterAccountTypeSelected();
+          }, true);
+        });
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      findDocumentsSection();
+      bindAccountCards();
+
+      let tries = 0;
+      const timer = setInterval(function () {
+        bindAccountCards();
+        findDocumentsSection();
+
+        tries += 1;
+
+        if (tries >= 10) {
+          clearInterval(timer);
+        }
+      }, 500);
+    });
+
+    document.addEventListener("click", function (event) {
+      const card = event.target.closest ? event.target.closest(".account-card") : null;
+
+      if (card) {
+        afterAccountTypeSelected();
+      }
+    }, true);
+
+    window.forceScrollToDocuments = forceScrollToDocuments;
+  })();
 </script>
+
 </body>
 </html>
+
+<script>
+/* PREONBOARDING_SCROLL_HARD_APPEND_V3 */
+(function () {
+  if (window.__preOnboardingScrollHardV3) return;
+  window.__preOnboardingScrollHardV3 = true;
+
+  function normalizeText(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function findDocumentsSection() {
+    var section = document.getElementById("documents-section");
+
+    if (section) {
+      return section;
+    }
+
+    var titles = Array.prototype.slice.call(document.querySelectorAll("h2, h3, h4"));
+
+    for (var i = 0; i < titles.length; i++) {
+      var text = normalizeText(titles[i].textContent);
+
+      if (text.indexOf("documents a fournir") !== -1) {
+        section = titles[i].closest ? titles[i].closest(".section-box") : titles[i].parentElement;
+
+        if (section) {
+          section.id = "documents-section";
+          return section;
+        }
+
+        return titles[i];
+      }
+    }
+
+    return null;
+  }
+
+  function forceScrollToDocuments() {
+    var section = findDocumentsSection();
+
+    if (!section) {
+      console.warn("Section Documents à fournir introuvable");
+      return;
+    }
+
+    var top = section.getBoundingClientRect().top + window.pageYOffset - 20;
+
+    window.scrollTo({
+      top: top,
+      behavior: "smooth"
+    });
+
+    section.style.transition = "box-shadow .25s ease, border-color .25s ease";
+    section.style.borderColor = "#b5121b";
+    section.style.boxShadow = "0 0 0 5px rgba(181, 18, 27, 0.14)";
+
+    setTimeout(function () {
+      section.style.borderColor = "";
+      section.style.boxShadow = "";
+    }, 2200);
+  }
+
+  function scheduleScroll() {
+    setTimeout(forceScrollToDocuments, 150);
+    setTimeout(forceScrollToDocuments, 450);
+    setTimeout(forceScrollToDocuments, 900);
+  }
+
+  function isAccountCard(target) {
+    if (!target || !target.closest) return false;
+    return !!target.closest(".account-card");
+  }
+
+  ["click", "pointerup", "touchend"].forEach(function (eventName) {
+    document.addEventListener(eventName, function (event) {
+      if (isAccountCard(event.target)) {
+        scheduleScroll();
+      }
+    }, true);
+  });
+
+  var observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
+      var target = mutation.target;
+
+      if (
+        target &&
+        target.classList &&
+        target.classList.contains("account-card") &&
+        target.classList.contains("active")
+      ) {
+        scheduleScroll();
+      }
+    });
+  });
+
+  function bindObserver() {
+    findDocumentsSection();
+
+    document.querySelectorAll(".account-card").forEach(function (card) {
+      try {
+        observer.observe(card, {
+          attributes: true,
+          attributeFilter: ["class"]
+        });
+      } catch (e) {}
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bindObserver);
+  } else {
+    bindObserver();
+  }
+
+  setTimeout(bindObserver, 500);
+  setTimeout(bindObserver, 1500);
+
+  window.forceScrollToDocumentsV3 = forceScrollToDocuments;
+})();
+</script>
