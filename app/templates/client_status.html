@@ -1,33 +1,878 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Suivre ma demande</title>
-<style>
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f7eeee;color:#21191b}.page{max-width:620px;margin:auto;padding:24px 18px}.card{background:#fff;border:1px solid #ead7d7;border-radius:18px;padding:20px;margin:16px 0}.hero{background:linear-gradient(135deg,#21191b,#c90000);color:#fff;border-radius:22px;padding:22px}input,button{width:100%;box-sizing:border-box;padding:13px;border-radius:10px;margin:8px 0 14px}input{border:1px solid #d1d5db}button{border:0;background:#c90000;color:#fff;font-weight:700}a{color:#c90000;text-decoration:none;font-weight:700}.hidden{display:none}.badge{display:inline-block;padding:8px 12px;border-radius:999px;background:#f3f4f6;font-weight:700}.ok{background:#dcfce7;color:#166534}.review{background:#fef3c7;color:#b45309}.bad{background:#fee2e2;color:#c90000}.info{background:#f9fafb;border:1px solid #edf0f3;border-radius:12px;padding:12px;margin-top:10px}.rib{background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px;white-space:pre-wrap}
-</style>
+    <meta charset="UTF-8">
+    <title>Suivi de dossier - First Diaspora Onboarding</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root {
+            --red: #C90000;
+            --red-dark: #9E0000;
+            --black: #111111;
+            --gray-bg: #F4F6F9;
+            --border: #DADDE5;
+            --muted: #6B7280;
+            --green: #166534;
+            --orange: #B45309;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--gray-bg);
+            color: #111827;
+        }
+
+        .topbar {
+            background: var(--black);
+            color: white;
+            padding: 18px 30px;
+            border-bottom: 4px solid var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .topbar a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 18px;
+        }
+
+        .container {
+            max-width: 920px;
+            margin: 35px auto;
+            padding: 0 18px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 26px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            border: 1px solid #EEF0F5;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--red);
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 15px;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .btn {
+            margin-top: 20px;
+            background: var(--red);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 18px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .btn:hover {
+            background: var(--red-dark);
+        }
+
+        .result {
+            margin-top: 22px;
+        }
+
+        .status-card {
+            border: 1px solid #e5e7eb;
+            border-left: 6px solid var(--red);
+            border-radius: 14px;
+            padding: 16px;
+            background: #ffffff;
+            margin-top: 14px;
+        }
+
+        .status-card h3 {
+            margin: 0 0 10px;
+            color: var(--red);
+        }
+
+        .status-card p {
+            margin: 7px 0;
+            line-height: 1.45;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .badge-ok {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .badge-review {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .badge-alert {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .badge-default {
+            background: #E5E7EB;
+            color: #374151;
+        }
+
+        .error {
+            background: #FEF2F2;
+            color: #991B1B;
+            border: 1px solid #FECACA;
+            border-radius: 12px;
+            padding: 14px;
+            margin-top: 16px;
+            font-weight: bold;
+        }
+
+        .loading {
+            color: var(--muted);
+            font-weight: bold;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .topbar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<div class="page">
-<p><a href="/?v=24">Retour accueil</a></p>
-<div class="hero"><h1>Suivre ma demande</h1><p>Entrez la reference du dossier et l'email utilise lors de la demande.</p></div>
-<div class="card">
-<label>Reference de demande</label><input id="reference" placeholder="Ex : AFB-DIASPORA-2026-0001">
-<label>Email</label><input id="email" type="email" placeholder="Ex : client@email.com">
-<button type="button" onclick="checkStatus()">Consulter le statut</button><p id="message"></p>
+
+<div class="topbar">
+    <h2>First Diaspora Onboarding</h2>
+    <div>
+        <a href="/">Accueil</a>
+        <a href="/open-account-flow-test">Ouvrir un compte</a>
+    </div>
 </div>
-<div id="result" class="card hidden">
-<h2>Resultat du suivi</h2><span id="status" class="badge">...</span>
-<div class="info"><b>Reference</b><br><span id="refValue">-</span></div>
-<div class="info"><b>Client</b><br><span id="clientValue">-</span></div>
-<div class="info"><b>Score documentaire</b><br><span id="docScoreValue">-</span></div>
-<div class="info"><b>BlackModule</b><br><span id="blackmoduleValue">-</span></div>
-<div class="info"><b>Message de la banque</b><br><span id="clientMessageValue">-</span></div>
-<div id="ribBlock" class="hidden"><h3>RIB Afriland attribue</h3><div id="ribValue" class="rib"></div></div>
-</div></div>
+
+<div class="container">
+    <div class="card">
+        <h1>Suivi de votre demande</h1>
+
+        <p class="muted">
+            Vous pouvez suivre votre dossier avec votre email seul.  
+            La référence du dossier reste optionnelle si vous voulez rechercher une demande précise.
+        </p>
+
+        <form id="statusForm">
+            <label for="email">Email utilisé lors de la demande <span style="color:#C90000">*</span></label>
+            <input id="email" name="email" type="email" placeholder="exemple@email.com" required>
+
+            <label for="reference">Référence dossier <span class="muted">(optionnelle)</span></label>
+            <input id="reference" name="reference" type="text" placeholder="Ex : DIA-20260630-42C46275">
+
+            <div class="hint">
+                Si vous ne connaissez pas votre référence, saisissez uniquement votre email.
+            </div>
+
+            <button class="btn" type="submit">Rechercher mon dossier</button>
+        </form>
+
+        <div id="statusResult" class="result"></div>
+    </div>
+</div>
+
 <script>
-function labelStatus(s){const l={SUBMITTED:"Demande soumise",COMPLIANCE_REVIEW:"En revue conformite",NEED_MORE_DOCUMENTS:"Documents complementaires requis",APPROVED:"Dossier approuve",REJECTED:"Dossier rejete",ACCOUNT_OPENED:"Compte ouvert / RIB attribue",BLACKMODULE_ALERT:"Revue conformite requise"};return l[s]||s||"Non defini";}
-function classStatus(s){if(s==="ACCOUNT_OPENED"||s==="APPROVED")return"badge ok";if(s==="REJECTED")return"badge bad";if(s==="COMPLIANCE_REVIEW"||s==="NEED_MORE_DOCUMENTS"||s==="BLACKMODULE_ALERT")return"badge review";return"badge";}
-async function checkStatus(){const ref=document.getElementById("reference").value.trim();const email=document.getElementById("email").value.trim();const msg=document.getElementById("message");const result=document.getElementById("result");result.classList.add("hidden");if(!ref||!email){msg.style.color="#c90000";msg.innerText="Veuillez renseigner la reference et l'email.";return;}msg.style.color="#6b7280";msg.innerText="Recherche du dossier...";try{const res=await fetch("/api/applications/status/"+encodeURIComponent(ref)+"?email="+encodeURIComponent(email));if(!res.ok){msg.style.color="#c90000";msg.innerText="Dossier introuvable ou informations incorrectes.";return;}const data=await res.json();const st=document.getElementById("status");st.className=classStatus(data.status);st.innerText=labelStatus(data.status);document.getElementById("refValue").innerText=data.reference||"-";document.getElementById("clientValue").innerText=((data.first_name||"")+" "+(data.last_name||"")).trim()||"-";document.getElementById("docScoreValue").innerText=Number(data.document_score||0)+"%";document.getElementById("blackmoduleValue").innerText=data.blackmodule_status||"NOT_SCREENED";document.getElementById("clientMessageValue").innerText=data.client_message||data.review_comment||"Votre dossier est en cours de traitement.";if(data.status==="ACCOUNT_OPENED"&&data.final_rib){document.getElementById("ribBlock").classList.remove("hidden");document.getElementById("ribValue").innerText=data.final_rib;}else{document.getElementById("ribBlock").classList.add("hidden");}msg.innerText="";result.classList.remove("hidden");}catch(e){msg.style.color="#c90000";msg.innerText="Erreur de connexion. Veuillez reessayer.";}}
-</script></body></html>
+/* CLIENT_STATUS_EMAIL_ONLY_CLEAN_V2 */
+(function () {
+    const form = document.getElementById("statusForm");
+    const emailInput = document.getElementById("email");
+    const referenceInput = document.getElementById("reference");
+    const resultBox = document.getElementById("statusResult");
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function statusLabel(status) {
+        const labels = {
+            "SUBMITTED": "Dossier soumis",
+            "AUTO_KYC_OK": "KYC automatique validé",
+            "AUTO_KYC_REVIEW": "KYC en revue",
+            "BLACKMODULE_ALERT": "Alerte conformité",
+            "COMPLIANCE_REVIEW": "Revue conformité",
+            "APPROVED": "Dossier approuvé",
+            "REJECTED": "Dossier rejeté",
+            "NEED_MORE_DOCUMENTS": "Complément demandé",
+            "ACCOUNT_OPENED": "Compte ouvert"
+        };
+
+        return labels[status] || status || "Non défini";
+    }
+
+    function badgeClass(status) {
+        if (["APPROVED", "AUTO_KYC_OK", "ACCOUNT_OPENED"].includes(status)) {
+            return "badge-ok";
+        }
+
+        if (["AUTO_KYC_REVIEW", "COMPLIANCE_REVIEW", "NEED_MORE_DOCUMENTS"].includes(status)) {
+            return "badge-review";
+        }
+
+        if (["BLACKMODULE_ALERT", "REJECTED"].includes(status)) {
+            return "badge-alert";
+        }
+
+        return "badge-default";
+    }
+
+    function renderApplication(app) {
+        return `
+            <div class="status-card">
+                <h3>Dossier ${escapeHtml(app.reference)}</h3>
+
+                <p>
+                    <strong>Statut :</strong>
+                    <span class="badge ${badgeClass(app.status)}">${escapeHtml(statusLabel(app.status))}</span>
+                </p>
+
+                <p><strong>Client :</strong> ${escapeHtml(app.full_name || "")}</p>
+                <p><strong>Email :</strong> ${escapeHtml(app.email || "")}</p>
+                <p><strong>Téléphone :</strong> ${escapeHtml(app.phone || "Non renseigné")}</p>
+                <p><strong>Agence souhaitée :</strong> ${escapeHtml(app.preferred_branch || "Non renseignée")}</p>
+                <p><strong>Nationalité :</strong> ${escapeHtml(app.nationality || "Non renseignée")}</p>
+                <p><strong>Score KYC :</strong> ${escapeHtml(app.kyc_score ?? 0)}%</p>
+                <p><strong>Score documentaire :</strong> ${escapeHtml(app.document_score ?? 0)}%</p>
+
+                ${app.account_number ? `<p><strong>Numéro de compte :</strong> ${escapeHtml(app.account_number)}</p>` : ""}
+                ${app.final_rib ? `<p><strong>RIB final :</strong> ${escapeHtml(app.final_rib)}</p>` : ""}
+                ${app.client_message ? `<p><strong>Message banque :</strong> ${escapeHtml(app.client_message)}</p>` : ""}
+                ${app.review_comment ? `<p><strong>Observation :</strong> ${escapeHtml(app.review_comment)}</p>` : ""}
+            </div>
+        `;
+    }
+
+    function renderApplications(data) {
+        const apps = data.applications || [];
+
+        if (!apps.length) {
+            resultBox.innerHTML = `<div class="error">Aucun dossier trouvé pour cette adresse email.</div>`;
+            return;
+        }
+
+        resultBox.innerHTML = `
+            <p class="muted">
+                <strong>${apps.length}</strong> dossier(s) trouvé(s) pour <strong>${escapeHtml(data.email)}</strong>.
+            </p>
+            ${apps.map(renderApplication).join("")}
+        `;
+    }
+
+    async function searchStatus(event) {
+        event.preventDefault();
+
+        const email = emailInput.value.trim();
+        const reference = referenceInput.value.trim();
+
+        if (!email) {
+            resultBox.innerHTML = `<div class="error">Veuillez saisir votre email.</div>`;
+            return;
+        }
+
+        resultBox.innerHTML = `<div class="loading">Recherche en cours...</div>`;
+
+        try {
+            let url;
+
+            if (reference) {
+                url = `/api/applications/status/${encodeURIComponent(reference)}?email=${encodeURIComponent(email)}`;
+            } else {
+                url = `/api/applications/status-by-email?email=${encodeURIComponent(email)}`;
+            }
+
+            const response = await fetch(url, {
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                let detail = "Aucun dossier trouvé avec ces informations.";
+
+                try {
+                    const errorData = await response.json();
+                    detail = errorData.detail || detail;
+                } catch (e) {}
+
+                throw new Error(detail);
+            }
+
+            const data = await response.json();
+
+            if (data.applications) {
+                renderApplications(data);
+            } else {
+                resultBox.innerHTML = renderApplication(data);
+            }
+        } catch (error) {
+            resultBox.innerHTML = `
+                <div class="error">
+                    ${escapeHtml(error.message || "Impossible de retrouver le dossier.")}
+                </div>
+            `;
+        }
+    }
+
+    form.addEventListener("submit", searchStatus);
+})();
+</script>
+
+
+
+<style>
+/* CLIENT_STATUS_VISUAL_TRACKING_V3 */
+.tracking-summary {
+    border-radius: 18px;
+    background: linear-gradient(135deg, #111827, #2b2b2b);
+    color: white;
+    padding: 22px;
+    margin-top: 22px;
+    border-bottom: 5px solid #C90000;
+}
+
+.tracking-summary h2 {
+    margin: 0 0 8px;
+    font-size: 22px;
+}
+
+.tracking-summary p {
+    margin: 6px 0;
+    color: #e5e7eb;
+}
+
+.tracking-ref {
+    display: inline-block;
+    background: #C90000;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.tracking-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.tracking-mini-card {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.tracking-mini-card span {
+    display: block;
+    color: #d1d5db;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.tracking-mini-card strong {
+    font-size: 15px;
+}
+
+.tracking-progress-box {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    margin-top: 18px;
+    border: 1px solid #e5e7eb;
+}
+
+.tracking-progress-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.tracking-progress-header h3 {
+    margin: 0;
+    color: #111827;
+}
+
+.tracking-percent {
+    background: #DCFCE7;
+    color: #166534;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.tracking-bar {
+    width: 100%;
+    height: 12px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 18px;
+}
+
+.tracking-bar-fill {
+    height: 100%;
+    background: #C90000;
+    border-radius: 999px;
+    transition: width .3s ease;
+}
+
+.tracking-steps {
+    display: grid;
+    gap: 12px;
+}
+
+.tracking-step {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #FAFAFA;
+}
+
+.tracking-step-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.tracking-step.done {
+    background: #F0FDF4;
+    border-color: #BBF7D0;
+}
+
+.tracking-step.done .tracking-step-icon {
+    background: #16A34A;
+    color: white;
+}
+
+.tracking-step.current {
+    background: #FFF7ED;
+    border-color: #FDBA74;
+}
+
+.tracking-step.current .tracking-step-icon {
+    background: #C90000;
+    color: white;
+}
+
+.tracking-step.blocked {
+    background: #FEF2F2;
+    border-color: #FECACA;
+}
+
+.tracking-step.blocked .tracking-step-icon {
+    background: #991B1B;
+    color: white;
+}
+
+.tracking-step h4 {
+    margin: 0 0 4px;
+}
+
+.tracking-step p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.tracking-bank-message {
+    margin-top: 18px;
+    border-radius: 14px;
+    padding: 14px;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    color: #1E3A8A;
+}
+
+.tracking-bank-message strong {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.tracking-list-title {
+    margin-top: 24px;
+    color: #111827;
+}
+
+.tracking-status-card {
+    border: 1px solid #e5e7eb;
+    border-left: 6px solid #C90000;
+    border-radius: 16px;
+    padding: 16px;
+    background: white;
+    margin-top: 14px;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .06);
+}
+
+.tracking-status-card h3 {
+    margin: 0 0 8px;
+    color: #C90000;
+}
+
+.tracking-card-actions {
+    margin-top: 12px;
+}
+
+.tracking-card-actions button {
+    background: #111827;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    padding: 9px 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.tracking-card-actions button:hover {
+    background: #000;
+}
+
+@media (max-width: 780px) {
+    .tracking-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tracking-progress-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+</style>
+
+<script>
+/* CLIENT_STATUS_VISUAL_TRACKING_V3 */
+(function () {
+    if (window.__clientStatusVisualTrackingV3) return;
+    window.__clientStatusVisualTrackingV3 = true;
+
+    function escapeHtmlV3(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function statusLabelV3(status) {
+        const labels = {
+            "SUBMITTED": "Dossier soumis",
+            "AUTO_KYC_OK": "KYC automatique validé",
+            "AUTO_KYC_REVIEW": "KYC en revue",
+            "BLACKMODULE_ALERT": "Alerte conformité",
+            "COMPLIANCE_REVIEW": "Revue conformité",
+            "APPROVED": "Dossier approuvé",
+            "REJECTED": "Dossier rejeté",
+            "NEED_MORE_DOCUMENTS": "Complément demandé",
+            "ACCOUNT_OPENED": "Compte ouvert"
+        };
+
+        return labels[status] || status || "Non défini";
+    }
+
+    function progressForStatus(status) {
+        const map = {
+            "SUBMITTED": 20,
+            "AUTO_KYC_REVIEW": 40,
+            "AUTO_KYC_OK": 55,
+            "BLACKMODULE_ALERT": 55,
+            "COMPLIANCE_REVIEW": 65,
+            "NEED_MORE_DOCUMENTS": 55,
+            "APPROVED": 85,
+            "ACCOUNT_OPENED": 100,
+            "REJECTED": 100
+        };
+
+        return map[status] || 20;
+    }
+
+    function stepClass(status, step) {
+        const progress = progressForStatus(status);
+
+        if (status === "REJECTED" && step >= 4) return "blocked";
+        if (status === "NEED_MORE_DOCUMENTS" && step === 3) return "current";
+        if (status === "BLACKMODULE_ALERT" && step === 3) return "current";
+
+        const thresholds = {
+            1: 20,
+            2: 40,
+            3: 65,
+            4: 85,
+            5: 100
+        };
+
+        if (progress >= thresholds[step]) return "done";
+
+        const previous = step === 1 ? 0 : thresholds[step - 1];
+        if (progress >= previous && progress < thresholds[step]) return "current";
+
+        return "";
+    }
+
+    function renderStep(app, step, title, text) {
+        const cls = stepClass(app.status, step);
+        const icon = cls === "done" ? "✓" : step;
+
+        return `
+            <div class="tracking-step ${cls}">
+                <div class="tracking-step-icon">${icon}</div>
+                <div>
+                    <h4>${escapeHtmlV3(title)}</h4>
+                    <p>${escapeHtmlV3(text)}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderTrackingDetailsV3(app) {
+        const progress = progressForStatus(app.status);
+
+        const bankMessage = app.client_message || app.review_comment || "";
+        const finalInfo = app.account_number || app.final_rib;
+
+        return `
+            <div class="tracking-summary">
+                <h2>${escapeHtmlV3(statusLabelV3(app.status))}</h2>
+                <p>Bonjour ${escapeHtmlV3(app.full_name || "client")}, voici l’état actuel de votre demande.</p>
+                <span class="tracking-ref">${escapeHtmlV3(app.reference)}</span>
+
+                <div class="tracking-grid">
+                    <div class="tracking-mini-card">
+                        <span>Email</span>
+                        <strong>${escapeHtmlV3(app.email || "Non renseigné")}</strong>
+                    </div>
+                    <div class="tracking-mini-card">
+                        <span>Agence souhaitée</span>
+                        <strong>${escapeHtmlV3(app.preferred_branch || "Non renseignée")}</strong>
+                    </div>
+                    <div class="tracking-mini-card">
+                        <span>Niveau de risque</span>
+                        <strong>${escapeHtmlV3(app.risk_level || "Non évalué")}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tracking-progress-box">
+                <div class="tracking-progress-header">
+                    <h3>Avancement de votre dossier</h3>
+                    <span class="tracking-percent">${progress}%</span>
+                </div>
+
+                <div class="tracking-bar">
+                    <div class="tracking-bar-fill" style="width:${progress}%"></div>
+                </div>
+
+                <div class="tracking-steps">
+                    ${renderStep(app, 1, "Dossier soumis", "Votre demande a été enregistrée dans le système.")}
+                    ${renderStep(app, 2, "Analyse KYC et documents", "Les informations client et les pièces transmises sont en cours de contrôle.")}
+                    ${renderStep(app, 3, "Revue conformité", "Le dossier peut être validé automatiquement ou transmis à la conformité si nécessaire.")}
+                    ${renderStep(app, 4, "Décision banque", "Un agent analyse le dossier et prend une décision back-office.")}
+                    ${renderStep(app, 5, "Compte ouvert", "Lorsque le compte est ouvert, les informations finales peuvent être communiquées au client.")}
+                </div>
+
+                ${bankMessage ? `
+                    <div class="tracking-bank-message">
+                        <strong>Message de la banque</strong>
+                        ${escapeHtmlV3(bankMessage)}
+                    </div>
+                ` : ""}
+
+                ${finalInfo ? `
+                    <div class="tracking-bank-message">
+                        <strong>Informations de compte</strong>
+                        ${app.account_number ? `Numéro de compte : ${escapeHtmlV3(app.account_number)}<br>` : ""}
+                        ${app.final_rib ? `RIB final : ${escapeHtmlV3(app.final_rib)}` : ""}
+                    </div>
+                ` : ""}
+            </div>
+        `;
+    }
+
+    function renderSmallCardV3(app, index) {
+        return `
+            <div class="tracking-status-card">
+                <h3>${escapeHtmlV3(app.reference)}</h3>
+                <p><strong>Statut :</strong> ${escapeHtmlV3(statusLabelV3(app.status))}</p>
+                <p><strong>Client :</strong> ${escapeHtmlV3(app.full_name || "")}</p>
+                <p><strong>Agence :</strong> ${escapeHtmlV3(app.preferred_branch || "Non renseignée")}</p>
+                <p><strong>Score KYC :</strong> ${escapeHtmlV3(app.kyc_score ?? 0)}%</p>
+                <p><strong>Score documentaire :</strong> ${escapeHtmlV3(app.document_score ?? 0)}%</p>
+
+                <div class="tracking-card-actions">
+                    <button type="button" onclick="window.__showTrackingDetailsV3(${index})">
+                        Voir le détail du suivi
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    window.__lastTrackingAppsV3 = [];
+
+    window.__showTrackingDetailsV3 = function (index) {
+        const resultBox = document.getElementById("statusResult");
+        const app = window.__lastTrackingAppsV3[index];
+
+        if (!resultBox || !app) return;
+
+        resultBox.innerHTML =
+            renderTrackingDetailsV3(app) +
+            `<h3 class="tracking-list-title">Autres dossiers associés à cet email</h3>` +
+            window.__lastTrackingAppsV3
+                .map(renderSmallCardV3)
+                .join("");
+
+        resultBox.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
+    async function improvedSearch(event) {
+        const form = document.getElementById("statusForm");
+        const emailInput = document.getElementById("email");
+        const referenceInput = document.getElementById("reference");
+        const resultBox = document.getElementById("statusResult");
+
+        if (!form || !emailInput || !resultBox) return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        const email = emailInput.value.trim();
+        const reference = referenceInput ? referenceInput.value.trim() : "";
+
+        if (!email) {
+            resultBox.innerHTML = `<div class="error">Veuillez saisir votre email.</div>`;
+            return;
+        }
+
+        resultBox.innerHTML = `<div class="loading">Recherche en cours...</div>`;
+
+        try {
+            const url = reference
+                ? `/api/applications/status/${encodeURIComponent(reference)}?email=${encodeURIComponent(email)}`
+                : `/api/applications/status-by-email?email=${encodeURIComponent(email)}`;
+
+            const response = await fetch(url, { cache: "no-store" });
+
+            if (!response.ok) {
+                let detail = "Aucun dossier trouvé avec ces informations.";
+
+                try {
+                    const errorData = await response.json();
+                    detail = errorData.detail || detail;
+                } catch (e) {}
+
+                throw new Error(detail);
+            }
+
+            const data = await response.json();
+
+            let apps = [];
+
+            if (data.applications) {
+                apps = data.applications;
+            } else {
+                apps = [data];
+            }
+
+            window.__lastTrackingAppsV3 = apps;
+
+            if (apps.length === 1) {
+                resultBox.innerHTML = renderTrackingDetailsV3(apps[0]);
+                return;
+            }
+
+            resultBox.innerHTML = `
+                <h3 class="tracking-list-title">${apps.length} dossier(s) trouvé(s) pour ${escapeHtmlV3(email)}</h3>
+                <p class="muted">Sélectionnez un dossier pour afficher son suivi détaillé.</p>
+                ${apps.map(renderSmallCardV3).join("")}
+            `;
+        } catch (error) {
+            resultBox.innerHTML = `
+                <div class="error">
+                    ${escapeHtmlV3(error.message || "Impossible de retrouver le dossier.")}
+                </div>
+            `;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("statusForm");
+
+        if (!form) return;
+
+        form.addEventListener("submit", improvedSearch, true);
+    });
+})();
+</script>
+
+</body>
+</html>

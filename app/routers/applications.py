@@ -277,6 +277,58 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
     return application
 
 
+
+# APPLICATION_STATUS_BY_EMAIL_V1
+def application_status_payload(application):
+    return {
+        "reference": application.reference,
+        "full_name": f"{application.last_name} {application.first_name}",
+        "email": application.email,
+        "phone": application.phone,
+        "preferred_branch": application.preferred_branch,
+        "nationality": application.nationality,
+        "residency_status": application.residency_status,
+        "status": application.status,
+        "risk_level": application.risk_level,
+        "kyc_score": application.kyc_score,
+        "document_score": application.document_score,
+        "blackmodule_status": application.blackmodule_status,
+        "created_at": application.created_at,
+        "review_decision": application.review_decision,
+        "review_comment": application.review_comment,
+        "client_message": getattr(application, "client_message", None),
+        "final_rib": getattr(application, "final_rib", None),
+        "account_number": getattr(application, "account_number", None),
+    }
+
+
+@router.get("/status-by-email")
+def get_application_status_by_email(email: str, db: Session = Depends(get_db)):
+    email_clean = (email or "").strip().lower()
+
+    if not email_clean or "@" not in email_clean:
+        raise HTTPException(status_code=400, detail="Veuillez saisir une adresse email valide.")
+
+    applications = (
+        db.query(AccountApplication)
+        .filter(AccountApplication.email.ilike(email_clean))
+        .order_by(AccountApplication.created_at.desc())
+        .all()
+    )
+
+    if not applications:
+        raise HTTPException(status_code=404, detail="Aucun dossier trouvé pour cette adresse email.")
+
+    return {
+        "email": email_clean,
+        "count": len(applications),
+        "applications": [
+            application_status_payload(application)
+            for application in applications
+        ]
+    }
+
+
 @router.get("/status/{reference}")
 def get_application_status(reference: str, email: str | None = None, db: Session = Depends(get_db)):
     application = db.query(AccountApplication).filter(
