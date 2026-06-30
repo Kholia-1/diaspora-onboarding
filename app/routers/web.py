@@ -1,3 +1,8 @@
+from app.models import AccountApplication
+from app.database import get_db
+from sqlalchemy.orm import Session
+from fastapi.responses import RedirectResponse
+from fastapi import Depends
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 
@@ -28,14 +33,51 @@ def backoffice_applications(request: Request):
 
 
 @router.get("/backoffice/applications/{application_id}")
-def backoffice_application_detail(request: Request, application_id: int):
+def backoffice_application_detail(request: Request, application_id: str, db: Session = Depends(get_db)):
+    """
+    Affiche le détail d'un dossier back-office.
+    Accepte soit l'ID numérique interne, soit la référence publique DIA-...
+    """
+    raw = str(application_id or "").strip()
+
+    # Si l'URL contient une référence DIA-..., on retrouve l'ID interne
+    # puis on redirige vers l'URL numérique utilisée par le JavaScript existant.
+    if raw and not raw.isdigit():
+        found = None
+
+        for column in AccountApplication.__table__.columns:
+            if column.name == "id":
+                continue
+
+            try:
+                if column.type.python_type is not str:
+                    continue
+            except Exception:
+                continue
+
+            model_column = getattr(AccountApplication, column.name, None)
+            if model_column is None:
+                continue
+
+            found = db.query(AccountApplication).filter(model_column == raw).first()
+            if found:
+                break
+
+        if found:
+            return RedirectResponse(
+                url=f"/backoffice/applications/{found.id}",
+                status_code=303
+            )
+
     return templates.TemplateResponse(
         request,
         "backoffice_detail.html",
         {
-            "application_id": application_id
+            "request": request,
+            "application_id": raw
         }
     )
+
 
 @router.get("/backoffice/agencies")
 def backoffice_agencies(request: Request):
@@ -153,4 +195,14 @@ async def get_active_activity_sectors():
 @router.get("/open-account-flow-test")
 async def open_account_flow_test_page(request: Request):
     return templates.TemplateResponse(request, "client_open_account_flow_test.html", {"request": request})
+
+# Services cartes - pages client démonstration
+@router.get("/souscrire-carte")
+async def card_subscription_page(request: Request):
+    return templates.TemplateResponse(request, "client_card_subscription.html", {"request": request})
+
+
+@router.get("/recharger-carte")
+async def card_reload_page(request: Request):
+    return templates.TemplateResponse(request, "client_card_reload.html", {"request": request})
 
