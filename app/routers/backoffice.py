@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import os
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Body
@@ -20,6 +21,17 @@ def get_document_type_label(document_type: str) -> str:
         "IDENTITY_DOCUMENT_VERSO": "Pièce d’identité officielle - Verso",
         "IDENTITY_DOCUMENT_IMPORTED": "Pièce d’identité officielle importée",
 
+        "CNI_RECTO": "Pièce d’identité - recto",
+        "CNI_VERSO": "Pièce d’identité - verso",
+        "PASSPORT_DOCUMENT": "Passeport",
+        "RESIDENCE_PERMIT_RECTO": "Titre de séjour - recto",
+        "RESIDENCE_PERMIT_VERSO": "Titre de séjour - verso",
+        "CONSULAR_CARD_RECTO": "Carte consulaire - recto",
+        "CONSULAR_CARD_VERSO": "Carte consulaire - verso",
+        "ADDRESS_PROOF": "Justificatif de domicile",
+        "CLIENT_PHOTO": "Photo client",
+        "CLIENT_VIDEO": "Vidéo client",
+
         "PROOF_OF_ADDRESS_PHOTO": "Justificatif de domicile",
 
         "INCOME_PROOF": "Preuve de justification de revenu / activité",
@@ -35,6 +47,71 @@ def get_document_type_label(document_type: str) -> str:
     }
 
     return labels.get(document_type, document_type or "Document")
+
+
+
+def get_document_filename(doc) -> str:
+    return str(
+        getattr(doc, "original_filename", None)
+        or getattr(doc, "file_name", None)
+        or getattr(doc, "filename", None)
+        or getattr(doc, "file_path", None)
+        or getattr(doc, "path", "")
+        or ""
+    )
+
+
+def is_video_document(doc) -> bool:
+    mime = str(getattr(doc, "mime_type", "") or "").lower()
+    name = get_document_filename(doc).lower()
+    document_type = str(getattr(doc, "document_type", "") or "").upper()
+
+    return (
+        mime.startswith("video/")
+        or name.endswith((".webm", ".mp4", ".mov"))
+        or document_type in {"CLIENT_VIDEO", "SELFIE_VIDEO"}
+    )
+
+
+def is_photo_identity_media_only(doc) -> bool:
+    document_type = str(getattr(doc, "document_type", "") or "").upper()
+
+    return document_type in {
+        "CLIENT_PHOTO",
+        "CLIENT_VIDEO",
+        "SELFIE_PHOTO",
+        "SELFIE_VIDEO"
+    }
+
+
+def is_analysis_available(doc) -> bool:
+    if is_video_document(doc) or is_photo_identity_media_only(doc):
+        return False
+
+    file_path = str(getattr(doc, "file_path", "") or "")
+    if not file_path:
+        return False
+
+    return os.path.exists(file_path + ".analysis.enc")
+
+
+def latest_documents_by_type(documents):
+    latest = {}
+
+    for doc in documents:
+        key = str(getattr(doc, "document_type", "") or f"DOC_{getattr(doc, 'id', '')}")
+
+        current = latest.get(key)
+
+        if current is None:
+            latest[key] = doc
+            continue
+
+        if int(getattr(doc, "id", 0) or 0) >= int(getattr(current, "id", 0) or 0):
+            latest[key] = doc
+
+    return sorted(latest.values(), key=lambda d: int(getattr(d, "id", 0) or 0), reverse=True)
+
 
 router = APIRouter(
     prefix="/api/backoffice",
@@ -52,10 +129,8 @@ def list_applications(db: Session = Depends(get_db)):
 
 
 @router.get("/applications/{application_id}")
-def get_application_detail(application_id: int, db: Session = Depends(get_db)):
-    application = db.query(AccountApplication).filter(
-        AccountApplication.id == application_id
-    ).first()
+def get_application_detail(application_id: str, db: Session = Depends(get_db)):
+    application = _find_application_by_id_or_reference(db, application_id)
 
     if not application:
         raise HTTPException(status_code=404, detail="Demande introuvable")
@@ -63,6 +138,21 @@ def get_application_detail(application_id: int, db: Session = Depends(get_db)):
     documents = db.query(ApplicationDocument).filter(
         ApplicationDocument.application_id == application.id
     ).all()
+
+    # BACKOFFICE_HIDE_JSON_DOCUMENTS_V1
+    documents = [
+        doc for doc in documents
+        if not str(
+            getattr(doc, "file_name", None)
+            or getattr(doc, "filename", None)
+            or getattr(doc, "original_filename", None)
+            or getattr(doc, "file_path", None)
+            or getattr(doc, "path", "")
+        ).lower().endswith(".json")
+    ]
+
+    # BACKOFFICE_LATEST_DOCUMENTS_BY_TYPE_V1
+    documents = latest_documents_by_type(documents)
 
     return {
         "application": {
@@ -98,6 +188,8 @@ def get_application_detail(application_id: int, db: Session = Depends(get_db)):
             "income_currency": application.income_currency,
             "activity_sector": application.activity_sector,
             "activity_sector_code": application.activity_sector_code,
+            "activity_subsector": getattr(application, "activity_subsector", None),
+            "activity_subsector_code": getattr(application, "activity_subsector_code", None),
             "account_object": application.account_object,
             "account_object_other": application.account_object_other,
             "funds_origin": application.funds_origin,
@@ -141,7 +233,14 @@ def get_application_detail(application_id: int, db: Session = Depends(get_db)):
                 # Ne pas utiliser directement file_path dans le front.
                 # Le document est chiffré, il doit passer par cette route.
                 "content_url": f"/api/applications/documents/{doc.id}/content",
-                "analysis_url": f"/api/applications/documents/{doc.id}/analysis"
+                "analysis_url": (
+                    f"/api/applications/documents/{doc.id}/analysis"
+                    if is_analysis_available(doc)
+                    else None
+                ),
+                "can_analyze": is_analysis_available(doc),
+                "is_video": is_video_document(doc),
+                "is_media_only": is_photo_identity_media_only(doc)
             }
             for doc in documents
         ]
@@ -315,3 +414,41 @@ def save_packages_config(payload: dict = Body(...)):
         "message": "Configuration des packages enregistrée",
         "packages": cleaned
     }
+
+def _find_application_by_id_or_reference(db, application_id):
+    """
+    Retrouve un dossier soit par ID numérique interne, soit par référence publique DIA-...
+    """
+    raw = str(application_id or "").strip()
+
+    if not raw:
+        raise HTTPException(status_code=404, detail="Dossier introuvable")
+
+    # Cas 1 : ID numérique interne
+    if raw.isdigit():
+        application = db.query(AccountApplication).filter(AccountApplication.id == int(raw)).first()
+        if application:
+            return application
+
+    # Cas 2 : référence publique, ex: DIA-20260629-3B6110BA
+    # Recherche dans toutes les colonnes texte du modèle
+    for column in AccountApplication.__table__.columns:
+        if column.name == "id":
+            continue
+
+        try:
+            if column.type.python_type is not str:
+                continue
+        except Exception:
+            continue
+
+        model_column = getattr(AccountApplication, column.name, None)
+        if model_column is None:
+            continue
+
+        application = db.query(AccountApplication).filter(model_column == raw).first()
+        if application:
+            return application
+
+    raise HTTPException(status_code=404, detail="Dossier introuvable")
+

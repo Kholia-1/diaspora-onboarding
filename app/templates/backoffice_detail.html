@@ -558,6 +558,20 @@
     }
 </style>
 
+
+<style>
+/* BACKOFFICE_NO_ANALYSIS_STYLE_V1 */
+.doc-no-analysis {
+    display: inline-block;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 700;
+}
+</style>
+
 </head>
 
 <body>
@@ -804,6 +818,8 @@
 
     
 async function safeFetchJsonV31(url) {
+    if (!url) return null;
+
     try {
         const response = await fetch(url);
         if (!response.ok) return null;
@@ -931,7 +947,8 @@ async function loadDetail() {
         renderApplication(data.application);
         renderDocuments(data.documents || []);
         await renderComplianceSummaryV31(data);
-        renderComplianceSummaryV30(data);
+        // V30 désactivé : V31 est la version active
+        // renderComplianceSummaryV30(data);
     }
 
     function renderApplication(app) {
@@ -1026,7 +1043,7 @@ async function loadDetail() {
 
         documents.forEach(doc => {
             const fileUrl = doc.content_url || `/api/applications/documents/${doc.id}/content`;
-            const analysisUrl = doc.analysis_url || `/api/applications/documents/${doc.id}/analysis`;
+            const analysisUrl = (doc.can_analyze && doc.analysis_url) ? doc.analysis_url : null;
             const mimeType = doc.mime_type || "";
             const verificationStatus = doc.verification_status || "UPLOADED";
             let previewHtml = "";
@@ -1055,7 +1072,13 @@ async function loadDetail() {
                     </p>
                     <a href="${fileUrl}" target="_blank">Ouvrir le document déchiffré</a>
                     <br>
-                    <a href="${analysisUrl}" target="_blank">Voir analyse OCR / matching</a>
+                    ${analysisUrl
+                        ? `${analysisUrl
+                        ? `<a href="${analysisUrl}" class="bo-analysis-link" data-doc-id="${doc.id}">Voir analyse OCR / matching</a>`
+                        : `<span class="doc-no-analysis">Analyse OCR non disponible pour ce type de document</span>`
+                    }`
+                        : `<span class="doc-no-analysis">Analyse OCR non disponible pour ce type de document</span>`
+                    }
                     ${previewHtml}
                 </div>
             `;
@@ -1200,6 +1223,8 @@ async function loadDetail() {
 
 <script>
 async function safeFetchJsonV30(url) {
+    if (!url) return null;
+
     try {
         const response = await fetch(url);
         if (!response.ok) return null;
@@ -1311,6 +1336,381 @@ async function renderComplianceSummaryV30(data) {
         </div>
     `;
 }
+</script>
+
+
+
+
+<!-- BACKOFFICE_DETAIL_ACTIVITY_SUBSECTOR_DISPLAY_V2_DIRECT_API -->
+<script>
+(function () {
+  const MARKER = "BACKOFFICE_DETAIL_ACTIVITY_SUBSECTOR_DISPLAY_V2_DIRECT_API";
+
+  function getApplicationIdFromUrl() {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    return parts[parts.length - 1];
+  }
+
+  function safeText(value) {
+    return String(value || "-")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function buildBox(data) {
+    const label = data.activity_subsector || "";
+    const code = data.activity_subsector_code || "";
+
+    if (!label && !code) {
+      return "";
+    }
+
+    return `
+      <div id="bo-subsector-box" style="
+        margin:16px 0;
+        padding:14px 16px;
+        border:1px solid #d8dee9;
+        border-radius:10px;
+        background:#f8fafc;
+      ">
+        <div style="font-weight:700;color:#334155;margin-bottom:6px;">
+          Sous-secteur d’activité
+        </div>
+        <div style="color:#0f172a;font-size:15px;">
+          ${safeText(label)}
+        </div>
+        ${code ? `<div style="margin-top:5px;font-size:12px;color:#64748b;">Code : ${safeText(code)}</div>` : ""}
+      </div>
+    `;
+  }
+
+  async function init() {
+    try {
+      if (document.getElementById("bo-subsector-box")) return;
+
+      const id = getApplicationIdFromUrl();
+
+      if (!id) {
+        console.log(MARKER, "ID dossier introuvable:", id);
+        return;
+      }
+
+      const response = await fetch("/api/backoffice/applications/" + encodeURIComponent(id) + "?v=" + Date.now(), {
+        cache: "no-store"
+      });
+
+      if (!response.ok) {
+        console.log(MARKER, "API erreur:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+      console.log(MARKER, data);
+
+      const html = buildBox(data);
+
+      if (!html) {
+        console.log(MARKER, "API OK mais aucun sous-secteur dans la réponse");
+        return;
+      }
+
+      const target =
+        document.querySelector(".card-body") ||
+        document.querySelector(".container") ||
+        document.querySelector("main") ||
+        document.body;
+
+      target.insertAdjacentHTML("afterbegin", html);
+
+      console.log(MARKER, "Sous-secteur affiché");
+    } catch (error) {
+      console.error(MARKER, error);
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    setTimeout(init, 700);
+  });
+})();
+</script>
+
+
+<style>
+/* BACKOFFICE_ANALYSIS_MODAL_SAFE_V5 */
+.bo-analysis-modal-bg {
+    position: fixed;
+    inset: 0;
+    background: rgba(17,24,39,.65);
+    display: none;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.bo-analysis-modal-card {
+    width: min(900px, 96vw);
+    max-height: 88vh;
+    overflow: auto;
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.35);
+}
+
+.bo-analysis-modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+}
+
+.bo-analysis-modal-head h3 {
+    margin: 0;
+    color: #C90000;
+}
+
+.bo-analysis-close {
+    border: 0;
+    background: #C90000;
+    color: white;
+    border-radius: 9px;
+    padding: 8px 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.bo-analysis-json {
+    background: #111827;
+    color: #f9fafb;
+    padding: 12px;
+    border-radius: 12px;
+    white-space: pre-wrap;
+    overflow: auto;
+    font-size: 13px;
+}
+
+.doc-no-analysis {
+    display: inline-block;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 700;
+}
+</style>
+
+<script>
+/* BACKOFFICE_ANALYSIS_MODAL_SAFE_V5 */
+(function () {
+    if (window.__boAnalysisModalSafeV5) return;
+    window.__boAnalysisModalSafeV5 = true;
+
+    let documentsById = {};
+
+    function escapeHtmlSafe(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function getApplicationIdSafe() {
+        if (typeof APPLICATION_ID !== "undefined" && APPLICATION_ID) {
+            return APPLICATION_ID;
+        }
+
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        return parts[parts.length - 1] || "";
+    }
+
+    function getDocIdFromAnalysisHref(href) {
+        const match = String(href || "").match(/\/api\/applications\/documents\/(\d+)\/analysis/);
+        return match ? match[1] : "";
+    }
+
+    function ensureModal() {
+        let modal = document.getElementById("boAnalysisModalSafeV5");
+
+        if (modal) return modal;
+
+        modal = document.createElement("div");
+        modal.id = "boAnalysisModalSafeV5";
+        modal.className = "bo-analysis-modal-bg";
+        modal.innerHTML = `
+            <div class="bo-analysis-modal-card">
+                <div class="bo-analysis-modal-head">
+                    <h3>Analyse OCR / matching</h3>
+                    <button type="button" class="bo-analysis-close">Fermer</button>
+                </div>
+                <div id="boAnalysisModalBodySafeV5">Chargement...</div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        modal.querySelector(".bo-analysis-close").addEventListener("click", function () {
+            modal.style.display = "none";
+        });
+
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        });
+
+        return modal;
+    }
+
+    function showModal(html) {
+        const modal = ensureModal();
+        document.getElementById("boAnalysisModalBodySafeV5").innerHTML = html;
+        modal.style.display = "flex";
+    }
+
+    function canAnalyze(doc) {
+        return !!(doc && doc.can_analyze === true && doc.analysis_url);
+    }
+
+    async function loadDocumentsIndex() {
+        const id = getApplicationIdSafe();
+        if (!id) return;
+
+        try {
+            const response = await fetch("/api/backoffice/applications/" + encodeURIComponent(id) + "?v=" + Date.now(), {
+                cache: "no-store"
+            });
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            documentsById = {};
+
+            (data.documents || []).forEach(function (doc) {
+                documentsById[String(doc.id)] = doc;
+            });
+
+            normalizeAnalysisLinks();
+        } catch (e) {
+            console.warn("Index documents indisponible", e);
+        }
+    }
+
+    function noAnalysisSpan() {
+        const span = document.createElement("span");
+        span.className = "doc-no-analysis";
+        span.textContent = "Analyse OCR non disponible pour ce type de document";
+        return span;
+    }
+
+    function normalizeAnalysisLinks() {
+        document.querySelectorAll("a").forEach(function (link) {
+            const href = link.getAttribute("href") || "";
+            const text = String(link.textContent || "").toLowerCase();
+
+            const looksLikeAnalysis =
+                href.includes("/api/applications/documents/") &&
+                href.includes("/analysis");
+
+            const isAnalysisText =
+                text.includes("analyse ocr") ||
+                text.includes("matching");
+
+            if (!looksLikeAnalysis && !isAnalysisText) return;
+
+            const docId =
+                link.getAttribute("data-doc-id") ||
+                getDocIdFromAnalysisHref(href);
+
+            const doc = documentsById[String(docId)];
+
+            if (!canAnalyze(doc)) {
+                link.replaceWith(noAnalysisSpan());
+                return;
+            }
+
+            link.classList.add("bo-analysis-link");
+            link.setAttribute("data-doc-id", docId);
+            link.setAttribute("data-analysis-url", doc.analysis_url);
+            link.setAttribute("href", "#");
+            link.removeAttribute("target");
+        });
+    }
+
+    document.addEventListener("click", async function (event) {
+        const link = event.target.closest ? event.target.closest("a") : null;
+        if (!link) return;
+
+        const isAnalysisLink =
+            link.classList.contains("bo-analysis-link") ||
+            (
+                String(link.getAttribute("href") || "").includes("/api/applications/documents/") &&
+                String(link.getAttribute("href") || "").includes("/analysis")
+            );
+
+        if (!isAnalysisLink) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const docId =
+            link.getAttribute("data-doc-id") ||
+            getDocIdFromAnalysisHref(link.getAttribute("href"));
+
+        const doc = documentsById[String(docId)];
+
+        if (!canAnalyze(doc)) {
+            showModal(`<span class="doc-no-analysis">Analyse OCR non disponible pour ce type de document.</span>`);
+            return;
+        }
+
+        try {
+            showModal("<p>Chargement de l’analyse...</p>");
+
+            const url = doc.analysis_url + (doc.analysis_url.includes("?") ? "&" : "?") + "v=" + Date.now();
+            const response = await fetch(url, { cache: "no-store" });
+
+            if (!response.ok) {
+                showModal(`<span class="doc-no-analysis">Analyse OCR introuvable ou indisponible pour ce document.</span>`);
+                return;
+            }
+
+            const payload = await response.json();
+
+            showModal(`
+                <p><strong>Document :</strong> ${escapeHtmlSafe(doc.document_label || doc.document_type || "Document")}</p>
+                <p><strong>Type :</strong> ${escapeHtmlSafe(doc.document_type || "")}</p>
+                <p><strong>Statut :</strong> ${escapeHtmlSafe(payload.verification_status || doc.verification_status || "Non renseigné")}</p>
+                <p><strong>Score qualité :</strong> ${escapeHtmlSafe(payload.quality_score ?? doc.quality_score ?? "Non renseigné")}</p>
+                <h4>Détail OCR / matching</h4>
+                <pre class="bo-analysis-json">${escapeHtmlSafe(JSON.stringify(payload, null, 2))}</pre>
+            `);
+        } catch (e) {
+            showModal(`<span class="doc-no-analysis">Impossible de charger l’analyse OCR.</span>`);
+        }
+    }, true);
+
+    document.addEventListener("DOMContentLoaded", function () {
+        loadDocumentsIndex();
+        setTimeout(loadDocumentsIndex, 800);
+        setTimeout(normalizeAnalysisLinks, 1600);
+    });
+
+    const observer = new MutationObserver(function () {
+        normalizeAnalysisLinks();
+    });
+
+    observer.observe(document.documentElement, {
+        childList: true,
+        subtree: true
+    });
+})();
 </script>
 
 </body>

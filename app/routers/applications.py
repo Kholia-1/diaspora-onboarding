@@ -266,6 +266,13 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
     db.add(application)
     db.commit()
     db.refresh(application)
+    # APPLICATION_CREATE_ATTACH_PRE_ONBOARDING_CALL_V1
+    pre_session_id = getattr(payload, "pre_onboarding_session_id", None)
+    if pre_session_id:
+        _attach_pre_onboarding_files(application, pre_session_id, db)
+        db.commit()
+        db.refresh(application)
+
 
     return application
 
@@ -314,10 +321,15 @@ def get_document_content(document_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Fichier document introuvable")
 
     with open(document.file_path, "rb") as f:
-        encrypted_content = f.read()
+        raw_content = f.read()
+
+    # APPLICATION_DOCUMENT_CONTENT_PLAIN_OR_ENCRYPTED_V1
+    # Fichiers .enc : upload classique chiffré.
+    # Fichiers sans .enc : fichiers copiés du pré-onboarding, déjà en clair.
+    is_encrypted_file = str(document.file_path or "").lower().endswith(".enc")
 
     try:
-        content = decrypt_bytes(encrypted_content)
+        content = decrypt_bytes(raw_content) if is_encrypted_file else raw_content
     except Exception:
         raise HTTPException(status_code=500, detail="Impossible de déchiffrer le document")
 
@@ -338,6 +350,19 @@ def get_document_analysis(document_id: int, db: Session = Depends(get_db)):
 
     if not document:
         raise HTTPException(status_code=404, detail="Document introuvable")
+
+    # APPLICATION_DOCUMENT_ANALYSIS_MEDIA_GUARD_V1
+    document_type = str(document.document_type or "").upper()
+    mime_type = str(document.mime_type or "").lower()
+
+    if (
+        document_type in {"CLIENT_PHOTO", "CLIENT_VIDEO", "SELFIE_PHOTO", "SELFIE_VIDEO"}
+        or mime_type.startswith("video/")
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Analyse OCR non disponible pour ce type de document."
+        )
 
     meta_path = document.file_path + ".analysis.enc"
 
@@ -522,3 +547,151 @@ async def screen_blackmodule(application_id: int, db: Session = Depends(get_db))
         "alert": application.blackmodule_alert,
         "new_status": application.status
     }
+
+# APPLICATION_ATTACH_PRE_ONBOARDING_V1
+def _attach_pre_onboarding_files(application, pre_onboarding_session_id: str, db):
+    from pathlib import Path
+    from datetime import datetime
+    import os
+    import re
+    import json
+    import shutil
+
+    if not pre_onboarding_session_id:
+        return 0
+
+    def clean(value: str, default: str = "session") -> str:
+        value = (value or "").strip()
+        value = re.sub(r"[^A-Za-z0-9_-]", "_", value)
+        return value[:100] or default
+
+    session_safe = clean(pre_onboarding_session_id)
+
+    pre_root = Path(os.getenv("PRE_ONBOARDING_UPLOAD_DIR", "uploads/pre_onboarding"))
+    source_dir = pre_root / session_safe
+
+    if not source_dir.exists():
+        return 0
+
+    app_id = getattr(application, "id", None)
+    if not app_id:
+        return 0
+
+    final_root = Path(os.getenv("APPLICATION_UPLOAD_DIR", "uploads/applications"))
+    final_dir = final_root / str(app_id) / "pre_onboarding"
+    final_dir.mkdir(parents=True, exist_ok=True)
+
+    columns = set(ApplicationDocument.__table__.columns.keys())
+    created = 0
+
+    # APPLICATION_ATTACH_LATEST_DOCS_ONLY_V1
+    latest_metadata_files = {}
+
+    for metadata_file in sorted(source_dir.glob("*.json")):
+        try:
+            metadata_preview = json.loads(metadata_file.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+
+        document_type_preview = metadata_preview.get("document_type") or "PRE_ONBOARDING_DOCUMENT"
+        created_at_preview = metadata_preview.get("created_at") or ""
+
+        current = latest_metadata_files.get(document_type_preview)
+
+        if current is None or created_at_preview >= current["created_at"]:
+            latest_metadata_files[document_type_preview] = {
+                "created_at": created_at_preview,
+                "metadata_file": metadata_file
+            }
+
+    for item in latest_metadata_files.values():
+        metadata_file = item["metadata_file"]
+
+        try:
+            metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+
+        source_path = Path(metadata.get("relative_path") or "")
+        if not source_path.exists():
+            source_path = source_dir / (metadata.get("stored_name") or "")
+
+        if not source_path.exists() or not source_path.is_file():
+            continue
+
+        # APPLICATION_SKIP_JSON_PREONBOARDING_FILES_V1
+        if source_path.suffix.lower() == ".json":
+            continue
+
+        stored_name = metadata.get("stored_name") or source_path.name
+        target_path = final_dir / stored_name
+
+        if not target_path.exists():
+            shutil.copy2(source_path, target_path)
+
+        document_type = metadata.get("document_type") or "PRE_ONBOARDING_DOCUMENT"
+
+        values = {}
+
+        def set_if(name, value):
+            if name in columns:
+                values[name] = value
+
+        set_if("application_id", app_id)
+        set_if("document_type", document_type)
+        set_if("file_name", stored_name)
+        set_if("filename", stored_name)
+        set_if("original_filename", metadata.get("original_name") or stored_name)
+        set_if("file_path", str(target_path))
+        set_if("path", str(target_path))
+        set_if("content_type", metadata.get("content_type"))
+        set_if("mime_type", metadata.get("content_type"))
+        set_if("file_size", metadata.get("size"))
+        set_if("size", metadata.get("size"))
+        set_if("status", "UPLOADED")
+        set_if("analysis_status", "PENDING")
+        set_if("source", "PRE_ONBOARDING")
+        set_if("created_at", datetime.utcnow())
+        set_if("uploaded_at", datetime.utcnow())
+
+        # Remplir prudemment les colonnes obligatoires non couvertes
+        for col in ApplicationDocument.__table__.columns:
+            if col.primary_key or col.name in values:
+                continue
+
+            if col.nullable or col.default is not None or col.server_default is not None:
+                continue
+
+            col_type = col.type.__class__.__name__.lower()
+
+            if "string" in col_type or "text" in col_type:
+                values[col.name] = ""
+            elif "integer" in col_type:
+                values[col.name] = 0
+            elif "boolean" in col_type:
+                values[col.name] = False
+            elif "datetime" in col_type or "date" in col_type:
+                values[col.name] = datetime.utcnow()
+
+        # Éviter doublons simples sur même application + type + nom
+        query = db.query(ApplicationDocument)
+
+        if "application_id" in columns:
+            query = query.filter(ApplicationDocument.application_id == app_id)
+
+        if "document_type" in columns:
+            query = query.filter(ApplicationDocument.document_type == document_type)
+
+        if "file_name" in columns:
+            query = query.filter(ApplicationDocument.file_name == stored_name)
+        elif "filename" in columns:
+            query = query.filter(ApplicationDocument.filename == stored_name)
+
+        existing = query.first()
+        if existing:
+            continue
+
+        db.add(ApplicationDocument(**values))
+        created += 1
+
+    return created
