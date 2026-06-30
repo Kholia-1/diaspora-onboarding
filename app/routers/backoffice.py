@@ -96,6 +96,11 @@ def is_analysis_available(doc) -> bool:
 
 
 def latest_documents_by_type(documents):
+    """
+    Garde uniquement le dernier document de chaque type,
+    puis retourne les documents dans un ordre métier logique pour le back-office.
+    """
+
     latest = {}
 
     for doc in documents:
@@ -110,7 +115,48 @@ def latest_documents_by_type(documents):
         if int(getattr(doc, "id", 0) or 0) >= int(getattr(current, "id", 0) or 0):
             latest[key] = doc
 
-    return sorted(latest.values(), key=lambda d: int(getattr(d, "id", 0) or 0), reverse=True)
+    # BACKOFFICE_DOCUMENT_ORDER_CLEAN_V1
+    document_order = {
+        "CNI_RECTO": 10,
+        "IDENTITY_DOCUMENT_RECTO": 11,
+        "CNI_VERSO": 12,
+        "IDENTITY_DOCUMENT_VERSO": 13,
+        "IDENTITY_DOCUMENT": 14,
+        "IDENTITY_DOCUMENT_PHOTO": 15,
+        "IDENTITY_DOCUMENT_IMPORTED": 16,
+        "PASSPORT_DOCUMENT": 17,
+        "RESIDENCE_PERMIT_RECTO": 18,
+        "RESIDENCE_PERMIT_VERSO": 19,
+        "CONSULAR_CARD_RECTO": 20,
+        "CONSULAR_CARD_VERSO": 21,
+
+        "ADDRESS_PROOF": 30,
+        "PROOF_OF_ADDRESS_PHOTO": 31,
+
+        "INCOME_PROOF": 40,
+        "RIB_DOCUMENT": 50,
+
+        "CLIENT_PHOTO": 60,
+        "SELFIE_PHOTO": 61,
+        "SELFIE_IMPORTED": 62,
+        "CLIENT_VIDEO": 70,
+        "SELFIE_VIDEO": 71,
+
+        "BIRTH_CERTIFICATE_PHOTO": 80,
+        "EMPLOYMENT_OR_SCHOOL_CERTIFICATE_PHOTO": 81,
+        "TAX_COMPLIANCE_CERTIFICATE_PHOTO": 82,
+    }
+
+    def sort_key(doc):
+        doc_type = str(getattr(doc, "document_type", "") or "").upper()
+        doc_id = int(getattr(doc, "id", 0) or 0)
+
+        return (
+            document_order.get(doc_type, 999),
+            -doc_id
+        )
+
+    return sorted(latest.values(), key=sort_key)
 
 
 router = APIRouter(
