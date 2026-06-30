@@ -1715,3 +1715,394 @@ async function renderComplianceSummaryV30(data) {
 
 </body>
 </html>
+<style>
+/* BACKOFFICE_DOCUMENT_VISUAL_GROUPS_V1 */
+.bo-doc-section {
+    margin-top: 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.bo-doc-section-header {
+    padding: 14px 16px;
+    background: #111827;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.bo-doc-section-header h4 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.bo-doc-section-header span {
+    background: #C90000;
+    color: white;
+    border-radius: 999px;
+    padding: 4px 9px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.bo-doc-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 14px;
+}
+
+.bo-doc-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px;
+    background: #FAFAFA;
+}
+
+.bo-doc-card-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.bo-doc-card-title strong {
+    color: #111827;
+    font-size: 15px;
+}
+
+.bo-doc-type {
+    display: inline-block;
+    background: #FEE2E2;
+    color: #991B1B;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.bo-doc-meta {
+    color: #6b7280;
+    font-size: 12px;
+    line-height: 1.45;
+    margin: 8px 0;
+}
+
+.bo-doc-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0;
+}
+
+.bo-doc-badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 5px 8px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.bo-doc-badge-ok {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.bo-doc-badge-muted {
+    background: #E5E7EB;
+    color: #374151;
+}
+
+.bo-doc-badge-info {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+.bo-doc-badge-warn {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.bo-doc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.bo-doc-actions a,
+.bo-doc-actions button {
+    color: #C90000;
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.bo-doc-actions a:hover,
+.bo-doc-actions button:hover {
+    text-decoration: underline;
+}
+
+.bo-doc-preview img,
+.bo-doc-preview video,
+.bo-doc-preview iframe {
+    width: 100%;
+    max-height: 230px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    margin-top: 10px;
+    background: #000;
+    object-fit: contain;
+}
+
+.bo-doc-preview iframe {
+    height: 230px;
+    background: white;
+}
+
+@media (max-width: 850px) {
+    .bo-doc-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+/* BACKOFFICE_DOCUMENT_VISUAL_GROUPS_V1 */
+(function () {
+    if (window.__boDocumentVisualGroupsV1) return;
+    window.__boDocumentVisualGroupsV1 = true;
+
+    function escapeDocHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function getBackofficeApplicationId() {
+        if (typeof APPLICATION_ID !== "undefined" && APPLICATION_ID) {
+            return APPLICATION_ID;
+        }
+
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        return parts[parts.length - 1] || "";
+    }
+
+    function normalizeType(type) {
+        return String(type || "").trim().toUpperCase();
+    }
+
+    function groupForDoc(doc) {
+        const type = normalizeType(doc.document_type);
+
+        const identityTypes = new Set([
+            "CNI_RECTO",
+            "CNI_VERSO",
+            "IDENTITY_DOCUMENT",
+            "IDENTITY_DOCUMENT_PHOTO",
+            "IDENTITY_DOCUMENT_RECTO",
+            "IDENTITY_DOCUMENT_VERSO",
+            "IDENTITY_DOCUMENT_IMPORTED",
+            "PASSPORT_DOCUMENT",
+            "RESIDENCE_PERMIT_RECTO",
+            "RESIDENCE_PERMIT_VERSO",
+            "CONSULAR_CARD_RECTO",
+            "CONSULAR_CARD_VERSO"
+        ]);
+
+        const financeTypes = new Set([
+            "ADDRESS_PROOF",
+            "PROOF_OF_ADDRESS_PHOTO",
+            "INCOME_PROOF",
+            "RIB_DOCUMENT"
+        ]);
+
+        const mediaTypes = new Set([
+            "CLIENT_PHOTO",
+            "CLIENT_VIDEO",
+            "SELFIE",
+            "SELFIE_PHOTO",
+            "SELFIE_VIDEO",
+            "SELFIE_IMPORTED"
+        ]);
+
+        const nonResidentTypes = new Set([
+            "BIRTH_CERTIFICATE_PHOTO",
+            "EMPLOYMENT_OR_SCHOOL_CERTIFICATE_PHOTO",
+            "TAX_COMPLIANCE_CERTIFICATE_PHOTO"
+        ]);
+
+        if (identityTypes.has(type)) return "identity";
+        if (financeTypes.has(type)) return "finance";
+        if (mediaTypes.has(type)) return "media";
+        if (nonResidentTypes.has(type)) return "nonresident";
+
+        return "other";
+    }
+
+    function mimeBadge(doc) {
+        const mime = String(doc.mime_type || "").toLowerCase();
+
+        if (mime.startsWith("image/")) return `<span class="bo-doc-badge bo-doc-badge-info">Image</span>`;
+        if (mime.startsWith("video/")) return `<span class="bo-doc-badge bo-doc-badge-info">Vidéo</span>`;
+        if (mime === "application/pdf") return `<span class="bo-doc-badge bo-doc-badge-info">PDF</span>`;
+
+        return `<span class="bo-doc-badge bo-doc-badge-muted">Fichier</span>`;
+    }
+
+    function analysisBadge(doc) {
+        if (doc.can_analyze === true && doc.analysis_url) {
+            return `<span class="bo-doc-badge bo-doc-badge-ok">OCR disponible</span>`;
+        }
+
+        return `<span class="bo-doc-badge bo-doc-badge-muted">OCR non requis</span>`;
+    }
+
+    function mediaSpecificBadge(doc) {
+        const type = normalizeType(doc.document_type);
+
+        if (type === "CLIENT_PHOTO" || type === "SELFIE_PHOTO") {
+            return `<span class="bo-doc-badge bo-doc-badge-warn">Photo client</span>`;
+        }
+
+        if (type === "CLIENT_VIDEO" || type === "SELFIE_VIDEO") {
+            return `<span class="bo-doc-badge bo-doc-badge-warn">Vidéo client</span>`;
+        }
+
+        return "";
+    }
+
+    function previewHtml(doc) {
+        const url = doc.content_url || `/api/applications/documents/${doc.id}/content`;
+        const mime = String(doc.mime_type || "").toLowerCase();
+        const label = escapeDocHtml(doc.document_label || doc.document_type || "Document");
+
+        if (mime.startsWith("image/")) {
+            return `<div class="bo-doc-preview"><img src="${url}" alt="${label}" onerror="this.style.display='none'"></div>`;
+        }
+
+        if (mime.startsWith("video/")) {
+            return `<div class="bo-doc-preview"><video src="${url}" controls></video></div>`;
+        }
+
+        if (mime === "application/pdf") {
+            return `<div class="bo-doc-preview"><iframe src="${url}" title="${label}"></iframe></div>`;
+        }
+
+        return `<p class="muted">Aperçu non disponible.</p>`;
+    }
+
+    function renderDocCard(doc) {
+        const fileUrl = doc.content_url || `/api/applications/documents/${doc.id}/content`;
+
+        const analysisAction = doc.can_analyze === true && doc.analysis_url
+            ? `<a href="${doc.analysis_url}" class="bo-analysis-link" data-doc-id="${doc.id}">Voir analyse OCR / matching</a>`
+            : `<span class="doc-no-analysis">Analyse OCR non disponible pour ce type de document</span>`;
+
+        return `
+            <div class="bo-doc-card">
+                <div class="bo-doc-card-title">
+                    <strong>${escapeDocHtml(doc.document_label || doc.document_type || "Document")}</strong>
+                    <span class="bo-doc-type">${escapeDocHtml(doc.document_type || "")}</span>
+                </div>
+
+                <div class="bo-doc-meta">
+                    ${escapeDocHtml(doc.original_filename || "Fichier transmis")}
+                    <br>
+                    Score qualité : ${Number(doc.quality_score || 0)}%
+                    ${doc.mime_type ? " | " + escapeDocHtml(doc.mime_type) : ""}
+                </div>
+
+                <div class="bo-doc-badges">
+                    ${mimeBadge(doc)}
+                    ${analysisBadge(doc)}
+                    ${mediaSpecificBadge(doc)}
+                </div>
+
+                <div class="bo-doc-actions">
+                    <a href="${fileUrl}" target="_blank">Ouvrir le document</a>
+                    ${analysisAction}
+                </div>
+
+                ${previewHtml(doc)}
+            </div>
+        `;
+    }
+
+    function renderSection(title, docs) {
+        if (!docs || docs.length === 0) return "";
+
+        return `
+            <div class="bo-doc-section">
+                <div class="bo-doc-section-header">
+                    <h4>${escapeDocHtml(title)}</h4>
+                    <span>${docs.length}</span>
+                </div>
+                <div class="bo-doc-grid">
+                    ${docs.map(renderDocCard).join("")}
+                </div>
+            </div>
+        `;
+    }
+
+    async function renderVisualDocumentGroups() {
+        const container = document.getElementById("documentsContainer");
+        const applicationId = getBackofficeApplicationId();
+
+        if (!container || !applicationId) return;
+
+        try {
+            const response = await fetch("/api/backoffice/applications/" + encodeURIComponent(applicationId) + "?v=" + Date.now(), {
+                cache: "no-store"
+            });
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const docs = data.documents || [];
+
+            if (!docs.length) return;
+
+            const groups = {
+                identity: [],
+                finance: [],
+                media: [],
+                nonresident: [],
+                other: []
+            };
+
+            docs.forEach(function (doc) {
+                groups[groupForDoc(doc)].push(doc);
+            });
+
+            container.innerHTML =
+                renderSection("Documents d’identité", groups.identity) +
+                renderSection("Documents KYC et financiers", groups.finance) +
+                renderSection("Médias client", groups.media) +
+                renderSection("Documents complémentaires non-résident", groups.nonresident) +
+                renderSection("Autres documents", groups.other);
+
+        } catch (error) {
+            console.warn("Finition visuelle documents impossible:", error);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(renderVisualDocumentGroups, 700);
+        setTimeout(renderVisualDocumentGroups, 1800);
+    });
+})();
+</script>
