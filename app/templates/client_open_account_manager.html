@@ -12542,3 +12542,216 @@ document.addEventListener("DOMContentLoaded", function () {
   document.addEventListener("DOMContentLoaded", loadPreloaded);
 })();
 </script>
+
+<style>
+/* MANAGER_FORM_DYNAMIC_PACKAGES_V1 */
+.dynamic-package-card {
+    cursor: pointer;
+    transition: all .2s ease;
+    position: relative;
+}
+
+.dynamic-package-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(0,0,0,.10);
+}
+
+.dynamic-package-card.selected {
+    border: 2px solid #C90000 !important;
+    background: #FFF5F5;
+}
+
+.package-price-box {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.package-payment-required {
+    display: inline-block;
+    margin-top: 8px;
+    background: #FEF3C7;
+    color: #92400E;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.package-free {
+    display: inline-block;
+    margin-top: 8px;
+    background: #DCFCE7;
+    color: #166534;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+}
+</style>
+
+<script>
+/* MANAGER_FORM_DYNAMIC_PACKAGES_V1 */
+(function () {
+    if (window.__managerDynamicPackagesV1) return;
+    window.__managerDynamicPackagesV1 = true;
+
+    let selectedPackage = null;
+
+    function money(value, currency) {
+        const n = Number(value || 0);
+        return n.toLocaleString("fr-FR") + " " + (currency || "XAF");
+    }
+
+    function ensurePackageHiddenFields() {
+        const form = document.querySelector("form");
+        if (!form) return;
+
+        const fields = [
+            "selected_package_code",
+            "selected_package_name",
+            "selected_package_currency",
+            "selected_package_opening_fee",
+            "selected_package_subscription_fee",
+            "selected_package_monthly_fee",
+            "selected_package_payment_required"
+        ];
+
+        fields.forEach(function (name) {
+            if (!form.querySelector(`[name="${name}"]`)) {
+                const input = document.createElement("input");
+                input.type = "hidden";
+                input.name = name;
+                form.appendChild(input);
+            }
+        });
+    }
+
+    function setHiddenValue(name, value) {
+        const el = document.querySelector(`[name="${name}"]`);
+        if (el) el.value = value ?? "";
+    }
+
+    function applySelectedPackage(pkg) {
+        selectedPackage = pkg;
+
+        document.querySelectorAll(".dynamic-package-card").forEach(function (card) {
+            card.classList.remove("selected");
+        });
+
+        const card = document.querySelector(`[data-package-code="${pkg.code}"]`);
+        if (card) card.classList.add("selected");
+
+        setHiddenValue("selected_package_code", pkg.code);
+        setHiddenValue("selected_package_name", pkg.name);
+        setHiddenValue("selected_package_currency", pkg.currency || "XAF");
+        setHiddenValue("selected_package_opening_fee", pkg.opening_fee || 0);
+        setHiddenValue("selected_package_subscription_fee", pkg.subscription_fee || 0);
+        setHiddenValue("selected_package_monthly_fee", pkg.monthly_fee || 0);
+        setHiddenValue("selected_package_payment_required", pkg.payment_required ? "true" : "false");
+
+        const oldSelected = document.querySelector('[name="selected_package_ui"]');
+        if (oldSelected) {
+            oldSelected.value = pkg.name;
+        }
+    }
+
+    function renderPackage(pkg) {
+        const services = Array.isArray(pkg.services) ? pkg.services : [];
+        const currency = pkg.currency || "XAF";
+
+        return `
+            <div class="package-card dynamic-package-card" data-package-code="${pkg.code}">
+                <h4>${pkg.name || pkg.code}</h4>
+                <p>${pkg.description || ""}</p>
+
+                ${services.map(service => `<span class="tag">${service}</span>`).join("")}
+
+                <div class="package-price-box">
+                    <strong>Tarification</strong><br>
+                    Ouverture : ${money(pkg.opening_fee, currency)}<br>
+                    Souscription : ${money(pkg.subscription_fee, currency)}<br>
+                    Mensuel : ${money(pkg.monthly_fee, currency)}
+                    <br>
+                    ${pkg.payment_required
+                        ? `<span class="package-payment-required">Paiement requis</span>`
+                        : `<span class="package-free">Sans paiement immédiat</span>`
+                    }
+                </div>
+            </div>
+        `;
+    }
+
+    async function loadDynamicPackages() {
+        ensurePackageHiddenFields();
+
+        const grid = document.querySelector(".package-grid");
+        if (!grid) return;
+
+        try {
+            const response = await fetch("/api/backoffice/packages?v=" + Date.now(), {
+                cache: "no-store"
+            });
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const packages = (data.packages || []).filter(pkg => pkg.active);
+
+            if (!packages.length) return;
+
+            grid.innerHTML = packages.map(renderPackage).join("");
+
+            grid.querySelectorAll(".dynamic-package-card").forEach(function (card) {
+                card.addEventListener("click", function () {
+                    const code = card.getAttribute("data-package-code");
+                    const pkg = packages.find(p => String(p.code) === String(code));
+                    if (pkg) applySelectedPackage(pkg);
+                });
+            });
+
+            applySelectedPackage(packages[0]);
+        } catch (error) {
+            console.warn("Chargement packages dynamiques impossible:", error);
+        }
+    }
+
+    // Ajoute les champs package au JSON envoyé à /api/applications
+    const originalFetch = window.fetch;
+    window.fetch = function (input, init) {
+        try {
+            const url = typeof input === "string" ? input : (input && input.url) || "";
+
+            if (
+                url.includes("/api/applications") &&
+                init &&
+                String(init.method || "").toUpperCase() === "POST" &&
+                init.body
+            ) {
+                const body = JSON.parse(init.body);
+
+                body.selected_package_code = document.querySelector('[name="selected_package_code"]')?.value || null;
+                body.selected_package_name = document.querySelector('[name="selected_package_name"]')?.value || null;
+                body.selected_package_currency = document.querySelector('[name="selected_package_currency"]')?.value || null;
+                body.selected_package_opening_fee = Number(document.querySelector('[name="selected_package_opening_fee"]')?.value || 0);
+                body.selected_package_subscription_fee = Number(document.querySelector('[name="selected_package_subscription_fee"]')?.value || 0);
+                body.selected_package_monthly_fee = Number(document.querySelector('[name="selected_package_monthly_fee"]')?.value || 0);
+                body.selected_package_payment_required = String(document.querySelector('[name="selected_package_payment_required"]')?.value || "false") === "true";
+
+                init.body = JSON.stringify(body);
+            }
+        } catch (e) {}
+
+        return originalFetch.apply(this, arguments);
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(loadDynamicPackages, 400);
+        setTimeout(loadDynamicPackages, 1200);
+    });
+})();
+</script>

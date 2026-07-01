@@ -1,83 +1,570 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Configuration des packages</title>
-<style>
-body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f9;margin:0;color:#111827}
-.page{max-width:1000px;margin:auto;padding:28px}
-.top{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:20px}
-a{color:#c90000;text-decoration:none;font-weight:bold}
-.card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 8px 22px rgba(15,23,42,.06)}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.head{display:flex;justify-content:space-between;align-items:center;gap:12px}
-label{display:block;font-weight:700;margin:10px 0 6px}
-input,textarea{width:100%;box-sizing:border-box;padding:11px;border:1px solid #d1d5db;border-radius:10px}
-textarea{min-height:70px}
-button{background:#c90000;color:#fff;border:0;border-radius:12px;padding:13px 18px;font-weight:bold;cursor:pointer}
-.msg{margin-top:12px;font-weight:bold}
-@media(max-width:700px){.row{grid-template-columns:1fr}.top{display:block}}
-</style>
+    <meta charset="UTF-8">
+    <title>Configuration des packages - Back-office</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root {
+            --red: #C90000;
+            --red-dark: #9E0000;
+            --black: #111111;
+            --gray-bg: #F4F6F9;
+            --border: #DADDE5;
+            --muted: #6B7280;
+            --green: #166534;
+            --orange: #B45309;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--gray-bg);
+            color: #111827;
+        }
+
+        .topbar {
+            background: var(--black);
+            color: white;
+            padding: 18px 30px;
+            border-bottom: 4px solid var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .topbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 18px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 28px auto;
+            padding: 0 18px;
+        }
+
+        .header-card {
+            background: white;
+            border-left: 6px solid var(--red);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.07);
+            margin-bottom: 18px;
+        }
+
+        .header-card h1 {
+            margin: 0;
+            color: var(--red);
+        }
+
+        .header-card p {
+            color: var(--muted);
+            margin-bottom: 0;
+            line-height: 1.5;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            background: var(--red);
+        }
+
+        .btn:hover {
+            background: var(--red-dark);
+        }
+
+        .btn-dark {
+            background: #111827;
+        }
+
+        .btn-dark:hover {
+            background: #000;
+        }
+
+        .btn-muted {
+            background: #6B7280;
+        }
+
+        .btn-danger {
+            background: #991B1B;
+        }
+
+        .message {
+            margin: 12px 0;
+            font-weight: bold;
+        }
+
+        .package-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        .package-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            border: 1px solid #EEF0F5;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+        }
+
+        .package-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .package-title h3 {
+            margin: 0;
+            color: #111827;
+        }
+
+        .package-title small {
+            color: var(--muted);
+            font-weight: bold;
+        }
+
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .badge-active {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .badge-inactive {
+            background: #E5E7EB;
+            color: #374151;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .form-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        .form-grid .half {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .switch-line {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .switch-line label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .switch-line input {
+            width: auto;
+        }
+
+        .fee-preview {
+            background: #FAFAFA;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            color: #374151;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 950px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .topbar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid .half {
+                grid-column: 1 / -1;
+            }
+
+            .package-head {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<div class="page">
-<div class="top">
-<div><h1>Configuration des packages</h1><p>Modifiez les packages affiches dans le formulaire d'ouverture de compte.</p></div>
-<a href="/backoffice/applications">Retour back-office</a>
+
+<div class="topbar">
+    <h2>Back-office - Packages bancaires</h2>
+    <div>
+        <a href="/backoffice/applications">Dossiers</a>
+        <a href="/backoffice/packages">Packages</a>
+    </div>
 </div>
-<div id="packages"><div class="card">Chargement des packages...</div></div>
-<button onclick="savePackages()">Enregistrer les packages</button>
-<div id="message" class="msg"></div>
+
+<div class="container">
+    <div class="header-card">
+        <h1>Configuration manuelle des packages</h1>
+        <p>
+            Cette page permet de configurer les packages proposés au client lors de l’ouverture de compte.
+            Ces informations serviront ensuite à l’affichage client, au paiement Mastercard et aux notifications WhatsApp.
+        </p>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn" onclick="addPackage()">Ajouter un package</button>
+        <button class="btn btn-dark" onclick="loadPackages()">Recharger</button>
+        <button class="btn" onclick="savePackages()">Enregistrer la configuration</button>
+    </div>
+
+    <div id="message" class="message"></div>
+    <div id="packagesContainer" class="package-grid">Chargement...</div>
 </div>
+
 <script>
-let packages=[];
-function defaults(){return[
-{code:"BUDGET",name:"Package Budget",description:"Destine aux petites bourses",services:["SMS First","Carte Fellow","SARA Banking"],active:true},
-{code:"BUSINESS",name:"Package Business",description:"Pour les professionnels",services:["SMS First","Assurance","Decouvert permanent","Carte Visa Classique"],active:true},
-{code:"ECO",name:"Package Eco",description:"L'essentiel au meilleur prix",services:["SMS First","Assurance","SARA Banking"],active:true}
-];}
-function esc(v){return String(v||"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c];});}
-function render(){
- const c=document.getElementById("packages"); c.innerHTML="";
- if(!packages.length){packages=defaults();}
- packages.forEach(function(p,i){
-  c.innerHTML+=`\<div class="card"\>
-   \<div class="head"\>\<h2>${esc(p.name)}\</h2>\<label>\<input style="width:auto" type="checkbox" id="active_${i}" ${p.active!==false?"checked":""}> Actif\</label>\</div>
-   \<div class="row"\>
-    \<div\>\<label>Code\</label>\<input id="code_${i}" value="${esc(p.code)}"\>\</div>
-    \<div\>\<label>Nom\</label>\<input id="name_${i}" value="${esc(p.name)}"\>\</div>
-   \</div>
-   \<label>Description\</label>\<textarea id="description_${i}">${esc(p.description)}\</textarea>
-   \<label>Services inclus - un service par ligne\</label>\<textarea id="services_${i}">${esc((p.services||[]).join("\\n"))}\</textarea>
-  \</div>`;
- });
+let packages = [];
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
-async function loadPackages(){
- const msg=document.getElementById("message");
- try{
-  const r=await fetch("/api/backoffice/packages");
-  if(!r.ok){packages=defaults();render();msg.style.color="#b45309";msg.innerText="API indisponible, packages par defaut affiches.";return;}
-  const d=await r.json(); packages=d.packages||defaults(); render();
- }catch(e){packages=defaults();render();msg.style.color="#b45309";msg.innerText="Erreur de chargement, packages par defaut affiches.";}
+
+function toNumber(value) {
+    const n = Number(String(value || "0").replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
 }
-async function savePackages(){
- const msg=document.getElementById("message");
- const updated=packages.map(function(p,i){return{
-  code:document.getElementById("code_"+i).value.trim(),
-  name:document.getElementById("name_"+i).value.trim(),
-  description:document.getElementById("description_"+i).value.trim(),
-  services:document.getElementById("services_"+i).value.split("\\n").map(x=>x.trim()).filter(Boolean),
-  active:document.getElementById("active_"+i).checked
- };});
- msg.style.color="#6b7280"; msg.innerText="Enregistrement en cours...";
- try{
-  const r=await fetch("/api/backoffice/packages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({packages:updated})});
-  if(!r.ok){msg.style.color="#c90000";msg.innerText="Erreur lors de l'enregistrement.";return;}
-  const d=await r.json(); packages=d.packages||updated; render(); msg.style.color="#166534"; msg.innerText="Packages enregistres avec succes.";
- }catch(e){msg.style.color="#c90000"; msg.innerText="Erreur de connexion lors de l'enregistrement.";}
+
+function formatMoney(value, currency) {
+    return `${toNumber(value).toLocaleString("fr-FR")} ${currency || "XAF"}`;
 }
-loadPackages();
+
+function defaultPackage() {
+    const index = packages.length + 1;
+
+    return {
+        code: `PACKAGE_${index}`,
+        name: `Nouveau package ${index}`,
+        description: "",
+        services: [],
+        currency: "XAF",
+        opening_fee: 0,
+        subscription_fee: 0,
+        monthly_fee: 0,
+        payment_required: false,
+        active: true,
+        display_order: index,
+        customer_type: "TOUS",
+        mastercard_item_code: `PACKAGE_${index}`,
+        whatsapp_template: `package_${index}_selected`
+    };
+}
+
+async function loadPackages() {
+    const container = document.getElementById("packagesContainer");
+    const message = document.getElementById("message");
+
+    container.innerHTML = "Chargement...";
+    message.innerHTML = "";
+
+    try {
+        const response = await fetch("/api/backoffice/packages?v=" + Date.now(), {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error("Impossible de charger les packages.");
+        }
+
+        const data = await response.json();
+        packages = data.packages || [];
+
+        renderPackages();
+    } catch (error) {
+        container.innerHTML = `<div class="package-card">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+function renderPackages() {
+    const container = document.getElementById("packagesContainer");
+
+    if (!packages.length) {
+        container.innerHTML = `<div class="package-card">Aucun package configuré.</div>`;
+        return;
+    }
+
+    container.innerHTML = packages.map((pkg, index) => renderPackageCard(pkg, index)).join("");
+}
+
+function renderPackageCard(pkg, index) {
+    const activeBadge = pkg.active
+        ? `<span class="badge badge-active">Actif</span>`
+        : `<span class="badge badge-inactive">Inactif</span>`;
+
+    const servicesText = Array.isArray(pkg.services) ? pkg.services.join("\n") : "";
+
+    return `
+        <div class="package-card">
+            <div class="package-head">
+                <div class="package-title">
+                    <h3>${escapeHtml(pkg.name || "Package")}</h3>
+                    <small>${escapeHtml(pkg.code || "")}</small>
+                </div>
+                ${activeBadge}
+            </div>
+
+            <div class="form-grid">
+                <div>
+                    <label>Code package</label>
+                    <input id="code_${index}" value="${escapeHtml(pkg.code || "")}" oninput="syncPackage(${index})">
+                </div>
+
+                <div>
+                    <label>Nom package</label>
+                    <input id="name_${index}" value="${escapeHtml(pkg.name || "")}" oninput="syncPackage(${index})">
+                </div>
+
+                <div>
+                    <label>Ordre d’affichage</label>
+                    <input id="display_order_${index}" type="number" value="${escapeHtml(pkg.display_order || index + 1)}" oninput="syncPackage(${index})">
+                </div>
+
+                <div>
+                    <label>Devise</label>
+                    <select id="currency_${index}" onchange="syncPackage(${index})">
+                        ${["XAF", "EUR", "USD"].map(c => `
+                            <option value="${c}" ${String(pkg.currency || "XAF") === c ? "selected" : ""}>${c}</option>
+                        `).join("")}
+                    </select>
+                </div>
+
+                <div class="full">
+                    <label>Description</label>
+                    <textarea id="description_${index}" oninput="syncPackage(${index})">${escapeHtml(pkg.description || "")}</textarea>
+                </div>
+
+                <div class="full">
+                    <label>Services inclus — un service par ligne</label>
+                    <textarea id="services_${index}" oninput="syncPackage(${index})">${escapeHtml(servicesText)}</textarea>
+                </div>
+
+                <div>
+                    <label>Frais d’ouverture</label>
+                    <input id="opening_fee_${index}" type="number" min="0" step="1" value="${escapeHtml(pkg.opening_fee || 0)}" oninput="syncPackage(${index})">
+                </div>
+
+                <div>
+                    <label>Frais de souscription</label>
+                    <input id="subscription_fee_${index}" type="number" min="0" step="1" value="${escapeHtml(pkg.subscription_fee || 0)}" oninput="syncPackage(${index})">
+                </div>
+
+                <div>
+                    <label>Frais mensuels</label>
+                    <input id="monthly_fee_${index}" type="number" min="0" step="1" value="${escapeHtml(pkg.monthly_fee || 0)}" oninput="syncPackage(${index})">
+                </div>
+
+                <div>
+                    <label>Type clientèle</label>
+                    <select id="customer_type_${index}" onchange="syncPackage(${index})">
+                        ${["TOUS", "PARTICULIER", "PROFESSIONNEL", "ENTREPRISE", "DIASPORA"].map(c => `
+                            <option value="${c}" ${String(pkg.customer_type || "TOUS") === c ? "selected" : ""}>${c}</option>
+                        `).join("")}
+                    </select>
+                </div>
+
+                <div class="half">
+                    <label>Code article Mastercard</label>
+                    <input id="mastercard_item_code_${index}" value="${escapeHtml(pkg.mastercard_item_code || "")}" oninput="syncPackage(${index})">
+                </div>
+
+                <div class="half">
+                    <label>Template WhatsApp</label>
+                    <input id="whatsapp_template_${index}" value="${escapeHtml(pkg.whatsapp_template || "")}" oninput="syncPackage(${index})">
+                </div>
+            </div>
+
+            <div class="switch-line">
+                <label>
+                    <input id="active_${index}" type="checkbox" ${pkg.active ? "checked" : ""} onchange="syncPackage(${index})">
+                    Package actif
+                </label>
+
+                <label>
+                    <input id="payment_required_${index}" type="checkbox" ${pkg.payment_required ? "checked" : ""} onchange="syncPackage(${index})">
+                    Paiement requis
+                </label>
+
+                <button class="btn btn-danger" onclick="removePackage(${index})">Supprimer</button>
+            </div>
+
+            <div class="fee-preview" id="preview_${index}">
+                Ouverture : ${formatMoney(pkg.opening_fee, pkg.currency)} |
+                Souscription : ${formatMoney(pkg.subscription_fee, pkg.currency)} |
+                Mensuel : ${formatMoney(pkg.monthly_fee, pkg.currency)}
+            </div>
+        </div>
+    `;
+}
+
+function syncPackage(index) {
+    const pkg = packages[index];
+
+    if (!pkg) return;
+
+    pkg.code = document.getElementById(`code_${index}`).value.trim().toUpperCase();
+    pkg.name = document.getElementById(`name_${index}`).value.trim();
+    pkg.description = document.getElementById(`description_${index}`).value.trim();
+    pkg.services = document.getElementById(`services_${index}`).value
+        .split("\n")
+        .map(x => x.trim())
+        .filter(Boolean);
+
+    pkg.currency = document.getElementById(`currency_${index}`).value;
+    pkg.opening_fee = toNumber(document.getElementById(`opening_fee_${index}`).value);
+    pkg.subscription_fee = toNumber(document.getElementById(`subscription_fee_${index}`).value);
+    pkg.monthly_fee = toNumber(document.getElementById(`monthly_fee_${index}`).value);
+    pkg.payment_required = document.getElementById(`payment_required_${index}`).checked;
+    pkg.active = document.getElementById(`active_${index}`).checked;
+    pkg.display_order = Number(document.getElementById(`display_order_${index}`).value || index + 1);
+    pkg.customer_type = document.getElementById(`customer_type_${index}`).value;
+    pkg.mastercard_item_code = document.getElementById(`mastercard_item_code_${index}`).value.trim().toUpperCase();
+    pkg.whatsapp_template = document.getElementById(`whatsapp_template_${index}`).value.trim();
+
+    const preview = document.getElementById(`preview_${index}`);
+
+    if (preview) {
+        preview.innerHTML = `
+            Ouverture : ${formatMoney(pkg.opening_fee, pkg.currency)} |
+            Souscription : ${formatMoney(pkg.subscription_fee, pkg.currency)} |
+            Mensuel : ${formatMoney(pkg.monthly_fee, pkg.currency)}
+        `;
+    }
+}
+
+function syncAllPackages() {
+    packages.forEach((_, index) => syncPackage(index));
+}
+
+function addPackage() {
+    syncAllPackages();
+    packages.push(defaultPackage());
+    renderPackages();
+}
+
+function removePackage(index) {
+    if (!confirm("Supprimer ce package ?")) return;
+
+    packages.splice(index, 1);
+    renderPackages();
+}
+
+async function savePackages() {
+    const message = document.getElementById("message");
+
+    syncAllPackages();
+
+    if (!packages.length) {
+        message.innerHTML = "Ajoutez au moins un package.";
+        return;
+    }
+
+    try {
+        const response = await fetch("/api/backoffice/packages", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ packages })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Erreur lors de l’enregistrement.");
+        }
+
+        packages = data.packages || packages;
+        message.innerHTML = "Configuration enregistrée avec succès.";
+        renderPackages();
+    } catch (error) {
+        message.innerHTML = escapeHtml(error.message);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadPackages);
 </script>
+
 </body>
 </html>

@@ -1,3 +1,4 @@
+from app.routers import payments
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -40,6 +41,7 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
+app.include_router(payments.router)
 app.include_router(web.router)
 app.include_router(applications.router)
 app.include_router(backoffice.router)

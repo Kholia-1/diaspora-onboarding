@@ -1007,6 +1007,9 @@ async function loadDetail() {
         document.getElementById("accountInfo").innerHTML =
             info("Agence souhaitée", app.preferred_branch) +
             info("Type de compte", app.account_type) +
+            info("Package choisi", app.selected_package_name || app.selected_package_code) +
+            info("Paiement package", app.selected_package_payment_required ? "Requis" : "Non requis") +
+            info("Frais souscription package", app.selected_package_subscription_fee ? `${app.selected_package_subscription_fee} ${app.selected_package_currency || "XAF"}` : "0") +
             info("RIB fourni par le client", app.rib) +
             info("Numéro compte attribué", app.account_number) +
             info("RIB final Afriland", app.final_rib) +

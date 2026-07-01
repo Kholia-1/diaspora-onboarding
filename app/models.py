@@ -61,6 +61,25 @@ class AccountApplication(Base):
 
     account_type = Column(String(100), nullable=True)
     preferred_branch = Column(String(150), nullable=True)
+
+
+    # SELECTED_PACKAGE_FIELDS_V1
+    selected_package_code = Column(String, nullable=True)
+    selected_package_name = Column(String, nullable=True)
+    selected_package_currency = Column(String, nullable=True)
+    selected_package_opening_fee = Column(Float, default=0)
+    selected_package_subscription_fee = Column(Float, default=0)
+    selected_package_monthly_fee = Column(Float, default=0)
+    selected_package_payment_required = Column(Boolean, default=False)
+
+    # PACKAGE_PAYMENT_FIELDS_V1
+    package_payment_reference = Column(String, nullable=True)
+    package_payment_status = Column(String, default="NOT_REQUIRED")
+    package_payment_provider = Column(String, default="MASTERCARD")
+    package_payment_amount = Column(Float, default=0)
+    package_payment_currency = Column(String, default="XAF")
+    package_payment_url = Column(String, nullable=True)
+
     account_purpose = Column(Text, nullable=True)
 
     is_pep = Column(Boolean, default=False)
@@ -153,3 +172,35 @@ class Country(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+# PAYMENT_TRANSACTION_MODEL_V1
+class PaymentTransaction(Base):
+    __tablename__ = "payment_transactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    payment_reference = Column(String, unique=True, index=True, nullable=False)
+
+    application_id = Column(Integer, nullable=True)
+    application_reference = Column(String, index=True, nullable=True)
+
+    client_email = Column(String, index=True, nullable=True)
+
+    package_code = Column(String, nullable=True)
+    package_name = Column(String, nullable=True)
+
+    amount = Column(Float, default=0)
+    currency = Column(String, default="XAF")
+
+    provider = Column(String, default="MASTERCARD")
+    provider_item_code = Column(String, nullable=True)
+    provider_transaction_id = Column(String, nullable=True)
+
+    status = Column(String, default="PENDING")
+    payment_url = Column(String, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    paid_at = Column(DateTime, nullable=True)
+    failed_at = Column(DateTime, nullable=True)
+
+    raw_response = Column(Text, nullable=True)

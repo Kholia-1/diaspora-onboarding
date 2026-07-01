@@ -56,6 +56,14 @@ class ApplicationCreate(BaseModel):
 
     account_type: Optional[str] = None
     preferred_branch: Optional[str] = None
+
+    selected_package_code: str | None = None
+    selected_package_name: str | None = None
+    selected_package_currency: str | None = None
+    selected_package_opening_fee: float | None = 0
+    selected_package_subscription_fee: float | None = 0
+    selected_package_monthly_fee: float | None = 0
+    selected_package_payment_required: bool | None = False
     account_purpose: Optional[str] = None
 
     is_pep: bool = False

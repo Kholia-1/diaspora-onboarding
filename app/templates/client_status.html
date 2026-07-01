@@ -876,3 +876,612 @@
 
 </body>
 </html>
+
+<style>
+/* CLIENT_STATUS_PAYMENT_DISPLAY_V1 */
+.payment-status-box {
+    margin-top: 18px;
+    border-radius: 16px;
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    box-shadow: 0 6px 18px rgba(15, 23, 42, .06);
+}
+
+.payment-status-box h3 {
+    margin: 0 0 10px;
+    color: #111827;
+}
+
+.payment-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.payment-item {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+}
+
+.payment-item span {
+    display: block;
+    color: #6b7280;
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.payment-item strong {
+    color: #111827;
+}
+
+.payment-badge {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.payment-paid {
+    background: #DCFCE7;
+    color: #166534;
+}
+
+.payment-pending {
+    background: #FEF3C7;
+    color: #92400E;
+}
+
+.payment-failed {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.payment-free {
+    background: #E5E7EB;
+    color: #374151;
+}
+
+.payment-action {
+    display: inline-block;
+    margin-top: 14px;
+    background: #C90000;
+    color: white;
+    padding: 11px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.payment-action:hover {
+    background: #9E0000;
+}
+
+@media (max-width: 760px) {
+    .payment-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+/* CLIENT_STATUS_PAYMENT_DISPLAY_V1 */
+(function () {
+    if (window.__clientStatusPaymentDisplayV1) return;
+    window.__clientStatusPaymentDisplayV1 = true;
+
+    function escapePaymentHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function moneyPayment(value, currency) {
+        const n = Number(value || 0);
+        return n.toLocaleString("fr-FR") + " " + (currency || "XAF");
+    }
+
+    function paymentLabel(app) {
+        const required = app.selected_package_payment_required === true || app.selected_package_payment_required === "true";
+        const status = app.package_payment_status || (required ? "PENDING" : "NOT_REQUIRED");
+
+        if (!required) {
+            return {
+                label: "Paiement non requis",
+                cls: "payment-free"
+            };
+        }
+
+        if (status === "PAID") {
+            return {
+                label: "Paiement confirmé",
+                cls: "payment-paid"
+            };
+        }
+
+        if (status === "FAILED") {
+            return {
+                label: "Paiement échoué",
+                cls: "payment-failed"
+            };
+        }
+
+        return {
+            label: "Paiement en attente",
+            cls: "payment-pending"
+        };
+    }
+
+    function buildPaymentBox(app) {
+        const payment = paymentLabel(app);
+        const required = app.selected_package_payment_required === true || app.selected_package_payment_required === "true";
+
+        const packageAmount =
+            Number(app.selected_package_opening_fee || 0) +
+            Number(app.selected_package_subscription_fee || 0);
+
+        const amount = app.package_payment_amount || packageAmount || 0;
+        const currency = app.package_payment_currency || app.selected_package_currency || "XAF";
+
+        let action = "";
+
+        if (required && app.package_payment_status !== "PAID" && app.package_payment_url) {
+            action = `
+                <a class="payment-action" href="${escapePaymentHtml(app.package_payment_url)}">
+                    Procéder / reprendre le paiement
+                </a>
+            `;
+        }
+
+        return `
+            <div class="payment-status-box" data-payment-box="1">
+                <h3>Package et paiement</h3>
+
+                <span class="payment-badge ${payment.cls}">
+                    ${escapePaymentHtml(payment.label)}
+                </span>
+
+                <div class="payment-grid">
+                    <div class="payment-item">
+                        <span>Package choisi</span>
+                        <strong>${escapePaymentHtml(app.selected_package_name || app.selected_package_code || "Non renseigné")}</strong>
+                    </div>
+
+                    <div class="payment-item">
+                        <span>Montant à payer</span>
+                        <strong>${moneyPayment(amount, currency)}</strong>
+                    </div>
+
+                    <div class="payment-item">
+                        <span>Référence paiement</span>
+                        <strong>${escapePaymentHtml(app.package_payment_reference || "Non générée")}</strong>
+                    </div>
+                </div>
+
+                ${action}
+            </div>
+        `;
+    }
+
+    function injectPaymentBox() {
+        const resultBox = document.getElementById("statusResult");
+        if (!resultBox) return;
+
+        const progressBox = resultBox.querySelector(".tracking-progress-box");
+        if (!progressBox) return;
+
+        if (resultBox.querySelector('[data-payment-box="1"]')) return;
+
+        const refEl = resultBox.querySelector(".tracking-ref");
+        const ref = refEl ? refEl.textContent.trim() : "";
+
+        const apps = window.__lastTrackingAppsV3 || [];
+        const app = apps.find(x => String(x.reference || "").trim() === ref) || apps[0];
+
+        if (!app) return;
+
+        progressBox.insertAdjacentHTML("beforebegin", buildPaymentBox(app));
+    }
+
+    const observer = new MutationObserver(function () {
+        setTimeout(injectPaymentBox, 80);
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const resultBox = document.getElementById("statusResult");
+
+        if (resultBox) {
+            observer.observe(resultBox, {
+                childList: true,
+                subtree: true
+            });
+        }
+    });
+})();
+</script>
+
+<style>
+/* CLIENT_STATUS_PAYMENT_DISPLAY_V2 */
+.payment-status-main {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-weight: bold;
+    border: 1px solid #e5e7eb;
+}
+
+.payment-status-main.pending {
+    background: #FEF3C7;
+    color: #92400E;
+    border-color: #FDE68A;
+}
+
+.payment-status-main.paid {
+    background: #DCFCE7;
+    color: #166534;
+    border-color: #BBF7D0;
+}
+
+.payment-status-main.failed {
+    background: #FEE2E2;
+    color: #991B1B;
+    border-color: #FECACA;
+}
+
+.payment-status-main.free {
+    background: #E5E7EB;
+    color: #374151;
+    border-color: #D1D5DB;
+}
+
+.payment-action-secondary {
+    display: inline-block;
+    margin-top: 14px;
+    background: #111827;
+    color: white;
+    padding: 11px 14px;
+    border-radius: 10px;
+    border: none;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.payment-action-secondary:hover {
+    background: #000;
+}
+</style>
+
+<script>
+/* CLIENT_STATUS_PAYMENT_DISPLAY_V2 */
+(function () {
+    if (window.__clientStatusPaymentDisplayV2) return;
+    window.__clientStatusPaymentDisplayV2 = true;
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function money(value, currency) {
+        const n = Number(value || 0);
+        return n.toLocaleString("fr-FR") + " " + (currency || "XAF");
+    }
+
+    function getPackageAmount(app) {
+        return (
+            Number(app.package_payment_amount || 0) ||
+            (
+                Number(app.selected_package_opening_fee || 0) +
+                Number(app.selected_package_subscription_fee || 0)
+            )
+        );
+    }
+
+    function isPaymentRequired(app) {
+        const explicitRequired =
+            app.selected_package_payment_required === true ||
+            app.selected_package_payment_required === "true";
+
+        const amount = getPackageAmount(app);
+
+        return explicitRequired || amount > 0;
+    }
+
+    function getPaymentState(app) {
+        const required = isPaymentRequired(app);
+        const status = String(app.package_payment_status || "").toUpperCase();
+
+        if (!required) {
+            return {
+                key: "free",
+                label: "Paiement non requis",
+                help: "Ce package ne nécessite pas de paiement immédiat."
+            };
+        }
+
+        if (status === "PAID") {
+            return {
+                key: "paid",
+                label: "Paiement confirmé",
+                help: "Le paiement de la souscription a été confirmé."
+            };
+        }
+
+        if (status === "FAILED") {
+            return {
+                key: "failed",
+                label: "Paiement échoué",
+                help: "Le paiement n’a pas été validé. Le client peut reprendre l’opération."
+            };
+        }
+
+        if (app.package_payment_reference) {
+            return {
+                key: "pending",
+                label: "Paiement en attente",
+                help: "Une référence de paiement a été générée, mais le paiement n’est pas encore confirmé."
+            };
+        }
+
+        return {
+            key: "pending",
+            label: "Paiement en attente de génération",
+            help: "Le package est payant, mais aucune référence de paiement n’a encore été générée."
+        };
+    }
+
+    function renderPaymentBoxV2(app) {
+        const amount = getPackageAmount(app);
+        const currency = app.package_payment_currency || app.selected_package_currency || "XAF";
+        const state = getPaymentState(app);
+        const required = isPaymentRequired(app);
+
+        let action = "";
+
+        if (required && state.key !== "paid" && app.package_payment_url) {
+            action = `
+                <a class="payment-action" href="${escapeHtml(app.package_payment_url)}">
+                    Procéder / reprendre le paiement
+                </a>
+            `;
+        }
+
+        if (required && state.key !== "paid" && !app.package_payment_url) {
+            action = `
+                <button class="payment-action-secondary" type="button"
+                        onclick="window.__generatePackagePaymentFromStatus('${escapeHtml(app.reference)}')">
+                    Générer le lien de paiement
+                </button>
+            `;
+        }
+
+        return `
+            <div class="payment-status-box" data-payment-box="1">
+                <h3>Package et paiement</h3>
+
+                <div class="payment-status-main ${state.key}">
+                    Statut du paiement : ${escapeHtml(state.label)}
+                    <br>
+                    <small>${escapeHtml(state.help)}</small>
+                </div>
+
+                <div class="payment-grid">
+                    <div class="payment-item">
+                        <span>Package choisi</span>
+                        <strong>${escapeHtml(app.selected_package_name || app.selected_package_code || "Non renseigné")}</strong>
+                    </div>
+
+                    <div class="payment-item">
+                        <span>Montant à payer</span>
+                        <strong>${money(amount, currency)}</strong>
+                    </div>
+
+                    <div class="payment-item">
+                        <span>Référence paiement</span>
+                        <strong>${escapeHtml(app.package_payment_reference || "Non générée")}</strong>
+                    </div>
+                </div>
+
+                ${action}
+            </div>
+        `;
+    }
+
+    window.__generatePackagePaymentFromStatus = async function (reference) {
+        const resultBox = document.getElementById("statusResult");
+
+        try {
+            const response = await fetch(`/api/payments/package/initiate/${encodeURIComponent(reference)}`, {
+                method: "POST",
+                cache: "no-store"
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Impossible de générer le paiement.");
+            }
+
+            const payment = data.payment;
+
+            if (!payment) {
+                throw new Error(data.message || "Aucun paiement généré.");
+            }
+
+            const apps = window.__lastTrackingAppsV3 || [];
+            const app = apps.find(x => String(x.reference) === String(reference));
+
+            if (app) {
+                app.package_payment_reference = payment.payment_reference;
+                app.package_payment_status = payment.status;
+                app.package_payment_provider = payment.provider;
+                app.package_payment_amount = payment.amount;
+                app.package_payment_currency = payment.currency;
+                app.package_payment_url = payment.payment_url;
+            }
+
+            const oldBox = resultBox ? resultBox.querySelector('[data-payment-box="1"]') : null;
+
+            if (oldBox && app) {
+                oldBox.outerHTML = renderPaymentBoxV2(app);
+            }
+
+        } catch (error) {
+            alert(error.message || "Erreur lors de la génération du lien de paiement.");
+        }
+    };
+
+    function injectPaymentBoxV2() {
+        const resultBox = document.getElementById("statusResult");
+        if (!resultBox) return;
+
+        const progressBox = resultBox.querySelector(".tracking-progress-box");
+        if (!progressBox) return;
+
+        const refEl = resultBox.querySelector(".tracking-ref");
+        const ref = refEl ? refEl.textContent.trim() : "";
+
+        const apps = window.__lastTrackingAppsV3 || [];
+        const app = apps.find(x => String(x.reference || "").trim() === ref) || apps[0];
+
+        if (!app) return;
+
+        const oldBox = resultBox.querySelector('[data-payment-box="1"]');
+
+        if (oldBox) {
+            oldBox.outerHTML = renderPaymentBoxV2(app);
+        } else {
+            progressBox.insertAdjacentHTML("beforebegin", renderPaymentBoxV2(app));
+        }
+    }
+
+    const observer = new MutationObserver(function () {
+        setTimeout(injectPaymentBoxV2, 120);
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const resultBox = document.getElementById("statusResult");
+
+        if (resultBox) {
+            observer.observe(resultBox, {
+                childList: true,
+                subtree: true
+            });
+        }
+    });
+})();
+</script>
+
+<script>
+/* CLIENT_STATUS_PAYMENT_CLICK_FIX_V3 */
+(function () {
+    if (window.__clientStatusPaymentClickFixV3) return;
+    window.__clientStatusPaymentClickFixV3 = true;
+
+    async function generatePayment(reference, button) {
+        if (!reference) {
+            alert("Référence dossier introuvable.");
+            return;
+        }
+
+        const originalText = button ? button.textContent : "";
+
+        if (button) {
+            button.disabled = true;
+            button.textContent = "Génération du lien...";
+        }
+
+        try {
+            const response = await fetch(`/api/payments/package/initiate/${encodeURIComponent(reference)}`, {
+                method: "POST",
+                cache: "no-store"
+            });
+
+            let data = null;
+
+            try {
+                data = await response.json();
+            } catch (e) {
+                throw new Error("Réponse serveur invalide.");
+            }
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Impossible de générer le paiement.");
+            }
+
+            if (!data.payment) {
+                throw new Error(data.message || "Aucun paiement généré.");
+            }
+
+            const payment = data.payment;
+
+            const apps = window.__lastTrackingAppsV3 || [];
+            const app = apps.find(x => String(x.reference || "") === String(reference));
+
+            if (app) {
+                app.package_payment_reference = payment.payment_reference;
+                app.package_payment_status = payment.status;
+                app.package_payment_provider = payment.provider;
+                app.package_payment_amount = payment.amount;
+                app.package_payment_currency = payment.currency;
+                app.package_payment_url = payment.payment_url;
+            }
+
+            if (button) {
+                button.textContent = "Lien généré. Ouverture...";
+            }
+
+            if (payment.payment_url) {
+                window.location.href = payment.payment_url;
+            } else {
+                alert("Lien de paiement généré : " + payment.payment_reference);
+                window.location.reload();
+            }
+
+        } catch (error) {
+            alert(error.message || "Erreur lors de la génération du lien de paiement.");
+
+            if (button) {
+                button.disabled = false;
+                button.textContent = originalText || "Générer le lien de paiement";
+            }
+        }
+    }
+
+    window.__generatePackagePaymentFromStatus = function (reference) {
+        const button = document.activeElement;
+        generatePayment(reference, button);
+    };
+
+    document.addEventListener("click", function (event) {
+        const button = event.target.closest(".payment-action-secondary");
+
+        if (!button) return;
+
+        const text = (button.textContent || "").toLowerCase();
+
+        if (!text.includes("générer") && !text.includes("generer")) return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        const resultBox = document.getElementById("statusResult");
+        const refEl = resultBox ? resultBox.querySelector(".tracking-ref") : null;
+        const reference = refEl ? refEl.textContent.trim() : "";
+
+        generatePayment(reference, button);
+    }, true);
+})();
+</script>

@@ -253,6 +253,15 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
 
         account_type=payload.account_type,
         preferred_branch=payload.preferred_branch,
+
+        # APPLICATION_SELECTED_PACKAGE_SAVE_V1
+        selected_package_code=payload.selected_package_code,
+        selected_package_name=payload.selected_package_name,
+        selected_package_currency=payload.selected_package_currency,
+        selected_package_opening_fee=payload.selected_package_opening_fee or 0,
+        selected_package_subscription_fee=payload.selected_package_subscription_fee or 0,
+        selected_package_monthly_fee=payload.selected_package_monthly_fee or 0,
+        selected_package_payment_required=bool(payload.selected_package_payment_required),
         account_purpose=payload.account_purpose,
 
         is_pep=payload.is_pep,
@@ -299,6 +308,21 @@ def application_status_payload(application):
         "client_message": getattr(application, "client_message", None),
         "final_rib": getattr(application, "final_rib", None),
         "account_number": getattr(application, "account_number", None),
+
+        # STATUS_PAYMENT_FIELDS_V1
+        "selected_package_code": getattr(application, "selected_package_code", None),
+        "selected_package_name": getattr(application, "selected_package_name", None),
+        "selected_package_currency": getattr(application, "selected_package_currency", None),
+        "selected_package_opening_fee": getattr(application, "selected_package_opening_fee", 0),
+        "selected_package_subscription_fee": getattr(application, "selected_package_subscription_fee", 0),
+        "selected_package_monthly_fee": getattr(application, "selected_package_monthly_fee", 0),
+        "selected_package_payment_required": getattr(application, "selected_package_payment_required", False),
+        "package_payment_reference": getattr(application, "package_payment_reference", None),
+        "package_payment_status": getattr(application, "package_payment_status", None),
+        "package_payment_provider": getattr(application, "package_payment_provider", None),
+        "package_payment_amount": getattr(application, "package_payment_amount", 0),
+        "package_payment_currency": getattr(application, "package_payment_currency", None),
+        "package_payment_url": getattr(application, "package_payment_url", None),
     }
 
 

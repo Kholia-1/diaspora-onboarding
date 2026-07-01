@@ -241,6 +241,13 @@ def get_application_detail(application_id: str, db: Session = Depends(get_db)):
             "funds_origin": application.funds_origin,
             "funds_origin_other": application.funds_origin_other,
             "account_type": application.account_type,
+            "selected_package_code": getattr(application, "selected_package_code", None),
+            "selected_package_name": getattr(application, "selected_package_name", None),
+            "selected_package_currency": getattr(application, "selected_package_currency", None),
+            "selected_package_opening_fee": getattr(application, "selected_package_opening_fee", 0),
+            "selected_package_subscription_fee": getattr(application, "selected_package_subscription_fee", 0),
+            "selected_package_monthly_fee": getattr(application, "selected_package_monthly_fee", 0),
+            "selected_package_payment_required": getattr(application, "selected_package_payment_required", False),
             "preferred_branch": application.preferred_branch,
             "account_purpose": application.account_purpose,
             "is_pep": application.is_pep,
@@ -379,31 +386,123 @@ def dashboard_summary(db: Session = Depends(get_db)):
         "comptes_ouverts": account_opened
     }
 
+
 PACKAGES_CONFIG_PATH = Path("data/packages.json")
 
 DEFAULT_PACKAGES = [
     {
         "code": "BUDGET",
         "name": "Package Budget",
-        "description": "Destiné aux petites bourses",
+        "description": "Destiné aux clients recherchant l’essentiel bancaire à coût maîtrisé.",
         "services": ["SMS First", "Carte Fellow", "SARA Banking"],
-        "active": True
+        "currency": "XAF",
+        "opening_fee": 0,
+        "subscription_fee": 0,
+        "monthly_fee": 0,
+        "payment_required": False,
+        "active": True,
+        "display_order": 1,
+        "customer_type": "PARTICULIER",
+        "mastercard_item_code": "PKG_BUDGET",
+        "whatsapp_template": "package_budget_selected"
     },
     {
         "code": "BUSINESS",
         "name": "Package Business",
-        "description": "Pour les professionnels",
+        "description": "Pour les professionnels et clients ayant des besoins bancaires étendus.",
         "services": ["SMS First", "Assurance", "Découvert permanent", "Carte Visa Classique"],
-        "active": True
+        "currency": "XAF",
+        "opening_fee": 0,
+        "subscription_fee": 0,
+        "monthly_fee": 0,
+        "payment_required": False,
+        "active": True,
+        "display_order": 2,
+        "customer_type": "PROFESSIONNEL",
+        "mastercard_item_code": "PKG_BUSINESS",
+        "whatsapp_template": "package_business_selected"
     },
     {
         "code": "ECO",
         "name": "Package Eco",
-        "description": "L’essentiel au meilleur prix",
+        "description": "L’essentiel au meilleur prix pour une ouverture de compte simplifiée.",
         "services": ["SMS First", "Assurance", "SARA Banking"],
-        "active": True
+        "currency": "XAF",
+        "opening_fee": 0,
+        "subscription_fee": 0,
+        "monthly_fee": 0,
+        "payment_required": False,
+        "active": True,
+        "display_order": 3,
+        "customer_type": "PARTICULIER",
+        "mastercard_item_code": "PKG_ECO",
+        "whatsapp_template": "package_eco_selected"
     }
 ]
+
+
+def _bool_value(value, default=False):
+    if isinstance(value, bool):
+        return value
+
+    if value is None:
+        return default
+
+    return str(value).strip().lower() in {"1", "true", "yes", "oui", "on"}
+
+
+def _money_value(value):
+    if value is None or value == "":
+        return 0
+
+    try:
+        return float(str(value).replace(" ", "").replace(",", "."))
+    except Exception:
+        return 0
+
+
+def _int_value(value, default=100):
+    try:
+        return int(value)
+    except Exception:
+        return default
+
+
+def normalize_package_item(item: dict, index: int = 0):
+    name = str(item.get("name") or "").strip()
+    code = str(item.get("code") or name.upper().replace(" ", "_")).strip().upper()
+    description = str(item.get("description") or "").strip()
+    currency = str(item.get("currency") or "XAF").strip().upper()
+    customer_type = str(item.get("customer_type") or "TOUS").strip().upper()
+    mastercard_item_code = str(item.get("mastercard_item_code") or code).strip().upper()
+    whatsapp_template = str(item.get("whatsapp_template") or f"{code.lower()}_selected").strip()
+
+    services = item.get("services") or []
+
+    if isinstance(services, str):
+        services = [x.strip() for x in services.replace(",", "\n").split("\n") if x.strip()]
+
+    if not isinstance(services, list):
+        services = []
+
+    services = [str(x).strip() for x in services if str(x).strip()]
+
+    return {
+        "code": code,
+        "name": name or code,
+        "description": description,
+        "services": services,
+        "currency": currency,
+        "opening_fee": _money_value(item.get("opening_fee")),
+        "subscription_fee": _money_value(item.get("subscription_fee")),
+        "monthly_fee": _money_value(item.get("monthly_fee")),
+        "payment_required": _bool_value(item.get("payment_required"), False),
+        "active": _bool_value(item.get("active"), True),
+        "display_order": _int_value(item.get("display_order"), index + 1),
+        "customer_type": customer_type,
+        "mastercard_item_code": mastercard_item_code,
+        "whatsapp_template": whatsapp_template
+    }
 
 
 def ensure_packages_config():
@@ -415,7 +514,20 @@ def ensure_packages_config():
             encoding="utf-8"
         )
 
-    return json.loads(PACKAGES_CONFIG_PATH.read_text(encoding="utf-8"))
+    data = json.loads(PACKAGES_CONFIG_PATH.read_text(encoding="utf-8"))
+    packages = data.get("packages") or DEFAULT_PACKAGES
+
+    normalized = [
+        normalize_package_item(item, index)
+        for index, item in enumerate(packages)
+    ]
+
+    normalized = sorted(
+        normalized,
+        key=lambda item: (int(item.get("display_order") or 100), item.get("name") or "")
+    )
+
+    return {"packages": normalized}
 
 
 @router.get("/packages")
@@ -432,23 +544,21 @@ def save_packages_config(payload: dict = Body(...)):
 
     cleaned = []
 
-    for item in packages:
-        name = str(item.get("name") or "").strip()
-        code = str(item.get("code") or name.upper().replace(" ", "_")).strip()
-        description = str(item.get("description") or "").strip()
-        active = bool(item.get("active", True))
-        services = item.get("services") or []
+    for index, item in enumerate(packages):
+        if not isinstance(item, dict):
+            continue
 
-        if isinstance(services, str):
-            services = [x.strip() for x in services.split(",") if x.strip()]
+        package = normalize_package_item(item, index)
 
-        cleaned.append({
-            "code": code,
-            "name": name,
-            "description": description,
-            "services": services,
-            "active": active
-        })
+        if not package["code"] or not package["name"]:
+            continue
+
+        cleaned.append(package)
+
+    cleaned = sorted(
+        cleaned,
+        key=lambda item: (int(item.get("display_order") or 100), item.get("name") or "")
+    )
 
     PACKAGES_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     PACKAGES_CONFIG_PATH.write_text(
@@ -460,6 +570,7 @@ def save_packages_config(payload: dict = Body(...)):
         "message": "Configuration des packages enregistrée",
         "packages": cleaned
     }
+
 
 def _find_application_by_id_or_reference(db, application_id):
     """
