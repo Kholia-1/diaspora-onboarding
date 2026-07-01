@@ -1543,3 +1543,244 @@
     });
 })();
 </script>
+
+<!-- CLIENT_STATUS_OPENED_ACCOUNT_DISPLAY_V1 -->
+<style>
+  .client-opened-account-v1 {
+    margin-top: 14px;
+    background: linear-gradient(135deg, #ecfdf5, #ffffff);
+    border: 1px solid #bbf7d0;
+    border-left: 6px solid #16a34a;
+    border-radius: 14px;
+    padding: 14px;
+    color: #064e3b;
+    line-height: 1.5;
+  }
+
+  .client-opened-account-v1 h4 {
+    margin: 0 0 10px 0;
+    color: #166534;
+    font-size: 17px;
+  }
+
+  .client-opened-account-grid-v1 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .client-opened-account-item-v1 {
+    background: #ffffff;
+    border: 1px solid #d1fae5;
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .client-opened-account-item-v1 strong {
+    display: block;
+    color: #065f46;
+    margin-bottom: 4px;
+  }
+
+  .client-opened-account-full-v1 {
+    grid-column: 1 / -1;
+  }
+
+  .client-opened-account-badge-v1 {
+    display: inline-flex;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    color: #166534;
+    font-weight: 800;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 800px) {
+    .client-opened-account-grid-v1 {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  const MARKER = "CLIENT_STATUS_OPENED_ACCOUNT_DISPLAY_V1";
+
+  if (window.__clientStatusOpenedAccountV1Loaded) {
+    return;
+  }
+
+  window.__clientStatusOpenedAccountV1Loaded = true;
+
+  const processed = new Set();
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function findEmailValue() {
+    const inputs = Array.from(document.querySelectorAll("input"));
+
+    const emailInput = inputs.find(input => {
+      const type = String(input.type || "").toLowerCase();
+      const name = String(input.name || input.id || input.placeholder || "").toLowerCase();
+
+      return type === "email" || name.includes("email") || name.includes("mail");
+    });
+
+    if (emailInput && emailInput.value && emailInput.value.includes("@")) {
+      return emailInput.value.trim();
+    }
+
+    const anyWithEmail = inputs.find(input => String(input.value || "").includes("@"));
+
+    return anyWithEmail ? anyWithEmail.value.trim() : "";
+  }
+
+  function extractReferences() {
+    const text = document.body.innerText || "";
+    const matches = text.match(/DIA-\d{8}-[A-Z0-9]+/g) || [];
+
+    return Array.from(new Set(matches));
+  }
+
+  function findCardForReference(reference) {
+    const all = Array.from(document.querySelectorAll("section, article, .card, .status-card, .application-card, .result-card, div"));
+
+    const candidates = all.filter(el => {
+      const text = el.innerText || "";
+      return text.includes(reference) && text.length < 4000;
+    });
+
+    if (!candidates.length) {
+      return null;
+    }
+
+    candidates.sort((a, b) => {
+      return (a.innerText || "").length - (b.innerText || "").length;
+    });
+
+    return candidates[0];
+  }
+
+  function renderOpenedAccount(account) {
+    const accountNumber = account.account_number || "Non renseigné";
+    const rib = account.rib || "Non renseigné";
+    const message = account.message_to_client || "Votre compte a été ouvert par la banque.";
+    const paymentStatus = account.payment_status || "PAID";
+
+    return `
+      <div class="client-opened-account-v1" data-opened-account-ref="${escapeHtml(account.application_reference)}">
+        <span class="client-opened-account-badge-v1">Compte ouvert</span>
+        <h4>Informations finales du compte</h4>
+
+        <div class="client-opened-account-grid-v1">
+          <div class="client-opened-account-item-v1">
+            <strong>Référence dossier</strong>
+            ${escapeHtml(account.application_reference)}
+          </div>
+
+          <div class="client-opened-account-item-v1">
+            <strong>Statut paiement</strong>
+            ${escapeHtml(paymentStatus)}
+          </div>
+
+          <div class="client-opened-account-item-v1">
+            <strong>Numéro de compte</strong>
+            ${escapeHtml(accountNumber)}
+          </div>
+
+          <div class="client-opened-account-item-v1 client-opened-account-full-v1">
+            <strong>RIB final Afriland</strong>
+            ${escapeHtml(rib)}
+          </div>
+
+          <div class="client-opened-account-item-v1 client-opened-account-full-v1">
+            <strong>Message de la banque</strong>
+            ${escapeHtml(message)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function injectOpenedAccount(reference, email) {
+    const key = reference + "|" + email;
+
+    if (processed.has(key)) {
+      return;
+    }
+
+    processed.add(key);
+
+    try {
+      const response = await fetch(
+        `/api/applications/${encodeURIComponent(reference)}/opened-account-public?email=${encodeURIComponent(email)}&v=${Date.now()}`
+      );
+
+      if (!response.ok) {
+        return;
+      }
+
+      const account = await response.json();
+
+      const card = findCardForReference(reference);
+
+      if (!card) {
+        return;
+      }
+
+      if (card.querySelector(`[data-opened-account-ref="${CSS.escape(reference)}"]`)) {
+        return;
+      }
+
+      card.insertAdjacentHTML("beforeend", renderOpenedAccount(account));
+    } catch (error) {
+      console.warn("Opened account display:", error);
+    }
+  }
+
+  function refreshOpenedAccounts() {
+    const email = findEmailValue();
+
+    if (!email) {
+      return;
+    }
+
+    const references = extractReferences();
+
+    references.forEach(reference => {
+      injectOpenedAccount(reference, email);
+    });
+  }
+
+  function startObserver() {
+    refreshOpenedAccounts();
+
+    const observer = new MutationObserver(function () {
+      refreshOpenedAccounts();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    setInterval(refreshOpenedAccounts, 2000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startObserver);
+  } else {
+    startObserver();
+  }
+})();
+</script>

@@ -1,3 +1,4 @@
+from app.routers import client_account_status
 from app.routers import account_opening
 from app.routers import whatsapp_notifications
 from app.routers import api_integration_tests
@@ -45,6 +46,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(payments.router)
+app.include_router(client_account_status.router)
 app.include_router(account_opening.router)
 app.include_router(whatsapp_notifications.router)
 app.include_router(api_integration_tests.router)
