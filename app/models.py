@@ -204,3 +204,24 @@ class PaymentTransaction(Base):
     failed_at = Column(DateTime, nullable=True)
 
     raw_response = Column(Text, nullable=True)
+
+
+# ACCOUNT_OPENING_RECORD_V1
+from sqlalchemy import Column, Integer, String, DateTime, Text
+from datetime import datetime
+
+
+class AccountOpeningRecord(Base):
+    __tablename__ = "account_opening_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    application_id = Column(Integer, nullable=True, index=True)
+    application_reference = Column(String, unique=True, index=True, nullable=False)
+    client_email = Column(String, nullable=True, index=True)
+
+    account_number = Column(String, nullable=False, index=True)
+    rib = Column(String, nullable=False)
+    status = Column(String, default="OPENED", index=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    raw_payload = Column(Text, nullable=True)
