@@ -1,3 +1,4 @@
+from app.routers import mastercard_gateway
 from app.routers import client_account_status
 from app.routers import account_opening
 from app.routers import whatsapp_notifications
@@ -46,6 +47,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(payments.router)
+app.include_router(mastercard_gateway.router)
 app.include_router(client_account_status.router)
 app.include_router(account_opening.router)
 app.include_router(whatsapp_notifications.router)
