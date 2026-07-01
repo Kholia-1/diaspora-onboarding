@@ -12,6 +12,8 @@ from app.services.mastercard_payment_service import (
     calculate_package_amount,
     create_mastercard_payment_session,
 )
+from app.services.whatsapp_notification_service import send_whatsapp_notification
+
 
 router = APIRouter(
     prefix="/api/payments",
@@ -38,6 +40,95 @@ def payment_payload(payment: PaymentTransaction):
     }
 
 
+def is_payment_allowed_after_approval(application) -> bool:
+    status = str(getattr(application, "status", "") or "").upper()
+    review_decision = str(getattr(application, "review_decision", "") or "").upper()
+
+    allowed_statuses = {
+        "APPROVED",
+        "APPROVED_PENDING_PAYMENT",
+        "PAYMENT_PENDING",
+        "PAYMENT_CONFIRMED"
+    }
+
+    allowed_decisions = {
+        "APPROVED",
+        "VALIDATED",
+        "ACCEPTED",
+        "ACCOUNT_APPROVED",
+        "COMPTE_APPROUVE"
+    }
+
+    return status in allowed_statuses or review_decision in allowed_decisions
+
+
+def sync_payment_to_application(application, payment: PaymentTransaction):
+    if not application:
+        return
+
+    if hasattr(application, "package_payment_reference"):
+        application.package_payment_reference = payment.payment_reference
+
+    if hasattr(application, "package_payment_status"):
+        application.package_payment_status = payment.status
+
+    if hasattr(application, "package_payment_provider"):
+        application.package_payment_provider = payment.provider
+
+    if hasattr(application, "package_payment_amount"):
+        application.package_payment_amount = payment.amount
+
+    if hasattr(application, "package_payment_currency"):
+        application.package_payment_currency = payment.currency
+
+    if hasattr(application, "package_payment_url"):
+        application.package_payment_url = payment.payment_url
+
+
+def application_full_name(application):
+    if not application:
+        return "Cher client"
+
+    first_name = str(getattr(application, "first_name", "") or "").strip()
+    last_name = str(getattr(application, "last_name", "") or "").strip()
+    full_name = f"{first_name} {last_name}".strip()
+
+    return full_name or "Cher client"
+
+
+def application_phone(application):
+    if not application:
+        return ""
+
+    return (
+        getattr(application, "phone", None)
+        or getattr(application, "phone_number", None)
+        or getattr(application, "whatsapp_phone", None)
+        or ""
+    )
+
+
+def notify_payment_confirmed_whatsapp(application, payment: PaymentTransaction):
+    phone = application_phone(application)
+
+    context = {
+        "full_name": application_full_name(application),
+        "reference": payment.application_reference,
+        "application_reference": payment.application_reference,
+        "payment_reference": payment.payment_reference,
+        "package_name": payment.package_name,
+        "amount": payment.amount,
+        "currency": payment.currency,
+    }
+
+    return send_whatsapp_notification(
+        phone=phone,
+        event_type="PAIEMENT_CONFIRME",
+        context=context,
+        dry_run=True
+    )
+
+
 @router.post("/package/initiate/{application_reference}")
 def initiate_package_payment(application_reference: str, db: Session = Depends(get_db)):
     application = db.query(AccountApplication).filter(
@@ -47,7 +138,12 @@ def initiate_package_payment(application_reference: str, db: Session = Depends(g
     if not application:
         raise HTTPException(status_code=404, detail="Dossier introuvable.")
 
-    # PAYMENT_REQUIRED_AMOUNT_FIX_V1
+    if not is_payment_allowed_after_approval(application):
+        raise HTTPException(
+            status_code=403,
+            detail="Le paiement sera disponible après validation du dossier par la banque."
+        )
+
     amount = calculate_package_amount(application)
 
     payment_required = (
@@ -80,6 +176,9 @@ def initiate_package_payment(application_reference: str, db: Session = Depends(g
     ).first()
 
     if existing:
+        sync_payment_to_application(application, existing)
+        db.commit()
+
         return {
             "message": "Paiement déjà initié.",
             "payment_required": True,
@@ -109,12 +208,13 @@ def initiate_package_payment(application_reference: str, db: Session = Depends(g
     payment.payment_url = session["payment_url"]
     payment.raw_response = json.dumps(session["raw_response"], ensure_ascii=False)
 
-    # Champs optionnels sur le dossier si disponibles dans le modèle
+    sync_payment_to_application(application, payment)
+
     if hasattr(application, "package_payment_status"):
         application.package_payment_status = "PENDING"
 
-    if hasattr(application, "package_payment_reference"):
-        application.package_payment_reference = payment.payment_reference
+    if getattr(application, "status", None) == "APPROVED":
+        application.status = "APPROVED_PENDING_PAYMENT"
 
     db.commit()
     db.refresh(payment)
@@ -155,31 +255,18 @@ def simulate_payment_success(payment_reference: str, db: Session = Depends(get_d
     ).first()
 
     if application:
-        if hasattr(application, "package_payment_status"):
-            application.package_payment_status = "PAID"
+        application.status = "PAYMENT_CONFIRMED"
+        sync_payment_to_application(application, payment)
 
-        if hasattr(application, "package_payment_reference"):
-            application.package_payment_reference = payment.payment_reference
-
-        # PAYMENT_SYNC_APPLICATION_FIELDS_V1
-        if hasattr(application, "package_payment_provider"):
-            application.package_payment_provider = payment.provider
-
-        if hasattr(application, "package_payment_amount"):
-            application.package_payment_amount = payment.amount
-
-        if hasattr(application, "package_payment_currency"):
-            application.package_payment_currency = payment.currency
-
-        if hasattr(application, "package_payment_url"):
-            application.package_payment_url = payment.payment_url
+    whatsapp_notification = notify_payment_confirmed_whatsapp(application, payment)
 
     db.commit()
     db.refresh(payment)
 
     return {
         "message": "Paiement simulé comme confirmé.",
-        "payment": payment_payload(payment)
+        "payment": payment_payload(payment),
+        "whatsapp_notification": whatsapp_notification
     }
 
 
@@ -199,8 +286,8 @@ def simulate_payment_failure(payment_reference: str, db: Session = Depends(get_d
         AccountApplication.reference == payment.application_reference
     ).first()
 
-    if application and hasattr(application, "package_payment_status"):
-        application.package_payment_status = "FAILED"
+    if application:
+        sync_payment_to_application(application, payment)
 
     db.commit()
     db.refresh(payment)
@@ -211,9 +298,6 @@ def simulate_payment_failure(payment_reference: str, db: Session = Depends(get_d
     }
 
 
-
-
-# PAYMENT_SIMULATE_SUCCESS_GET_V1
 @router.get("/{payment_reference}/simulate-success", response_class=HTMLResponse)
 def simulate_payment_success_get(payment_reference: str, db: Session = Depends(get_db)):
     payment = db.query(PaymentTransaction).filter(
@@ -231,27 +315,15 @@ def simulate_payment_success_get(payment_reference: str, db: Session = Depends(g
     ).first()
 
     if application:
-        if hasattr(application, "package_payment_status"):
-            application.package_payment_status = "PAID"
+        application.status = "PAYMENT_CONFIRMED"
+        sync_payment_to_application(application, payment)
 
-        if hasattr(application, "package_payment_reference"):
-            application.package_payment_reference = payment.payment_reference
-
-        # PAYMENT_SYNC_APPLICATION_FIELDS_V1
-        if hasattr(application, "package_payment_provider"):
-            application.package_payment_provider = payment.provider
-
-        if hasattr(application, "package_payment_amount"):
-            application.package_payment_amount = payment.amount
-
-        if hasattr(application, "package_payment_currency"):
-            application.package_payment_currency = payment.currency
-
-        if hasattr(application, "package_payment_url"):
-            application.package_payment_url = payment.payment_url
+    whatsapp_notification = notify_payment_confirmed_whatsapp(application, payment)
 
     db.commit()
     db.refresh(payment)
+
+    prepared_message = whatsapp_notification.get("prepared_message") if isinstance(whatsapp_notification, dict) else ""
 
     return f"""
     <!DOCTYPE html>
@@ -267,7 +339,7 @@ def simulate_payment_success_get(payment_reference: str, db: Session = Depends(g
                 padding: 40px;
             }}
             .card {{
-                max-width: 650px;
+                max-width: 720px;
                 margin: auto;
                 background: white;
                 border-radius: 18px;
@@ -278,6 +350,15 @@ def simulate_payment_success_get(payment_reference: str, db: Session = Depends(g
             h1 {{
                 color: #166534;
                 margin-top: 0;
+            }}
+            .notice {{
+                background: #EFF6FF;
+                border: 1px solid #BFDBFE;
+                color: #1E3A8A;
+                border-radius: 12px;
+                padding: 14px;
+                margin-top: 16px;
+                line-height: 1.5;
             }}
             .btn {{
                 display: inline-block;
@@ -302,6 +383,11 @@ def simulate_payment_success_get(payment_reference: str, db: Session = Depends(g
             <p><strong>Package :</strong> {payment.package_name or payment.package_code}</p>
             <p><strong>Montant :</strong> {payment.amount} {payment.currency}</p>
             <p><strong>Statut :</strong> {payment.status}</p>
+
+            <div class="notice">
+                <strong>Simulation WhatsApp :</strong><br>
+                {prepared_message or "Notification WhatsApp préparée en simulation."}
+            </div>
 
             <a class="btn" href="/client/status">Retour au suivi client</a>
             <a class="btn btn-dark" href="/api/payments/{payment.payment_reference}">Voir statut JSON</a>
