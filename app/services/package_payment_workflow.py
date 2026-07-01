@@ -1,4 +1,5 @@
 import json
+import os
 
 from app.models import PaymentTransaction
 from app.services.mastercard_payment_service import (
@@ -6,6 +7,10 @@ from app.services.mastercard_payment_service import (
     calculate_package_amount,
     create_mastercard_payment_session,
 )
+from app.services.whatsapp_notification_service import send_whatsapp_notification
+
+
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://80-65-211-49.sslip.io")
 
 
 def payment_to_payload(payment: PaymentTransaction):
@@ -56,9 +61,75 @@ def sync_payment_to_application(application, payment: PaymentTransaction):
         application.package_payment_url = payment.payment_url
 
 
+def application_full_name(application):
+    first_name = str(getattr(application, "first_name", "") or "").strip()
+    last_name = str(getattr(application, "last_name", "") or "").strip()
+    full_name = f"{first_name} {last_name}".strip()
+
+    return full_name or "Cher client"
+
+
+def application_phone(application):
+    return (
+        getattr(application, "phone", None)
+        or getattr(application, "phone_number", None)
+        or getattr(application, "whatsapp_phone", None)
+        or ""
+    )
+
+
+def absolute_payment_url(payment_url: str):
+    if not payment_url:
+        return ""
+
+    if payment_url.startswith("http://") or payment_url.startswith("https://"):
+        return payment_url
+
+    return PUBLIC_BASE_URL.rstrip("/") + "/" + payment_url.lstrip("/")
+
+
+def notify_payment_link_whatsapp(application, payment: PaymentTransaction):
+    phone = application_phone(application)
+
+    context = {
+        "full_name": application_full_name(application),
+        "reference": application.reference,
+        "application_reference": application.reference,
+        "payment_reference": payment.payment_reference,
+        "payment_url": absolute_payment_url(payment.payment_url),
+        "package_name": payment.package_name,
+        "amount": payment.amount,
+        "currency": payment.currency,
+    }
+
+    return send_whatsapp_notification(
+        phone=phone,
+        event_type="LIEN_PAIEMENT",
+        context=context,
+        dry_run=True
+    )
+
+
+def find_existing_payment(application, package_code, db):
+    existing = (
+        db.query(PaymentTransaction)
+        .filter(PaymentTransaction.application_reference == application.reference)
+        .filter(PaymentTransaction.package_code == package_code)
+        .order_by(PaymentTransaction.id.desc())
+        .first()
+    )
+
+    if existing and existing.status in ["PENDING", "PAID"]:
+        return existing
+
+    return None
+
+
 def create_package_payment_after_approval(application, db):
-    # Création automatique du paiement package après validation back-office.
-    # Le client ne crée pas lui-même le paiement.
+    """
+    Création automatique du paiement package après validation back-office.
+    Le client ne crée pas lui-même le paiement.
+    """
 
     if not is_package_payment_required(application):
         if hasattr(application, "package_payment_status"):
@@ -82,14 +153,7 @@ def create_package_payment_after_approval(application, db):
 
     package_code = getattr(application, "selected_package_code", None)
 
-    existing = (
-        db.query(PaymentTransaction)
-        .filter(PaymentTransaction.application_reference == application.reference)
-        .filter(PaymentTransaction.package_code == package_code)
-        .filter(PaymentTransaction.status.in_(["PENDING", "PAID"]))
-        .order_by(PaymentTransaction.id.desc())
-        .first()
-    )
+    existing = find_existing_payment(application, package_code, db)
 
     if existing:
         sync_payment_to_application(application, existing)
@@ -133,8 +197,11 @@ def create_package_payment_after_approval(application, db):
 
     application.status = "APPROVED_PENDING_PAYMENT"
 
+    whatsapp_notification = notify_payment_link_whatsapp(application, payment)
+
     return {
         "payment_required": True,
         "message": "Paiement package créé automatiquement après approbation.",
-        "payment": payment_to_payload(payment)
+        "payment": payment_to_payload(payment),
+        "whatsapp_notification": whatsapp_notification
     }
