@@ -1,8 +1,7 @@
 import json
-import random
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -31,18 +30,6 @@ def application_phone(application):
         or getattr(application, "whatsapp_phone", None)
         or ""
     )
-
-
-def generate_account_number():
-    now = datetime.utcnow().strftime("%y%m%d")
-    suffix = random.randint(100000, 999999)
-
-    return f"AFB{now}{suffix}"
-
-
-def generate_rib(account_number):
-    # RIB simulé pour prototype uniquement.
-    return f"CM21 AFB 10001 00001 {account_number} 00"
 
 
 def can_open_account(application):
@@ -74,7 +61,20 @@ def opening_payload(record: AccountOpeningRecord):
 
 
 @router.post("/{application_reference}/open-account")
-def open_account_after_payment(application_reference: str, db: Session = Depends(get_db)):
+def open_account_after_payment(
+    application_reference: str,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Ouverture de compte après paiement confirmé.
+
+    Important :
+    - Le numéro de compte est saisi par le back-office ou récupéré du Core Banking.
+    - Le RIB est saisi manuellement par le back-office.
+    - Aucun RIB n'est généré automatiquement par Diaspora Onboarding.
+    """
+
     application = db.query(AccountApplication).filter(
         AccountApplication.reference == application_reference
     ).first()
@@ -88,54 +88,57 @@ def open_account_after_payment(application_reference: str, db: Session = Depends
             detail="Le compte ne peut être ouvert qu'après confirmation du paiement ou si aucun paiement n'est requis."
         )
 
+    account_number = str(payload.get("account_number") or "").strip()
+    rib = str(payload.get("rib") or "").strip()
+    opened_by = str(payload.get("opened_by") or "BACKOFFICE").strip()
+    comment = str(payload.get("comment") or "").strip()
+
+    if not account_number:
+        raise HTTPException(
+            status_code=400,
+            detail="Le numéro de compte est obligatoire."
+        )
+
+    if not rib:
+        raise HTTPException(
+            status_code=400,
+            detail="Le RIB saisi par le back-office est obligatoire."
+        )
+
     existing = db.query(AccountOpeningRecord).filter(
         AccountOpeningRecord.application_reference == application.reference
     ).first()
 
-    if existing:
-        application.status = "ACCOUNT_OPENED"
+    raw_payload = {
+        "source": "BACKOFFICE_MANUAL_INPUT",
+        "opened_by": opened_by,
+        "comment": comment,
+        "saved_at": datetime.utcnow().isoformat(),
+        "package_payment_reference": getattr(application, "package_payment_reference", None),
+        "package_payment_status": getattr(application, "package_payment_status", None),
+    }
 
-        whatsapp_notification = send_whatsapp_notification(
-            phone=application_phone(application),
-            event_type="COMPTE_OUVERT",
-            context={
-                "full_name": application_full_name(application),
-                "reference": application.reference,
-                "application_reference": application.reference,
-                "account_number": existing.account_number,
-                "final_rib": existing.rib,
-            },
-            dry_run=True
+    if existing:
+        existing.account_number = account_number
+        existing.rib = rib
+        existing.status = "OPENED"
+        existing.raw_payload = json.dumps(raw_payload, ensure_ascii=False)
+
+        record = existing
+        message = "Compte déjà ouvert. Informations compte/RIB mises à jour par le back-office."
+    else:
+        record = AccountOpeningRecord(
+            application_id=application.id,
+            application_reference=application.reference,
+            client_email=getattr(application, "email", None),
+            account_number=account_number,
+            rib=rib,
+            status="OPENED",
+            raw_payload=json.dumps(raw_payload, ensure_ascii=False)
         )
 
-        db.commit()
-
-        return {
-            "message": "Compte déjà ouvert pour ce dossier.",
-            "application_status": application.status,
-            "account": opening_payload(existing),
-            "whatsapp_notification": whatsapp_notification
-        }
-
-    account_number = generate_account_number()
-    rib = generate_rib(account_number)
-
-    record = AccountOpeningRecord(
-        application_id=application.id,
-        application_reference=application.reference,
-        client_email=getattr(application, "email", None),
-        account_number=account_number,
-        rib=rib,
-        status="OPENED",
-        raw_payload=json.dumps({
-            "generated_by": "DIASPORA_ONBOARDING_PROTOTYPE",
-            "generated_at": datetime.utcnow().isoformat(),
-            "package_payment_reference": getattr(application, "package_payment_reference", None),
-            "package_payment_status": getattr(application, "package_payment_status", None),
-        }, ensure_ascii=False)
-    )
-
-    db.add(record)
+        db.add(record)
+        message = "Compte ouvert avec succès avec RIB saisi par le back-office."
 
     application.status = "ACCOUNT_OPENED"
 
@@ -156,7 +159,7 @@ def open_account_after_payment(application_reference: str, db: Session = Depends
     db.refresh(record)
 
     return {
-        "message": "Compte ouvert avec succès en simulation.",
+        "message": message,
         "application_status": application.status,
         "account": opening_payload(record),
         "whatsapp_notification": whatsapp_notification
