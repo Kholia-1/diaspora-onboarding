@@ -1485,3 +1485,61 @@
     }, true);
 })();
 </script>
+
+<style>
+/* CLIENT_STATUS_NO_CLIENT_PAYMENT_GENERATION_V5 */
+.payment-wait-bank {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    color: #1E3A8A;
+    font-weight: bold;
+}
+</style>
+
+<script>
+/* CLIENT_STATUS_NO_CLIENT_PAYMENT_GENERATION_V5 */
+(function () {
+    if (window.__noClientPaymentGenerationV5) return;
+    window.__noClientPaymentGenerationV5 = true;
+
+    // Sécurité côté interface : le client ne crée plus le paiement.
+    window.__generatePackagePaymentFromStatus = function () {
+        alert("Le lien de paiement est généré par la banque après validation du dossier.");
+    };
+
+    function removeClientGenerateButtons() {
+        document.querySelectorAll(".payment-action-secondary").forEach(function (button) {
+            const text = (button.textContent || "").toLowerCase();
+
+            if (text.includes("générer") || text.includes("generer")) {
+                const box = button.closest(".payment-status-box");
+
+                button.remove();
+
+                if (box && !box.querySelector(".payment-wait-bank")) {
+                    box.insertAdjacentHTML(
+                        "beforeend",
+                        '<div class="payment-wait-bank">Le lien de paiement sera généré par la banque après validation du dossier.</div>'
+                    );
+                }
+            }
+        });
+    }
+
+    const observer = new MutationObserver(function () {
+        setTimeout(removeClientGenerateButtons, 80);
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        removeClientGenerateButtons();
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    });
+})();
+</script>

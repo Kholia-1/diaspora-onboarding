@@ -1,7 +1,7 @@
 from app.models import AccountApplication
 from app.database import get_db
 from sqlalchemy.orm import Session
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi import Depends
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
@@ -205,4 +205,29 @@ async def card_subscription_page(request: Request):
 @router.get("/recharger-carte")
 async def card_reload_page(request: Request):
     return templates.TemplateResponse(request, "client_card_reload.html", {"request": request})
+
+
+# BACKOFFICE_API_INTEGRATIONS_PAGE_V3
+
+
+# BACKOFFICE_API_INTEGRATIONS_PAGE_HTMLRESPONSE_V4
+
+# BACKOFFICE_API_INTEGRATIONS_PAGE_FORCE_CLEAN_V5
+@router.get("/backoffice/api-integrations")
+def backoffice_api_integrations_page():
+    from pathlib import Path
+    from fastapi.responses import HTMLResponse
+
+    template_path = Path(__file__).resolve().parents[1] / "templates" / "backoffice_api_integrations.html"
+
+    if not template_path.exists():
+        return HTMLResponse(
+            content="<h1>Erreur</h1><p>Template backoffice_api_integrations.html introuvable.</p>",
+            status_code=500
+        )
+
+    return HTMLResponse(
+        content=template_path.read_text(encoding="utf-8"),
+        status_code=200
+    )
 

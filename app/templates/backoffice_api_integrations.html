@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Intégrations API - Back-office</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root {
+            --red: #C90000;
+            --red-dark: #9E0000;
+            --black: #111111;
+            --gray-bg: #F4F6F9;
+            --border: #DADDE5;
+            --muted: #6B7280;
+            --green: #166534;
+            --orange: #92400E;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--gray-bg);
+            color: #111827;
+        }
+
+        .topbar {
+            background: var(--black);
+            color: white;
+            padding: 18px 30px;
+            border-bottom: 4px solid var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .topbar h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .topbar a {
+            color: white;
+            text-decoration: none;
+            margin-left: 18px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: 28px auto;
+            padding: 0 18px;
+        }
+
+        .header-card {
+            background: white;
+            border-left: 6px solid var(--red);
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.07);
+            margin-bottom: 18px;
+        }
+
+        .header-card h1 {
+            margin: 0;
+            color: var(--red);
+        }
+
+        .header-card p {
+            color: var(--muted);
+            line-height: 1.5;
+            margin-bottom: 0;
+        }
+
+        .warning {
+            background: #FFF7ED;
+            border: 1px solid #FDBA74;
+            color: #9A3412;
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 18px;
+            font-weight: bold;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 15px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            background: var(--red);
+        }
+
+        .btn:hover {
+            background: var(--red-dark);
+        }
+
+        .btn-dark {
+            background: #111827;
+        }
+
+        .message {
+            margin: 12px 0;
+            font-weight: bold;
+        }
+
+        .integration-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        .integration-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            border: 1px solid #EEF0F5;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+        }
+
+        .integration-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+
+        .integration-title h3 {
+            margin: 0;
+            color: #111827;
+        }
+
+        .integration-title small {
+            color: var(--muted);
+            font-weight: bold;
+        }
+
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 5px 9px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .badge-on {
+            background: #DCFCE7;
+            color: #166534;
+        }
+
+        .badge-off {
+            background: #E5E7EB;
+            color: #374151;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        .half {
+            grid-column: span 2;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .switch-line {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+
+        .switch-line label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .switch-line input {
+            width: auto;
+        }
+
+        @media (max-width: 950px) {
+            .form-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .topbar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .half {
+                grid-column: 1 / -1;
+            }
+
+            .integration-head {
+                flex-direction: column;
+            }
+        }
+    
+/* API_INTEGRATION_TEST_CONNECTION_UI_V1 */
+.test-result {
+    margin-top: 12px;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-weight: bold;
+    border: 1px solid #e5e7eb;
+}
+
+.test-result.ok {
+    background: #DCFCE7;
+    color: #166534;
+    border-color: #BBF7D0;
+}
+
+.test-result.warning {
+    background: #FEF3C7;
+    color: #92400E;
+    border-color: #FDE68A;
+}
+
+.test-result.error {
+    background: #FEE2E2;
+    color: #991B1B;
+    border-color: #FECACA;
+}
+
+.btn-test {
+    background: #111827;
+}
+
+.btn-test:hover {
+    background: #000;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <h2>Back-office - Intégrations API</h2>
+    <div>
+        <a href="/backoffice/applications">Dossiers</a>
+        <a href="/backoffice/packages">Packages</a>
+        <a href="/backoffice/api-integrations">API à intégrer</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header-card">
+        <h1>Paramétrage des intégrations API</h1>
+        <p>
+            Cette page centralise la configuration des API externes utilisées par le parcours diaspora :
+            WhatsApp, Mastercard, Core Banking, BLACKMODULE et GED.
+        </p>
+    </div>
+
+    <div class="warning">
+        Important : pour une mise en production, les vrais secrets API doivent être stockés dans un coffre sécurisé
+        ou dans des variables d’environnement protégées, pas dans Git.
+    </div>
+
+    <div class="toolbar">
+        <button class="btn" onclick="saveIntegrations()">Enregistrer la configuration</button>
+        <button class="btn btn-dark" onclick="loadIntegrations()">Recharger</button>
+    </div>
+
+    <div id="message" class="message"></div>
+    <div id="integrationsContainer" class="integration-grid">Chargement...</div>
+</div>
+
+<script>
+let integrations = [];
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+async function loadIntegrations() {
+    const container = document.getElementById("integrationsContainer");
+    const message = document.getElementById("message");
+
+    container.innerHTML = "Chargement...";
+    message.innerHTML = "";
+
+    try {
+        const response = await fetch("/api/backoffice/api-integrations?v=" + Date.now(), {
+            cache: "no-store"
+        });
+
+        if (!response.ok) {
+            throw new Error("Impossible de charger les intégrations API.");
+        }
+
+        const data = await response.json();
+        integrations = data.integrations || [];
+
+        renderIntegrations();
+    } catch (error) {
+        container.innerHTML = `<div class="integration-card">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+function renderIntegrations() {
+    const container = document.getElementById("integrationsContainer");
+
+    if (!integrations.length) {
+        container.innerHTML = `<div class="integration-card">Aucune intégration configurée.</div>`;
+        return;
+    }
+
+    container.innerHTML = integrations.map((item, index) => renderIntegrationCard(item, index)).join("");
+}
+
+function option(value, selected) {
+    return `<option value="${value}" ${String(selected) === value ? "selected" : ""}>${value}</option>`;
+}
+
+function renderIntegrationCard(item, index) {
+    const badge = item.enabled
+        ? `<span class="badge badge-on">Activée</span>`
+        : `<span class="badge badge-off">Désactivée</span>`;
+
+    return `
+        <div class="integration-card">
+            <div class="integration-head">
+                <div class="integration-title">
+                    <h3>${escapeHtml(item.name || item.code)}</h3>
+                    <small>${escapeHtml(item.code || "")} — ${escapeHtml(item.provider || "")}</small>
+                </div>
+                ${badge}
+            </div>
+
+            <div class="form-grid">
+                <div>
+                    <label>Code</label>
+                    <input id="code_${index}" value="${escapeHtml(item.code || "")}" readonly>
+                </div>
+
+                <div>
+                    <label>Nom</label>
+                    <input id="name_${index}" value="${escapeHtml(item.name || "")}" oninput="syncIntegration(${index})">
+                </div>
+
+                <div>
+                    <label>Environnement</label>
+                    <select id="environment_${index}" onchange="syncIntegration(${index})">
+                        ${option("SANDBOX", item.environment)}
+                        ${option("PRODUCTION", item.environment)}
+                        ${option("INTERNAL", item.environment)}
+                    </select>
+                </div>
+
+                <div>
+                    <label>Type auth</label>
+                    <select id="auth_type_${index}" onchange="syncIntegration(${index})">
+                        ${option("API_KEY", item.auth_type)}
+                        ${option("BEARER_TOKEN", item.auth_type)}
+                        ${option("OAUTH2", item.auth_type)}
+                        ${option("BASIC", item.auth_type)}
+                        ${option("NONE", item.auth_type)}
+                    </select>
+                </div>
+
+                <div class="full">
+                    <label>Description</label>
+                    <textarea id="description_${index}" oninput="syncIntegration(${index})">${escapeHtml(item.description || "")}</textarea>
+                </div>
+
+                <div class="half">
+                    <label>Base URL</label>
+                    <input id="base_url_${index}" value="${escapeHtml(item.base_url || "")}" oninput="syncIntegration(${index})">
+                </div>
+
+                <div class="half">
+                    <label>Provider</label>
+                    <input id="provider_${index}" value="${escapeHtml(item.provider || "")}" oninput="syncIntegration(${index})">
+                </div>
+
+                <div>
+                    <label>API Key / Token</label>
+                    <input id="api_key_${index}" value="${escapeHtml(item.api_key || "")}" oninput="syncIntegration(${index})">
+                </div>
+
+                <div>
+                    <label>Client ID</label>
+                    <input id="client_id_${index}" value="${escapeHtml(item.client_id || "")}" oninput="syncIntegration(${index})">
+                </div>
+
+                <div>
+                    <label>Client Secret</label>
+                    <input id="client_secret_${index}" value="${escapeHtml(item.client_secret || "")}" oninput="syncIntegration(${index})">
+                </div>
+
+                <div>
+                    <label>Merchant ID / Phone ID</label>
+                    <input id="merchant_or_phone_${index}" value="${escapeHtml(item.merchant_id || item.phone_number_id || "")}" oninput="syncIntegration(${index})">
+                </div>
+
+                <div class="half">
+                    <label>Webhook URL</label>
+                    <input id="webhook_url_${index}" value="${escapeHtml(item.webhook_url || "")}" oninput="syncIntegration(${index})">
+                </div>
+
+                <div class="half">
+                    <label>Callback URL</label>
+                    <input id="callback_url_${index}" value="${escapeHtml(item.callback_url || "")}" oninput="syncIntegration(${index})">
+                </div>
+
+                <div class="full">
+                    <label>Notes / usage métier</label>
+                    <textarea id="notes_${index}" oninput="syncIntegration(${index})">${escapeHtml(item.notes || "")}</textarea>
+                </div>
+            </div>
+
+            <div class="switch-line">
+                <label>
+                    <input id="enabled_${index}" type="checkbox" ${item.enabled ? "checked" : ""} onchange="syncIntegration(${index})">
+                    Intégration activée
+                </label>
+
+                <button class="btn btn-test" type="button" onclick="testIntegration(${index})">
+                    Tester la connexion
+                </button>
+            </div>
+
+            <div id="test_result_${index}"></div>
+        </div>
+    `;
+}
+
+function syncIntegration(index) {
+    const item = integrations[index];
+    if (!item) return;
+
+    item.code = document.getElementById(`code_${index}`).value.trim().toUpperCase();
+    item.name = document.getElementById(`name_${index}`).value.trim();
+    item.description = document.getElementById(`description_${index}`).value.trim();
+    item.enabled = document.getElementById(`enabled_${index}`).checked;
+    item.environment = document.getElementById(`environment_${index}`).value;
+    item.auth_type = document.getElementById(`auth_type_${index}`).value;
+    item.base_url = document.getElementById(`base_url_${index}`).value.trim();
+    item.provider = document.getElementById(`provider_${index}`).value.trim();
+    item.api_key = document.getElementById(`api_key_${index}`).value.trim();
+    item.client_id = document.getElementById(`client_id_${index}`).value.trim();
+    item.client_secret = document.getElementById(`client_secret_${index}`).value.trim();
+    item.webhook_url = document.getElementById(`webhook_url_${index}`).value.trim();
+    item.callback_url = document.getElementById(`callback_url_${index}`).value.trim();
+    item.notes = document.getElementById(`notes_${index}`).value.trim();
+
+    const merchantOrPhone = document.getElementById(`merchant_or_phone_${index}`).value.trim();
+
+    if (item.code === "WHATSAPP") {
+        item.phone_number_id = merchantOrPhone;
+    } else if (item.code === "MASTERCARD") {
+        item.merchant_id = merchantOrPhone;
+    }
+}
+
+function syncAll() {
+    integrations.forEach((_, index) => syncIntegration(index));
+}
+
+async function saveIntegrations() {
+    const message = document.getElementById("message");
+
+    syncAll();
+
+    try {
+        const response = await fetch("/api/backoffice/api-integrations", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ integrations })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Erreur lors de l’enregistrement.");
+        }
+
+        integrations = data.integrations || integrations;
+        message.innerHTML = "Configuration enregistrée avec succès.";
+        renderIntegrations();
+    } catch (error) {
+        message.innerHTML = escapeHtml(error.message);
+    }
+}
+
+
+function testResultClass(status, success) {
+    if (success) return "ok";
+
+    if (status === "DISABLED" || status === "CONFIG_INCOMPLETE") {
+        return "warning";
+    }
+
+    return "error";
+}
+
+async function testIntegration(index) {
+    syncIntegration(index);
+
+    const item = integrations[index];
+    const box = document.getElementById(`test_result_${index}`);
+
+    if (!item || !box) return;
+
+    box.innerHTML = `
+        <div class="test-result warning">
+            Test de connexion en cours...
+        </div>
+    `;
+
+    try {
+        const response = await fetch(`/api/backoffice/api-integrations/${encodeURIComponent(item.code)}/test`, {
+            method: "POST",
+            cache: "no-store"
+        });
+
+        const data = await response.json();
+
+        const cls = testResultClass(data.status, data.success);
+
+        let missing = "";
+
+        if (data.missing_fields && data.missing_fields.length) {
+            missing = `<br>Champs manquants : ${data.missing_fields.join(", ")}`;
+        }
+
+        box.innerHTML = `
+            <div class="test-result ${cls}">
+                <strong>${escapeHtml(data.status || "TEST")}</strong><br>
+                ${escapeHtml(data.message || "")}
+                ${missing}
+            </div>
+        `;
+
+    } catch (error) {
+        box.innerHTML = `
+            <div class="test-result error">
+                Erreur lors du test : ${escapeHtml(error.message || "")}
+            </div>
+        `;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadIntegrations);
+</script>
+
+</body>
+</html>

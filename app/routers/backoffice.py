@@ -10,6 +10,7 @@ from app.database import get_db
 from app.models import AccountApplication, ApplicationDocument
 from app.schemas import ApplicationResponse, BackOfficeDecision
 from app.services.notification_service import notify_application_status_changed
+from app.services.package_payment_workflow import create_package_payment_after_approval
 
 
 
@@ -267,6 +268,12 @@ def get_application_detail(application_id: str, db: Session = Depends(get_db)):
             "blackmodule_alert": application.blackmodule_alert,
             "review_decision": application.review_decision,
             "review_comment": application.review_comment,
+            "package_payment_reference": getattr(application, "package_payment_reference", None),
+            "package_payment_status": getattr(application, "package_payment_status", None),
+            "package_payment_provider": getattr(application, "package_payment_provider", None),
+            "package_payment_amount": getattr(application, "package_payment_amount", 0),
+            "package_payment_currency": getattr(application, "package_payment_currency", None),
+            "package_payment_url": getattr(application, "package_payment_url", None),
             "client_message": application.client_message,
             "final_rib": application.final_rib,
             "account_number": application.account_number
@@ -336,6 +343,12 @@ def decide_application(
     application.reviewed_at = datetime.utcnow()
     application.status = payload.decision
 
+    # BACKOFFICE_AUTO_PAYMENT_AFTER_APPROVAL_V1
+    payment_workflow = None
+
+    if payload.decision == "APPROVED":
+        payment_workflow = create_package_payment_after_approval(application, db)
+
     db.commit()
     db.refresh(application)
 
@@ -344,7 +357,8 @@ def decide_application(
         "reference": application.reference,
         "decision": application.review_decision,
         "reviewed_by": application.reviewed_by,
-        "status": application.status
+        "status": application.status,
+        "payment_workflow": payment_workflow
     }
 
 
@@ -609,3 +623,230 @@ def _find_application_by_id_or_reference(db, application_id):
 
     raise HTTPException(status_code=404, detail="Dossier introuvable")
 
+
+
+# API_INTEGRATIONS_CONFIG_V1
+API_INTEGRATIONS_CONFIG_PATH = Path("data/api_integrations.json")
+
+DEFAULT_API_INTEGRATIONS = [
+    {
+        "code": "WHATSAPP",
+        "name": "WhatsApp Business API",
+        "description": "Notifications client : lien de paiement, paiement confirmé, dossier approuvé, compte ouvert.",
+        "enabled": False,
+        "environment": "SANDBOX",
+        "provider": "META_CLOUD_API",
+        "base_url": "https://graph.facebook.com",
+        "auth_type": "BEARER_TOKEN",
+        "api_key": "",
+        "client_id": "",
+        "client_secret": "",
+        "phone_number_id": "",
+        "business_account_id": "",
+        "webhook_url": "",
+        "callback_url": "",
+        "notes": "Prévoir les templates WhatsApp validés par Meta."
+    },
+    {
+        "code": "MASTERCARD",
+        "name": "Mastercard Payment Gateway",
+        "description": "Paiement des frais de souscription package après validation back-office.",
+        "enabled": False,
+        "environment": "SANDBOX",
+        "provider": "MASTERCARD_GATEWAY",
+        "base_url": "",
+        "auth_type": "API_KEY",
+        "api_key": "",
+        "client_id": "",
+        "client_secret": "",
+        "merchant_id": "",
+        "webhook_url": "",
+        "callback_url": "",
+        "notes": "Ne jamais stocker ni manipuler les numéros de carte dans l’application."
+    },
+    {
+        "code": "CORE_BANKING",
+        "name": "Core Banking / CBS",
+        "description": "Création du compte, génération du numéro de compte, génération du RIB, activation package.",
+        "enabled": False,
+        "environment": "INTERNAL",
+        "provider": "BANK_CORE",
+        "base_url": "",
+        "auth_type": "OAUTH2",
+        "api_key": "",
+        "client_id": "",
+        "client_secret": "",
+        "webhook_url": "",
+        "callback_url": "",
+        "notes": "À connecter au système bancaire central validé par la banque."
+    },
+    {
+        "code": "BLACKMODULE",
+        "name": "BLACKMODULE conformité",
+        "description": "Screening sanctions, PPE, listes internes et résultat conformité.",
+        "enabled": False,
+        "environment": "INTERNAL",
+        "provider": "BLACKMODULE",
+        "base_url": "",
+        "auth_type": "API_KEY",
+        "api_key": "",
+        "client_id": "",
+        "client_secret": "",
+        "webhook_url": "",
+        "callback_url": "",
+        "notes": "Intégration avec le moteur de filtrage conformité."
+    },
+    {
+        "code": "GED",
+        "name": "GED / archivage documentaire",
+        "description": "Archivage des pièces client : CNI, passeport, justificatifs, vidéo, photo.",
+        "enabled": False,
+        "environment": "INTERNAL",
+        "provider": "GED",
+        "base_url": "",
+        "auth_type": "API_KEY",
+        "api_key": "",
+        "client_id": "",
+        "client_secret": "",
+        "webhook_url": "",
+        "callback_url": "",
+        "notes": "Prévoir politique de conservation et droits d’accès."
+    }
+]
+
+SECRET_FIELDS = {
+    "api_key",
+    "client_secret",
+    "access_token",
+    "password",
+    "private_key"
+}
+
+
+def mask_secret_value(value):
+    if not value:
+        return ""
+
+    value = str(value)
+
+    if len(value) <= 6:
+        return "******"
+
+    return value[:3] + "******" + value[-3:]
+
+
+def normalize_integration(item: dict):
+    code = str(item.get("code") or "").strip().upper()
+
+    return {
+        "code": code,
+        "name": str(item.get("name") or code).strip(),
+        "description": str(item.get("description") or "").strip(),
+        "enabled": bool(item.get("enabled", False)),
+        "environment": str(item.get("environment") or "SANDBOX").strip().upper(),
+        "provider": str(item.get("provider") or "").strip(),
+        "base_url": str(item.get("base_url") or "").strip(),
+        "auth_type": str(item.get("auth_type") or "API_KEY").strip().upper(),
+        "api_key": str(item.get("api_key") or "").strip(),
+        "client_id": str(item.get("client_id") or "").strip(),
+        "client_secret": str(item.get("client_secret") or "").strip(),
+        "phone_number_id": str(item.get("phone_number_id") or "").strip(),
+        "business_account_id": str(item.get("business_account_id") or "").strip(),
+        "merchant_id": str(item.get("merchant_id") or "").strip(),
+        "webhook_url": str(item.get("webhook_url") or "").strip(),
+        "callback_url": str(item.get("callback_url") or "").strip(),
+        "notes": str(item.get("notes") or "").strip(),
+    }
+
+
+def ensure_api_integrations_config():
+    API_INTEGRATIONS_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    if not API_INTEGRATIONS_CONFIG_PATH.exists():
+        API_INTEGRATIONS_CONFIG_PATH.write_text(
+            json.dumps({"integrations": DEFAULT_API_INTEGRATIONS}, ensure_ascii=False, indent=2),
+            encoding="utf-8"
+        )
+
+    data = json.loads(API_INTEGRATIONS_CONFIG_PATH.read_text(encoding="utf-8"))
+    integrations = data.get("integrations") or DEFAULT_API_INTEGRATIONS
+
+    return {
+        "integrations": [
+            normalize_integration(item)
+            for item in integrations
+        ]
+    }
+
+
+def public_integration_payload(item):
+    public = dict(item)
+
+    for field in SECRET_FIELDS:
+        if field in public:
+            public[field] = mask_secret_value(public.get(field))
+
+    return public
+
+
+@router.get("/api-integrations")
+def get_api_integrations_config():
+    data = ensure_api_integrations_config()
+
+    return {
+        "integrations": [
+            public_integration_payload(item)
+            for item in data["integrations"]
+        ]
+    }
+
+
+@router.post("/api-integrations")
+def save_api_integrations_config(payload: dict = Body(...)):
+    incoming = payload.get("integrations")
+
+    if not isinstance(incoming, list):
+        raise HTTPException(status_code=400, detail="Le champ integrations doit être une liste.")
+
+    current_data = ensure_api_integrations_config()
+    current_by_code = {
+        item["code"]: item
+        for item in current_data["integrations"]
+    }
+
+    cleaned = []
+
+    for item in incoming:
+        if not isinstance(item, dict):
+            continue
+
+        normalized = normalize_integration(item)
+        code = normalized["code"]
+
+        if not code:
+            continue
+
+        old = current_by_code.get(code, {})
+
+        # Si le champ secret est vide ou masqué, on conserve l’ancienne valeur.
+        for field in SECRET_FIELDS:
+            value = str(normalized.get(field) or "").strip()
+
+            if not value or "******" in value:
+                normalized[field] = old.get(field, "")
+
+        cleaned.append(normalized)
+
+    API_INTEGRATIONS_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    API_INTEGRATIONS_CONFIG_PATH.write_text(
+        json.dumps({"integrations": cleaned}, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+
+    return {
+        "message": "Configuration des intégrations API enregistrée.",
+        "integrations": [
+            public_integration_payload(item)
+            for item in cleaned
+        ]
+    }
