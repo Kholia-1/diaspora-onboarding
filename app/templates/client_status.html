@@ -192,7 +192,7 @@
     <h2>First Diaspora Onboarding</h2>
     <div>
         <a href="/">Accueil</a>
-        <a href="/open-account-flow-test">Ouvrir un compte</a>
+        <a href="/open-account-test">Ouvrir un compte</a>
     </div>
 </div>
 
@@ -874,6 +874,381 @@
 })();
 </script>
 
+
+<!-- CLIENT_STATUS_PAYMENT_CLIENT_SAFE_V1 -->
+<style>
+.payment-client-safe-card {
+    margin-top: 14px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1e3a8a;
+    border-radius: 16px;
+    padding: 14px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.payment-client-safe-card strong {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 5px;
+}
+
+.payment-client-safe-card p {
+    margin: 0;
+}
+</style>
+
+<script>
+(function () {
+    if (window.__clientStatusPaymentSafeV1) return;
+    window.__clientStatusPaymentSafeV1 = true;
+
+    function normalizeText(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase();
+    }
+
+    function createPaymentInfoCard() {
+        const card = document.createElement("div");
+        card.className = "payment-client-safe-card";
+        card.innerHTML = `
+            <strong>Paiement en attente de validation</strong>
+            <p>Après validation de votre dossier, la banque vous transmettra un lien de paiement sécurisé par SMS, WhatsApp ou e-mail.</p>
+        `;
+        return card;
+    }
+
+    function protectPaymentArea() {
+        document.querySelectorAll("button, a").forEach(function (el) {
+            const text = normalizeText(el.textContent);
+
+            if (
+                text.includes("generer le lien de paiement") ||
+                text.includes("paiement en attente de validation")
+            ) {
+                const card = createPaymentInfoCard();
+                el.replaceWith(card);
+            }
+        });
+
+        document.querySelectorAll("*").forEach(function (el) {
+            if (!el.childNodes || el.childNodes.length !== 1) return;
+
+            const child = el.childNodes[0];
+            if (!child || child.nodeType !== Node.TEXT_NODE) return;
+
+            const raw = child.textContent || "";
+            const normalized = normalizeText(raw);
+
+            if (normalized.includes("le lien de paiement sera genere par la banque apres validation du dossier")) {
+                child.textContent = "Après validation de votre dossier, la banque vous transmettra un lien de paiement sécurisé par SMS, WhatsApp ou e-mail.";
+            }
+        });
+    }
+
+    document.addEventListener("click", function (event) {
+        const target = event.target.closest ? event.target.closest("button, a") : null;
+        if (!target) return;
+
+        const text = normalizeText(target.textContent);
+
+        if (
+            text.includes("generer le lien de paiement") ||
+            text.includes("paiement en attente de validation")
+        ) {
+            event.preventDefault();
+            event.stopPropagation();
+            protectPaymentArea();
+        }
+    }, true);
+
+    document.addEventListener("DOMContentLoaded", function () {
+        protectPaymentArea();
+
+        let count = 0;
+        const timer = setInterval(function () {
+            protectPaymentArea();
+            count += 1;
+
+            if (count >= 10) {
+                clearInterval(timer);
+            }
+        }, 600);
+
+        setTimeout(protectPaymentArea, 1500);
+        setTimeout(protectPaymentArea, 3000);
+    });
+})();
+</script>
+<!-- /CLIENT_STATUS_PAYMENT_CLIENT_SAFE_V1 -->
+
+
+<!-- MASTER_CARD_CLIENT_STATUS_PAYMENT_BANNER_V1 -->
+<script>
+(function () {
+    function getPaymentOrderId() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            return params.get("payment_order_id") || "";
+        } catch (e) {
+            return "";
+        }
+    }
+
+    function createBanner(payment) {
+        const paid = payment && payment.paid === true;
+        const amount = payment && payment.amount_captured ? payment.amount_captured : "";
+        const currency = payment && payment.currency ? payment.currency : "";
+        const orderId = payment && payment.order_id ? payment.order_id : "";
+        const receipt = payment && payment.receipt ? payment.receipt : "";
+        const card = payment && payment.masked_card ? payment.masked_card : "";
+
+        const box = document.createElement("div");
+        box.id = "mastercardPaymentClientBanner";
+        box.style.maxWidth = "980px";
+        box.style.margin = "18px auto";
+        box.style.padding = "18px 20px";
+        box.style.borderRadius = "16px";
+        box.style.boxShadow = "0 10px 30px rgba(15, 23, 42, 0.10)";
+        box.style.fontFamily = "Arial, sans-serif";
+
+        if (paid) {
+            box.style.background = "#ecfdf3";
+            box.style.border = "1px solid #22c55e";
+            box.style.color = "#064e3b";
+            box.innerHTML = `
+                <div style="font-size:20px;font-weight:800;margin-bottom:8px;">
+                    Paiement confirmé
+                </div>
+                <div style="font-size:15px;line-height:1.55;">
+                    Votre paiement de <strong>${amount} ${currency}</strong> a été confirmé avec succès.
+                    Votre dossier est en cours de mise à jour.
+                </div>
+                <div style="margin-top:10px;font-size:13px;color:#065f46;">
+                    Référence paiement : <strong>${orderId}</strong>
+                    ${receipt ? " · Reçu : <strong>" + receipt + "</strong>" : ""}
+                    ${card ? " · Carte : <strong>" + card + "</strong>" : ""}
+                </div>
+            `;
+        } else {
+            box.style.background = "#fff7df";
+            box.style.border = "1px solid #facc15";
+            box.style.color = "#78350f";
+            box.innerHTML = `
+                <div style="font-size:20px;font-weight:800;margin-bottom:8px;">
+                    Vérification du paiement en cours
+                </div>
+                <div style="font-size:15px;line-height:1.55;">
+                    Nous avons reçu votre retour de paiement. La confirmation finale est en cours de vérification.
+                </div>
+            `;
+        }
+
+        return box;
+    }
+
+    async function loadPaymentStatus() {
+        const orderId = getPaymentOrderId();
+        if (!orderId) return;
+
+        try {
+            const response = await fetch("/api/payments/mastercard/records/latest?order_id=" + encodeURIComponent(orderId));
+            const data = await response.json();
+
+            const banner = createBanner(data && data.payment ? data.payment : null);
+
+            const target = document.body;
+            if (!target) return;
+
+            target.insertBefore(banner, target.firstChild);
+
+        } catch (e) {
+            const banner = createBanner(null);
+            if (document.body) {
+                document.body.insertBefore(banner, document.body.firstChild);
+            }
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", loadPaymentStatus);
+    } else {
+        loadPaymentStatus();
+    }
+})();
+</script>
+
+
+<script>
+/* CLIENT_SELF_PAYMENT_LINK_PANEL_V1 */
+(function () {
+    function findApplicationReference() {
+        const params = new URLSearchParams(window.location.search);
+
+        const keys = ["reference", "ref", "application_reference", "dossier"];
+
+        for (const key of keys) {
+            const value = params.get(key);
+            if (value && value.startsWith("DIA-")) {
+                return value.trim();
+            }
+        }
+
+        const bodyText = document.body.innerText || "";
+        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
+        return match ? match[0] : null;
+    }
+
+    function createPaymentPanel(reference) {
+        const wrapper = document.createElement("div");
+        wrapper.id = "clientSelfPaymentLinkPanel";
+        wrapper.style.cssText = "margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);";
+
+        wrapper.innerHTML = `
+            <h3 style="margin:0 0 8px 0;color:#b00020;">Paiement du package</h3>
+            <p style="margin:0 0 12px 0;color:#555;">
+                Si votre dossier est approuvé et qu’un paiement est requis, vous pouvez récupérer votre lien de paiement sécurisé Mastercard ici.
+            </p>
+
+            <div style="margin-bottom:10px;">
+                <label style="font-weight:700;">Référence dossier</label>
+                <input id="clientPaymentReferenceInput" value="${reference || ""}" readonly
+                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+            </div>
+
+            <div style="margin-bottom:10px;">
+                <label style="font-weight:700;">Email ou téléphone utilisé dans le dossier</label>
+                <input id="clientPaymentIdentifierInput" placeholder="Ex: email@domaine.com ou +2376..."
+                    style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+            </div>
+
+            <button id="clientGeneratePaymentLinkBtn" type="button"
+                style="padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
+                Afficher mon lien de paiement
+            </button>
+
+            <div id="clientPaymentLinkResult" style="margin-top:14px;"></div>
+        `;
+
+        return wrapper;
+    }
+
+    async function generatePaymentLink() {
+        const reference = document.getElementById("clientPaymentReferenceInput").value.trim();
+        const identifier = document.getElementById("clientPaymentIdentifierInput").value.trim();
+        const resultBox = document.getElementById("clientPaymentLinkResult");
+
+        if (!reference) {
+            resultBox.innerHTML = `<div style="color:#dc3545;">Référence dossier introuvable.</div>`;
+            return;
+        }
+
+        if (!identifier) {
+            resultBox.innerHTML = `<div style="color:#dc3545;">Veuillez saisir votre email ou téléphone pour vérifier le dossier.</div>`;
+            return;
+        }
+
+        resultBox.innerHTML = `<div style="color:#555;">Génération du lien en cours...</div>`;
+
+        try {
+            const response = await fetch("/api/client/payment-link/generate", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    application_reference: reference,
+                    identifier: identifier,
+                    send_whatsapp: false
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                resultBox.innerHTML = `
+                    <div style="padding:10px;border-radius:8px;background:#fff3cd;color:#664d03;">
+                        ${data.detail || data.message || "Lien de paiement non disponible."}
+                    </div>
+                `;
+                return;
+            }
+
+            if (data.status === "PAYMENT_ALREADY_CONFIRMED") {
+                resultBox.innerHTML = `
+                    <div style="padding:10px;border-radius:8px;background:#d1e7dd;color:#0f5132;">
+                        ${data.message}
+                    </div>
+                `;
+                return;
+            }
+
+            const link = data.payment && data.payment.full_payment_url ? data.payment.full_payment_url : "";
+
+            resultBox.innerHTML = `
+                <div style="padding:12px;border-radius:8px;background:#f8f9fa;">
+                    <strong>Lien de paiement sécurisé Mastercard</strong><br>
+                    <input id="clientPaymentGeneratedLink" value="${link}" readonly
+                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:8px;">
+
+                    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                        <a href="${link}" target="_blank"
+                           style="padding:10px 14px;border-radius:8px;background:#D22630;color:#fff;text-decoration:none;font-weight:700;">
+                            Payer maintenant
+                        </a>
+
+                        <button type="button"
+                            onclick="navigator.clipboard.writeText(document.getElementById('clientPaymentGeneratedLink').value).then(()=>alert('Lien copié'))"
+                            style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
+                            Copier le lien
+                        </button>
+                    </div>
+
+                    <div style="margin-top:8px;color:#555;font-size:13px;">
+                        Référence paiement : ${data.payment.payment_reference}<br>
+                        Montant : ${data.payment.amount} ${data.payment.currency}
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            resultBox.innerHTML = `
+                <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
+                    Erreur lors de la génération du lien. Veuillez réessayer.
+                </div>
+            `;
+        }
+    }
+
+    function init() {
+        const reference = findApplicationReference();
+
+        if (!reference) {
+            return;
+        }
+
+        const panel = createPaymentPanel(reference);
+
+        const target =
+            document.querySelector("main") ||
+            document.querySelector(".container") ||
+            document.body;
+
+        target.appendChild(panel);
+
+        document.getElementById("clientGeneratePaymentLinkBtn").addEventListener("click", generatePaymentLink);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+})();
+</script>
+
 </body>
 </html>
 
@@ -1231,7 +1606,7 @@
             return {
                 key: "pending",
                 label: "Paiement en attente",
-                help: "Une référence de paiement a été générée, mais le paiement n’est pas encore confirmé."
+                help: "Votre dossier est en cours de traitement. Le paiement sera disponible uniquement après validation par la banque."
             };
         }
 
@@ -1262,7 +1637,7 @@
             action = `
                 <button class="payment-action-secondary" type="button"
                         onclick="window.__generatePackagePaymentFromStatus('${escapeHtml(app.reference)}')">
-                    Générer le lien de paiement
+                    Paiement en attente de validation
                 </button>
             `;
         }
@@ -1455,7 +1830,7 @@
 
             if (button) {
                 button.disabled = false;
-                button.textContent = originalText || "Générer le lien de paiement";
+                button.textContent = originalText || "Paiement en attente de validation";
             }
         }
     }
@@ -1522,7 +1897,7 @@
                 if (box && !box.querySelector(".payment-wait-bank")) {
                     box.insertAdjacentHTML(
                         "beforeend",
-                        '<div class="payment-wait-bank">Le lien de paiement sera généré par la banque après validation du dossier.</div>'
+                        '<div class="payment-wait-bank">Après validation de votre dossier, la banque vous transmettra un lien de paiement sécurisé par SMS, WhatsApp ou e-mail.</div>'
                     );
                 }
             }
@@ -1541,5 +1916,246 @@
             subtree: true
         });
     });
+})();
+</script>
+
+<!-- CLIENT_STATUS_OPENED_ACCOUNT_DISPLAY_V1 -->
+<style>
+  .client-opened-account-v1 {
+    margin-top: 14px;
+    background: linear-gradient(135deg, #ecfdf5, #ffffff);
+    border: 1px solid #bbf7d0;
+    border-left: 6px solid #16a34a;
+    border-radius: 14px;
+    padding: 14px;
+    color: #064e3b;
+    line-height: 1.5;
+  }
+
+  .client-opened-account-v1 h4 {
+    margin: 0 0 10px 0;
+    color: #166534;
+    font-size: 17px;
+  }
+
+  .client-opened-account-grid-v1 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .client-opened-account-item-v1 {
+    background: #ffffff;
+    border: 1px solid #d1fae5;
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .client-opened-account-item-v1 strong {
+    display: block;
+    color: #065f46;
+    margin-bottom: 4px;
+  }
+
+  .client-opened-account-full-v1 {
+    grid-column: 1 / -1;
+  }
+
+  .client-opened-account-badge-v1 {
+    display: inline-flex;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    color: #166534;
+    font-weight: 800;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 800px) {
+    .client-opened-account-grid-v1 {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+(function () {
+  const MARKER = "CLIENT_STATUS_OPENED_ACCOUNT_DISPLAY_V1";
+
+  if (window.__clientStatusOpenedAccountV1Loaded) {
+    return;
+  }
+
+  window.__clientStatusOpenedAccountV1Loaded = true;
+
+  const processed = new Set();
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function findEmailValue() {
+    const inputs = Array.from(document.querySelectorAll("input"));
+
+    const emailInput = inputs.find(input => {
+      const type = String(input.type || "").toLowerCase();
+      const name = String(input.name || input.id || input.placeholder || "").toLowerCase();
+
+      return type === "email" || name.includes("email") || name.includes("mail");
+    });
+
+    if (emailInput && emailInput.value && emailInput.value.includes("@")) {
+      return emailInput.value.trim();
+    }
+
+    const anyWithEmail = inputs.find(input => String(input.value || "").includes("@"));
+
+    return anyWithEmail ? anyWithEmail.value.trim() : "";
+  }
+
+  function extractReferences() {
+    const text = document.body.innerText || "";
+    const matches = text.match(/DIA-\d{8}-[A-Z0-9]+/g) || [];
+
+    return Array.from(new Set(matches));
+  }
+
+  function findCardForReference(reference) {
+    const all = Array.from(document.querySelectorAll("section, article, .card, .status-card, .application-card, .result-card, div"));
+
+    const candidates = all.filter(el => {
+      const text = el.innerText || "";
+      return text.includes(reference) && text.length < 4000;
+    });
+
+    if (!candidates.length) {
+      return null;
+    }
+
+    candidates.sort((a, b) => {
+      return (a.innerText || "").length - (b.innerText || "").length;
+    });
+
+    return candidates[0];
+  }
+
+  function renderOpenedAccount(account) {
+    const accountNumber = account.account_number || "Non renseigné";
+    const rib = account.rib || "Non renseigné";
+    const message = account.message_to_client || "Votre compte a été ouvert par la banque.";
+    const paymentStatus = account.payment_status || "PAID";
+
+    return `
+      <div class="client-opened-account-v1" data-opened-account-ref="${escapeHtml(account.application_reference)}">
+        <span class="client-opened-account-badge-v1">Compte ouvert</span>
+        <h4>Informations finales du compte</h4>
+
+        <div class="client-opened-account-grid-v1">
+          <div class="client-opened-account-item-v1">
+            <strong>Référence dossier</strong>
+            ${escapeHtml(account.application_reference)}
+          </div>
+
+          <div class="client-opened-account-item-v1">
+            <strong>Statut paiement</strong>
+            ${escapeHtml(paymentStatus)}
+          </div>
+
+          <div class="client-opened-account-item-v1">
+            <strong>Numéro de compte</strong>
+            ${escapeHtml(accountNumber)}
+          </div>
+
+          <div class="client-opened-account-item-v1 client-opened-account-full-v1">
+            <strong>RIB final Afriland</strong>
+            ${escapeHtml(rib)}
+          </div>
+
+          <div class="client-opened-account-item-v1 client-opened-account-full-v1">
+            <strong>Message de la banque</strong>
+            ${escapeHtml(message)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function injectOpenedAccount(reference, email) {
+    const key = reference + "|" + email;
+
+    if (processed.has(key)) {
+      return;
+    }
+
+    processed.add(key);
+
+    try {
+      const response = await fetch(
+        `/api/applications/${encodeURIComponent(reference)}/opened-account-public?email=${encodeURIComponent(email)}&v=${Date.now()}`
+      );
+
+      if (!response.ok) {
+        return;
+      }
+
+      const account = await response.json();
+
+      const card = findCardForReference(reference);
+
+      if (!card) {
+        return;
+      }
+
+      if (card.querySelector(`[data-opened-account-ref="${CSS.escape(reference)}"]`)) {
+        return;
+      }
+
+      card.insertAdjacentHTML("beforeend", renderOpenedAccount(account));
+    } catch (error) {
+      console.warn("Opened account display:", error);
+    }
+  }
+
+  function refreshOpenedAccounts() {
+    const email = findEmailValue();
+
+    if (!email) {
+      return;
+    }
+
+    const references = extractReferences();
+
+    references.forEach(reference => {
+      injectOpenedAccount(reference, email);
+    });
+  }
+
+  function startObserver() {
+    refreshOpenedAccounts();
+
+    const observer = new MutationObserver(function () {
+      refreshOpenedAccounts();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+
+    setInterval(refreshOpenedAccounts, 2000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", startObserver);
+  } else {
+    startObserver();
+  }
 })();
 </script>

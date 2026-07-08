@@ -26,6 +26,12 @@ class AccountApplication(Base):
     phone = Column(String(50), nullable=True)
     email = Column(String(150), nullable=False)
 
+    # WHATSAPP_OTP_FIELDS_V1
+    pre_onboarding_session_id = Column(String(150), nullable=True)
+    whatsapp_phone_full = Column(String(50), nullable=True)
+    whatsapp_otp_verified = Column(Boolean, default=False)
+    whatsapp_otp_verified_at = Column(DateTime, nullable=True)
+
     contact_person_1_name = Column(String(150), nullable=True)
     contact_person_1_phone = Column(String(50), nullable=True)
     contact_person_2_name = Column(String(150), nullable=True)

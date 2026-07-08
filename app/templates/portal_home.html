@@ -342,6 +342,52 @@
       }
     }
   </style>
+
+<!-- DG_HOME_LANGUAGE_SWITCHER_V2 -->
+<style>
+.home-lang-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(17, 24, 39, 0.08);
+    border: 1px solid rgba(17, 24, 39, 0.12);
+    border-radius: 999px;
+    padding: 4px;
+    margin-left: 10px;
+}
+
+.home-lang-switcher button {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 12px;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    background: transparent;
+    color: #111827;
+}
+
+.home-lang-switcher button.active {
+    background: #C90000;
+    color: #FFFFFF;
+}
+
+.home-lang-switcher button:hover {
+    background: rgba(201, 0, 0, 0.12);
+}
+
+.home-lang-switcher button.active:hover {
+    background: #C90000;
+}
+
+@media (max-width: 760px) {
+    .home-lang-switcher {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+}
+</style>
+
 </head>
 
 <body>
@@ -358,27 +404,27 @@
   <main>
     <section class="hero">
       <div class="hero-main">
-        <div class="badge">Bienvenue sur votre espace digital</div>
-        <h2>Que souhaitez-vous <span>faire aujourd’hui ?</span></h2>
-        <p>
+        <div class="badge">Services bancaires en ligne</div>
+        <h2>Comment pouvons-nous <span>vous accompagner ?</span></h2>
+        <!--<p>
           Sélectionnez le service bancaire souhaité. Le parcours d’ouverture de compte est disponible pour la démonstration,
           tandis que les autres services sont prévus dans l’évolution progressive de la plateforme.
-        </p>
+         </p> -->
       </div>
 
       <aside class="hero-side">
-        <h3>Portail client</h3>
+        <h3>Espace client </h3>
         <p>
-          Cette page sert de point d’entrée unique pour les services digitaux destinés aux clients :
-          ouverture de compte, souscription à une carte bancaire et rechargement de carte.
+            Retrouvez ici les principaux services disponibles pour préparer une demande,
+            accéder à un service bancaire ou suivre les prochaines évolutions.
         </p>
       </aside>
     </section>
 
     <section class="section">
       <div class="section-title">
-        <h3>Menu des services</h3>
-        <p>Choisissez l’opération que vous souhaitez effectuer.</p>
+        <h3>Services disponibles</h3>
+        <p>Choisissez le service qui correspond à votre besoin.</p>
       </div>
 
       <div class="services-grid">
@@ -386,25 +432,27 @@
           <div>
             <div class="service-icon">🏦</div>
             <div class="service-status ready">Disponible</div>
-            <h4>Ouvrir un compte</h4>
+            <h4>Démarrer une ouverture de compte à distance</h4>
             <p>
-              Démarrer une ouverture de compte à distance pour un client Diaspora :
-              choix du type de compte, documents requis et formulaire de demande.
+              <p>
+                  Préparez une demande d’ouverture de compte à distance avec les informations et                      documents nécessaires.
+              </p>.
             </p>
           </div>
           <div class="service-actions">
-            <a class="btn-primary" href="/open-account-flow-test">Commencer</a>
+            <a class="btn-primary" href="/open-account-flow-test"> Créer un compte </a>
           </div>
         </article>
 
         <article class="service-card">
           <div>
             <div class="service-icon">💳</div>
-            <div class="service-status evolution">Lien officiel en attente</div>
+            <div class="service-status evolution">Bientôt disponible</div>
             <h4>Souscrire à une carte bancaire</h4>
             <p>
-              Demander une carte bancaire liée au compte du client, avec choix du type de carte,
-              des plafonds et des options disponibles.
+              <p>
+                Accédez prochainement à la souscription de carte bancaire selon les offres et                       conditions de la banque.
+              </p>
             </p>
           </div>
           <div class="service-actions">
@@ -415,11 +463,10 @@
         <article class="service-card">
           <div>
             <div class="service-icon">🔁</div>
-            <div class="service-status evolution">Lien officiel en attente</div>
+            <div class="service-status evolution">Bientôt disponible</div>
             <h4>Recharger ma carte</h4>
             <p>
-              Service prévu pour permettre au client de recharger une carte bancaire ou prépayée
-              selon les règles et canaux autorisés par la banque.
+              Rechargez prochainement votre carte via les canaux autorisés par la banque.
             </p>
           </div>
           <div class="service-actions">
@@ -432,7 +479,7 @@
 
   <footer class="footer">
     <span>© Afriland First Bank — Portail digital client</span>
-    <span>Version MVP évolutive</span>
+    <span>Service digital en cours d’évolution</span>
   </footer>
 
   <div class="toast" id="toast"></div>
@@ -440,7 +487,7 @@
   <script>
     function showSoon(serviceName) {
       const toast = document.getElementById("toast");
-      toast.innerHTML = "<strong>" + serviceName + "</strong><br>Ce service est prévu dans une prochaine évolution de la plateforme.";
+      toast.innerHTML = "<strong>" + serviceName + "</strong><br>Ce service sera disponible prochainement.";
       toast.classList.add("show");
 
       setTimeout(function () {
@@ -450,7 +497,7 @@
   
     function showOfficialLinkPending(serviceName) {
       const toast = document.getElementById("toast");
-      toast.innerHTML = "<strong>" + serviceName + "</strong><br>Ce service existe déjà à la banque. Le lien officiel sera connecté dans une prochaine mise à jour.";
+      toast.innerHTML = "<strong>" + serviceName + "</strong><br>Ce service sera relié prochainement au canal officiel de la banque.";
       toast.classList.add("show");
 
       setTimeout(function () {
@@ -458,5 +505,210 @@
       }, 4200);
     }
   </script>
+
+<!-- DG_HOME_LANGUAGE_SWITCHER_SCRIPT_V2 -->
+<script>
+(function () {
+    if (window.__dgHomeLanguageSwitcherV2) return;
+    window.__dgHomeLanguageSwitcherV2 = true;
+
+    const STORAGE_KEY = "diaspora_client_lang";
+
+    const DICT = [
+        ["© Afriland First Bank - Portail digital client", "© Afriland First Bank - Digital customer portal"],
+        ["Portail digital client", "Digital customer portal"],
+        ["Portail digital de services bancaires", "Digital banking services portal"],
+        ["Services bancaires en ligne", "Online banking services"],
+        ["Online banking services", "Online banking services"],
+
+        ["Comment pouvons-nous", "How can we"],
+        ["vous accompagner ?", "assist you?"],
+        ["Comment pouvons-nous vous accompagner ?", "How can we assist you?"],
+
+        ["Espace client", "Customer area"],
+        [
+            "Retrouvez ici les principaux services disponibles pour préparer une demande, accéder à un service bancaire ou suivre les prochaines évolutions.",
+            "Find the main available services here to prepare a request, access a banking service or follow upcoming updates."
+        ],
+
+        ["Services disponibles", "Available services"],
+        ["Available services", "Available services"],
+        ["Choisissez le service qui correspond à votre besoin.", "Choose the service that matches your needs."],
+
+        ["DISPONIBLE", "AVAILABLE"],
+        ["Disponible", "Available"],
+        ["COMING SOON", "COMING SOON"],
+        ["Bientôt disponible", "COMING SOON"],
+
+        ["Démarrer une ouverture de compte à distance", "Start remote account opening"],
+        ["Ouverture de compte", "Account opening"],
+        ["Ouvrir un compte", "Open an account"],
+        [
+            "Préparez une demande d’ouverture de compte à distance avec les informations et documents nécessaires.",
+            "Prepare a remote account opening request with the required information and documents."
+        ],
+        ["Créer un compte", "Create an account"],
+        ["Commencer", "Start"],
+
+        ["Souscrire à une carte bancaire", "Apply for a bank card"],
+        ["Apply for a bank card", "Apply for a bank card"],
+        [
+            "Accédez prochainement à la souscription de carte bancaire selon les offres et conditions de la banque.",
+            "Bank card subscription will soon be available according to the bank’s offers and conditions."
+        ],
+
+        ["Recharger ma carte", "Top up my card"],
+        ["Top up my card", "Top up my card"],
+        [
+            "Rechargez prochainement votre carte via les canaux autorisés par la banque.",
+            "You will soon be able to top up your card through the bank’s authorized channels."
+        ],
+
+        ["Accéder", "Access"],
+        ["Access", "Access"],
+
+        ["Menu des services", "Services menu"],
+        ["Service digital en cours d’évolution", "Digital service under development"],
+
+        ["Ce service sera disponible prochainement.", "This service will be available soon."],
+        [
+            "Ce service sera relié prochainement au canal officiel de la banque.",
+            "This service will soon be connected to the bank’s official channel."
+        ]
+    ];
+
+    function currentLang() {
+        return localStorage.getItem(STORAGE_KEY) || "fr";
+    }
+
+    function normalize(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, " ")
+            .toLowerCase()
+            .trim();
+    }
+
+    function targetText(value) {
+        const normalized = normalize(value);
+        const lang = currentLang();
+
+        for (const pair of DICT) {
+            const fr = pair[0];
+            const en = pair[1];
+
+            if (normalized === normalize(fr) || normalized === normalize(en)) {
+                return lang === "en" ? en : fr;
+            }
+        }
+
+        return null;
+    }
+
+    function translateTextNodes() {
+        const walker = document.createTreeWalker(
+            document.body,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode: function (node) {
+                    const parent = node.parentElement;
+                    if (!parent) return NodeFilter.FILTER_REJECT;
+
+                    const tag = parent.tagName ? parent.tagName.toLowerCase() : "";
+                    if (tag === "script" || tag === "style") {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+
+                    if (!node.textContent || !node.textContent.trim()) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            }
+        );
+
+        const nodes = [];
+        let node;
+
+        while ((node = walker.nextNode())) {
+            nodes.push(node);
+        }
+
+        nodes.forEach(function (node) {
+            const original = node.textContent;
+            const translated = targetText(original.trim());
+
+            if (translated) {
+                const leading = original.match(/^\s*/)[0];
+                const trailing = original.match(/\s*$/)[0];
+                node.textContent = leading + translated + trailing;
+            }
+        });
+    }
+
+    function ensureSwitcher() {
+        if (document.getElementById("homeLangSwitcher")) return;
+
+        const switcher = document.createElement("div");
+        switcher.id = "homeLangSwitcher";
+        switcher.className = "home-lang-switcher";
+        switcher.innerHTML = `
+            <button type="button" id="homeLangFr" onclick="setHomeLanguage('fr')">FR</button>
+            <button type="button" id="homeLangEn" onclick="setHomeLanguage('en')">EN</button>
+        `;
+
+        const target =
+            document.querySelector(".client-nav") ||
+            document.querySelector(".topbar-content") ||
+            document.querySelector(".header-actions") ||
+            document.querySelector("header") ||
+            document.body;
+
+        target.appendChild(switcher);
+    }
+
+    function updateButtons() {
+        const lang = currentLang();
+        const frBtn = document.getElementById("homeLangFr");
+        const enBtn = document.getElementById("homeLangEn");
+
+        if (frBtn) frBtn.classList.toggle("active", lang === "fr");
+        if (enBtn) enBtn.classList.toggle("active", lang === "en");
+    }
+
+    function translateHome() {
+        document.documentElement.lang = currentLang();
+
+        ensureSwitcher();
+        updateButtons();
+        translateTextNodes();
+    }
+
+    window.setHomeLanguage = function (lang) {
+        localStorage.setItem(STORAGE_KEY, lang === "en" ? "en" : "fr");
+        translateHome();
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        translateHome();
+
+        let count = 0;
+        const timer = setInterval(function () {
+            translateHome();
+            count += 1;
+
+            if (count >= 10) {
+                clearInterval(timer);
+            }
+        }, 300);
+    });
+
+    setTimeout(translateHome, 800);
+    setTimeout(translateHome, 1800);
+})();
+</script>
+
 </body>
 </html>

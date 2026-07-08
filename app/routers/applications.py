@@ -220,6 +220,15 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
         phone=payload.phone,
         email=payload.email,
 
+        # WHATSAPP_OTP_SAVE_FIELDS_V1
+        pre_onboarding_session_id=payload.pre_onboarding_session_id,
+        whatsapp_phone_full=payload.whatsapp_phone_full or payload.phone,
+        whatsapp_otp_verified=bool(payload.whatsapp_otp_verified),
+        whatsapp_otp_verified_at=(
+            payload.whatsapp_otp_verified_at
+            or (datetime.now(timezone.utc) if payload.whatsapp_otp_verified else None)
+        ),
+
         contact_person_1_name=payload.contact_person_1_name,
         contact_person_1_phone=payload.contact_person_1_phone,
         contact_person_2_name=payload.contact_person_2_name,

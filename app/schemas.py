@@ -6,6 +6,9 @@ from pydantic import BaseModel, EmailStr, ConfigDict
 
 class ApplicationCreate(BaseModel):
     pre_onboarding_session_id: Optional[str] = None
+    whatsapp_phone_full: Optional[str] = None
+    whatsapp_otp_verified: Optional[bool] = False
+    whatsapp_otp_verified_at: Optional[datetime] = None
     last_name: str
     first_name: str
     birth_date: Optional[date] = None
@@ -85,6 +88,10 @@ class ApplicationResponse(BaseModel):
     address_location: Optional[str] = None
     postal_box: Optional[str] = None
     phone: Optional[str] = None
+    whatsapp_phone_full: Optional[str] = None
+    whatsapp_otp_verified: Optional[bool] = False
+    whatsapp_otp_verified_at: Optional[datetime] = None
+    pre_onboarding_session_id: Optional[str] = None
     email: str
 
     contact_person_1_name: Optional[str] = None

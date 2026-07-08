@@ -1,33 +1,227 @@
 import json
-from pathlib import Path
-import urllib.request
+import os
 import urllib.error
+import urllib.request
+from datetime import datetime, timezone
+from pathlib import Path
 
 
-CONFIG_PATH = Path("data/api_integrations.json")
+DATA_DIR = Path("data")
+CONFIG_FILE = DATA_DIR / "callbell_settings.json"
+API_INTEGRATIONS_FILE = DATA_DIR / "api_integrations.json"
+NOTIFICATION_LOG = DATA_DIR / "notifications.log"
 
 
-def load_whatsapp_config():
-    if not CONFIG_PATH.exists():
-        return None
+def _load_file_config():
+    if not CONFIG_FILE.exists():
+        return {}
 
-    data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-
-    for item in data.get("integrations", []):
-        if str(item.get("code", "")).upper() == "WHATSAPP":
-            return item
-
-    return None
+    try:
+        return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
 
 
-def whatsapp_event_message(event_type: str, context: dict):
-    event_type = str(event_type or "").upper()
+def _load_admin_callbell_config():
+    """
+    Lit la configuration Callbell depuis l'interface admin :
+    data/api_integrations.json → WHATSAPP_CALLBELL.
+    """
+    if not API_INTEGRATIONS_FILE.exists():
+        return {}
 
-    full_name = context.get("full_name") or "Cher client"
+    try:
+        data = json.loads(API_INTEGRATIONS_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+    if isinstance(data, dict):
+        items = data.get("integrations") or data.get("items") or data.get("api_integrations") or []
+        if not items:
+            items = [data]
+    elif isinstance(data, list):
+        items = data
+    else:
+        items = []
+
+    best = {}
+
+    for item in items:
+        code = str(item.get("code") or "").upper()
+        provider = str(item.get("provider") or "").upper()
+        blob = json.dumps(item, ensure_ascii=False).lower()
+
+        if code == "WHATSAPP_CALLBELL" or provider == "CALLBELL" or "callbell" in blob:
+            best = item
+            break
+
+    if not best:
+        return {}
+
+    return {
+        "enabled": best.get("enabled"),
+        "base_url": best.get("base_url") or "https://api.callbell.eu",
+        "api_token": (
+            best.get("api_key")
+            or best.get("token")
+            or best.get("bearer_token")
+            or best.get("access_token")
+            or ""
+        ),
+        "channel_uuid": (
+            best.get("channel_uuid")
+            or best.get("client_id")
+            or best.get("phone_number_id")
+            or ""
+        ),
+        "template_uuid": (
+            best.get("template_uuid")
+            or best.get("client_secret")
+            or ""
+        ),
+        "use_template": best.get("use_template", True),
+        "default_country_code": best.get("default_country_code") or "+237",
+    }
+
+
+def _first_non_empty(*values):
+    for value in values:
+        if value is None:
+            continue
+        value = str(value).strip()
+        if value:
+            return value
+    return ""
+
+
+def _as_bool(value, default=False):
+    if value is None:
+        return default
+
+    if isinstance(value, bool):
+        return value
+
+    return str(value).strip().lower() in {"1", "true", "yes", "oui", "on", "enabled"}
+
+
+def get_callbell_config():
+    file_config = _load_file_config()
+    admin_config = _load_admin_callbell_config()
+
+    enabled_value = _first_non_empty(
+        os.getenv("CALLBELL_ENABLED"),
+        admin_config.get("enabled"),
+        file_config.get("enabled")
+    )
+
+    use_template_value = _first_non_empty(
+        os.getenv("CALLBELL_USE_TEMPLATE"),
+        admin_config.get("use_template"),
+        file_config.get("use_template")
+    )
+
+    return {
+        "enabled": _as_bool(enabled_value, False),
+        "base_url": _first_non_empty(
+            os.getenv("CALLBELL_BASE_URL"),
+            admin_config.get("base_url"),
+            file_config.get("base_url"),
+            "https://api.callbell.eu"
+        ).rstrip("/"),
+        "api_token": _first_non_empty(
+            os.getenv("CALLBELL_API_TOKEN"),
+            admin_config.get("api_token"),
+            file_config.get("api_token")
+        ),
+        "channel_uuid": _first_non_empty(
+            os.getenv("CALLBELL_CHANNEL_UUID"),
+            admin_config.get("channel_uuid"),
+            file_config.get("channel_uuid")
+        ),
+        "template_uuid": _first_non_empty(
+            os.getenv("CALLBELL_TEMPLATE_UUID"),
+            admin_config.get("template_uuid"),
+            file_config.get("template_uuid")
+        ),
+        "use_template": _as_bool(use_template_value, True),
+        "default_country_code": _first_non_empty(
+            os.getenv("CALLBELL_DEFAULT_COUNTRY_CODE"),
+            admin_config.get("default_country_code"),
+            file_config.get("default_country_code"),
+            "+237"
+        ),
+    }
+
+
+def public_callbell_config_status():
+    config = get_callbell_config()
+    token = config.get("api_token") or ""
+
+    return {
+        "enabled": config["enabled"],
+        "base_url": config["base_url"],
+        "api_token_configured": bool(token),
+        "api_token_masked": f"{token[:4]}***{token[-4:]}" if len(token) >= 8 else "",
+        "channel_uuid_configured": bool(config["channel_uuid"]),
+        "channel_uuid": config["channel_uuid"],
+        "template_uuid_configured": bool(config["template_uuid"]),
+        "template_uuid": config["template_uuid"],
+        "use_template": config["use_template"],
+        "default_country_code": config["default_country_code"],
+        "ready": bool(token and config["channel_uuid"]),
+    }
+
+
+def _append_notification_log(record: dict):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+    safe_record = dict(record)
+    safe_record.pop("api_token", None)
+
+    with NOTIFICATION_LOG.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(safe_record, ensure_ascii=False) + "\n")
+
+
+def normalize_phone(phone: str, default_country_code="+237") -> str:
+    value = str(phone or "").strip()
+
+    value = (
+        value.replace(" ", "")
+        .replace("-", "")
+        .replace("(", "")
+        .replace(")", "")
+    )
+
+    if not value:
+        return ""
+
+    if value.startswith("+"):
+        return value
+
+    if value.startswith("00"):
+        return "+" + value[2:]
+
+    if value.startswith("237"):
+        return "+" + value
+
+    if value.startswith("6") and len(value) == 9:
+        return default_country_code + value
+
+    return value
+
+
+def build_whatsapp_message(event_type: str, context: dict):
+    context = context or {}
+
+    full_name = context.get("full_name") or context.get("client_name") or "Cher client"
     reference = context.get("reference") or context.get("application_reference") or ""
     payment_url = context.get("payment_url") or ""
+    package_name = context.get("package_name") or "votre package"
+    amount = context.get("amount") or ""
+    currency = context.get("currency") or "XAF"
     account_number = context.get("account_number") or ""
-    final_rib = context.get("final_rib") or ""
+
+    event_type = str(event_type or "").upper()
 
     if event_type == "DOSSIER_SOUMIS":
         return f"Bonjour {full_name}, votre dossier d’ouverture de compte diaspora {reference} a été soumis avec succès."
@@ -36,18 +230,18 @@ def whatsapp_event_message(event_type: str, context: dict):
         return f"Bonjour {full_name}, votre dossier {reference} a été approuvé par la banque."
 
     if event_type == "LIEN_PAIEMENT":
-        return f"Bonjour {full_name}, votre dossier {reference} est approuvé. Veuillez procéder au paiement de votre package ici : {payment_url}"
+        return (
+            f"Bonjour {full_name}, votre dossier {reference} est approuvé. "
+            f"Veuillez procéder au paiement de {package_name} d’un montant de {amount} {currency} ici : {payment_url}"
+        )
 
     if event_type == "PAIEMENT_CONFIRME":
         return f"Bonjour {full_name}, le paiement lié à votre dossier {reference} a été confirmé."
 
     if event_type == "COMPTE_OUVERT":
-        msg = f"Bonjour {full_name}, votre compte lié au dossier {reference} est ouvert."
         if account_number:
-            msg += f" Numéro de compte : {account_number}."
-        if final_rib:
-            msg += f" RIB : {final_rib}."
-        return msg
+            return f"Bonjour {full_name}, votre compte lié au dossier {reference} est ouvert. Numéro de compte : {account_number}."
+        return f"Bonjour {full_name}, votre compte lié au dossier {reference} est ouvert."
 
     if event_type == "COMPLEMENT_DOCUMENTAIRE":
         return f"Bonjour {full_name}, un complément documentaire est demandé pour votre dossier {reference}. Veuillez consulter votre suivi client."
@@ -55,132 +249,200 @@ def whatsapp_event_message(event_type: str, context: dict):
     return f"Bonjour {full_name}, une mise à jour est disponible pour votre dossier {reference}."
 
 
-def build_callbell_payload(config: dict, phone: str, message: str, context: dict):
-    return {
-        "provider": "CALLBELL",
-        "to": phone,
-        "channel_uuid": config.get("phone_number_id") or "",
-        "template_uuid": config.get("business_account_id") or "",
-        "message": message,
-        "context": context,
+def _build_callbell_payload(phone: str, message: str, context: dict | None = None):
+    config = get_callbell_config()
+    context = context or {}
+
+    payload = {
+        "to": normalize_phone(phone, config["default_country_code"]),
+        "from": "whatsapp",
+        "type": "text",
+        "channel_uuid": config["channel_uuid"],
+        "content": {
+            "text": message
+        },
+        "metadata": {
+            "source": "diaspora_onboarding",
+            "event_type": str(context.get("event_type") or "")[:50],
+            "reference": str(context.get("reference") or context.get("application_reference") or "")[:500],
+        }
     }
 
+    if config["use_template"] and config["template_uuid"]:
+        payload["template_uuid"] = config["template_uuid"]
+        payload["optin_contact"] = True
 
-def validate_whatsapp_config(config: dict):
-    if not config:
-        return ["Configuration WhatsApp introuvable."]
+        template_values = context.get("template_values")
+
+        if isinstance(template_values, list) and template_values:
+            payload["template_values"] = [str(v) for v in template_values]
+        else:
+            # Le template Callbell configuré attend 1 variable.
+            # Par défaut, on transmet le message préparé comme valeur unique.
+            payload["template_values"] = [str(message)]
+
+    return payload
+
+
+def send_callbell_message(phone: str, message: str, context: dict | None = None, dry_run=None):
+    config = get_callbell_config()
+    context = context or {}
+
+    payload = _build_callbell_payload(phone, message, context)
 
     missing = []
 
-    if not config.get("enabled"):
-        missing.append("Intégration WhatsApp désactivée.")
+    if not payload["to"]:
+        missing.append("Numéro WhatsApp destinataire manquant.")
 
-    if not config.get("base_url"):
-        missing.append("Base URL manquante.")
+    if not config["api_token"]:
+        missing.append("CALLBELL_API_TOKEN manquant.")
 
-    if not config.get("api_key"):
-        missing.append("Bearer Token / API Key manquant.")
+    if not config["channel_uuid"]:
+        missing.append("CALLBELL_CHANNEL_UUID manquant.")
 
-    if not config.get("phone_number_id"):
-        missing.append("Channel UUID manquant.")
+    if config["use_template"] and not config["template_uuid"]:
+        missing.append("CALLBELL_TEMPLATE_UUID manquant alors que use_template=true.")
 
-    return missing
+    if dry_run is None:
+        dry_run = not config["enabled"]
 
-
-def send_whatsapp_notification(phone: str, event_type: str, context: dict, dry_run: bool = True):
-    """
-    Envoi WhatsApp via provider configurable.
-
-    Par défaut dry_run=True :
-    - aucun message réel n'est envoyé
-    - on retourne seulement le message et le payload préparés
-
-    Pour un vrai envoi plus tard :
-    - activer WhatsApp dans /backoffice/api-integrations
-    - renseigner les paramètres Callbell
-    - appeler avec dry_run=False
-    """
-
-    config = load_whatsapp_config()
-
-    if not phone:
-        return {
-            "success": False,
-            "status": "MISSING_PHONE",
-            "message": "Numéro WhatsApp client manquant."
-        }
-
-    message = whatsapp_event_message(event_type, context or {})
-    payload = build_callbell_payload(config or {}, phone, message, context or {})
-
-    missing = validate_whatsapp_config(config)
-
-    if dry_run:
-        return {
-            "success": True,
-            "status": "DRY_RUN",
-            "message": "Simulation WhatsApp préparée. Aucun message réel envoyé.",
-            "event_type": event_type,
-            "phone": phone,
-            "prepared_message": message,
-            "payload": payload,
-            "config_warnings": missing
-        }
+    base_result = {
+        "provider": "CALLBELL",
+        "channel": "WHATSAPP",
+        "dry_run": bool(dry_run),
+        "enabled": config["enabled"],
+        "to": payload["to"],
+        "prepared_message": message,
+        "payload_preview": {
+            k: v for k, v in payload.items()
+            if k not in {"metadata"}
+        },
+        "missing": missing,
+    }
 
     if missing:
-        return {
-            "success": False,
+        result = {
+            **base_result,
             "status": "CONFIG_INCOMPLETE",
-            "message": "Configuration WhatsApp incomplète.",
-            "missing": missing,
-            "payload": payload
+            "sent": False,
         }
+        _append_notification_log({
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "event": "callbell_config_incomplete",
+            "result": result,
+        })
+        return result
 
-    base_url = str(config.get("base_url") or "").rstrip("/")
+    if dry_run:
+        result = {
+            **base_result,
+            "status": "DRY_RUN",
+            "sent": False,
+            "message": "Message préparé mais non envoyé."
+        }
+        _append_notification_log({
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "event": "callbell_dry_run",
+            "result": result,
+        })
+        return result
 
-    # Endpoint par défaut Callbell pour la démonstration.
-    # Si besoin, la banque pourra remplacer cette URL dans le service selon la documentation Callbell validée.
-    endpoint = base_url + "/v1/messages/send"
-
-    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    url = f"{config['base_url']}/v1/messages/send"
 
     request = urllib.request.Request(
-        endpoint,
-        data=body,
-        method="POST",
+        url,
+        data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         headers={
+            "Authorization": f"Bearer {config['api_token']}",
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + str(config.get("api_key") or ""),
-            "User-Agent": "Diaspora-Onboarding-WhatsApp/1.0"
-        }
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (compatible; DiasporaOnboarding/1.0; +https://diaspora-onboarding.com)",
+        },
+        method="POST",
     )
 
     try:
-        with urllib.request.urlopen(request, timeout=15) as response:
-            raw = response.read().decode("utf-8", errors="replace")
+        with urllib.request.urlopen(request, timeout=30) as response:
+            body = response.read().decode("utf-8", errors="replace")
 
-            return {
-                "success": True,
+            try:
+                parsed = json.loads(body)
+            except Exception:
+                parsed = {"raw": body}
+
+            result = {
+                **base_result,
                 "status": "SENT",
+                "sent": True,
                 "http_status": response.status,
-                "message": "Message WhatsApp envoyé via Callbell.",
-                "response": raw
+                "response": parsed,
             }
 
-    except urllib.error.HTTPError as exc:
-        raw = exc.read().decode("utf-8", errors="replace")
+            _append_notification_log({
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "event": "callbell_sent",
+                "to": payload["to"],
+                "http_status": response.status,
+                "response": parsed,
+            })
 
-        return {
-            "success": False,
+            return result
+
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")
+
+        try:
+            parsed = json.loads(body)
+        except Exception:
+            parsed = {"raw": body}
+
+        result = {
+            **base_result,
             "status": "HTTP_ERROR",
+            "sent": False,
             "http_status": exc.code,
-            "message": "Erreur HTTP lors de l’envoi WhatsApp.",
-            "response": raw
+            "response": parsed,
         }
+
+        _append_notification_log({
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "event": "callbell_http_error",
+            "to": payload["to"],
+            "http_status": exc.code,
+            "response": parsed,
+        })
+
+        return result
 
     except Exception as exc:
-        return {
-            "success": False,
+        result = {
+            **base_result,
             "status": "SEND_FAILED",
-            "message": str(exc)
+            "sent": False,
+            "error": str(exc),
         }
+
+        _append_notification_log({
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "event": "callbell_send_failed",
+            "to": payload["to"],
+            "error": str(exc),
+        })
+
+        return result
+
+
+def send_whatsapp_notification(phone: str, event_type: str, context: dict | None = None, dry_run=None):
+    context = context or {}
+    context = dict(context)
+    context["event_type"] = event_type
+
+    message = build_whatsapp_message(event_type, context)
+
+    return send_callbell_message(
+        phone=phone,
+        message=message,
+        context=context,
+        dry_run=dry_run
+    )

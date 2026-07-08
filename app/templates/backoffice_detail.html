@@ -572,9 +572,193 @@
 }
 </style>
 
+
+<style>
+/* AFB_BACKOFFICE_PRE_CONTACT_CARD_V1 */
+.afb-precontact-card {
+  margin: 18px 0 22px 0;
+  border: 1px solid #e5e7eb;
+  border-left: 5px solid #D22630;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ffffff 0%, #fff7f7 100%);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  padding: 18px 20px;
+}
+
+.afb-precontact-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.afb-precontact-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 950;
+  color: #111827;
+}
+
+.afb-precontact-subtitle {
+  margin-top: 4px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.afb-precontact-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 12px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.afb-precontact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.afb-precontact-item {
+  padding: 13px 14px;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.afb-precontact-label {
+  margin-bottom: 6px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.afb-precontact-value {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 950;
+  word-break: break-word;
+}
+
+.afb-precontact-value.empty {
+  color: #9ca3af;
+  font-weight: 800;
+}
+
+.afb-precontact-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+@media (max-width: 900px) {
+  .afb-precontact-grid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .afb-precontact-head {
+    flex-direction: column;
+  }
+
+  .afb-precontact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
 </head>
 
 <body>
+
+<!-- AFB_BACKOFFICE_OTP_VISIBLE_CARD_V2 -->
+<div class="afb-otp-card" style="
+    margin: 18px 0;
+    padding: 18px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
+        <div>
+            <h3 style="margin:0 0 6px 0;font-size:18px;color:#111827;">
+                Vérification WhatsApp OTP
+            </h3>
+            <p style="margin:0;color:#6b7280;font-size:13px;">
+                Informations issues de la pré-inscription client.
+            </p>
+        </div>
+
+        {% if application and application.whatsapp_otp_verified %}
+            <span style="padding:7px 12px;border-radius:999px;background:#dcfce7;color:#166534;font-weight:700;font-size:13px;">
+                OTP vérifié
+            </span>
+        {% else %}
+            <span style="padding:7px 12px;border-radius:999px;background:#fee2e2;color:#991b1b;font-weight:700;font-size:13px;">
+                OTP non vérifié
+            </span>
+        {% endif %}
+    </div>
+
+    <div style="
+        display:grid;
+        grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+        gap:14px;
+        margin-top:16px;
+    ">
+        <div style="padding:12px;border-radius:10px;background:#f9fafb;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Session pré-inscription</div>
+            <div style="font-weight:700;color:#111827;word-break:break-all;">
+                {{ application.pre_onboarding_session_id if application and application.pre_onboarding_session_id else "Non renseignée" }}
+            </div>
+        </div>
+
+        <div style="padding:12px;border-radius:10px;background:#f9fafb;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">WhatsApp historisé</div>
+            <div style="font-weight:700;color:#111827;">
+                {{ application.whatsapp_phone_full if application and application.whatsapp_phone_full else application.phone if application and application.phone else "Non renseigné" }}
+            </div>
+        </div>
+
+        <div style="padding:12px;border-radius:10px;background:#f9fafb;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Statut OTP WhatsApp</div>
+            <div style="font-weight:700;color:#111827;">
+                {% if application and application.whatsapp_otp_verified %}
+                    Vérifié
+                {% else %}
+                    Non vérifié
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="padding:12px;border-radius:10px;background:#f9fafb;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">Date de vérification</div>
+            <div style="font-weight:700;color:#111827;">
+                {% if application and application.whatsapp_otp_verified_at %}
+                    {{ application.whatsapp_otp_verified_at }}
+                {% else %}
+                    Non renseignée
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="topbar no-print">
     <h2>Détail du dossier</h2>
@@ -1719,6 +1903,1677 @@ async function renderComplianceSummaryV30(data) {
     });
 })();
 </script>
+
+
+<!-- BACKOFFICE_PAYMENT_SUMMARY_BANNER_V1 -->
+<script>
+(function () {
+    function findApplicationReference() {
+        const sources = [
+            window.location.href,
+            document.body ? document.body.innerText : ""
+        ];
+
+        for (const src of sources) {
+            const match = String(src || "").match(/DIA-[0-9]{8}-[A-Z0-9]+/);
+            if (match && match[0]) return match[0];
+        }
+
+        return "";
+    }
+
+    function fmt(value) {
+        if (value === null || value === undefined || value === "") return "—";
+        return String(value);
+    }
+
+    function createPaymentBanner(data) {
+        const app = data.application || {};
+        const payment = data.payment || {};
+        const computed = data.computed || {};
+
+        const confirmed = computed.payment_confirmed === true;
+        const required = computed.payment_required === true;
+        const canOpen = computed.can_open_account === true;
+
+        const box = document.createElement("div");
+        box.id = "backofficePaymentSummaryBanner";
+        box.style.maxWidth = "1180px";
+        box.style.margin = "18px auto";
+        box.style.padding = "18px 20px";
+        box.style.borderRadius = "16px";
+        box.style.boxShadow = "0 10px 30px rgba(15, 23, 42, 0.10)";
+        box.style.fontFamily = "Arial, sans-serif";
+        box.style.lineHeight = "1.45";
+
+        if (!required) {
+            box.style.background = "#f8fafc";
+            box.style.border = "1px solid #cbd5e1";
+            box.style.color = "#334155";
+            box.innerHTML = `
+                <div style="font-size:20px;font-weight:800;margin-bottom:8px;">
+                    Paiement package : non requis
+                </div>
+                <div>Ce dossier ne nécessite pas de paiement package avant ouverture du compte.</div>
+            `;
+            return box;
+        }
+
+        if (confirmed) {
+            box.style.background = "#ecfdf3";
+            box.style.border = "1px solid #22c55e";
+            box.style.color = "#064e3b";
+            box.innerHTML = `
+                <div style="font-size:20px;font-weight:800;margin-bottom:8px;">
+                    Paiement confirmé
+                </div>
+                <div>
+                    Le paiement package est confirmé. L’ouverture du compte peut se poursuivre.
+                </div>
+                <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;font-size:14px;">
+                    <div><strong>Référence :</strong><br>${fmt(payment.payment_reference || app.package_payment_reference)}</div>
+                    <div><strong>Montant :</strong><br>${fmt(payment.amount || app.package_payment_amount)} ${fmt(payment.currency || app.package_payment_currency)}</div>
+                    <div><strong>Statut :</strong><br>${fmt(payment.status || app.package_payment_status)}</div>
+                    <div><strong>Session Mastercard :</strong><br>${fmt(payment.provider_transaction_id)}</div>
+                    <div><strong>Date paiement :</strong><br>${fmt(payment.paid_at)}</div>
+                </div>
+            `;
+        } else {
+            box.style.background = "#fff7df";
+            box.style.border = "1px solid #facc15";
+            box.style.color = "#78350f";
+            box.innerHTML = `
+                <div style="font-size:20px;font-weight:800;margin-bottom:8px;">
+                    Paiement package en attente
+                </div>
+                <div>
+                    Ce dossier nécessite un paiement package avant ouverture du compte.
+                </div>
+                <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;font-size:14px;">
+                    <div><strong>Référence :</strong><br>${fmt(payment.payment_reference || app.package_payment_reference)}</div>
+                    <div><strong>Montant :</strong><br>${fmt(payment.amount || app.package_payment_amount)} ${fmt(payment.currency || app.package_payment_currency)}</div>
+                    <div><strong>Statut :</strong><br>${fmt(payment.status || app.package_payment_status)}</div>
+                    <div><strong>Blocage :</strong><br>${fmt(computed.blocking_reason)}</div>
+                </div>
+            `;
+        }
+
+        return box;
+    }
+
+    function disableAccountOpeningIfNeeded(data) {
+        const computed = data.computed || {};
+        if (computed.can_open_account === true) return;
+
+        const words = ["ouvrir le compte", "compte ouvert", "ouvrir compte", "account opened", "open account"];
+
+        const elements = Array.from(document.querySelectorAll("button, a, input[type='submit']"));
+
+        elements.forEach(function (el) {
+            const text = String(el.innerText || el.value || el.getAttribute("title") || "").toLowerCase();
+            const shouldBlock = words.some(function (w) { return text.includes(w); });
+
+            if (!shouldBlock) return;
+
+            el.setAttribute("data-payment-blocked", "true");
+            el.style.opacity = "0.55";
+            el.style.cursor = "not-allowed";
+            el.title = "Ouverture bloquée : paiement package requis mais non confirmé.";
+
+            el.addEventListener("click", function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                alert("Ouverture bloquée : le paiement package doit être confirmé avant l’ouverture du compte.");
+                return false;
+            }, true);
+        });
+    }
+
+    async function loadPaymentSummary() {
+        const appRef = findApplicationReference();
+        if (!appRef) return;
+
+        try {
+            const response = await fetch("/api/payments/mastercard/application-payment-summary/" + encodeURIComponent(appRef));
+            const data = await response.json();
+
+            if (!data || data.success !== true) return;
+
+            const banner = createPaymentBanner(data);
+
+            const main =
+                document.querySelector("main") ||
+                document.querySelector(".container") ||
+                document.querySelector(".content") ||
+                document.body;
+
+            if (!main) return;
+
+            main.insertBefore(banner, main.firstChild);
+
+            disableAccountOpeningIfNeeded(data);
+
+        } catch (e) {
+            console.log("Erreur chargement résumé paiement back-office", e);
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", loadPaymentSummary);
+    } else {
+        loadPaymentSummary();
+    }
+})();
+</script>
+
+
+<!-- BACKOFFICE_PAYMENT_SUMMARY_BANNER_FIX_V2 -->
+<script>
+(function () {
+    const MAX_ATTEMPTS = 40;
+    let attempts = 0;
+
+    function getApplicationReference() {
+        try {
+            if (window.currentApplication && window.currentApplication.reference) {
+                return String(window.currentApplication.reference).trim();
+            }
+        } catch (e) {}
+
+        const title = document.getElementById("referenceTitle");
+        if (title && title.innerText) {
+            const m = String(title.innerText).match(/DIA-[0-9]{8}-[A-Z0-9]+/);
+            if (m && m[0]) return m[0];
+        }
+
+        const bodyText = document.body ? document.body.innerText : "";
+        const m2 = String(bodyText).match(/DIA-[0-9]{8}-[A-Z0-9]+/);
+        if (m2 && m2[0]) return m2[0];
+
+        return "";
+    }
+
+    function fmt(value) {
+        if (value === null || value === undefined || value === "") return "—";
+        return String(value);
+    }
+
+    function findStatusBlock() {
+        const headings = Array.from(document.querySelectorAll("h1,h2,h3,h4,strong,div,span"));
+        const h = headings.find(el => String(el.innerText || "").trim().toLowerCase() === "statut du dossier");
+
+        if (!h) return null;
+
+        return h.closest(".card, .section, .panel, .box, article, aside, div") || h.parentElement;
+    }
+
+    function createBanner(data) {
+        const app = data.application || {};
+        const payment = data.payment || {};
+        const computed = data.computed || {};
+
+        const confirmed = computed.payment_confirmed === true;
+        const required = computed.payment_required === true;
+
+        const ref = fmt(payment.payment_reference || app.package_payment_reference);
+        const amount = fmt(payment.amount || app.package_payment_amount);
+        const currency = fmt(payment.currency || app.package_payment_currency || "XAF");
+        const status = fmt(payment.status || app.package_payment_status);
+        const session = fmt(payment.provider_transaction_id);
+        const paidAt = fmt(payment.paid_at);
+        const packageName = fmt(app.package_name);
+
+        const box = document.createElement("div");
+        box.id = "backofficePaymentSummaryBannerV2";
+        box.style.margin = "18px 0";
+        box.style.padding = "18px";
+        box.style.borderRadius = "16px";
+        box.style.boxShadow = "0 10px 28px rgba(15, 23, 42, 0.10)";
+        box.style.fontFamily = "Arial, sans-serif";
+        box.style.lineHeight = "1.45";
+
+        if (!required) {
+            box.style.background = "#f8fafc";
+            box.style.border = "1px solid #cbd5e1";
+            box.style.color = "#334155";
+            box.innerHTML = `
+                <div style="font-size:18px;font-weight:800;margin-bottom:8px;">
+                    Paiement package : non requis
+                </div>
+                <div>Ce dossier ne nécessite pas de paiement package avant ouverture du compte.</div>
+            `;
+            return box;
+        }
+
+        if (confirmed) {
+            box.style.background = "#ecfdf3";
+            box.style.border = "1px solid #22c55e";
+            box.style.color = "#064e3b";
+            box.innerHTML = `
+                <div style="font-size:18px;font-weight:800;margin-bottom:8px;">
+                    Paiement package confirmé
+                </div>
+                <div style="margin-bottom:12px;">
+                    Le paiement Mastercard est confirmé. L’ouverture du compte peut se poursuivre.
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;font-size:14px;">
+                    <div><strong>Référence paiement</strong><br>${ref}</div>
+                    <div><strong>Package</strong><br>${packageName}</div>
+                    <div><strong>Montant</strong><br>${amount} ${currency}</div>
+                    <div><strong>Statut transaction</strong><br>${status}</div>
+                    <div><strong>Session Mastercard</strong><br><span style="word-break:break-word;">${session}</span></div>
+                    <div><strong>Date paiement</strong><br>${paidAt}</div>
+                </div>
+            `;
+            return box;
+        }
+
+        box.style.background = "#fff7df";
+        box.style.border = "1px solid #facc15";
+        box.style.color = "#78350f";
+        box.innerHTML = `
+            <div style="font-size:18px;font-weight:800;margin-bottom:8px;">
+                Paiement package en attente
+            </div>
+            <div style="margin-bottom:12px;">
+                Ce dossier nécessite un paiement package avant ouverture du compte.
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;font-size:14px;">
+                <div><strong>Référence paiement</strong><br>${ref}</div>
+                <div><strong>Package</strong><br>${packageName}</div>
+                <div><strong>Montant</strong><br>${amount} ${currency}</div>
+                <div><strong>Statut transaction</strong><br>${status}</div>
+                <div><strong>Blocage</strong><br>${fmt(computed.blocking_reason)}</div>
+            </div>
+        `;
+
+        return box;
+    }
+
+    function insertBanner(banner) {
+        const old = document.getElementById("backofficePaymentSummaryBannerV2");
+        if (old) old.remove();
+
+        const statusBlock = findStatusBlock();
+
+        if (statusBlock && statusBlock.parentNode) {
+            statusBlock.parentNode.insertBefore(banner, statusBlock.nextSibling);
+            return;
+        }
+
+        const main =
+            document.querySelector("main") ||
+            document.querySelector(".container") ||
+            document.querySelector(".content") ||
+            document.body;
+
+        if (main) {
+            main.insertBefore(banner, main.firstChild);
+        }
+    }
+
+    function disableAccountOpeningIfNeeded(data) {
+        const computed = data.computed || {};
+        if (computed.can_open_account === true) return;
+
+        const words = ["ouvrir le compte", "compte ouvert", "ouvrir compte", "account opened", "open account"];
+        const elements = Array.from(document.querySelectorAll("button, a, input[type='submit']"));
+
+        elements.forEach(function (el) {
+            const text = String(el.innerText || el.value || el.getAttribute("title") || "").toLowerCase();
+            const shouldBlock = words.some(function (w) { return text.includes(w); });
+
+            if (!shouldBlock) return;
+
+            el.setAttribute("data-payment-blocked", "true");
+            el.style.opacity = "0.55";
+            el.style.cursor = "not-allowed";
+            el.title = "Ouverture bloquée : paiement package requis mais non confirmé.";
+
+            el.addEventListener("click", function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                alert("Ouverture bloquée : le paiement package doit être confirmé avant l’ouverture du compte.");
+                return false;
+            }, true);
+        });
+    }
+
+    async function loadPaymentSummaryWhenReady() {
+        attempts += 1;
+
+        const appRef = getApplicationReference();
+
+        if (!appRef) {
+            if (attempts < MAX_ATTEMPTS) {
+                setTimeout(loadPaymentSummaryWhenReady, 500);
+            }
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/payments/mastercard/application-payment-summary/" + encodeURIComponent(appRef));
+            const data = await response.json();
+
+            if (!data || data.success !== true) {
+                return;
+            }
+
+            const banner = createBanner(data);
+            insertBanner(banner);
+            disableAccountOpeningIfNeeded(data);
+
+        } catch (e) {
+            console.log("Erreur chargement résumé paiement back-office V2", e);
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", loadPaymentSummaryWhenReady);
+    } else {
+        loadPaymentSummaryWhenReady();
+    }
+
+    setTimeout(loadPaymentSummaryWhenReady, 1500);
+    setTimeout(loadPaymentSummaryWhenReady, 3000);
+})();
+</script>
+
+
+<script>
+/* PAYMENT_WHATSAPP_DIAGNOSTIC_PANEL_V1 */
+(function () {
+    function findReference() {
+        if (window.currentApplication && window.currentApplication.reference) {
+            return window.currentApplication.reference;
+        }
+
+        const bodyText = document.body.innerText || "";
+        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
+        return match ? match[0] : null;
+    }
+
+    function statusBadge(value) {
+        const v = (value || "N/A").toString();
+        let bg = "#6c757d";
+
+        if (["PAID", "PAYMENT_CONFIRMED", "PAID_CAPTURED", "read", "delivered"].includes(v)) bg = "#198754";
+        if (["PENDING", "AUTHENTICATED_NOT_CAPTURED", "enqueued"].includes(v)) bg = "#ffc107";
+        if (["FAILED", "failed", "NOT_PAID", "ERROR"].includes(v)) bg = "#dc3545";
+
+        return `<span style="display:inline-block;padding:4px 8px;border-radius:999px;background:${bg};color:#fff;font-size:12px;font-weight:700;">${v}</span>`;
+    }
+
+    function createPanel(data) {
+        const payment = data.payment || {};
+        const mastercard = data.mastercard || {};
+        const whatsapp = (data.whatsapp || {}).last || {};
+        const link = (data.actions || {}).copy_payment_link || payment.payment_link || "";
+
+        const errors = (whatsapp.errors || []).map(e => {
+            return `<li><strong>${e.code || ""}</strong> ${e.title || ""}<br><small>${e.message || e.details || ""}</small></li>`;
+        }).join("");
+
+        const html = `
+            <div id="paymentWhatsappDiagnosticPanel" style="margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+                <h3 style="margin:0 0 12px 0;color:#b00020;">Paiement & WhatsApp</h3>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+                    <div>
+                        <strong>Référence paiement</strong><br>
+                        <span>${payment.payment_reference || "N/A"}</span>
+                    </div>
+
+                    <div>
+                        <strong>Statut transaction</strong><br>
+                        ${statusBadge(payment.status)}
+                    </div>
+
+                    <div>
+                        <strong>Session Mastercard</strong><br>
+                        <small>${payment.provider_transaction_id || "N/A"}</small>
+                    </div>
+
+                    <div>
+                        <strong>WhatsApp dernier statut</strong><br>
+                        ${statusBadge(whatsapp.delivery_status || whatsapp.initial_status)}
+                    </div>
+                </div>
+
+                ${mastercard.decision ? `
+                    <div style="margin-top:14px;padding:10px;border-radius:8px;background:#f8f9fa;">
+                        <strong>Diagnostic Mastercard :</strong>
+                        ${statusBadge(mastercard.decision)}
+                        <br>
+                        <small>${mastercard.message || ""}</small>
+                    </div>
+                ` : ""}
+
+                ${link ? `
+                    <div style="margin-top:14px;">
+                        <strong>Lien de paiement</strong><br>
+                        <input id="paymentLinkInput" value="${link}" readonly style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px;">
+                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('paymentLinkInput').value).then(()=>alert('Lien copié'))" style="margin-top:8px;padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
+                            Copier le lien de paiement
+                        </button>
+                    </div>
+                ` : `
+                    <div style="margin-top:14px;color:#dc3545;">
+                        Aucun lien de paiement disponible.
+                    </div>
+                `}
+
+                ${errors ? `
+                    <div style="margin-top:14px;padding:10px;border-radius:8px;background:#fff3cd;">
+                        <strong>Erreur WhatsApp détectée :</strong>
+                        <ul style="margin-top:8px;">${errors}</ul>
+                    </div>
+                ` : ""}
+            </div>
+        `;
+
+        return html;
+    }
+
+    async function loadDiagnostic() {
+        const reference = findReference();
+        if (!reference) return;
+
+        try {
+            const url = `/api/backoffice/diagnostics/payment/${encodeURIComponent(reference)}?refresh_callbell=true&refresh_mastercard=false`;
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (!data || !data.found) return;
+
+            const panel = document.createElement("div");
+            panel.innerHTML = createPanel(data);
+
+            const target =
+                document.querySelector(".card") ||
+                document.querySelector("main") ||
+                document.body;
+
+            target.prepend(panel.firstElementChild);
+        } catch (e) {
+            console.warn("Diagnostic paiement/WhatsApp indisponible", e);
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", loadDiagnostic);
+    } else {
+        loadDiagnostic();
+    }
+})();
+</script>
+
+
+<script>
+/* BACKOFFICE_GENERATE_PAYMENT_LINK_PANEL_V1 */
+(function () {
+    function findReference() {
+        if (window.currentApplication && window.currentApplication.reference) {
+            return window.currentApplication.reference;
+        }
+
+        const bodyText = document.body.innerText || "";
+        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
+        return match ? match[0] : null;
+    }
+
+    function createPanel(reference) {
+        const panel = document.createElement("div");
+        panel.id = "backofficeGeneratePaymentLinkPanel";
+        panel.style.cssText = "margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-left:5px solid #D22630;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);";
+
+        panel.innerHTML = `
+            <h3 style="margin:0 0 10px 0;color:#b00020;">Lien de paiement Mastercard</h3>
+
+            <p style="margin:0 0 12px 0;color:#555;">
+                Après approbation du dossier, le back-office peut générer ou récupérer ici le lien de paiement du client.
+            </p>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px;">
+                <div>
+                    <label style="font-weight:700;">Référence dossier</label>
+                    <input id="boPaymentApplicationRef" value="${reference || ""}" readonly
+                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700;">Montant test facultatif</label>
+                    <input id="boPaymentAmountOverride" type="number" min="1" step="1" placeholder="Ex: 100"
+                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                </div>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button id="boGeneratePaymentLinkBtn" type="button"
+                    style="padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
+                    Générer / récupérer le lien
+                </button>
+
+                <button id="boGeneratePaymentLinkWhatsappBtn" type="button"
+                    style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
+                    Générer + tenter WhatsApp
+                </button>
+            </div>
+
+            <div id="boPaymentLinkResult" style="margin-top:14px;"></div>
+        `;
+
+        return panel;
+    }
+
+    async function generateLink(sendWhatsapp) {
+        const reference = document.getElementById("boPaymentApplicationRef").value.trim();
+        const amountRaw = document.getElementById("boPaymentAmountOverride").value.trim();
+        const resultBox = document.getElementById("boPaymentLinkResult");
+
+        if (!reference) {
+            resultBox.innerHTML = `<div style="color:#dc3545;">Référence dossier introuvable.</div>`;
+            return;
+        }
+
+        const payload = {
+            send_whatsapp: !!sendWhatsapp
+        };
+
+        if (amountRaw) {
+            payload.amount_override = Number(amountRaw);
+        }
+
+        resultBox.innerHTML = `<div style="color:#555;">Génération du lien en cours...</div>`;
+
+        try {
+            const response = await fetch(`/api/backoffice/payment-link/${encodeURIComponent(reference)}/generate`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                resultBox.innerHTML = `
+                    <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
+                        ${typeof data.detail === "object" ? (data.detail.message || JSON.stringify(data.detail)) : (data.detail || data.message || "Lien non généré.")}
+                    </div>
+                `;
+                return;
+            }
+
+            if (data.status === "PAYMENT_ALREADY_CONFIRMED") {
+                resultBox.innerHTML = `
+                    <div style="padding:10px;border-radius:8px;background:#d1e7dd;color:#0f5132;">
+                        ${data.message}
+                    </div>
+                `;
+                return;
+            }
+
+            const payment = data.payment || {};
+            const link = payment.full_payment_url || "";
+
+            const whatsappStatus = data.whatsapp
+                ? `<div style="margin-top:8px;font-size:13px;color:#555;">WhatsApp : ${data.whatsapp.status || "N/A"}</div>`
+                : "";
+
+            resultBox.innerHTML = `
+                <div style="padding:12px;border-radius:8px;background:#f8f9fa;border:1px solid #e5e7eb;">
+                    <strong>Lien Mastercard disponible</strong><br>
+
+                    <input id="boGeneratedPaymentLink" value="${link}" readonly
+                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:8px;">
+
+                    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                        <a href="${link}" target="_blank"
+                            style="padding:10px 14px;border-radius:8px;background:#D22630;color:#fff;text-decoration:none;font-weight:700;">
+                            Ouvrir le paiement
+                        </a>
+
+                        <button type="button"
+                            onclick="navigator.clipboard.writeText(document.getElementById('boGeneratedPaymentLink').value).then(()=>alert('Lien copié'))"
+                            style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
+                            Copier le lien
+                        </button>
+                    </div>
+
+                    <div style="margin-top:8px;color:#555;font-size:13px;">
+                        Référence paiement : ${payment.payment_reference || "N/A"}<br>
+                        Montant : ${payment.amount || "N/A"} ${payment.currency || ""}<br>
+                        Statut : ${payment.status || "N/A"}<br>
+                        Session Mastercard : ${payment.session_mastercard || "N/A"}
+                    </div>
+
+                    ${whatsappStatus}
+                </div>
+            `;
+        } catch (e) {
+            resultBox.innerHTML = `
+                <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
+                    Erreur technique pendant la génération du lien.
+                </div>
+            `;
+        }
+    }
+
+    function init() {
+        const reference = findReference();
+        if (!reference) return;
+
+        if (document.getElementById("backofficeGeneratePaymentLinkPanel")) return;
+
+        const panel = createPanel(reference);
+
+        const target =
+            document.querySelector("#paymentWhatsappDiagnosticPanel") ||
+            document.querySelector(".card") ||
+            document.querySelector("main") ||
+            document.body;
+
+        if (target.id === "paymentWhatsappDiagnosticPanel") {
+            target.parentNode.insertBefore(panel, target.nextSibling);
+        } else {
+            target.prepend(panel);
+        }
+
+        document.getElementById("boGeneratePaymentLinkBtn").addEventListener("click", function () {
+            generateLink(false);
+        });
+
+        document.getElementById("boGeneratePaymentLinkWhatsappBtn").addEventListener("click", function () {
+            generateLink(true);
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+})();
+</script>
+
+
+<script>
+/* BACKOFFICE_PAYMENT_PANEL_VISIBLE_FIX_V3 */
+(function () {
+    function isApplicationDetail() {
+        return /^\/backoffice\/applications\/[^\/]+/.test(window.location.pathname);
+    }
+
+    function getApplicationKey() {
+        const bodyText = document.body.innerText || "";
+        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
+        if (match) return match[0];
+
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        return parts[parts.length - 1] || "";
+    }
+
+    function removeOldHiddenPanels() {
+        document.querySelectorAll("#backofficeGeneratePaymentLinkPanel").forEach(function (el) {
+            el.remove();
+        });
+    }
+
+    function buildPanel(appKey) {
+        const div = document.createElement("div");
+        div.id = "backofficePaymentPanelVisibleV3";
+        div.style.cssText = `
+            display:block !important;
+            visibility:visible !important;
+            opacity:1 !important;
+            position:relative !important;
+            z-index:9999 !important;
+            margin:20px 0 !important;
+            padding:18px !important;
+            border:2px solid #D22630 !important;
+            border-radius:12px !important;
+            background:#fff !important;
+            color:#222 !important;
+            box-shadow:0 4px 14px rgba(0,0,0,.12) !important;
+        `;
+
+        div.innerHTML = `
+            <h3 style="margin:0 0 10px 0;color:#b00020;font-size:20px;">
+                Lien de paiement Mastercard
+            </h3>
+
+            <p style="margin:0 0 12px 0;color:#555;">
+                Générer ou récupérer le lien de paiement Mastercard pour ce dossier.
+            </p>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px;">
+                <div>
+                    <label style="font-weight:700;">Référence ou ID dossier</label>
+                    <input id="boPaymentApplicationRefV3" value="${appKey}" 
+                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                </div>
+
+                <div>
+                    <label style="font-weight:700;">Montant test facultatif</label>
+                    <input id="boPaymentAmountOverrideV3" type="number" min="1" step="1" placeholder="Ex: 100"
+                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                </div>
+            </div>
+
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button id="boGeneratePaymentLinkBtnV3" type="button"
+                    style="padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
+                    Générer / récupérer le lien
+                </button>
+
+                <button id="boGeneratePaymentLinkWhatsappBtnV3" type="button"
+                    style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
+                    Générer + tenter WhatsApp
+                </button>
+            </div>
+
+            <div id="boPaymentLinkResultV3" style="margin-top:14px;"></div>
+        `;
+
+        return div;
+    }
+
+    async function generateLink(sendWhatsapp) {
+        const refInput = document.getElementById("boPaymentApplicationRefV3");
+        const amountInput = document.getElementById("boPaymentAmountOverrideV3");
+        const resultBox = document.getElementById("boPaymentLinkResultV3");
+
+        const reference = refInput.value.trim();
+        const amountRaw = amountInput.value.trim();
+
+        if (!reference) {
+            resultBox.innerHTML = `<div style="color:#dc3545;">Référence ou ID dossier introuvable.</div>`;
+            return;
+        }
+
+        const payload = {
+            send_whatsapp: !!sendWhatsapp
+        };
+
+        if (amountRaw) {
+            payload.amount_override = Number(amountRaw);
+        }
+
+        resultBox.innerHTML = `<div style="color:#555;">Génération du lien en cours...</div>`;
+
+        try {
+            const response = await fetch(`/api/backoffice/payment-link/${encodeURIComponent(reference)}/generate`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                resultBox.innerHTML = `
+                    <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
+                        ${typeof data.detail === "object" ? (data.detail.message || JSON.stringify(data.detail)) : (data.detail || data.message || "Lien non généré.")}
+                    </div>
+                `;
+                return;
+            }
+
+            if (data.status === "PAYMENT_ALREADY_CONFIRMED") {
+                resultBox.innerHTML = `
+                    <div style="padding:10px;border-radius:8px;background:#d1e7dd;color:#0f5132;">
+                        ${data.message}
+                    </div>
+                `;
+                return;
+            }
+
+            const payment = data.payment || {};
+            const app = data.application || {};
+            const link = payment.full_payment_url || "";
+
+            resultBox.innerHTML = `
+                <div style="padding:12px;border-radius:8px;background:#f8f9fa;border:1px solid #e5e7eb;">
+                    <strong>Lien Mastercard disponible</strong><br>
+
+                    <input id="boGeneratedPaymentLinkV3" value="${link}" readonly
+                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:8px;">
+
+                    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                        <a href="${link}" target="_blank"
+                           style="padding:10px 14px;border-radius:8px;background:#D22630;color:#fff;text-decoration:none;font-weight:700;">
+                            Ouvrir le paiement
+                        </a>
+
+                        <button type="button" id="boCopyPaymentLinkBtnV3"
+                            style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
+                            Copier le lien
+                        </button>
+                    </div>
+
+                    <div style="margin-top:8px;color:#555;font-size:13px;">
+                        Dossier : ${app.reference || reference}<br>
+                        Référence paiement : ${payment.payment_reference || "N/A"}<br>
+                        Montant : ${payment.amount || "N/A"} ${payment.currency || ""}<br>
+                        Statut : ${payment.status || "N/A"}<br>
+                        Session Mastercard : ${payment.session_mastercard || "N/A"}
+                    </div>
+
+                    ${data.whatsapp ? `<div style="margin-top:8px;color:#555;font-size:13px;">WhatsApp : ${data.whatsapp.status || "N/A"}</div>` : ""}
+                </div>
+            `;
+
+            document.getElementById("boCopyPaymentLinkBtnV3").addEventListener("click", function () {
+                navigator.clipboard.writeText(document.getElementById("boGeneratedPaymentLinkV3").value)
+                    .then(function () { alert("Lien copié"); });
+            });
+
+        } catch (e) {
+            resultBox.innerHTML = `
+                <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
+                    Erreur technique pendant la génération du lien.
+                </div>
+            `;
+        }
+    }
+
+    function insertVisiblePanel() {
+        if (!isApplicationDetail()) return;
+        if (document.getElementById("backofficePaymentPanelVisibleV3")) return;
+
+        removeOldHiddenPanels();
+
+        const appKey = getApplicationKey();
+        const panel = buildPanel(appKey);
+
+        const target =
+            document.querySelector("main") ||
+            document.querySelector(".container") ||
+            document.querySelector(".content") ||
+            document.body;
+
+        target.insertBefore(panel, target.firstChild);
+
+        document.getElementById("boGeneratePaymentLinkBtnV3").addEventListener("click", function () {
+            generateLink(false);
+        });
+
+        document.getElementById("boGeneratePaymentLinkWhatsappBtnV3").addEventListener("click", function () {
+            generateLink(true);
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", insertVisiblePanel);
+    } else {
+        insertVisiblePanel();
+    }
+
+    setTimeout(insertVisiblePanel, 500);
+    setTimeout(insertVisiblePanel, 1500);
+    setTimeout(insertVisiblePanel, 3000);
+})();
+</script>
+
+
+<script>
+/* BACKOFFICE_PAYMENT_PANEL_AUTOFILL_DIA_REF_V4 */
+(function () {
+    function findDiaReference() {
+        const bodyText = document.body.innerText || "";
+        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
+        return match ? match[0] : null;
+    }
+
+    function updatePaymentPanelReference() {
+        const dia = findDiaReference();
+        if (!dia) return;
+
+        const inputs = [
+            document.getElementById("boPaymentApplicationRef"),
+            document.getElementById("boPaymentApplicationRefV3")
+        ].filter(Boolean);
+
+        inputs.forEach(function (input) {
+            if (!input.value || /^\d+$/.test(input.value.trim())) {
+                input.value = dia;
+            }
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", updatePaymentPanelReference);
+    } else {
+        updatePaymentPanelReference();
+    }
+
+    setTimeout(updatePaymentPanelReference, 500);
+    setTimeout(updatePaymentPanelReference, 1500);
+    setTimeout(updatePaymentPanelReference, 3000);
+})();
+</script>
+
+
+<script>
+/* BACKOFFICE_DECISION_SIMPLIFIED_UI_V1 */
+(function () {
+    function isBackofficeDetailPage() {
+        return /^\/backoffice\/applications\/[^\/]+/.test(window.location.pathname);
+    }
+
+    function findApplicationRefOrId() {
+        const bodyText = document.body.innerText || "";
+        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
+        if (match) return match[0];
+
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        return parts[parts.length - 1] || "";
+    }
+
+    function badge(text, type) {
+        let bg = "#6c757d";
+        let color = "#fff";
+
+        if (type === "success") bg = "#198754";
+        if (type === "warning") {
+            bg = "#ffc107";
+            color = "#111";
+        }
+        if (type === "danger") bg = "#dc3545";
+        if (type === "info") bg = "#0d6efd";
+
+        return `<span style="display:inline-block;padding:5px 10px;border-radius:999px;background:${bg};color:${color};font-weight:800;font-size:12px;">${text}</span>`;
+    }
+
+    function normalize(value) {
+        return (value || "").toString().trim().toUpperCase();
+    }
+
+    function isPaymentConfirmed(data) {
+        const app = data.application || {};
+        const payment = data.payment || {};
+
+        const appPaymentStatus = normalize(app.package_payment_status);
+        const appStatus = normalize(app.status);
+        const paymentStatus = normalize(payment.status);
+
+        return (
+            ["PAID", "PAYMENT_CONFIRMED", "CONFIRMED", "CAPTURED", "SUCCESS"].includes(appPaymentStatus) ||
+            ["PAYMENT_CONFIRMED"].includes(appStatus) ||
+            ["PAID", "PAYMENT_CONFIRMED", "CONFIRMED", "CAPTURED", "SUCCESS"].includes(paymentStatus)
+        );
+    }
+
+    function isPaymentRequired(data) {
+        const app = data.application || {};
+        const payment = data.payment || {};
+
+        if (normalize(app.package_payment_status) === "NOT_REQUIRED") return false;
+        if (payment && payment.payment_reference) return true;
+        if (app.package_payment_reference) return true;
+
+        return false;
+    }
+
+    function buildDecisionPanel(data) {
+        const app = data.application || {};
+        const payment = data.payment || {};
+        const actions = data.actions || {};
+
+        const required = isPaymentRequired(data);
+        const confirmed = isPaymentConfirmed(data);
+
+        let stateHtml = "";
+        let actionHtml = "";
+
+        if (!required) {
+            stateHtml = `
+                ${badge("Paiement non requis", "success")}
+                <p style="margin:8px 0 0 0;color:#444;">
+                    Ce dossier peut être ouvert directement après validation back-office.
+                </p>
+            `;
+            actionHtml = `
+                <strong>Action autorisée :</strong> saisir le numéro de compte et le RIB, puis ouvrir le compte.
+            `;
+        } else if (required && !confirmed) {
+            stateHtml = `
+                ${badge("Paiement en attente", "warning")}
+                <p style="margin:8px 0 0 0;color:#664d03;">
+                    Le paiement est requis mais non confirmé. Le compte ne doit pas être ouvert.
+                </p>
+            `;
+
+            const link = actions.copy_payment_link || payment.payment_link || payment.payment_url || "";
+
+            actionHtml = `
+                <strong>Action à faire :</strong> générer ou copier le lien Mastercard et attendre la confirmation du paiement.
+                ${link ? `
+                    <div style="margin-top:10px;">
+                        <input id="decisionPaymentLinkCopyInput" value="${link}" readonly
+                            style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+                        <button type="button" id="decisionPaymentLinkCopyBtn"
+                            style="margin-top:8px;padding:9px 12px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:800;cursor:pointer;">
+                            Copier le lien de paiement
+                        </button>
+                    </div>
+                ` : ""}
+            `;
+        } else {
+            stateHtml = `
+                ${badge("Paiement confirmé", "success")}
+                <p style="margin:8px 0 0 0;color:#0f5132;">
+                    Le paiement est confirmé. Le back-office peut ouvrir le compte.
+                </p>
+            `;
+            actionHtml = `
+                <strong>Action autorisée :</strong> saisir le numéro de compte et le RIB final, puis enregistrer l’ouverture.
+            `;
+        }
+
+        return `
+            <div id="backofficeDecisionSimplifiedPanel" style="margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-left:5px solid #0d6efd;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+                <h3 style="margin:0 0 10px 0;color:#0d3b66;">Décision back-office simplifiée</h3>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;">
+                    <div style="padding:12px;border-radius:10px;background:#f8f9fa;">
+                        <strong>Dossier</strong><br>
+                        <span>${app.reference || findApplicationRefOrId()}</span><br>
+                        <small>Statut : ${app.status || "N/A"}</small>
+                    </div>
+
+                    <div style="padding:12px;border-radius:10px;background:#f8f9fa;">
+                        <strong>Paiement</strong><br>
+                        ${stateHtml}
+                    </div>
+
+                    <div style="padding:12px;border-radius:10px;background:#f8f9fa;">
+                        <strong>Référence paiement</strong><br>
+                        <span>${payment.payment_reference || app.package_payment_reference || "Aucune"}</span><br>
+                        <small>${payment.amount || app.package_payment_amount || ""} ${payment.currency || app.package_payment_currency || ""}</small>
+                    </div>
+                </div>
+
+                <div style="margin-top:14px;padding:12px;border-radius:10px;background:#eef5ff;color:#0d3b66;">
+                    ${actionHtml}
+                </div>
+
+                ${required && !confirmed ? `
+                    <div style="margin-top:14px;padding:12px;border-radius:10px;background:#fff3cd;color:#664d03;font-weight:700;">
+                        Sécurité : l’option “Compte ouvert / RIB attribué” est bloquée tant que le paiement reste en attente.
+                    </div>
+                ` : ""}
+            </div>
+        `;
+    }
+
+    function disableAccountOpenedOption(data) {
+        const required = isPaymentRequired(data);
+        const confirmed = isPaymentConfirmed(data);
+
+        const shouldBlock = required && !confirmed;
+
+        const selects = Array.from(document.querySelectorAll("select"));
+        const decisionSelects = selects.filter(function (select) {
+            return Array.from(select.options || []).some(function (opt) {
+                return normalize(opt.value) === "ACCOUNT_OPENED" ||
+                       normalize(opt.textContent).includes("COMPTE OUVERT");
+            });
+        });
+
+        decisionSelects.forEach(function (select) {
+            Array.from(select.options || []).forEach(function (opt) {
+                const isOpenOption =
+                    normalize(opt.value) === "ACCOUNT_OPENED" ||
+                    normalize(opt.textContent).includes("COMPTE OUVERT");
+
+                if (isOpenOption) {
+                    opt.disabled = shouldBlock;
+                    if (shouldBlock) {
+                        opt.textContent = "Compte ouvert / RIB attribué — bloqué : paiement non confirmé";
+                    }
+                }
+            });
+
+            if (shouldBlock && normalize(select.value) === "ACCOUNT_OPENED") {
+                select.value = "";
+            }
+        });
+
+        const forms = Array.from(document.querySelectorAll("form"));
+
+        forms.forEach(function (form) {
+            if (form.dataset.paymentGuardAttached === "1") return;
+            form.dataset.paymentGuardAttached = "1";
+
+            form.addEventListener("submit", function (event) {
+                if (!shouldBlock) return;
+
+                const selectedOpen = decisionSelects.some(function (select) {
+                    return normalize(select.value) === "ACCOUNT_OPENED";
+                });
+
+                if (selectedOpen) {
+                    event.preventDefault();
+                    alert("Ouverture bloquée : le paiement package est requis mais non confirmé.");
+                }
+            });
+        });
+    }
+
+    async function loadDecisionState() {
+        if (!isBackofficeDetailPage()) return;
+
+        const key = findApplicationRefOrId();
+        if (!key) return;
+
+        try {
+            const response = await fetch(`/api/backoffice/diagnostics/payment/${encodeURIComponent(key)}?refresh_callbell=false&refresh_mastercard=false`);
+            const data = await response.json();
+
+            if (!data || !data.found) return;
+
+            const old = document.getElementById("backofficeDecisionSimplifiedPanel");
+            if (old) old.remove();
+
+            const html = buildDecisionPanel(data);
+
+            const paymentPanel =
+                document.getElementById("backofficePaymentPanelVisibleV3") ||
+                document.getElementById("backofficeGeneratePaymentLinkPanel");
+
+            if (paymentPanel) {
+                paymentPanel.insertAdjacentHTML("afterend", html);
+            } else {
+                const target =
+                    document.querySelector("main") ||
+                    document.querySelector(".container") ||
+                    document.querySelector(".content") ||
+                    document.body;
+
+                target.insertAdjacentHTML("afterbegin", html);
+            }
+
+            disableAccountOpenedOption(data);
+
+            const copyBtn = document.getElementById("decisionPaymentLinkCopyBtn");
+            if (copyBtn) {
+                copyBtn.addEventListener("click", function () {
+                    const input = document.getElementById("decisionPaymentLinkCopyInput");
+                    if (!input) return;
+
+                    navigator.clipboard.writeText(input.value).then(function () {
+                        alert("Lien copié");
+                    });
+                });
+            }
+
+        } catch (e) {
+            console.warn("Impossible de charger le panneau de décision simplifiée", e);
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", loadDecisionState);
+    } else {
+        loadDecisionState();
+    }
+
+    setTimeout(loadDecisionState, 800);
+    setTimeout(loadDecisionState, 2000);
+})();
+</script>
+
+
+
+<script>
+/* BACKOFFICE_DECISION_ACCOUNT_OPENED_GUARD_TARGETED_V1 */
+(function () {
+    function isBackofficeDetailPage() {
+        return /^\/backoffice\/applications\/[^\/]+/.test(window.location.pathname);
+    }
+
+    function normalize(value) {
+        return (value || "").toString().trim().toUpperCase();
+    }
+
+    function findApplicationRefOrId() {
+        const bodyText = document.body.innerText || "";
+        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
+        if (match) return match[0];
+
+        const parts = window.location.pathname.split("/").filter(Boolean);
+        return parts[parts.length - 1] || "";
+    }
+
+    function findDecisionForm() {
+        const headings = Array.from(document.querySelectorAll("h1,h2,h3,h4,label,strong,div,p"));
+
+        let decisionHeading = headings.find(function (el) {
+            const txt = (el.innerText || "").trim().toLowerCase();
+            return txt === "décision back-office" || txt === "decision back-office";
+        });
+
+        if (!decisionHeading) {
+            return null;
+        }
+
+        let current = decisionHeading;
+
+        for (let i = 0; i < 8 && current && current !== document.body; i++) {
+            if (
+                current.querySelector &&
+                current.querySelector('select') &&
+                current.querySelector('button, input[type="submit"]')
+            ) {
+                return current;
+            }
+
+            current = current.parentElement;
+        }
+
+        return null;
+    }
+
+    function paymentIsConfirmed(data) {
+        const app = data.application || {};
+        const payment = data.payment || {};
+
+        const appStatus = normalize(app.status);
+        const appPay = normalize(app.package_payment_status);
+        const payStatus = normalize(payment.status);
+
+        return (
+            ["PAYMENT_CONFIRMED", "PAID", "CAPTURED", "CONFIRMED", "SUCCESS"].includes(appPay) ||
+            ["PAYMENT_CONFIRMED"].includes(appStatus) ||
+            ["PAYMENT_CONFIRMED", "PAID", "CAPTURED", "CONFIRMED", "SUCCESS"].includes(payStatus)
+        );
+    }
+
+    function paymentIsRequired(data) {
+        const app = data.application || {};
+        const payment = data.payment || {};
+
+        const appPay = normalize(app.package_payment_status);
+
+        if (["NOT_REQUIRED", "NONE"].includes(appPay)) {
+            return false;
+        }
+
+        if (app.package_payment_reference || payment.payment_reference) {
+            return true;
+        }
+
+        if (Number(app.package_payment_amount || 0) > 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    function addWarning(form, data) {
+        if (document.getElementById("targetedPaymentDecisionWarning")) return;
+
+        const app = data.application || {};
+        const payment = data.payment || {};
+
+        const warning = document.createElement("div");
+        warning.id = "targetedPaymentDecisionWarning";
+        warning.style.cssText = `
+            margin:12px 0;
+            padding:12px;
+            border-radius:10px;
+            background:#fff3cd;
+            border:1px solid #ffecb5;
+            color:#664d03;
+            font-weight:700;
+            line-height:1.4;
+        `;
+
+        warning.innerHTML = `
+            Paiement requis mais non confirmé.<br>
+            L’ouverture du compte est bloquée tant que le paiement Mastercard reste en attente.<br>
+            <small>
+                Référence paiement : ${payment.payment_reference || app.package_payment_reference || "N/A"} —
+                Statut paiement : ${payment.status || app.package_payment_status || "N/A"}
+            </small>
+        `;
+
+        const select = form.querySelector("select");
+
+        if (select && select.parentNode) {
+            select.parentNode.insertBefore(warning, select);
+        } else {
+            form.insertBefore(warning, form.firstChild);
+        }
+    }
+
+    function removeWarning() {
+        const warning = document.getElementById("targetedPaymentDecisionWarning");
+        if (warning) warning.remove();
+    }
+
+    function blockAccountOpenedOption(form, shouldBlock) {
+        const selects = Array.from(form.querySelectorAll("select"));
+
+        selects.forEach(function (select) {
+            Array.from(select.options || []).forEach(function (option) {
+                const value = normalize(option.value);
+                const label = normalize(option.textContent);
+
+                const isAccountOpened =
+                    value === "ACCOUNT_OPENED" ||
+                    label.includes("COMPTE OUVERT") ||
+                    label.includes("RIB ATTRIBUÉ") ||
+                    label.includes("RIB ATTRIBUE");
+
+                if (!isAccountOpened) return;
+
+                option.disabled = shouldBlock;
+
+                if (shouldBlock) {
+                    option.dataset.originalLabel = option.dataset.originalLabel || option.textContent;
+                    option.textContent = "Compte ouvert / RIB attribué — bloqué : paiement non confirmé";
+
+                    if (normalize(select.value) === "ACCOUNT_OPENED") {
+                        select.value = "";
+                    }
+                } else if (option.dataset.originalLabel) {
+                    option.textContent = option.dataset.originalLabel;
+                }
+            });
+        });
+    }
+
+    function attachSubmitGuard(form, shouldBlock) {
+        if (form.dataset.targetedPaymentGuardAttached === "1") {
+            form.dataset.targetedPaymentGuardActive = shouldBlock ? "1" : "0";
+            return;
+        }
+
+        form.dataset.targetedPaymentGuardAttached = "1";
+        form.dataset.targetedPaymentGuardActive = shouldBlock ? "1" : "0";
+
+        form.addEventListener("submit", function (event) {
+            if (form.dataset.targetedPaymentGuardActive !== "1") return;
+
+            const selectedAccountOpened = Array.from(form.querySelectorAll("select")).some(function (select) {
+                return normalize(select.value) === "ACCOUNT_OPENED";
+            });
+
+            if (selectedAccountOpened) {
+                event.preventDefault();
+                alert("Ouverture bloquée : le paiement package est requis mais non confirmé.");
+            }
+        });
+    }
+
+    async function applyGuard() {
+        if (!isBackofficeDetailPage()) return;
+
+        const form = findDecisionForm();
+        if (!form) return;
+
+        const key = findApplicationRefOrId();
+        if (!key) return;
+
+        try {
+            const response = await fetch(`/api/backoffice/diagnostics/payment/${encodeURIComponent(key)}?refresh_callbell=false&refresh_mastercard=false`);
+            const data = await response.json();
+
+            if (!data || !data.found) return;
+
+            const required = paymentIsRequired(data);
+            const confirmed = paymentIsConfirmed(data);
+
+            const shouldBlock = required && !confirmed;
+
+            blockAccountOpenedOption(form, shouldBlock);
+            attachSubmitGuard(form, shouldBlock);
+
+            if (shouldBlock) {
+                addWarning(form, data);
+            } else {
+                removeWarning();
+            }
+
+        } catch (e) {
+            console.warn("Verrou décision paiement indisponible", e);
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", applyGuard);
+    } else {
+        applyGuard();
+    }
+
+    setTimeout(applyGuard, 800);
+    setTimeout(applyGuard, 2000);
+})();
+</script>
+
+
+<script>
+/* AFB_BACKOFFICE_PRE_CONTACT_CARD_V1 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_BACKOFFICE_PRE_CONTACT_CARD_V1) return;
+  window.__AFB_BACKOFFICE_PRE_CONTACT_CARD_V1 = true;
+
+  const data = {
+    reference: {{ (application.reference if application else "") | tojson }},
+    email: {{ (application.email if application else "") | tojson }},
+    phone: {{ (application.phone if application else "") | tojson }},
+    residence: {{ (application.residence if application else "") | tojson }},
+    status: {{ (application.status if application else "") | tojson }}
+  };
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function display(value) {
+    const clean = String(value || "").trim();
+    return clean ? escapeHtml(clean) : '<span class="empty">Non renseigné</span>';
+  }
+
+  function hasContactData() {
+    return Boolean(
+      String(data.email || "").trim() ||
+      String(data.phone || "").trim() ||
+      String(data.residence || "").trim()
+    );
+  }
+
+  function buildCard() {
+    const phonePresent = String(data.phone || "").trim();
+
+    const badge = phonePresent
+      ? '<span class="afb-precontact-badge">WhatsApp renseigné</span>'
+      : '<span class="afb-precontact-badge" style="background:#fef3c7;color:#92400e;">WhatsApp non renseigné</span>';
+
+    const note = phonePresent
+      ? "Ces informations proviennent de la pré-inscription et/ou du formulaire final. Le numéro WhatsApp est celui utilisé comme téléphone principal du dossier."
+      : "Aucun numéro WhatsApp n’est enregistré sur ce dossier. Vérifier le parcours client ou le payload de création du dossier.";
+
+    return `
+      <section class="afb-precontact-card" id="afb-precontact-card">
+        <div class="afb-precontact-head">
+          <div>
+            <h2 class="afb-precontact-title">Contact pré-inscription</h2>
+            <div class="afb-precontact-subtitle">
+              Données de contact issues du parcours diaspora.
+            </div>
+          </div>
+          ${badge}
+        </div>
+
+        <div class="afb-precontact-grid">
+          <div class="afb-precontact-item">
+            <div class="afb-precontact-label">Référence dossier</div>
+            <div class="afb-precontact-value">${display(data.reference)}</div>
+          </div>
+
+          <div class="afb-precontact-item">
+            <div class="afb-precontact-label">Email</div>
+            <div class="afb-precontact-value">${display(data.email)}</div>
+          </div>
+
+          <div class="afb-precontact-item">
+            <div class="afb-precontact-label">WhatsApp</div>
+            <div class="afb-precontact-value">${display(data.phone)}</div>
+          </div>
+
+          <div class="afb-precontact-item">
+            <div class="afb-precontact-label">Pays de résidence</div>
+            <div class="afb-precontact-value">${display(data.residence)}</div>
+          </div>
+        </div>
+
+        <div class="afb-precontact-note">${escapeHtml(note)}</div>
+      </section>
+    `;
+  }
+
+  function insertCard() {
+    if (document.getElementById("afb-precontact-card")) return;
+    if (!hasContactData()) return;
+
+    const container =
+      document.querySelector("main") ||
+      document.querySelector(".container") ||
+      document.querySelector(".page-content") ||
+      document.querySelector(".content") ||
+      document.body;
+
+    if (!container) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = buildCard();
+
+    const card = wrapper.firstElementChild;
+
+    if (container === document.body) {
+      document.body.insertBefore(card, document.body.firstChild);
+    } else {
+      container.insertBefore(card, container.firstChild);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", insertCard);
+  } else {
+    insertCard();
+  }
+
+  setTimeout(insertCard, 500);
+})();
+</script>
+
+
+<script>
+/* AFB_BACKOFFICE_WHATSAPP_OTP_STATUS_V1 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_BACKOFFICE_WHATSAPP_OTP_STATUS_V1) return;
+  window.__AFB_BACKOFFICE_WHATSAPP_OTP_STATUS_V1 = true;
+
+  const otpData = {
+    preSession: {{ (application.pre_onboarding_session_id if application else "") | tojson }},
+    whatsappPhone: {{ (application.whatsapp_phone_full if application else "") | tojson }},
+    otpVerified: {{ (application.whatsapp_otp_verified if application else false) | tojson }},
+    otpVerifiedAt: {{ (application.whatsapp_otp_verified_at.isoformat() if application and application.whatsapp_otp_verified_at else "") | tojson }}
+  };
+
+  function escapeHtml(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function valueOrEmpty(value) {
+    const clean = String(value || "").trim();
+    return clean ? escapeHtml(clean) : '<span class="empty">Non renseigné</span>';
+  }
+
+  function buildItem(label, value) {
+    return `
+      <div class="afb-precontact-item afb-otp-extra-item">
+        <div class="afb-precontact-label">${escapeHtml(label)}</div>
+        <div class="afb-precontact-value">${value}</div>
+      </div>
+    `;
+  }
+
+  function insertOtpStatus() {
+    const card = document.getElementById("afb-precontact-card");
+    if (!card) return false;
+
+    if (document.getElementById("afb-whatsapp-otp-status-item")) return true;
+
+    const grid = card.querySelector(".afb-precontact-grid");
+    if (!grid) return false;
+
+    const otpLabel = otpData.otpVerified
+      ? '<span style="color:#047857;font-weight:950;">Vérifié</span>'
+      : '<span style="color:#b45309;font-weight:950;">Non vérifié / non historisé</span>';
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = `
+      <div id="afb-whatsapp-otp-status-item" class="afb-precontact-item afb-otp-extra-item">
+        <div class="afb-precontact-label">OTP WhatsApp</div>
+        <div class="afb-precontact-value">${otpLabel}</div>
+      </div>
+      ${buildItem("Session pré-inscription", valueOrEmpty(otpData.preSession))}
+      ${buildItem("WhatsApp historisé", valueOrEmpty(otpData.whatsappPhone))}
+    `;
+
+    Array.from(wrapper.children).forEach(function (child) {
+      grid.appendChild(child);
+    });
+
+    const note = card.querySelector(".afb-precontact-note");
+    if (note && otpData.otpVerifiedAt) {
+      note.textContent = note.textContent + " OTP vérifié le : " + otpData.otpVerifiedAt;
+    }
+
+    return true;
+  }
+
+  function waitInsert() {
+    if (insertOtpStatus()) return;
+
+    let tries = 0;
+    const timer = setInterval(function () {
+      tries += 1;
+      if (insertOtpStatus() || tries > 20) {
+        clearInterval(timer);
+      }
+    }, 300);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", waitInsert);
+  } else {
+    waitInsert();
+  }
+})();
+</script>
+
+
 
 </body>
 </html>

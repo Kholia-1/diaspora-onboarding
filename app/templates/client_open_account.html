@@ -1259,24 +1259,34 @@
                     <div class="grid">
                         <div>
                             <label>Sexe <span class="required">*</span></label>
-                            <select name="sex" id="sex" required onchange="updateIdentityLabels()">
+                            <select name="sex" id="sex" required onchange="updateIdentityLabels(); toggleMatrimonialRegime()">
                                 <option value="Masculin">Masculin</option>
                                 <option value="Féminin">Féminin</option>
                             </select>
                         </div>
+                          <div>
+                              <label>Situation matrimoniale <span class="required">*</span></label>
+                              <select name="marital_status" id="marital_status" required onchange="updateIdentityLabels(); toggleMatrimonialRegime()">
+                                  <option value="Célibataire">Célibataire</option>
+                                  <option value="Marié(e)">Marié(e)</option>
+                                  <option value="Divorcé(e)">Divorcé(e)</option>
+                                  <option value="Veuf/Veuve">Veuf / Veuve</option>
+                              </select>
+                          </div>
 
-                        <div>
-                            <label>Situation matrimoniale <span class="required">*</span></label>
-                            <select name="marital_status" id="marital_status" required onchange="updateIdentityLabels()">
+                          <div id="matrimonialRegimeBox" style="display:none;">
+                              <label>Régime matrimonial</label>
+                              <select name="matrimonial_regime" id="matrimonial_regime">
+                                  <option value="">Sélectionnez le régime matrimonial...</option>
+                                  <option value="Communauté de biens">Communauté de biens</option>
+                                  <option value="Séparation de biens">Séparation de biens</option>
+                                  <option value="Communauté réduite aux acquêts">Communauté réduite aux acquêts</option>
+                                  <option value="Autre">Autre</option>
+                              </select>
+                              <span class="hint">À renseigner uniquement si vous êtes marié(e).</span>
+                          </div>
 
-                                <option value="Célibataire">Célibataire</option>
-                                <option value="Marié(e)">Marié(e)</option>
-                                <option value="Divorcé(e)">Divorcé(e)</option>
-                                <option value="Veuf/Veuve">Veuf / Veuve</option>
-                            </select>
-                        </div>
-
-                        <div>
+<div>
                             <label id="lastNameLabel">Nom d’usage / Nom de famille <span class="required">*</span></label>
                             <span class="hint" id="lastNameHint">
                                 Pour une femme mariée, renseigner le nom d’épouse s’il est utilisé officiellement.
@@ -1342,13 +1352,7 @@
                                 <option value="NON_RESIDENT">Non-résident</option>
                             </select>
                         </div>
-
-                        <div>
-                            <label>Régime matrimonial</label>
-                            <input name="matrimonial_regime" placeholder="Ex : communauté de biens">
-                        </div>
-
-                        <div>
+<div>
                             <label>N° d’identification unique - NIU <span class="optional">(Optionnel)</span></label>
                             <input name="niu_ui" placeholder="Ex : P454884848848N">
                         </div>
@@ -8282,6 +8286,215 @@ if (v12OriginalV11SelfieState) {
     };
 }
 
+</script>
+
+<!-- DG_MARITAL_GRID_FIX_V3 -->
+<script>
+function toggleMatrimonialRegime() {
+    const maritalStatus = document.getElementById("marital_status");
+    const box = document.getElementById("matrimonialRegimeBox");
+    const regime = document.getElementById("matrimonial_regime");
+
+    if (!maritalStatus || !box || !regime) return;
+
+    if (maritalStatus.value === "Marié(e)") {
+        box.style.display = "block";
+        regime.disabled = false;
+    } else {
+        box.style.display = "none";
+        regime.value = "";
+        regime.disabled = true;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const maritalStatus = document.getElementById("marital_status");
+
+    if (maritalStatus && maritalStatus.dataset.dgMaritalGridFix !== "1") {
+        maritalStatus.dataset.dgMaritalGridFix = "1";
+        maritalStatus.addEventListener("change", toggleMatrimonialRegime);
+    }
+
+    toggleMatrimonialRegime();
+});
+</script>
+
+
+<!-- DG_RESIDENCE_REQUIRED_STAR_FIX_V1 -->
+<script>
+(function () {
+    function fixResidenceRequiredStar() {
+        const residenceField = document.querySelector('[name="residence"]');
+        if (!residenceField) return;
+
+        let container = residenceField.closest("div");
+        if (!container) return;
+
+        let label = container.querySelector("label");
+        if (!label) return;
+
+        label.innerHTML = 'Pays de résidence <span class="required">*</span>';
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        fixResidenceRequiredStar();
+        setTimeout(fixResidenceRequiredStar, 300);
+        setTimeout(fixResidenceRequiredStar, 1000);
+    });
+})();
+</script>
+
+
+<style>
+/* SELFIE_CAPTURE_BUTTON_MOBILE_FIX_V1 */
+.selfie-manual-capture-fix {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+    z-index: 999999 !important;
+    display: flex !important;
+    gap: 10px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 10px !important;
+    background: rgba(255,255,255,.96) !important;
+    border-top: 1px solid #e5e7eb !important;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.12) !important;
+    border-radius: 14px !important;
+}
+
+.selfie-manual-capture-fix button,
+.selfie-manual-capture-fix a {
+    width: 100% !important;
+    min-height: 52px !important;
+    border: none !important;
+    border-radius: 12px !important;
+    background: #D22630 !important;
+    color: #fff !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    text-align: center !important;
+}
+
+body.selfie-capture-active {
+    padding-bottom: 95px !important;
+}
+
+@media (max-width: 768px) {
+    video,
+    canvas,
+    .camera-preview,
+    #cameraPreview,
+    #video,
+    #selfieVideo {
+        max-height: 62vh !important;
+        object-fit: cover !important;
+    }
+}
+</style>
+
+<script>
+/* SELFIE_CAPTURE_BUTTON_MOBILE_FIX_V1 */
+(function () {
+    function pageLooksLikeSelfieCapture() {
+        const text = (document.body.innerText || "").toLowerCase();
+        return (
+            text.includes("capture photo selfie") ||
+            text.includes("placez votre visage") ||
+            text.includes("capturer la photo") ||
+            text.includes("auto-capture")
+        );
+    }
+
+    function findCaptureButton() {
+        const candidates = Array.from(document.querySelectorAll("button, a, input[type='button'], input[type='submit']"));
+
+        return candidates.find(function (el) {
+            const label = (
+                el.innerText ||
+                el.value ||
+                el.getAttribute("aria-label") ||
+                el.getAttribute("title") ||
+                ""
+            ).toLowerCase();
+
+            return (
+                label.includes("capturer") ||
+                label.includes("capture") ||
+                label.includes("prendre la photo") ||
+                label.includes("photo")
+            ) && !label.includes("fermer");
+        });
+    }
+
+    function createFloatingCaptureButton(existingButton) {
+        if (document.getElementById("selfieFloatingCaptureFix")) return;
+
+        document.body.classList.add("selfie-capture-active");
+
+        const bar = document.createElement("div");
+        bar.id = "selfieFloatingCaptureFix";
+        bar.className = "selfie-manual-capture-fix";
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.innerText = "Capturer la photo";
+
+        btn.addEventListener("click", function () {
+            const freshButton = findCaptureButton();
+
+            if (freshButton && freshButton !== btn) {
+                freshButton.click();
+                return;
+            }
+
+            const possibleFns = [
+                "capturePhoto",
+                "captureSelfie",
+                "takePhoto",
+                "takeSelfie",
+                "manualCapture",
+                "captureImage"
+            ];
+
+            for (const fnName of possibleFns) {
+                if (typeof window[fnName] === "function") {
+                    window[fnName]();
+                    return;
+                }
+            }
+
+            alert("Bouton de capture introuvable. Veuillez faire défiler légèrement la page ou contacter le support.");
+        });
+
+        bar.appendChild(btn);
+        document.body.appendChild(bar);
+    }
+
+    function init() {
+        if (!pageLooksLikeSelfieCapture()) return;
+
+        const existingButton = findCaptureButton();
+
+        if (existingButton) {
+            existingButton.style.display = "";
+            existingButton.style.visibility = "visible";
+        }
+
+        createFloatingCaptureButton(existingButton);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+
+    setTimeout(init, 1000);
+    setTimeout(init, 2500);
+})();
 </script>
 
 </body>

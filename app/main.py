@@ -1,3 +1,5 @@
+from app.routers import mastercard_gateway
+from app.routers import client_account_status
 from app.routers import account_opening
 from app.routers import whatsapp_notifications
 from app.routers import api_integration_tests
@@ -28,10 +30,25 @@ finally:
     db.close()
 
 app = FastAPI(
-    title="First Diaspora Onboarding API",
+
+title="First Diaspora Onboarding API",
     description="Plateforme d'ouverture de compte à distance pour la diaspora avec formulaire KYC, photos documents et intégration BLACKMODULE.",
     version="1.0.0"
 )
+
+# FORCE_REDIRECT_OLD_OPEN_ACCOUNT_ROUTES_TO_TEST_V1
+@app.middleware("http")
+async def force_redirect_old_open_account_routes(request, call_next):
+    """
+    Redirige les anciennes routes client vers la page officielle temporaire.
+    """
+    if request.url.path in ["/client/open-account", "/open-account"]:
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/open-account-test", status_code=302)
+
+    return await call_next(request)
+
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,6 +62,8 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(payments.router)
+app.include_router(mastercard_gateway.router)
+app.include_router(client_account_status.router)
 app.include_router(account_opening.router)
 app.include_router(whatsapp_notifications.router)
 app.include_router(api_integration_tests.router)
@@ -72,4 +91,27 @@ app.include_router(whatsapp_router.router)
 # Sous-secteurs d'activité router
 from app.routers import subsectors as subsectors_router
 app.include_router(subsectors_router.router)
+
+# PUBLIC_MASTERCARD_PAYMENTS_ROUTES_V1
+from app.routers.mastercard_payments_public import router as mastercard_payments_public_router
+app.include_router(mastercard_payments_public_router)
+
+
+# PAYMENT_DIAGNOSTICS_ROUTER_V1
+from app.routers.payment_diagnostics import router as payment_diagnostics_router
+app.include_router(payment_diagnostics_router)
+
+
+# CLIENT_PAYMENT_LINK_ROUTER_V1
+from app.routers.client_payment_link import router as client_payment_link_router
+app.include_router(client_payment_link_router)
+
+
+# BACKOFFICE_PAYMENT_LINK_ROUTER_V1
+from app.routers.backoffice_payment_link import router as backoffice_payment_link_router
+app.include_router(backoffice_payment_link_router)
+
+# AFB_MASTERCARD_MANUAL_VERIFY_ROUTER_V1
+from app.routers.mastercard_manual_verify import router as mastercard_manual_verify_router
+app.include_router(mastercard_manual_verify_router)
 

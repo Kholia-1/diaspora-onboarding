@@ -1,4 +1,5 @@
 
+
 <!-- MANAGER_FORM_PRE_SESSION_BOX_V1 -->
 <div id="pre-session-box" class="pre-session-box hidden">
   <strong>Documents préchargés depuis le pré-onboarding</strong>
@@ -12,7 +13,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Afriland First Bank - Ouverture de compte diaspora</title>
+    <title>Afriland First Bank - Ouverture de compte à distance</title>
     <!-- V13 — Corrections capture selfie intelligente selon document MD :
          1. cover-crop correction dans v10DetectSelfieFace
          2. Repères canoniques MediaPipe (EYE_L=33, EYE_R=263, NOSE=1)
@@ -1101,7 +1102,22 @@
     }
 }
 
-    </style>
+    
+/* AFB_FINAL_RESIDENCE_PREFILL_DROPDOWN_FIX_V1 */
+.residence-prefilled-clean #residenceCountryDropdown {
+  display: none !important;
+}
+
+.residence-prefilled-clean #residenceCountryHelper {
+  color: #047857 !important;
+  font-weight: 700 !important;
+}
+
+#residenceCountrySearch[data-prefilled-step0="1"] {
+  border-color: #10b981 !important;
+}
+
+</style>
 
 
     <!-- OpenCV.js + MediaPipe FaceDetector pour capture intelligente réelle -->
@@ -1232,6 +1248,120 @@
   }
 </style>
 
+<!-- DG_RESIDENCE_COUNTRY_IMAGE_FLAGS_V5 -->
+<style>
+.residence-country-picker {
+    position: relative;
+}
+
+.residence-country-dropdown {
+    display: none;
+    position: absolute;
+    z-index: 90;
+    width: 100%;
+    max-height: 270px;
+    overflow-y: auto;
+    background: #FFFFFF;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 12px 25px rgba(0,0,0,0.14);
+    margin-top: 6px;
+}
+
+.residence-country-option {
+    padding: 11px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 1px solid #F1F2F5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.residence-country-option:hover {
+    background: #FDEAEA;
+}
+
+.residence-country-img {
+    width: 30px;
+    height: 22px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+    background: #F4F6F9;
+    flex: 0 0 auto;
+}
+
+.residence-country-name {
+    font-weight: 800;
+    color: #111827;
+}
+
+.residence-country-empty {
+    padding: 12px 14px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+#residenceCountrySearch.with-selected-flag {
+    padding-left: 54px !important;
+}
+
+#residenceSelectedFlag {
+    display: none;
+    position: absolute;
+    left: 14px;
+    top: 13px;
+    width: 30px;
+    height: 22px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+    background: #F4F6F9;
+    z-index: 2;
+}
+</style>
+
+
+<!-- DG_MANAGER_LANGUAGE_SWITCHER_V1 -->
+<style>
+.manager-lang-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    padding: 4px;
+}
+
+.manager-lang-switcher button {
+    border: none;
+    border-radius: 999px;
+    padding: 7px 11px;
+    font-weight: 800;
+    font-size: 12px;
+    cursor: pointer;
+    background: transparent;
+    color: #FFFFFF;
+}
+
+.manager-lang-switcher button.active {
+    background: #C90000;
+    color: #FFFFFF;
+}
+
+.manager-lang-switcher button:hover {
+    background: rgba(201,0,0,0.7);
+}
+
+@media (max-width: 800px) {
+    .manager-lang-switcher {
+        margin-top: 8px;
+    }
+}
+</style>
+
 </head>
 
 <body>
@@ -1290,7 +1420,7 @@
                     <section class="section open">
                 <div class="section-header">
                     <span class="section-number">1</span>
-                    Identification du client
+                    Vos informations personnelles
                 </div>
 
                 <div class="section-body">
@@ -1302,24 +1432,34 @@
                     <div class="grid">
                         <div>
                             <label>Sexe <span class="required">*</span></label>
-                            <select name="sex" id="sex" required onchange="updateIdentityLabels()">
+                            <select name="sex" id="sex" required onchange="updateIdentityLabels(); toggleMatrimonialRegime()">
                                 <option value="Masculin">Masculin</option>
                                 <option value="Féminin">Féminin</option>
                             </select>
                         </div>
+                          <div>
+                              <label>Situation matrimoniale <span class="required">*</span></label>
+                              <select name="marital_status" id="marital_status" required onchange="updateIdentityLabels(); toggleMatrimonialRegime()">
+                                  <option value="Célibataire">Célibataire</option>
+                                  <option value="Marié(e)">Marié(e)</option>
+                                  <option value="Divorcé(e)">Divorcé(e)</option>
+                                  <option value="Veuf/Veuve">Veuf / Veuve</option>
+                              </select>
+                          </div>
 
-                        <div>
-                            <label>Situation matrimoniale <span class="required">*</span></label>
-                            <select name="marital_status" id="marital_status" required onchange="updateIdentityLabels()">
+                          <div id="matrimonialRegimeBox" style="display:none;">
+                              <label>Régime matrimonial</label>
+                              <select name="matrimonial_regime" id="matrimonial_regime">
+                                  <option value="">Sélectionnez le régime matrimonial...</option>
+                                  <option value="Communauté de biens">Communauté de biens</option>
+                                  <option value="Séparation de biens">Séparation de biens</option>
+                                  <option value="Communauté réduite aux acquêts">Communauté réduite aux acquêts</option>
+                                  <option value="Autre">Autre</option>
+                              </select>
+                              <span class="hint">À renseigner uniquement si vous êtes marié(e).</span>
+                          </div>
 
-                                <option value="Célibataire">Célibataire</option>
-                                <option value="Marié(e)">Marié(e)</option>
-                                <option value="Divorcé(e)">Divorcé(e)</option>
-                                <option value="Veuf/Veuve">Veuf / Veuve</option>
-                            </select>
-                        </div>
-
-                        <div>
+<div>
                             <label id="lastNameLabel">Nom d’usage / Nom de famille <span class="required">*</span></label>
                             <span class="hint" id="lastNameHint">
                                 Pour une femme mariée, renseigner le nom d’épouse s’il est utilisé officiellement.
@@ -1373,9 +1513,27 @@
                             </div>
                         </div>
 
+                        <!-- DG_RESIDENCE_COUNTRY_PICKER_V1 -->
                         <div>
-                            <label>Résidence <span class="required">*</span></label>
-                            <input name="residence" required placeholder="Pays / ville de résidence">
+                            <label>Pays de résidence <span class="required">*</span></label>
+                            <span class="hint">Recherchez et sélectionnez votre pays de résidence.</span>
+
+                            <div class="residence-country-picker">
+                                <input
+                                    id="residenceCountrySearch"
+                                    type="text"
+                                    placeholder="Rechercher un pays..."
+                                    autocomplete="off"
+                                    oninput="filterResidenceCountries()"
+                                    onfocus="showResidenceCountryDropdown()">
+
+                                <input type="hidden" name="residence" id="residence" required>
+
+                                <div id="residenceCountryDropdown" class="residence-country-dropdown"></div>
+                                <div id="residenceCountryHelper" class="field-message">
+                                    Tapez quelques lettres puis cliquez sur un pays proposé.
+                                </div>
+                            </div>
                         </div>
 
                         <div>
@@ -1385,13 +1543,7 @@
                                 <option value="NON_RESIDENT">Non-résident</option>
                             </select>
                         </div>
-
-                        <div>
-                            <label>Régime matrimonial</label>
-                            <input name="matrimonial_regime" placeholder="Ex : communauté de biens">
-                        </div>
-
-                        <div>
+<div>
                             <label>N° identification unique / Numéros fiscal</label>
                             <input name="niu_ui" placeholder="Ex : P454884848848N">
                         </div>
@@ -1570,9 +1722,31 @@
                         </select>
                     </div>
 
+                      <!-- DG_INCOME_TYPE_VISIBLE_AFTER_PROFESSION_V1 -->
+                      <div>
+                          <label>Type de revenu <span class="required">*</span></label>
+                          <span class="hint">Sélectionnez votre principale source de revenu.</span>
+                          <select id="income_source_type" name="income_source_type_ui" required onchange="updateIncomeProofGuidanceVisible()">
+                              <option value="">Sélectionnez le type de revenu...</option>
+                              <option value="SALARY">Salaire</option>
+                              <option value="BUSINESS">Activité commerciale</option>
+                              <option value="LIBERAL">Profession libérale</option>
+                              <option value="PENSION">Pension / retraite</option>
+                              <option value="RENTAL">Revenus locatifs</option>
+                              <option value="FAMILY_SUPPORT">Soutien familial</option>
+                              <option value="SCHOLARSHIP">Bourse / scolarité</option>
+                              <option value="SAVINGS">Épargne personnelle</option>
+                              <option value="OTHER">Autre</option>
+                          </select>
+                          <span id="incomeTypeInlineGuidance" class="hint">
+                              Le justificatif attendu sera précisé automatiquement dans la zone des documents.
+                          </span>
+                      </div>
+
+
                     <div>
                         <label>Tranche de revenus <span class="required">*</span></label>
-                        <select name="income_range_ui" required>
+                        <select id="income_range_ui" name="income_range_ui" required>
                             <option value="">Sélectionnez...</option>
                             <option value="0 - 100 000">0 - 100 000</option>
                             <option value="100 001 - 300 000">100 001 - 300 000</option>
@@ -1624,7 +1798,7 @@
                         <select name="account_type" required>
                             <option value="">Sélectionnez...</option>
                             <option value="Compte courant">Compte courant</option>
-                            <option value="Compte épargne diaspora">Compte épargne diaspora</option>
+                            <option value="Compte épargne diaspora">Compte épargne à distance</option>
                             <option value="Compte joint">Compte joint</option>
                         </select>
                     </div>
@@ -1633,7 +1807,7 @@
             <div>
                 <label>RIB <span class="optional">(si disponible)</span></label>
                 <span class="hint">
-                    Renseignez le RIB si le client dispose déjà d’une référence bancaire ou d’un compte existant.
+                    Renseignez votre RIB si vous disposez déjà d’une référence bancaire ou d’un compte existant.
                 </span>
                 <input name="rib" placeholder="Ex : 10001 00001 12345678901 97">
             </div>
@@ -1679,7 +1853,7 @@
 
                     <div>
                         <label>Code de parrainage <span class="optional">(Optionnel)</span></label>
-                        <input name="referral_code_ui" placeholder="Matricule client facultatif">
+                        <input name="referral_code_ui" placeholder="Référence facultative">
                     </div>
                 </div>
 
@@ -1801,7 +1975,7 @@
 <div id="selfieModal" class="camera-modal">
     <div class="camera-box">
         <div class="camera-header">
-            <strong id="selfieModalTitle">Selfie du client</strong>
+            <strong id="selfieModalTitle">Votre selfie</strong>
             <button type="button" onclick="closeSelfieCamera()">Fermer</button>
         </div>
 
@@ -9002,13 +9176,13 @@ document.addEventListener("DOMContentLoaded", function () {
         block.innerHTML = `
             <div class="sub-title">Documents complémentaires obligatoires</div>
             <p class="doc-help">
-                Photographiez les pièces permettant de justifier l’activité/revenu du client et son relevé d’identification bancaire.
+                Photographiez les pièces permettant de justifier votre activité ou vos revenus, ainsi que votre relevé d’identification bancaire.
             </p>
 
             <div class="camera-doc-grid">
                 <div class="camera-doc-card">
                     <label>
-                        Preuve de justification de revenu / activité du client
+                        Preuve de justification de vos revenus ou de votre activité
                         <span class="required-doc">*</span>
                     </label>
                     <p class="doc-help">
@@ -9033,7 +9207,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <span class="required-doc">*</span>
                     </label>
                     <p class="doc-help">
-                        Photographiez le relevé d’identification bancaire ou la preuve du RIB du client.
+                        Photographiez votre relevé d’identification bancaire ou une preuve de votre RIB.
                     </p>
 
                     <button type="button" class="doc-action-btn" onclick="openManagerExtraDocumentCamera('RIB_DOCUMENT')">
@@ -9205,7 +9379,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     window.uploadManagerExtraDocuments = async function(applicationId) {
         if (!window.managerExtraDocumentFiles.INCOME_PROOF) {
-            throw new Error("Veuillez photographier la preuve de justification de revenu / activité du client.");
+            throw new Error("Veuillez photographier la preuve de justification de vos revenus ou votre activité.");
         }
 
         if (!window.managerExtraDocumentFiles.RIB_DOCUMENT) {
@@ -9705,7 +9879,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const note = document.createElement("div");
         note.id = "managerSelfieRequiredNote";
         note.className = "manager-selfie-required-note";
-        note.innerText = "Selfie obligatoire : le client doit absolument capturer un selfie réel. L’import simple du selfie n’est pas accepté.";
+        note.innerText = "Selfie obligatoire : vous devez capturer un selfie réel. L’import simple du selfie n’est pas accepté.";
 
         selfieStatus.insertAdjacentElement("beforebegin", note);
     }
@@ -9755,7 +9929,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 selfieFiles.imported = null;
 
                 if (!selfieFiles.photo) {
-                    throw new Error("Veuillez obligatoirement capturer le selfie du client.");
+                    throw new Error("Veuillez obligatoirement capturer votre selfie.");
                 }
 
                 await uploadFileObject(applicationId, "SELFIE_PHOTO", selfieFiles.photo);
@@ -9787,7 +9961,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         event.preventDefault();
                         event.stopPropagation();
 
-                        alert("Veuillez obligatoirement capturer le selfie du client avant de soumettre le formulaire.");
+                        alert("Veuillez obligatoirement capturer votre selfie avant de soumettre le formulaire.");
 
                         const selfieStatus = document.getElementById("selfieCaptureStatus");
                         if (selfieStatus) {
@@ -10438,6 +10612,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return false;
         }
 
+        if (id.includes("income_source_type") || name.includes("income_source_type")) {
+            return false;
+        }
+
         if (id.includes("currency") || name.includes("currency")) {
             return false;
         }
@@ -10447,6 +10625,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function findIncomeRangeField() {
         const directSelectors = [
+            "#income_range_ui",
+            '[name="income_range_ui"]',
             "#income_range",
             "#monthly_income_range",
             "#revenue_range",
@@ -10471,10 +10651,11 @@ document.addEventListener("DOMContentLoaded", function () {
             const txt = normalizeText(label.textContent);
 
             if (
+                txt.includes("tranche de revenus") ||
                 txt.includes("tranche de revenu") ||
+                txt.includes("tranche revenus") ||
                 txt.includes("tranche revenu") ||
-                txt.includes("revenu mensuel") ||
-                txt.includes("revenu")
+                txt.includes("revenu mensuel")
             ) {
                 const forId = label.getAttribute("for");
 
@@ -10537,7 +10718,7 @@ document.addEventListener("DOMContentLoaded", function () {
             </select>
 
             <div class="manager-income-currency-help">
-                Sélectionnez la devise correspondant à la tranche de revenu déclarée par le client.
+                Sélectionnez la devise correspondant à votre tranche de revenu déclarée.
             </div>
         `;
 
@@ -10716,6 +10897,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function findIncomeRangeField() {
         const directSelectors = [
+            "#income_range_ui",
+            '[name="income_range_ui"]',
             "#income_range",
             "#monthly_income_range",
             "#revenue_range",
@@ -11149,7 +11332,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 event.preventDefault();
                 event.stopPropagation();
 
-                alert("Veuillez sélectionner le secteur d’activité du client.");
+                alert("Veuillez sélectionner votre secteur d’activité.");
 
                 sector.scrollIntoView({
                     behavior: "smooth",
@@ -11281,7 +11464,7 @@ document.addEventListener("DOMContentLoaded", function () {
             banner.innerHTML = `
                 <strong>Type de demande : ${label}</strong>
                 <div class="hint">
-                    Le client a choisi une ouverture de compte entreprise.
+                    Vous avez choisi une ouverture de compte entreprise.
                     Cette première version affiche le choix dans le formulaire.
                     Les champs spécifiques entreprise seront ajoutés dans l’étape suivante.
                 </div>
@@ -11290,7 +11473,7 @@ document.addEventListener("DOMContentLoaded", function () {
             banner.innerHTML = `
                 <strong>Type de demande : ${label}</strong>
                 <div class="hint">
-                    Le client a choisi une ouverture de compte personnel.
+                    Vous avez choisi une ouverture de compte personnel.
                 </div>
             `;
         }
@@ -11802,7 +11985,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const store = getOcrStoreV2();
         const selectedType = String(store.identity_document_type || "").toUpperCase();
 
-        // Priorité absolue au choix explicite du client.
+        // Priorité absolue à votre choix explicite.
         if (selectedType === "CNI") return forceDocumentTypeV2("CNI");
         if (selectedType === "PASSPORT") return forceDocumentTypeV2("PASSPORT");
         if (selectedType === "RESIDENCE_PERMIT") return forceDocumentTypeV2("RESIDENCE_PERMIT");
@@ -12319,6 +12502,2886 @@ document.addEventListener("DOMContentLoaded", function () {
   })();
 </script>
 
+<!-- DG_MARITAL_GRID_FIX_V3 -->
+<script>
+function toggleMatrimonialRegime() {
+    const maritalStatus = document.getElementById("marital_status");
+    const box = document.getElementById("matrimonialRegimeBox");
+    const regime = document.getElementById("matrimonial_regime");
+
+    if (!maritalStatus || !box || !regime) return;
+
+    if (maritalStatus.value === "Marié(e)") {
+        box.style.display = "block";
+        regime.disabled = false;
+    } else {
+        box.style.display = "none";
+        regime.value = "";
+        regime.disabled = true;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    const maritalStatus = document.getElementById("marital_status");
+
+    if (maritalStatus && maritalStatus.dataset.dgMaritalGridFix !== "1") {
+        maritalStatus.dataset.dgMaritalGridFix = "1";
+        maritalStatus.addEventListener("change", toggleMatrimonialRegime);
+    }
+
+    toggleMatrimonialRegime();
+});
+</script>
+
+
+<!-- DG_INCOME_TYPE_VISIBLE_GUIDANCE_SCRIPT_V1 -->
+<script>
+(function () {
+    const INCOME_HELP_VISIBLE = {
+        SALARY: "Document attendu : bulletin de salaire récent, attestation employeur ou contrat de travail.",
+        BUSINESS: "Document attendu : registre de commerce, justificatif fiscal ou preuve d’activité commerciale.",
+        LIBERAL: "Document attendu : justificatif d’activité professionnelle, carte professionnelle ou attestation d’exercice.",
+        PENSION: "Document attendu : attestation de pension ou justificatif de retraite.",
+        RENTAL: "Document attendu : contrat de bail, quittance ou document justifiant les revenus locatifs.",
+        FAMILY_SUPPORT: "Document attendu : attestation de prise en charge ou justificatif du soutien familial.",
+        SCHOLARSHIP: "Document attendu : attestation de bourse, certificat de scolarité ou justificatif de financement.",
+        SAVINGS: "Document attendu : relevé bancaire ou document justifiant l’épargne déclarée.",
+        OTHER: "Document attendu : tout justificatif cohérent avec le revenu déclaré."
+    };
+
+    const INCOME_LABEL_VISIBLE = {
+        SALARY: "Salaire",
+        BUSINESS: "Activité commerciale",
+        LIBERAL: "Profession libérale",
+        PENSION: "Pension / retraite",
+        RENTAL: "Revenus locatifs",
+        FAMILY_SUPPORT: "Soutien familial",
+        SCHOLARSHIP: "Bourse / scolarité",
+        SAVINGS: "Épargne personnelle",
+        OTHER: "Autre"
+    };
+
+    window.updateIncomeProofGuidanceVisible = function () {
+        const select = document.getElementById("income_source_type");
+        const value = select ? select.value : "";
+
+        const message = INCOME_HELP_VISIBLE[value] || "Sélectionnez le type de revenu afin d’identifier le justificatif attendu.";
+        const labelValue = INCOME_LABEL_VISIBLE[value] || "";
+
+        const inline = document.getElementById("incomeTypeInlineGuidance");
+        if (inline) {
+            inline.innerText = message;
+        }
+
+        const docsBlock = document.getElementById("managerExtraDocsBlock");
+        if (!docsBlock) return;
+
+        const incomeButton = docsBlock.querySelector('button[onclick*="INCOME_PROOF"]');
+        const incomeCard = incomeButton ? incomeButton.closest(".camera-doc-card") : null;
+        if (!incomeCard) return;
+
+        const cardLabel = incomeCard.querySelector("label");
+        const helpText = incomeCard.querySelector("p.doc-help");
+
+        if (cardLabel) {
+            cardLabel.innerHTML = '<span>' + (value ? "Justificatif de revenu — " + labelValue : "Justificatif de revenu") + '</span> <span class="required-doc">*</span>';
+        }
+
+        if (helpText) {
+            helpText.innerText = message;
+        }
+
+        if (incomeButton) {
+            incomeButton.innerHTML = "📷 Photographier le justificatif de revenu";
+        }
+    };
+
+    function bindIncomeFieldVisible() {
+        const select = document.getElementById("income_source_type");
+        if (!select || select.dataset.boundIncomeVisible === "1") return;
+
+        select.dataset.boundIncomeVisible = "1";
+        select.addEventListener("change", window.updateIncomeProofGuidanceVisible);
+    }
+
+    function applyIncomeVisibleFix() {
+        bindIncomeFieldVisible();
+        window.updateIncomeProofGuidanceVisible();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        applyIncomeVisibleFix();
+
+        let count = 0;
+        const timer = setInterval(function () {
+            applyIncomeVisibleFix();
+            count += 1;
+            if (count >= 15) clearInterval(timer);
+        }, 300);
+    });
+
+    setTimeout(applyIncomeVisibleFix, 1000);
+    setTimeout(applyIncomeVisibleFix, 2500);
+})();
+</script>
+
+
+<!-- DG_INCOME_CURRENCY_RANGE_TARGET_FIX_V1 -->
+<script>
+(function () {
+    function moveIncomeCurrencyAfterRealRange() {
+        const incomeRange = document.querySelector('[name="income_range_ui"]');
+        const currencyBox = document.getElementById("managerIncomeCurrencyBox");
+
+        if (!incomeRange || !currencyBox) return;
+
+        const rangeBox =
+            incomeRange.closest(".form-group") ||
+            incomeRange.closest(".field") ||
+            incomeRange.closest(".full") ||
+            incomeRange.closest("div") ||
+            incomeRange.parentElement;
+
+        if (!rangeBox) return;
+
+        if (currencyBox.previousElementSibling !== rangeBox) {
+            rangeBox.insertAdjacentElement("afterend", currencyBox);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        moveIncomeCurrencyAfterRealRange();
+        setTimeout(moveIncomeCurrencyAfterRealRange, 400);
+        setTimeout(moveIncomeCurrencyAfterRealRange, 1200);
+        setTimeout(moveIncomeCurrencyAfterRealRange, 2500);
+    });
+})();
+</script>
+
+<!-- DG_RESIDENCE_COUNTRY_IMAGE_FLAGS_SCRIPT_V5 -->
+<script>
+(function () {
+    let residenceCountryList = [];
+
+    function normalizeResidenceText(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .trim();
+    }
+
+    function escapeHtml(value) {
+        return String(value || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function countryFlagUrl(country) {
+        const iso = String(country && country.iso_code ? country.iso_code : "")
+            .trim()
+            .toLowerCase();
+
+        if (!/^[a-z]{2}$/.test(iso)) {
+            return "";
+        }
+
+        return "https://flagcdn.com/w40/" + iso + ".png";
+    }
+
+    function ensureSelectedFlagPreview() {
+        const picker = document.querySelector(".residence-country-picker");
+        const input = document.getElementById("residenceCountrySearch");
+
+        if (!picker || !input) return null;
+
+        let img = document.getElementById("residenceSelectedFlag");
+
+        if (!img) {
+            img = document.createElement("img");
+            img.id = "residenceSelectedFlag";
+            img.alt = "";
+            picker.insertBefore(img, input);
+        }
+
+        return img;
+    }
+
+    async function fetchResidenceCountries(query = "") {
+        try {
+            const url = query
+                ? "/api/countries/active?q=" + encodeURIComponent(query)
+                : "/api/countries/active";
+
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error("API pays indisponible");
+            }
+
+            residenceCountryList = await response.json();
+            return residenceCountryList;
+        } catch (error) {
+            console.error("Erreur chargement pays de résidence :", error);
+
+            const helper = document.getElementById("residenceCountryHelper");
+            if (helper) {
+                helper.className = "field-message error";
+                helper.innerText = "Impossible de charger la liste des pays. Veuillez réessayer.";
+            }
+
+            return [];
+        }
+    }
+
+    function renderResidenceCountries(items) {
+        const dropdown = document.getElementById("residenceCountryDropdown");
+        if (!dropdown) return;
+
+        dropdown.innerHTML = "";
+
+        if (!items || items.length === 0) {
+            dropdown.innerHTML = '<div class="residence-country-empty">Aucun pays trouvé.</div>';
+            return;
+        }
+
+        items.forEach(function (country) {
+            const name = country.name_fr || "";
+            const flagUrl = countryFlagUrl(country);
+
+            const option = document.createElement("div");
+            option.className = "residence-country-option";
+
+            option.innerHTML =
+                '<img class="residence-country-img" src="' + escapeHtml(flagUrl) + '" alt="">' +
+                '<span class="residence-country-name">' + escapeHtml(name) + '</span>';
+
+            option.onclick = function () {
+                const searchInput = document.getElementById("residenceCountrySearch");
+                const hiddenInput = document.getElementById("residence");
+                const helper = document.getElementById("residenceCountryHelper");
+                const selectedFlag = ensureSelectedFlagPreview();
+
+                if (searchInput) {
+                    searchInput.value = name;
+                    searchInput.classList.add("with-selected-flag");
+                }
+
+                if (selectedFlag && flagUrl) {
+                    selectedFlag.src = flagUrl;
+                    selectedFlag.style.display = "block";
+                }
+
+                // Valeur envoyée au backend : nom propre du pays, sans image, sans emoji.
+                if (hiddenInput) {
+                    hiddenInput.value = name;
+                }
+
+                dropdown.style.display = "none";
+
+                if (helper) {
+                    helper.className = "field-message success";
+                    helper.innerText = "Pays de résidence sélectionné.";
+                }
+            };
+
+            dropdown.appendChild(option);
+        });
+    }
+
+    window.showResidenceCountryDropdown = async function () {
+        const dropdown = document.getElementById("residenceCountryDropdown");
+        if (!dropdown) return;
+
+        dropdown.style.display = "block";
+
+        if (!residenceCountryList || residenceCountryList.length === 0) {
+            const results = await fetchResidenceCountries("");
+            renderResidenceCountries(results);
+            return;
+        }
+
+        renderResidenceCountries(residenceCountryList);
+    };
+
+    window.filterResidenceCountries = function () {
+        const searchInput = document.getElementById("residenceCountrySearch");
+        const hiddenInput = document.getElementById("residence");
+        const helper = document.getElementById("residenceCountryHelper");
+        const selectedFlag = ensureSelectedFlagPreview();
+
+        if (!searchInput) return;
+
+        const query = searchInput.value.trim();
+
+        if (hiddenInput) {
+            hiddenInput.value = "";
+        }
+
+        if (selectedFlag) {
+            selectedFlag.style.display = "none";
+        }
+
+        searchInput.classList.remove("with-selected-flag");
+
+        if (!query) {
+            if (helper) {
+                helper.className = "field-message";
+                helper.innerText = "Tapez quelques lettres puis cliquez sur un pays proposé.";
+            }
+
+            renderResidenceCountries(residenceCountryList);
+            window.showResidenceCountryDropdown();
+            return;
+        }
+
+        const normalizedQuery = normalizeResidenceText(query);
+
+        const filtered = residenceCountryList.filter(function (country) {
+            return normalizeResidenceText(country.name_fr).includes(normalizedQuery) ||
+                   normalizeResidenceText(country.iso_code).includes(normalizedQuery);
+        });
+
+        renderResidenceCountries(filtered);
+        window.showResidenceCountryDropdown();
+
+        if (helper) {
+            helper.className = "field-message";
+            helper.innerText = filtered.length
+                ? filtered.length + " pays trouvé(s)."
+                : "Aucun pays trouvé.";
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", async function () {
+        ensureSelectedFlagPreview();
+
+        const results = await fetchResidenceCountries("");
+        renderResidenceCountries(results);
+
+        document.addEventListener("click", function (event) {
+            const picker = document.querySelector(".residence-country-picker");
+            const dropdown = document.getElementById("residenceCountryDropdown");
+
+            if (picker && dropdown && !picker.contains(event.target)) {
+                dropdown.style.display = "none";
+            }
+        });
+    });
+})();
+</script>
+
+
+<!-- DG_MANAGER_LANGUAGE_SWITCHER_SCRIPT_V1 -->
+<script>
+(function () {
+    if (window.__dgManagerLanguageSwitcherV1) return;
+    window.__dgManagerLanguageSwitcherV1 = true;
+
+    const STORAGE_KEY = "diaspora_client_lang";
+
+    function currentLang() {
+        return localStorage.getItem(STORAGE_KEY) || "fr";
+    }
+
+    function tr(fr, en) {
+        return currentLang() === "en" ? en : fr;
+    }
+
+    function ensureSwitcher() {
+        if (document.getElementById("managerLangSwitcher")) return;
+
+        const nav = document.querySelector(".client-nav") || document.querySelector(".topbar-content");
+        if (!nav) return;
+
+        const switcher = document.createElement("div");
+        switcher.id = "managerLangSwitcher";
+        switcher.className = "manager-lang-switcher";
+        switcher.innerHTML = `
+            <button type="button" id="managerLangFr" onclick="setManagerClientLanguage('fr')">FR</button>
+            <button type="button" id="managerLangEn" onclick="setManagerClientLanguage('en')">EN</button>
+        `;
+
+        const secure = nav.querySelector(".secure");
+        if (secure) {
+            nav.insertBefore(switcher, secure);
+        } else {
+            nav.appendChild(switcher);
+        }
+    }
+
+    function updateButtons() {
+        const lang = currentLang();
+        const frBtn = document.getElementById("managerLangFr");
+        const enBtn = document.getElementById("managerLangEn");
+
+        if (frBtn) frBtn.classList.toggle("active", lang === "fr");
+        if (enBtn) enBtn.classList.toggle("active", lang === "en");
+    }
+
+    function setText(selector, fr, en) {
+        const el = document.querySelector(selector);
+        if (el) el.textContent = tr(fr, en);
+    }
+
+    function setHtml(selector, fr, en) {
+        const el = document.querySelector(selector);
+        if (el) el.innerHTML = tr(fr, en);
+    }
+
+    function setPlaceholder(selector, fr, en) {
+        const el = document.querySelector(selector);
+        if (el) el.placeholder = tr(fr, en);
+    }
+
+    function getFieldBox(selector) {
+        const field = document.querySelector(selector);
+        if (!field) return null;
+
+        let box = field.closest("div");
+        if (box && !box.querySelector("label") && box.parentElement) {
+            box = box.parentElement;
+        }
+
+        return box;
+    }
+
+    function setFieldLabel(selector, fr, en) {
+        const box = getFieldBox(selector);
+        if (!box) return;
+
+        const label = box.querySelector("label");
+        if (label) label.innerHTML = tr(fr, en);
+    }
+
+    function setFieldHint(selector, fr, en) {
+        const box = getFieldBox(selector);
+        if (!box) return;
+
+        const hint = box.querySelector(".hint");
+        if (hint) hint.textContent = tr(fr, en);
+    }
+
+    function setSectionHeader(number, fr, en) {
+        document.querySelectorAll(".section").forEach(function (section) {
+            const num = section.querySelector(".section-number");
+            const header = section.querySelector(".section-header");
+
+            if (!num || !header || num.textContent.trim() !== String(number)) return;
+
+            header.childNodes.forEach(function (node) {
+                if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+                    node.textContent = " " + tr(fr, en);
+                }
+            });
+        });
+    }
+
+    function setSelectOptions(selector, translations) {
+        const select = document.querySelector(selector);
+        if (!select) return;
+
+        Array.from(select.options).forEach(function (option) {
+            const key = option.value || option.textContent.trim();
+
+            if (translations[key]) {
+                option.textContent = tr(translations[key][0], translations[key][1]);
+            }
+        });
+    }
+
+    function normalize(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, " ")
+            .toLowerCase()
+            .trim();
+    }
+
+    const EXACT_TEXTS = [
+        ["Informations personnelles", "Personal information"],
+        ["Comment bien remplir ce formulaire", "How to complete this form"],
+        ["Parents", "Parents"],
+        ["Personne à contacter 1", "Contact person 1"],
+        ["Personne à contacter 2", "Contact person 2"],
+        ["Package souhaité", "Preferred package"],
+        ["Pièce d’identité officielle", "Official identity document"],
+        ["Photo du justificatif de domicile", "Proof of address photo"],
+        ["Selfie / preuve de vie", "Selfie / proof of life"],
+        ["Documents complémentaires pour particulier non-résident", "Additional documents for non-resident individual"],
+        ["Acte de naissance ou pièce avec filiation", "Birth certificate or document showing parentage"],
+        ["Fiche de paie / attestation d’emploi / scolarité", "Payslip / employment or school certificate"],
+        ["Attestation de conformité fiscale", "Tax compliance certificate"],
+        ["Consentement et autorisation", "Consent and authorization"],
+        ["Demande enregistrée avec succès", "Request successfully submitted"],
+        ["Référence dossier", "File reference"],
+        ["Suivre ma demande", "Track my request"],
+        ["Nouvelle demande", "New request"],
+        ["Soumettre ma demande d’ouverture de compte", "Submit my account opening request"]
+    ];
+
+    function targetText(value) {
+        const n = normalize(value);
+
+        for (const pair of EXACT_TEXTS) {
+            if (n === normalize(pair[0]) || n === normalize(pair[1])) {
+                return currentLang() === "en" ? pair[1] : pair[0];
+            }
+        }
+
+        return null;
+    }
+
+    function translateExactTextNodes() {
+        const walker = document.createTreeWalker(
+            document.body,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode: function (node) {
+                    const parent = node.parentElement;
+                    if (!parent) return NodeFilter.FILTER_REJECT;
+
+                    const tag = parent.tagName ? parent.tagName.toLowerCase() : "";
+                    if (tag === "script" || tag === "style") return NodeFilter.FILTER_REJECT;
+                    if (!node.textContent || !node.textContent.trim()) return NodeFilter.FILTER_REJECT;
+
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            }
+        );
+
+        const nodes = [];
+        let node;
+
+        while ((node = walker.nextNode())) {
+            nodes.push(node);
+        }
+
+        nodes.forEach(function (node) {
+            const translated = targetText(node.textContent.trim());
+            if (translated) {
+                const leading = node.textContent.match(/^\s*/)[0];
+                const trailing = node.textContent.match(/\s*$/)[0];
+                node.textContent = leading + translated + trailing;
+            }
+        });
+    }
+
+    function translateManagerPage() {
+        document.documentElement.lang = currentLang();
+
+        ensureSwitcher();
+        updateButtons();
+
+        setText(".brand-title", "Ouverture de compte à distance", "Remote account opening");
+
+        const navLinks = document.querySelectorAll(".client-nav a");
+        if (navLinks[0]) navLinks[0].textContent = tr("Ouvrir un compte", "Open an account");
+        if (navLinks[1]) navLinks[1].textContent = tr("Suivre ma demande", "Track my request");
+
+        setText(".client-nav .secure", "Connexion sécurisée - eKYC", "Secure connection - eKYC");
+
+        setText(".intro h1", "Informations personnelles", "Personal information");
+        setText(
+            ".intro p",
+            "Renseignez vos informations telles qu’elles figurent sur votre pièce d’identité. Les champs marqués d’un astérisque (*) sont obligatoires.",
+            "Enter your information exactly as it appears on your identity document. Fields marked with an asterisk (*) are required."
+        );
+
+        setText(".help-box h3", "Comment bien remplir ce formulaire", "How to complete this form");
+
+        const helpItems = document.querySelectorAll(".help-box li");
+        const helpFr = [
+            "Saisissez vos informations exactement comme sur votre pièce d’identité.",
+            "Les champs marqués d’un astérisque (*) sont obligatoires.",
+            "Joignez des photos nettes et lisibles de vos documents.",
+            "Vos données sont utilisées pour l’ouverture, le KYC et la vérification de votre compte."
+        ];
+        const helpEn = [
+            "Enter your information exactly as it appears on your identity document.",
+            "Fields marked with an asterisk (*) are required.",
+            "Attach clear and readable photos of your documents.",
+            "Your data is used for account opening, KYC and account verification."
+        ];
+
+        helpItems.forEach(function (item, index) {
+            if (helpFr[index]) item.textContent = tr(helpFr[index], helpEn[index]);
+        });
+
+        setSectionHeader(1, "Vos informations personnelles", "Your personal information");
+        setSectionHeader(2, "Parents ou tuteurs", "Parents or guardians");
+        setSectionHeader(3, "Coordonnées", "Contact details");
+        setSectionHeader(4, "Pièce et activité", "Identity document and activity");
+        setSectionHeader(5, "Votre compte", "Your account");
+        setSectionHeader(6, "Documents à joindre", "Documents to attach");
+        setSectionHeader(7, "Consentement et autorisation", "Consent and authorization");
+
+        setFieldLabel('[name="sex"]', 'Sexe <span class="required">*</span>', 'Gender <span class="required">*</span>');
+        setFieldLabel('[name="marital_status"]', 'Situation matrimoniale <span class="required">*</span>', 'Marital status <span class="required">*</span>');
+        setFieldLabel('[name="matrimonial_regime"]', 'Régime matrimonial', 'Matrimonial regime');
+        setFieldLabel('[name="last_name"]', 'Nom d’usage / Nom de famille <span class="required">*</span>', 'Usual name / Family name <span class="required">*</span>');
+        setFieldLabel('[name="birth_name"]', 'Nom de naissance / Nom de jeune fille', 'Birth name / Maiden name');
+        setFieldLabel('[name="first_name"]', 'Prénom(s) <span class="required">*</span>', 'First name(s) <span class="required">*</span>');
+        setFieldLabel('[name="birth_date"]', 'Date de naissance <span class="required">*</span>', 'Date of birth <span class="required">*</span>');
+        setFieldLabel('[name="birth_place"]', 'Lieu de naissance <span class="required">*</span>', 'Place of birth <span class="required">*</span>');
+        setFieldLabel('[name="birth_department"]', 'Département de naissance', 'Birth department');
+        setFieldLabel('#nationalitySearch', 'Nationalité <span class="required">*</span>', 'Nationality <span class="required">*</span>');
+        setFieldLabel('#residenceCountrySearch', 'Pays de résidence <span class="required">*</span>', 'Country of residence <span class="required">*</span>');
+        setFieldLabel('[name="residency_status"]', 'Statut de résidence <span class="required">*</span>', 'Residence status <span class="required">*</span>');
+        setFieldLabel('[name="niu_ui"]', 'N° identification unique / Numéros fiscal', 'Unique identification number / Tax number');
+
+        setFieldLabel('[name="father_last_name_ui"]', 'Noms du père', "Father's last name");
+        setFieldLabel('[name="father_first_name_ui"]', 'Prénoms du père', "Father's first name");
+        setFieldLabel('[name="mother_last_name_ui"]', 'Noms de la mère', "Mother's last name");
+        setFieldLabel('[name="mother_first_name_ui"]', 'Prénoms de la mère', "Mother's first name");
+
+        setFieldLabel('[name="contact_1_last_name_ui"]', 'Noms du contact', "Contact's last name");
+        setFieldLabel('[name="contact_1_first_name_ui"]', 'Prénoms du contact', "Contact's first name");
+        setFieldLabel('[name="contact_2_last_name_ui"]', 'Noms du contact', "Contact's last name");
+        setFieldLabel('[name="contact_2_first_name_ui"]', 'Prénoms du contact', "Contact's first name");
+
+        setFieldLabel('#phone_local', 'Téléphone WhatsApp <span class="required">*</span>', 'WhatsApp phone number <span class="required">*</span>');
+        setFieldLabel('[name="email"]', 'Adresse e-mail <span class="required">*</span>', 'Email address <span class="required">*</span>');
+        setFieldLabel('[name="address_location"]', 'Adresse / Localisation', 'Address / Location');
+        setFieldLabel('[name="postal_box"]', 'Boîte postale', 'Postal box');
+
+        setFieldLabel('[name="document_type_ui"]', 'Type de pièce <span class="required">*</span>', 'Document type <span class="required">*</span>');
+        setFieldLabel('[name="identity_document_number"]', 'N° de pièce <span class="required">*</span>', 'Document number <span class="required">*</span>');
+        setFieldLabel('[name="identity_document_issue_date"]', 'Date de délivrance', 'Issue date');
+        setFieldLabel('[name="identity_document_issue_place"]', 'Lieu de délivrance', 'Place of issue');
+        setFieldLabel('[name="profession_ui"]', 'Profession <span class="required">*</span>', 'Profession <span class="required">*</span>');
+        setFieldLabel('[name="income_source_type_ui"]', 'Type de revenu <span class="required">*</span>', 'Income source type <span class="required">*</span>');
+        setFieldLabel('[name="income_range_ui"]', 'Tranche de revenus <span class="required">*</span>', 'Income range <span class="required">*</span>');
+
+        setFieldLabel('#agencySearch', 'Agence <span class="required">*</span>', 'Branch <span class="required">*</span>');
+        setFieldLabel('[name="currency_ui"]', 'Devise', 'Currency');
+        setFieldLabel('[name="account_type"]', 'Type de compte <span class="required">*</span>', 'Account type <span class="required">*</span>');
+        setFieldLabel('[name="rib"]', 'RIB <span class="optional">(si disponible)</span>', 'Bank details / RIB <span class="optional">(if available)</span>');
+        setFieldLabel('[name="account_object"]', 'Objet du compte <span class="required">*</span>', 'Purpose of the account <span class="required">*</span>');
+        setFieldLabel('[name="funds_origin"]', 'Origine des fonds <span class="required">*</span>', 'Source of funds <span class="required">*</span>');
+        setFieldLabel('[name="referral_code_ui"]', 'Code de parrainage <span class="optional">(Optionnel)</span>', 'Referral code <span class="optional">(Optional)</span>');
+
+        setPlaceholder('#nationalitySearch', 'Rechercher une nationalité...', 'Search for a nationality...');
+        setPlaceholder('#residenceCountrySearch', 'Rechercher un pays...', 'Search for a country...');
+        setPlaceholder('#agencySearch', 'Rechercher par nom ou code...', 'Search by name or code...');
+        setPlaceholder('[name="address_location"]', 'Adresse complète de résidence', 'Full residential address');
+
+        setFieldHint('#residenceCountrySearch', 'Recherchez et sélectionnez votre pays de résidence.', 'Search and select your country of residence.');
+        setFieldHint('[name="income_source_type_ui"]', 'Sélectionnez votre principale source de revenu.', 'Select your main source of income.');
+        setFieldHint('#agencySearch', 'Recherchez et sélectionnez l’agence où votre dossier sera traité.', 'Search and select the branch where your file will be processed.');
+
+        setSelectOptions('[name="sex"]', {
+            "Masculin": ["Masculin", "Male"],
+            "Féminin": ["Féminin", "Female"]
+        });
+
+        setSelectOptions('[name="marital_status"]', {
+            "Célibataire": ["Célibataire", "Single"],
+            "Marié(e)": ["Marié(e)", "Married"],
+            "Divorcé(e)": ["Divorcé(e)", "Divorced"],
+            "Veuf/Veuve": ["Veuf / Veuve", "Widowed"]
+        });
+
+        setSelectOptions('[name="residency_status"]', {
+            "RESIDENT": ["Résident", "Resident"],
+            "NON_RESIDENT": ["Non-résident", "Non-resident"]
+        });
+
+        setSelectOptions('[name="document_type_ui"]', {
+            "": ["Sélectionnez...", "Select..."],
+            "Carte nationale d’identité": ["Carte nationale d’identité", "National identity card"],
+            "Passeport": ["Passeport", "Passport"],
+            "Titre de séjour": ["Titre de séjour", "Residence permit"],
+            "Carte consulaire": ["Carte consulaire", "Consular card"]
+        });
+
+        setSelectOptions('[name="profession_ui"]', {
+            "": ["Sélectionnez votre profession...", "Select your profession..."],
+            "Salarié": ["Salarié", "Employee"],
+            "Commerçant": ["Commerçant", "Trader"],
+            "Étudiant": ["Étudiant", "Student"],
+            "Entrepreneur": ["Entrepreneur", "Entrepreneur"],
+            "Fonctionnaire": ["Fonctionnaire", "Civil servant"],
+            "Autre": ["Autre", "Other"]
+        });
+
+        setSelectOptions('[name="income_source_type_ui"]', {
+            "": ["Sélectionnez le type de revenu...", "Select income source type..."],
+            "SALARY": ["Salaire", "Salary"],
+            "BUSINESS": ["Activité commerciale", "Business activity"],
+            "LIBERAL": ["Profession libérale", "Self-employed profession"],
+            "PENSION": ["Pension / retraite", "Pension / retirement"],
+            "RENTAL": ["Revenus locatifs", "Rental income"],
+            "FAMILY_SUPPORT": ["Soutien familial", "Family support"],
+            "SCHOLARSHIP": ["Bourse / scolarité", "Scholarship / education support"],
+            "SAVINGS": ["Épargne personnelle", "Personal savings"],
+            "OTHER": ["Autre", "Other"]
+        });
+
+        setSelectOptions('[name="account_type"]', {
+            "": ["Sélectionnez...", "Select..."],
+            "Compte courant": ["Compte courant", "Current account"],
+            "Compte épargne diaspora": ["Compte épargne à distance", "Remote savings account"],
+            "Compte joint": ["Compte joint", "Joint account"]
+        });
+
+        setSelectOptions('[name="account_object"]', {
+            "": ["Sélectionnez...", "Select..."],
+            "Épargne personnelle": ["Épargne personnelle", "Personal savings"],
+            "Réception de salaire": ["Réception de salaire", "Salary reception"],
+            "Activité commerciale": ["Activité commerciale", "Business activity"],
+            "Transferts familiaux": ["Transferts familiaux", "Family transfers"],
+            "Investissement": ["Investissement", "Investment"],
+            "Autres": ["Autres", "Other"]
+        });
+
+        setSelectOptions('[name="funds_origin"]', {
+            "": ["Sélectionnez...", "Select..."],
+            "Salaire": ["Salaire", "Salary"],
+            "Activité commerciale": ["Activité commerciale", "Business activity"],
+            "Épargne personnelle": ["Épargne personnelle", "Personal savings"],
+            "Transferts familiaux": ["Transferts familiaux", "Family transfers"],
+            "Revenus locatifs": ["Revenus locatifs", "Rental income"],
+            "Pension / retraite": ["Pension / retraite", "Pension / retirement"],
+            "Bourse / scolarité": ["Bourse / scolarité", "Scholarship / education support"],
+            "Autres": ["Autres", "Other"]
+        });
+
+        const submitBtn = document.querySelector(".submit-btn");
+        if (submitBtn) {
+            submitBtn.textContent = tr(
+                "Soumettre ma demande d’ouverture de compte",
+                "Submit my account opening request"
+            );
+        }
+
+        translateExactTextNodes();
+    }
+
+    window.setManagerClientLanguage = function (lang) {
+        localStorage.setItem(STORAGE_KEY, lang === "en" ? "en" : "fr");
+        translateManagerPage();
+    };
+
+    document.addEventListener("DOMContentLoaded", function () {
+        translateManagerPage();
+
+        let count = 0;
+        const timer = setInterval(function () {
+            translateManagerPage();
+            count += 1;
+            if (count >= 12) clearInterval(timer);
+        }, 350);
+    });
+
+    setTimeout(translateManagerPage, 800);
+    setTimeout(translateManagerPage, 1800);
+    setTimeout(translateManagerPage, 3000);
+})();
+</script>
+
+<!-- DG_MANAGER_TARGETED_TRANSLATIONS_V4 -->
+<script>
+(function () {
+    if (window.__dgManagerTargetedTranslationsV4) return;
+    window.__dgManagerTargetedTranslationsV4 = true;
+
+    const STORAGE_KEY = "diaspora_client_lang";
+
+    const PAIRS = [
+        ["La phase d’identification commence par le sexe et la situation matrimoniale, car ces informations peuvent influencer le nom d’usage, notamment pour une femme mariée.", "The identification section starts with gender and marital status, as this information may affect the usual name, especially for a married woman."],
+        ["La phase d'identification commence par le sexe et la situation matrimoniale, car ces informations peuvent influencer le nom d’usage, notamment pour une femme mariée.", "The identification section starts with gender and marital status, as this information may affect the usual name, especially for a married woman."],
+        ["Pour une femme mariée, renseigner le nom d’épouse s’il est utilisé officiellement.", "For a married woman, enter the married name if it is officially used."],
+        ["Pour une femme mariée, renseigner le nom d'épouse s'il est utilisé officiellement.", "For a married woman, enter the married name if it is officially used."],
+        ["À renseigner si différent du nom d’usage ou du nom marital.", "Enter this if it differs from the usual name or married name."],
+        ["A renseigner si différent du nom d’usage ou du nom marital.", "Enter this if it differs from the usual name or married name."],
+        ["Tous vos prénoms dans l’ordre de votre pièce.", "All your first names in the order shown on your identity document."],
+        ["Tous vos prénoms dans l'ordre de votre pièce.", "All your first names in the order shown on your identity document."],
+        ["Tapez quelques lettres puis cliquez sur un pays proposé.", "Type a few letters, then click one of the suggested countries."],
+        ["Tapez quelques lettres puis cliquez sur une agence proposée.", "Type a few letters, then click one of the suggested branches."],
+
+        ["Indiquez votre filiation et deux personnes à prévenir en cas d’urgence.", "Enter your parent information and two emergency contacts."],
+        ["Indiquez votre filiation et deux personnes à prévenir en cas d'urgence.", "Enter your parent information and two emergency contacts."],
+        ["N° de téléphone", "Phone number"],
+        ["N° téléphone", "Phone number"],
+        ["Rechercher un pays ou un indicatif...", "Search for a country or calling code..."],
+        ["Rechercher un pays ou un indicatif", "Search for a country or calling code"],
+        ["Tapez le nom du pays ou l’indicatif pour filtrer la liste.", "Type the country name or calling code to filter the list."],
+        ["Tapez le nom du pays ou l'indicatif pour filtrer la liste.", "Type the country name or calling code to filter the list."],
+        ["Format Cameroun : 9 chiffres après +237", "Cameroon format: 9 digits after +237"],
+        ["CM Cameroun (+237)", "CM Cameroon (+237)"],
+
+        ["Choisissez l’indicatif du pays puis saisissez votre numéro WhatsApp.", "Choose the country calling code, then enter your WhatsApp number."],
+        ["Choisissez l'indicatif du pays puis saisissez votre numéro WhatsApp.", "Choose the country calling code, then enter your WhatsApp number."],
+        ["Vos confirmations seront envoyées à cette adresse.", "Your confirmations will be sent to this address."],
+
+        ["En soumettant ce formulaire, vous autorisez la banque à vérifier les informations fournies, à contrôler les documents transmis et à effectuer les diligences nécessaires à l’ouverture de votre compte.", "By submitting this form, you authorize the bank to verify the information provided, check the submitted documents and perform the required due diligence for account opening."],
+        ["En soumettant ce formulaire, vous autorisez la banque à vérifier les informations fournies, à contrôler les documents transmis et à effectuer les diligences nécessaires à l'ouverture de votre compte.", "By submitting this form, you authorize the bank to verify the information provided, check the submitted documents and perform the required due diligence for account opening."],
+        ["Je certifie que les informations fournies sont exactes et j’autorise Afriland First Bank à effectuer les contrôles KYC, la vérification documentaire, le filtrage de conformité et les diligences nécessaires à l’ouverture de mon compte.", "I certify that the information provided is accurate and authorize Afriland First Bank to perform KYC checks, document verification, compliance screening and the due diligence required to open my account."],
+        ["Je certifie que les informations fournies sont exactes et j'autorise Afriland First Bank à effectuer les contrôles KYC, la vérification documentaire, le filtrage de conformité et les diligences nécessaires à l'ouverture de mon compte.", "I certify that the information provided is accurate and authorize Afriland First Bank to perform KYC checks, document verification, compliance screening and the due diligence required to open my account."],
+
+        ["Renseignez votre RIB si vous disposez déjà d’une référence bancaire ou d’un compte existant.", "Enter your RIB if you already have a bank reference or an existing account."],
+        ["Renseignez votre RIB si vous disposez déjà d'une référence bancaire ou d'un compte existant.", "Enter your RIB if you already have a bank reference or an existing account."],
+        ["Référence facultative", "Optional reference"],
+
+        ["PREFERRED PACKAGE", "PREFERRED PACKAGE"],
+        ["Package souhaité", "Preferred package"],
+        ["Pour les professionnels", "For professionals"],
+        ["L’essentiel au meilleur prix", "Essentials at the best price"],
+        ["L'essentiel au meilleur prix", "Essentials at the best price"],
+        ["Assurance", "Insurance"],
+        ["Découvert permanent", "Permanent overdraft"],
+        ["Carte Visa Classique", "Classic Visa card"],
+        ["Tarification", "Pricing"],
+        ["Ouverture", "Opening"],
+        ["Souscription", "Subscription"],
+        ["Mensuel", "Monthly"],
+        ["Sans paiement immédiat", "No immediate payment"],
+
+        ["Official identity document", "Official identity document"],
+        ["Photographiez votre pièce. Pour une CNI ou une carte consulaire, le recto et le verso sont requis. Pour un passeport, une seule page suffit.", "Photograph your ID document. For a national ID card or consular card, both front and back are required. For a passport, one page is sufficient."],
+        ["Photographier", "Take photo"],
+        ["Importer", "Upload"],
+        ["Photographier le justificatif de domicile", "Take proof of address photo"],
+        ["Importer le justificatif de domicile", "Upload proof of address"],
+        ["Aucune pièce capturée ou importée.", "No identity document captured or uploaded."],
+        ["Aucun justificatif de domicile ajouté.", "No proof of address added."],
+        ["Facture, attestation ou document officiel indiquant l’adresse.", "Bill, certificate or official document showing the address."],
+        ["Facture, attestation ou document officiel indiquant l'adresse.", "Bill, certificate or official document showing the address."],
+
+        ["DOCUMENTS COMPLÉMENTAIRES OBLIGATOIRES", "MANDATORY ADDITIONAL DOCUMENTS"],
+        ["DOCUMENTS COMPLEMENTAIRES OBLIGATOIRES", "MANDATORY ADDITIONAL DOCUMENTS"],
+        ["Photographiez les pièces permettant de justifier votre activité ou vos revenus, ainsi que votre relevé d’identification bancaire.", "Photograph the documents proving your activity or income, as well as your bank identification statement."],
+        ["Photographiez les pièces permettant de justifier votre activité ou vos revenus, ainsi que votre relevé d’identification bancaire.", "Photograph the documents proving your activity or income, as well as your bank identification statement."],
+        ["Justificatif de revenu — Activité commerciale", "Income proof — Business activity"],
+        ["Justificatif de revenu — Activite commerciale", "Income proof — Business activity"],
+        ["Photographier le justificatif de revenu", "Take income proof photo"],
+        ["Relevé d’identification bancaire - RIB", "Bank identification statement - RIB"],
+        ["Relevé d'identification bancaire - RIB", "Bank identification statement - RIB"],
+        ["Photographier le RIB", "Take RIB photo"],
+        ["Photographiez votre relevé d’identification bancaire ou une preuve de votre RIB.", "Photograph your bank identification statement or RIB proof."],
+        ["Photographiez votre relevé d’identification bancaire ou une preuve de votre RIB.", "Photograph your bank identification statement or RIB proof."],
+        ["Aucune photo capturée.", "No photo captured."],
+
+        ["Selfie / proof of life", "Selfie / proof of life"],
+        ["Prenez une photo claire du visage ou enregistrez une courte vidéo selfie. La photo utilise un cadrage intelligent ; la vidéo permet de renforcer la preuve de vie.", "Take a clear face photo or record a short selfie video. The photo uses intelligent framing; the video helps strengthen proof of life."],
+        ["Filmer", "Record"],
+        ["Selfie obligatoire : vous devez capturer un selfie réel. L’import simple du selfie n’est pas accepté.", "Mandatory selfie: you must capture a real selfie. Simple selfie upload is not accepted."],
+        ["Selfie obligatoire : vous devez capturer un selfie réel. L'import simple du selfie n'est pas accepté.", "Mandatory selfie: you must capture a real selfie. Simple selfie upload is not accepted."],
+        ["Aucun selfie capturé ou importé.", "No selfie captured or uploaded."],
+
+        ["ADDITIONAL DOCUMENTS FOR NON-RESIDENT INDIVIDUAL", "ADDITIONAL DOCUMENTS FOR NON-RESIDENT INDIVIDUAL"],
+        ["Birth certificate or document showing parentage", "Birth certificate or document showing parentage"],
+        ["Payslip / employment or school certificate", "Payslip / employment or school certificate"],
+        ["Tax compliance certificate", "Tax compliance certificate"],
+        ["Aucun document ajouté.", "No document added."],
+        ["À fournir si la pièce d’identité ne permet pas d’identifier clairement la filiation.", "Required if the identity document does not clearly show parentage."],
+        ["A fournir si la pièce d'identité ne permet pas d'identifier clairement la filiation.", "Required if the identity document does not clearly show parentage."],
+        ["Document justifiant l’activité professionnelle ou scolaire.", "Document proving professional or school activity."],
+        ["Document justifiant l'activite professionnelle ou scolaire.", "Document proving professional or school activity."],
+        ["Attestation de conformité fiscale exigée pour les non-résidents.", "Tax compliance certificate required for non-residents."],
+
+        ["Secteur d’activité", "Business sector"],
+        ["Secteur d'activité", "Business sector"],
+        ["Rechercher un secteur : commerce, santé, BTP, finance...", "Search for a sector: trade, health, construction, finance..."],
+        ["Sélectionner le secteur d’activité", "Select the business sector"],
+        ["Sélectionner le secteur d'activité", "Select the business sector"],
+        ["La liste est chargée depuis le système de la banque.", "The list is loaded from the bank system."],
+        ["Sous-secteur d’activité", "Business sub-sector"],
+        ["Sous-secteur d'activité", "Business sub-sector"],
+        ["Sélectionnez un sous-secteur", "Select a sub-sector"],
+        ["Aucun sous-secteur trouvé pour ce secteur", "No sub-sector found for this sector"],
+        ["Aucun sous-secteur correspondant au secteur sélectionné.", "No sub-sector matches the selected sector."],
+
+        ["Transport et logistique", "Transport and logistics"],
+        ["Commerce et distribution", "Trade and distribution"],
+        ["Santé", "Healthcare"],
+        ["Sante", "Healthcare"],
+        ["BTP", "Construction"],
+        ["Finance", "Finance"],
+        ["Banque", "Banking"],
+        ["Assurance", "Insurance"],
+        ["Agriculture", "Agriculture"],
+        ["Éducation", "Education"],
+        ["Education", "Education"],
+        ["Informatique", "IT services"],
+        ["Télécommunications", "Telecommunications"],
+        ["Telecommunications", "Telecommunications"],
+        ["Industrie", "Industry"],
+        ["Services", "Services"],
+        ["Hôtellerie et restauration", "Hospitality and catering"],
+        ["Hotellerie et restauration", "Hospitality and catering"],
+
+        ["Devise de la tranche de revenu", "Income range currency"],
+        ["Sélectionnez la devise correspondant à votre tranche de revenu déclarée.", "Select the currency corresponding to your declared income range."],
+        ["La devise de cette tranche est sélectionnée dans le champ Devise de la tranche de revenu.", "The currency for this range is selected in the Income range currency field."],
+        ["Les tranches sont converties depuis les montants FCFA avec le taux indicatif 1 EUR = 655.957 FCFA.", "The ranges are converted from FCFA amounts using the indicative rate 1 EUR = 655.957 FCFA."],
+        ["Document attendu : registre de commerce, justificatif fiscal ou preuve d’activité commerciale.", "Expected document: business registration, tax certificate, or proof of business activity."],
+        ["Document attendu : registre de commerce, justificatif fiscal ou preuve d'activité commerciale.", "Expected document: business registration, tax certificate, or proof of business activity."]
+    ];
+
+    function currentLang() {
+        return localStorage.getItem(STORAGE_KEY) || "fr";
+    }
+
+    function normalize(value) {
+        return String(value || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase();
+    }
+
+    function findTranslation(value) {
+        const n = normalize(value);
+
+        for (const pair of PAIRS) {
+            if (n === normalize(pair[0]) || n === normalize(pair[1])) {
+                return currentLang() === "en" ? pair[1] : pair[0];
+            }
+        }
+
+        return null;
+    }
+
+    function escapeRegExp(value) {
+        return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function replaceKnownPhrases(value) {
+        let output = String(value || "");
+
+        PAIRS.forEach(function (pair) {
+            const from = currentLang() === "en" ? pair[0] : pair[1];
+            const to = currentLang() === "en" ? pair[1] : pair[0];
+
+            if (!from || !to || from === to) return;
+
+            output = output.replace(new RegExp(escapeRegExp(from), "g"), to);
+        });
+
+        if (currentLang() === "en") {
+            output = output.replace(
+                /(\d+)\s+sous-secteur\(s\)\s+disponible\(s\)\.?/gi,
+                "$1 sub-sector(s) available."
+            );
+        } else {
+            output = output.replace(
+                /(\d+)\s+sub-sector\(s\)\s+available\.?/gi,
+                "$1 sous-secteur(s) disponible(s)."
+            );
+        }
+
+        return output;
+    }
+
+    function translateTextNodes() {
+        const walker = document.createTreeWalker(
+            document.body,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode: function (node) {
+                    const parent = node.parentElement;
+                    if (!parent) return NodeFilter.FILTER_REJECT;
+
+                    const tag = parent.tagName ? parent.tagName.toLowerCase() : "";
+                    if (tag === "script" || tag === "style") return NodeFilter.FILTER_REJECT;
+                    if (!node.textContent || !node.textContent.trim()) return NodeFilter.FILTER_REJECT;
+
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            }
+        );
+
+        const nodes = [];
+        let node;
+
+        while ((node = walker.nextNode())) {
+            nodes.push(node);
+        }
+
+        nodes.forEach(function (node) {
+            const raw = node.textContent;
+            const value = raw.trim();
+
+            let next = findTranslation(value);
+
+            if (!next) {
+                next = replaceKnownPhrases(raw);
+            } else {
+                const leading = raw.match(/^\s*/)[0];
+                const trailing = raw.match(/\s*$/)[0];
+                next = leading + next + trailing;
+            }
+
+            if (next && next !== raw) {
+                node.textContent = next;
+            }
+        });
+    }
+
+    function translateAttributes() {
+        document.querySelectorAll("[placeholder]").forEach(function (el) {
+            const raw = el.getAttribute("placeholder") || "";
+            const next = findTranslation(raw) || replaceKnownPhrases(raw);
+
+            if (next && next !== raw) {
+                el.setAttribute("placeholder", next);
+            }
+        });
+
+        document.querySelectorAll("[title]").forEach(function (el) {
+            const raw = el.getAttribute("title") || "";
+            const next = findTranslation(raw) || replaceKnownPhrases(raw);
+
+            if (next && next !== raw) {
+                el.setAttribute("title", next);
+            }
+        });
+    }
+
+    function translateOptions() {
+        document.querySelectorAll("option").forEach(function (option) {
+            if (!option.dataset.originalText) {
+                option.dataset.originalText = option.textContent.trim();
+            }
+
+            const original = option.dataset.originalText;
+            const current = option.textContent.trim();
+            const base = currentLang() === "fr" ? original : current;
+
+            const next = findTranslation(base) || findTranslation(original) || replaceKnownPhrases(base);
+
+            if (next && next !== current) {
+                if (!option.hasAttribute("value")) {
+                    option.setAttribute("value", original);
+                }
+
+                option.textContent = next;
+            }
+        });
+    }
+
+    function runTranslations() {
+        if (!document.body) return;
+
+        translateTextNodes();
+        translateAttributes();
+        translateOptions();
+    }
+
+    let timer = null;
+
+    function scheduleTranslations() {
+        clearTimeout(timer);
+        timer = setTimeout(runTranslations, 180);
+        setTimeout(runTranslations, 650);
+        setTimeout(runTranslations, 1300);
+    }
+
+    function wrapLanguageSwitcher() {
+        if (typeof window.setManagerClientLanguage !== "function") return;
+        if (window.setManagerClientLanguage.__fullTranslationWrapped) return;
+
+        const original = window.setManagerClientLanguage;
+
+        window.setManagerClientLanguage = function () {
+            const result = original.apply(this, arguments);
+            scheduleTranslations();
+            return result;
+        };
+
+        window.setManagerClientLanguage.__fullTranslationWrapped = true;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        runTranslations();
+
+        setTimeout(runTranslations, 500);
+        setTimeout(runTranslations, 1500);
+        setTimeout(runTranslations, 3000);
+
+        setTimeout(wrapLanguageSwitcher, 300);
+        setTimeout(wrapLanguageSwitcher, 1000);
+
+        document.addEventListener("click", scheduleTranslations);
+        document.addEventListener("change", scheduleTranslations);
+        document.addEventListener("input", scheduleTranslations);
+    });
+})();
+</script>
+
+
+<style>
+/* SELFIE_CAPTURE_BUTTON_MOBILE_FIX_V1 */
+.selfie-manual-capture-fix {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+    z-index: 999999 !important;
+    display: flex !important;
+    gap: 10px !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 10px !important;
+    background: rgba(255,255,255,.96) !important;
+    border-top: 1px solid #e5e7eb !important;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.12) !important;
+    border-radius: 14px !important;
+}
+
+.selfie-manual-capture-fix button,
+.selfie-manual-capture-fix a {
+    width: 100% !important;
+    min-height: 52px !important;
+    border: none !important;
+    border-radius: 12px !important;
+    background: #D22630 !important;
+    color: #fff !important;
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    text-align: center !important;
+}
+
+body.selfie-capture-active {
+    padding-bottom: 95px !important;
+}
+
+@media (max-width: 768px) {
+    video,
+    canvas,
+    .camera-preview,
+    #cameraPreview,
+    #video,
+    #selfieVideo {
+        max-height: 62vh !important;
+        object-fit: cover !important;
+    }
+}
+</style>
+
+<script>
+/* SELFIE_CAPTURE_BUTTON_MOBILE_FIX_V1 */
+(function () {
+    function pageLooksLikeSelfieCapture() {
+        const text = (document.body.innerText || "").toLowerCase();
+        return (
+            text.includes("capture photo selfie") ||
+            text.includes("placez votre visage") ||
+            text.includes("capturer la photo") ||
+            text.includes("auto-capture")
+        );
+    }
+
+    function findCaptureButton() {
+        const candidates = Array.from(document.querySelectorAll("button, a, input[type='button'], input[type='submit']"));
+
+        return candidates.find(function (el) {
+            const label = (
+                el.innerText ||
+                el.value ||
+                el.getAttribute("aria-label") ||
+                el.getAttribute("title") ||
+                ""
+            ).toLowerCase();
+
+            return (
+                label.includes("capturer") ||
+                label.includes("capture") ||
+                label.includes("prendre la photo") ||
+                label.includes("photo")
+            ) && !label.includes("fermer");
+        });
+    }
+
+    function createFloatingCaptureButton(existingButton) {
+        if (document.getElementById("selfieFloatingCaptureFix")) return;
+
+        document.body.classList.add("selfie-capture-active");
+
+        const bar = document.createElement("div");
+        bar.id = "selfieFloatingCaptureFix";
+        bar.className = "selfie-manual-capture-fix";
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.innerText = "Capturer la photo";
+
+        btn.addEventListener("click", function () {
+            const freshButton = findCaptureButton();
+
+            if (freshButton && freshButton !== btn) {
+                freshButton.click();
+                return;
+            }
+
+            const possibleFns = [
+                "capturePhoto",
+                "captureSelfie",
+                "takePhoto",
+                "takeSelfie",
+                "manualCapture",
+                "captureImage"
+            ];
+
+            for (const fnName of possibleFns) {
+                if (typeof window[fnName] === "function") {
+                    window[fnName]();
+                    return;
+                }
+            }
+
+            alert("Bouton de capture introuvable. Veuillez faire défiler légèrement la page ou contacter le support.");
+        });
+
+        bar.appendChild(btn);
+        document.body.appendChild(bar);
+    }
+
+    function init() {
+        if (!pageLooksLikeSelfieCapture()) return;
+
+        const existingButton = findCaptureButton();
+
+        if (existingButton) {
+            existingButton.style.display = "";
+            existingButton.style.visibility = "visible";
+        }
+
+        createFloatingCaptureButton(existingButton);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+
+    setTimeout(init, 1000);
+    setTimeout(init, 2500);
+})();
+</script>
+
+
+
+<script>
+/* AFB_FINAL_FORM_STEP0_PREFILL_AND_PAYLOAD_V1 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_FINAL_FORM_STEP0_PREFILL_AND_PAYLOAD_V1) return;
+  window.__AFB_FINAL_FORM_STEP0_PREFILL_AND_PAYLOAD_V1 = true;
+
+  const STEP0_PAYLOAD_KEY = "diaspora_step0_payload";
+
+  function readPayload() {
+    try {
+      return JSON.parse(localStorage.getItem(STEP0_PAYLOAD_KEY) || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function query(selector) {
+    return document.querySelector(selector);
+  }
+
+  function setValue(selectors, value) {
+    if (!value) return false;
+
+    for (const selector of selectors) {
+      const input = query(selector);
+      if (!input) continue;
+
+      const current = String(input.value || "").trim();
+      if (current) return true;
+
+      if (input.tagName === "SELECT") {
+        let matched = false;
+
+        Array.from(input.options).forEach(function (option) {
+          if (String(option.value || "").toLowerCase() === String(value).toLowerCase() ||
+              String(option.textContent || "").toLowerCase() === String(value).toLowerCase()) {
+            input.value = option.value;
+            matched = true;
+          }
+        });
+
+        if (!matched) {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = value;
+          input.appendChild(option);
+          input.value = value;
+        }
+      } else {
+        input.value = value;
+      }
+
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+
+      return true;
+    }
+
+    return false;
+  }
+
+  function ensureHiddenField(name, value) {
+    if (!value) return;
+
+    let input = document.querySelector('[name="' + name + '"]');
+
+    if (!input) {
+      const form = document.querySelector("form") || document.body;
+      input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.id = name;
+      form.appendChild(input);
+    }
+
+    input.value = value;
+  }
+
+  function prefillFinalForm() {
+    const payload = readPayload();
+
+    setValue([
+      '#email',
+      '[name="email"]',
+      '#client_email',
+      '[name="client_email"]'
+    ], payload.email);
+
+    setValue([
+      '#phone',
+      '[name="phone"]',
+      '#telephone',
+      '[name="telephone"]',
+      '#client_phone',
+      '[name="client_phone"]'
+    ], payload.whatsapp_phone_full || payload.phone);
+
+    setValue([
+      '#residence',
+      '[name="residence"]',
+      '#country_of_residence',
+      '[name="country_of_residence"]'
+    ], payload.country_of_residence || payload.residence);
+
+    ensureHiddenField("pre_onboarding_session_id", payload.pre_onboarding_session_id);
+  }
+
+  function mergeStep0IntoApplicationBody(body) {
+    const payload = readPayload();
+
+    if (!payload || !payload.pre_onboarding_session_id) return body;
+
+    body.pre_onboarding_session_id = body.pre_onboarding_session_id || payload.pre_onboarding_session_id;
+    body.email = body.email || payload.email;
+    body.phone = body.phone || payload.whatsapp_phone_full || payload.phone;
+    body.residence = body.residence || payload.country_of_residence || payload.residence;
+
+    return body;
+  }
+
+  const originalFetch = window.fetch;
+
+  window.fetch = function (input, init) {
+    try {
+      const url = typeof input === "string" ? input : String(input && input.url || "");
+
+      if (url.includes("/api/applications") && init && init.body && typeof init.body === "string") {
+        const body = JSON.parse(init.body);
+        init.body = JSON.stringify(mergeStep0IntoApplicationBody(body));
+      }
+    } catch (e) {}
+
+    return originalFetch.apply(this, arguments);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", prefillFinalForm);
+  } else {
+    prefillFinalForm();
+  }
+
+  setTimeout(prefillFinalForm, 500);
+  setTimeout(prefillFinalForm, 1200);
+})();
+</script>
+
+
+<script>
+/* AFB_FINAL_FORM_REAL_STEP0_PREFILL_V2 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_FINAL_FORM_REAL_STEP0_PREFILL_V2) return;
+  window.__AFB_FINAL_FORM_REAL_STEP0_PREFILL_V2 = true;
+
+  const STEP0_PAYLOAD_KEY = "diaspora_step0_payload";
+
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  function qs(selector) {
+    return document.querySelector(selector);
+  }
+
+  function clean(value) {
+    return String(value || "").trim();
+  }
+
+  function digits(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function readPayload() {
+    const params = new URLSearchParams(window.location.search);
+
+    let stored = {};
+    try {
+      stored = JSON.parse(localStorage.getItem(STEP0_PAYLOAD_KEY) || "{}") || {};
+    } catch (e) {
+      stored = {};
+    }
+
+    const payload = {
+      pre_onboarding_session_id:
+        params.get("pre_session") ||
+        stored.pre_onboarding_session_id ||
+        localStorage.getItem("diaspora_pre_onboarding_session_id") ||
+        "",
+
+      email:
+        params.get("step0_email") ||
+        stored.email ||
+        localStorage.getItem("diaspora_step0_email") ||
+        "",
+
+      phone:
+        params.get("step0_phone") ||
+        stored.whatsapp_phone_full ||
+        stored.phone ||
+        localStorage.getItem("diaspora_step0_whatsapp_full") ||
+        localStorage.getItem("diaspora_step0_whatsapp_otp_phone") ||
+        "",
+
+      residence:
+        params.get("step0_residence") ||
+        stored.country_of_residence ||
+        stored.residence ||
+        localStorage.getItem("diaspora_step0_country") ||
+        localStorage.getItem("diaspora_step0_residence") ||
+        ""
+    };
+
+    payload.email = clean(payload.email).toLowerCase();
+    payload.phone = normalizePhone(payload.phone);
+    payload.residence = clean(payload.residence);
+
+    return payload;
+  }
+
+  function normalizePhone(phone) {
+    const value = clean(phone);
+    if (!value) return "";
+    if (value.startsWith("+")) return "+" + digits(value);
+    return "+" + digits(value);
+  }
+
+  function setInputValue(input, value, overwrite) {
+    if (!input || !value) return false;
+
+    if (!overwrite && clean(input.value)) return true;
+
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.dispatchEvent(new Event("blur", { bubbles: true }));
+    return true;
+  }
+
+  function findDialOption(select, fullPhone) {
+    if (!select || !fullPhone) return null;
+
+    const phoneDigits = digits(fullPhone);
+
+    const options = Array.from(select.options || [])
+      .map(function (option) {
+        const code = clean(option.value || option.dataset.callingCode || option.dataset.code || option.textContent);
+        const codeDigits = digits(code);
+        return { option, code, codeDigits };
+      })
+      .filter(function (item) {
+        return item.codeDigits && phoneDigits.startsWith(item.codeDigits);
+      })
+      .sort(function (a, b) {
+        return b.codeDigits.length - a.codeDigits.length;
+      });
+
+    return options.length ? options[0] : null;
+  }
+
+  function prefillPhone(payload) {
+    const fullPhone = normalizePhone(payload.phone);
+    if (!fullPhone) return;
+
+    const countrySelect = el("phone_country");
+    const localInput = el("phone_local");
+    const hiddenPhone = el("phone") || qs('[name="phone"]');
+
+    if (hiddenPhone) {
+      setInputValue(hiddenPhone, fullPhone, true);
+    }
+
+    const match = findDialOption(countrySelect, fullPhone);
+
+    if (countrySelect && match) {
+      countrySelect.value = match.option.value;
+      countrySelect.dispatchEvent(new Event("input", { bubbles: true }));
+      countrySelect.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+
+    if (localInput) {
+      let local = digits(fullPhone);
+
+      if (match && match.codeDigits && local.startsWith(match.codeDigits)) {
+        local = local.slice(match.codeDigits.length);
+      }
+
+      local = local.replace(/^0+/, "");
+
+      setInputValue(localInput, local, true);
+      localInput.placeholder = localInput.placeholder || local;
+    }
+
+    if (typeof window.composePhoneNumber === "function") {
+      try {
+        window.composePhoneNumber("phone_country", "phone_local", "phone");
+      } catch (e) {}
+    }
+
+    if (hiddenPhone) {
+      setInputValue(hiddenPhone, fullPhone, true);
+    }
+  }
+
+  function prefillEmail(payload) {
+    const emailInput = qs('[name="email"]') || el("email") || el("client_email");
+    setInputValue(emailInput, payload.email, true);
+  }
+
+  function prefillResidence(payload) {
+    if (!payload.residence) return;
+
+    const hiddenResidence = el("residence") || qs('[name="residence"]');
+    const visibleResidence =
+      el("residenceCountrySearch") ||
+      el("country_of_residence") ||
+      qs('[name="country_of_residence"]') ||
+      qs('[name="residence_country"]');
+
+    setInputValue(hiddenResidence, payload.residence, true);
+    setInputValue(visibleResidence, payload.residence, true);
+
+    if (visibleResidence) {
+      visibleResidence.classList.add("with-selected-flag");
+      visibleResidence.setAttribute("data-prefilled-step0", "1");
+    }
+  }
+
+  function prefillSession(payload) {
+    const sessionInput =
+      el("pre_onboarding_session_id") ||
+      qs('[name="pre_onboarding_session_id"]');
+
+    setInputValue(sessionInput, payload.pre_onboarding_session_id, true);
+  }
+
+  function persistPayload(payload) {
+    if (!payload) return;
+
+    localStorage.setItem(STEP0_PAYLOAD_KEY, JSON.stringify({
+      pre_onboarding_session_id: payload.pre_onboarding_session_id,
+      email: payload.email,
+      phone: payload.phone,
+      whatsapp_phone_full: payload.phone,
+      residence: payload.residence,
+      country_of_residence: payload.residence,
+      restored_at: new Date().toISOString()
+    }));
+  }
+
+  function applyPrefill() {
+    const payload = readPayload();
+
+    if (!payload.email && !payload.phone && !payload.residence) {
+      console.warn("AFB_FINAL_FORM_REAL_STEP0_PREFILL_V2 : aucune donnée Étape 0 trouvée.");
+      return;
+    }
+
+    persistPayload(payload);
+    prefillSession(payload);
+    prefillEmail(payload);
+    prefillPhone(payload);
+    prefillResidence(payload);
+
+    window.__AFB_FINAL_STEP0_PREFILL_PAYLOAD__ = payload;
+
+    console.log("AFB_FINAL_FORM_REAL_STEP0_PREFILL_V2 appliqué :", payload);
+  }
+
+  function mergePayloadIntoBody(body) {
+    const payload = readPayload();
+
+    if (!body || typeof body !== "object") return body;
+
+    if (payload.pre_onboarding_session_id) {
+      body.pre_onboarding_session_id = body.pre_onboarding_session_id || payload.pre_onboarding_session_id;
+    }
+
+    if (payload.email) {
+      body.email = body.email || payload.email;
+    }
+
+    if (payload.phone) {
+      body.phone = payload.phone;
+    }
+
+    if (payload.residence) {
+      body.residence = body.residence || payload.residence;
+    }
+
+    return body;
+  }
+
+  function bindSubmitGuard() {
+    const form = el("accountForm") || qs("form");
+    if (!form || form.dataset.step0RealPrefillSubmit === "1") return;
+
+    form.dataset.step0RealPrefillSubmit = "1";
+
+    form.addEventListener("submit", function () {
+      applyPrefill();
+    }, true);
+  }
+
+  function wrapFetch() {
+    if (window.__AFB_FINAL_FORM_REAL_STEP0_FETCH_WRAPPED_V2) return;
+    window.__AFB_FINAL_FORM_REAL_STEP0_FETCH_WRAPPED_V2 = true;
+
+    const originalFetch = window.fetch;
+
+    window.fetch = function (input, init) {
+      try {
+        const url = typeof input === "string" ? input : String(input && input.url || "");
+
+        if (url.includes("/api/applications") && init && init.body && typeof init.body === "string") {
+          const body = JSON.parse(init.body);
+          init.body = JSON.stringify(mergePayloadIntoBody(body));
+        }
+      } catch (e) {}
+
+      return originalFetch.apply(this, arguments);
+    };
+  }
+
+  function init() {
+    applyPrefill();
+    bindSubmitGuard();
+    wrapFetch();
+
+    setTimeout(applyPrefill, 300);
+    setTimeout(applyPrefill, 900);
+    setTimeout(applyPrefill, 1800);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+
+<script>
+/* AFB_FINAL_FORM_PHONE_PREFILL_FIX_V3 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_FINAL_FORM_PHONE_PREFILL_FIX_V3) return;
+  window.__AFB_FINAL_FORM_PHONE_PREFILL_FIX_V3 = true;
+
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  function clean(value) {
+    return String(value || "").trim();
+  }
+
+  function digits(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function normalizePhone(value) {
+    const raw = clean(value);
+    if (!raw) return "";
+    return "+" + digits(raw);
+  }
+
+  function readStep0Phone() {
+    const params = new URLSearchParams(window.location.search);
+
+    let payload = {};
+    try {
+      payload = JSON.parse(localStorage.getItem("diaspora_step0_payload") || "{}") || {};
+    } catch (e) {
+      payload = {};
+    }
+
+    return normalizePhone(
+      params.get("step0_phone") ||
+      payload.whatsapp_phone_full ||
+      payload.phone ||
+      localStorage.getItem("diaspora_step0_whatsapp_full") ||
+      localStorage.getItem("diaspora_step0_whatsapp_otp_phone") ||
+      ""
+    );
+  }
+
+  function findBestCountryOption(select, fullPhone) {
+    if (!select || !fullPhone) return null;
+
+    const fullDigits = digits(fullPhone);
+
+    return Array.from(select.options || [])
+      .map(function (option) {
+        const value = clean(option.value);
+        const text = clean(option.textContent);
+        const dataCalling = clean(option.dataset.callingCode || option.dataset.code || "");
+        const codeDigits = digits(dataCalling || value || text);
+
+        return {
+          option: option,
+          codeDigits: codeDigits
+        };
+      })
+      .filter(function (item) {
+        return item.codeDigits && fullDigits.startsWith(item.codeDigits);
+      })
+      .sort(function (a, b) {
+        return b.codeDigits.length - a.codeDigits.length;
+      })[0] || null;
+  }
+
+  function setValue(input, value) {
+    if (!input || !value) return;
+
+    input.value = value;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    input.dispatchEvent(new Event("blur", { bubbles: true }));
+  }
+
+  function fillPhoneOnce() {
+    const fullPhone = readStep0Phone();
+    if (!fullPhone) return false;
+
+    const countrySelect = el("phone_country");
+    const localInput = el("phone_local");
+    const hiddenInput = el("phone");
+
+    if (!countrySelect || !localInput || !hiddenInput) return false;
+
+    const match = findBestCountryOption(countrySelect, fullPhone);
+
+    let local = digits(fullPhone);
+
+    if (match && match.codeDigits) {
+      countrySelect.value = match.option.value;
+      countrySelect.dispatchEvent(new Event("input", { bubbles: true }));
+      countrySelect.dispatchEvent(new Event("change", { bubbles: true }));
+
+      if (local.startsWith(match.codeDigits)) {
+        local = local.slice(match.codeDigits.length);
+      }
+    }
+
+    local = local.replace(/^0+/, "");
+
+    setValue(localInput, local);
+    setValue(hiddenInput, fullPhone);
+
+    // Si les fonctions natives du formulaire existent, on les laisse recomposer,
+    // puis on remet la valeur exacte complète pour éviter toute perte.
+    try {
+      if (typeof window.composePhoneNumber === "function") {
+        window.composePhoneNumber("phone_country", "phone_local", "phone");
+      }
+    } catch (e) {}
+
+    setTimeout(function () {
+      setValue(localInput, local);
+      setValue(hiddenInput, fullPhone);
+    }, 100);
+
+    setTimeout(function () {
+      setValue(localInput, local);
+      setValue(hiddenInput, fullPhone);
+    }, 500);
+
+    window.__AFB_STEP0_PHONE_PREFILLED__ = {
+      phone_country_value: countrySelect.value,
+      phone_local_value: localInput.value,
+      phone_hidden_value: hiddenInput.value,
+      source_phone: fullPhone
+    };
+
+    console.log("AFB_FINAL_FORM_PHONE_PREFILL_FIX_V3 appliqué :", window.__AFB_STEP0_PHONE_PREFILLED__);
+
+    return true;
+  }
+
+  function runRepeated() {
+    let count = 0;
+
+    const timer = setInterval(function () {
+      count += 1;
+
+      const ok = fillPhoneOnce();
+      const select = el("phone_country");
+
+      // On continue quelques secondes parce que la liste des pays est chargée async.
+      if ((ok && select && select.options && select.options.length > 5 && count > 4) || count > 30) {
+        clearInterval(timer);
+      }
+    }, 300);
+  }
+
+  function observeCountrySelect() {
+    const select = el("phone_country");
+    if (!select || select.dataset.step0PhoneObserver === "1") return;
+
+    select.dataset.step0PhoneObserver = "1";
+
+    const observer = new MutationObserver(function () {
+      fillPhoneOnce();
+    });
+
+    observer.observe(select, { childList: true, subtree: true });
+  }
+
+  function init() {
+    fillPhoneOnce();
+    observeCountrySelect();
+    runRepeated();
+
+    setTimeout(fillPhoneOnce, 1000);
+    setTimeout(fillPhoneOnce, 2000);
+    setTimeout(fillPhoneOnce, 3500);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+
+<script>
+/* AFB_FINAL_RESIDENCE_PREFILL_DROPDOWN_FIX_V1 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_FINAL_RESIDENCE_PREFILL_DROPDOWN_FIX_V1) return;
+  window.__AFB_FINAL_RESIDENCE_PREFILL_DROPDOWN_FIX_V1 = true;
+
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  function clean(value) {
+    return String(value || "").trim();
+  }
+
+  function readStep0Residence() {
+    const params = new URLSearchParams(window.location.search);
+
+    let payload = {};
+    try {
+      payload = JSON.parse(localStorage.getItem("diaspora_step0_payload") || "{}") || {};
+    } catch (e) {
+      payload = {};
+    }
+
+    return clean(
+      params.get("step0_residence") ||
+      payload.country_of_residence ||
+      payload.residence ||
+      localStorage.getItem("diaspora_step0_country") ||
+      localStorage.getItem("diaspora_step0_residence") ||
+      ""
+    );
+  }
+
+  function applyResidenceCleanState() {
+    const visible = el("residenceCountrySearch");
+    const hidden = el("residence");
+    const dropdown = el("residenceCountryDropdown");
+    const helper = el("residenceCountryHelper");
+
+    if (!visible || !hidden) return false;
+
+    const step0Residence = readStep0Residence();
+    const visibleValue = clean(visible.value);
+    const hiddenValue = clean(hidden.value);
+
+    const hasPrefilledResidence =
+      Boolean(step0Residence) &&
+      (
+        visibleValue.toLowerCase() === step0Residence.toLowerCase() ||
+        hiddenValue.toLowerCase() === step0Residence.toLowerCase() ||
+        visible.dataset.prefilledStep0 === "1"
+      );
+
+    if (!hasPrefilledResidence) return false;
+
+    visible.value = visibleValue || step0Residence;
+    hidden.value = hiddenValue || step0Residence;
+
+    visible.dataset.prefilledStep0 = "1";
+    visible.classList.add("with-selected-flag");
+
+    document.body.classList.add("residence-prefilled-clean");
+
+    if (dropdown) {
+      dropdown.innerHTML = "";
+      dropdown.style.display = "none";
+      dropdown.hidden = true;
+    }
+
+    if (helper) {
+      helper.textContent = "Pays de résidence prérempli depuis la pré-inscription.";
+      helper.style.display = "block";
+    }
+
+    visible.dispatchEvent(new Event("change", { bubbles: true }));
+    hidden.dispatchEvent(new Event("change", { bubbles: true }));
+
+    return true;
+  }
+
+  function observeDropdown() {
+    const dropdown = el("residenceCountryDropdown");
+    if (!dropdown || dropdown.dataset.residencePrefillObserver === "1") return;
+
+    dropdown.dataset.residencePrefillObserver = "1";
+
+    const observer = new MutationObserver(function () {
+      applyResidenceCleanState();
+    });
+
+    observer.observe(dropdown, {
+      childList: true,
+      subtree: true,
+      characterData: true
+    });
+  }
+
+  function bindManualEditReset() {
+    const visible = el("residenceCountrySearch");
+    if (!visible || visible.dataset.residenceManualResetBound === "1") return;
+
+    visible.dataset.residenceManualResetBound = "1";
+
+    visible.addEventListener("input", function () {
+      const step0Residence = readStep0Residence();
+      const current = clean(visible.value);
+
+      if (current && step0Residence && current.toLowerCase() !== step0Residence.toLowerCase()) {
+        visible.dataset.prefilledStep0 = "0";
+        document.body.classList.remove("residence-prefilled-clean");
+
+        const dropdown = el("residenceCountryDropdown");
+        if (dropdown) {
+          dropdown.hidden = false;
+          dropdown.style.display = "";
+        }
+      }
+    }, true);
+  }
+
+  function init() {
+    applyResidenceCleanState();
+    observeDropdown();
+    bindManualEditReset();
+
+    setTimeout(applyResidenceCleanState, 300);
+    setTimeout(applyResidenceCleanState, 900);
+    setTimeout(applyResidenceCleanState, 1800);
+    setTimeout(applyResidenceCleanState, 3000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+
+<script>
+/* AFB_FINAL_STEP0_OTP_PAYLOAD_BRIDGE_V1 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_FINAL_STEP0_OTP_PAYLOAD_BRIDGE_V1) return;
+  window.__AFB_FINAL_STEP0_OTP_PAYLOAD_BRIDGE_V1 = true;
+
+  function readStep0Payload() {
+    try {
+      return JSON.parse(localStorage.getItem("diaspora_step0_payload") || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function readOtpVerified(payload) {
+    const phone =
+      payload.whatsapp_phone_full ||
+      payload.phone ||
+      localStorage.getItem("diaspora_step0_whatsapp_full") ||
+      localStorage.getItem("diaspora_step0_whatsapp_otp_phone") ||
+      "";
+
+    return (
+      payload.whatsapp_otp_verified === true ||
+      payload.whatsapp_otp_verified === "true" ||
+      (
+        localStorage.getItem("diaspora_step0_whatsapp_otp_verified") === "true" &&
+        localStorage.getItem("diaspora_step0_whatsapp_otp_phone") === phone
+      )
+    );
+  }
+
+  function enrichBody(body) {
+    const payload = readStep0Payload();
+
+    if (!body || typeof body !== "object") return body;
+
+    const phone =
+      payload.whatsapp_phone_full ||
+      payload.phone ||
+      body.phone ||
+      "";
+
+    const otpVerified = readOtpVerified(payload);
+
+    if (payload.pre_onboarding_session_id) {
+      body.pre_onboarding_session_id = body.pre_onboarding_session_id || payload.pre_onboarding_session_id;
+    }
+
+    if (phone) {
+      body.phone = body.phone || phone;
+      body.whatsapp_phone_full = phone;
+    }
+
+    body.whatsapp_otp_verified = Boolean(otpVerified);
+
+    if (otpVerified) {
+      body.whatsapp_otp_verified_at =
+        payload.whatsapp_otp_verified_at ||
+        new Date().toISOString();
+    }
+
+    return body;
+  }
+
+  const previousFetch = window.fetch;
+
+  window.fetch = function (input, init) {
+    try {
+      const url = typeof input === "string" ? input : String(input && input.url || "");
+
+      if (url.includes("/api/applications") && init && init.body && typeof init.body === "string") {
+        const body = JSON.parse(init.body);
+        init.body = JSON.stringify(enrichBody(body));
+      }
+    } catch (e) {}
+
+    return previousFetch.apply(this, arguments);
+  };
+})();
+</script>
+
+
+<script>
+/* AFB_FINAL_MINIMAL_STEP0_PREFILL_V7 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_FINAL_MINIMAL_STEP0_PREFILL_V7) return;
+  window.__AFB_FINAL_MINIMAL_STEP0_PREFILL_V7 = true;
+
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  function qs(selector) {
+    return document.querySelector(selector);
+  }
+
+  function clean(value) {
+    return String(value || "").trim();
+  }
+
+  function digits(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function normalizePhone(value) {
+    const raw = clean(value);
+    if (!raw) return "";
+    return "+" + digits(raw);
+  }
+
+  function readStoredPayload() {
+    try {
+      return JSON.parse(localStorage.getItem("diaspora_step0_payload") || "{}") || {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function readStep0() {
+    const params = new URLSearchParams(window.location.search);
+    const stored = readStoredPayload();
+
+    return {
+      preSession:
+        clean(params.get("pre_session")) ||
+        clean(stored.pre_onboarding_session_id) ||
+        clean(localStorage.getItem("diaspora_pre_onboarding_session_id")),
+
+      email:
+        clean(params.get("step0_email")) ||
+        clean(stored.email) ||
+        clean(localStorage.getItem("diaspora_step0_email")),
+
+      residence:
+        clean(params.get("step0_residence")) ||
+        clean(stored.country_of_residence) ||
+        clean(stored.residence) ||
+        clean(localStorage.getItem("diaspora_step0_country")) ||
+        clean(localStorage.getItem("diaspora_step0_residence")),
+
+      phone:
+        normalizePhone(
+          params.get("step0_phone") ||
+          stored.whatsapp_phone_full ||
+          stored.phone ||
+          localStorage.getItem("diaspora_step0_whatsapp_full") ||
+          localStorage.getItem("diaspora_step0_whatsapp_otp_phone") ||
+          ""
+        ),
+
+      otpVerified:
+        params.get("step0_otp_verified") === "1" ||
+        stored.whatsapp_otp_verified === true ||
+        stored.whatsapp_otp_verified === "true",
+
+      otpVerifiedAt:
+        clean(params.get("step0_otp_verified_at")) ||
+        clean(stored.whatsapp_otp_verified_at)
+    };
+  }
+
+  function setValue(field, value) {
+    if (!field || !value) return false;
+
+    field.value = value;
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    field.dispatchEvent(new Event("change", { bubbles: true }));
+
+    return true;
+  }
+
+  function fillEmail(data) {
+    const email = qs('[name="email"]');
+    setValue(email, data.email);
+  }
+
+  function fillResidence(data) {
+    if (!data.residence) return;
+
+    const visible = el("residenceCountrySearch");
+    const hidden = el("residence") || qs('[name="residence"]');
+    const dropdown = el("residenceCountryDropdown");
+    const helper = el("residenceCountryHelper");
+
+    setValue(visible, data.residence);
+    setValue(hidden, data.residence);
+
+    if (visible) {
+      visible.dataset.prefilledStep0 = "1";
+    }
+
+    if (dropdown) {
+      dropdown.innerHTML = "";
+      dropdown.style.display = "none";
+      dropdown.hidden = true;
+    }
+
+    if (helper) {
+      helper.textContent = "Pays de résidence prérempli depuis la pré-inscription.";
+      helper.style.display = "block";
+    }
+  }
+
+  function detectDialCode(fullPhone) {
+    const all = digits(fullPhone);
+
+    const known = [
+      "237","225","221","239","33","32","1","44","49","39","34","41",
+      "241","242","243","235","236","240","234","229","228","233",
+      "223","226","227","212","213","216","20","27","86","91","90","55"
+    ].sort(function (a, b) {
+      return b.length - a.length;
+    });
+
+    for (const code of known) {
+      if (all.startsWith(code)) return code;
+    }
+
+    return "";
+  }
+
+  function findDialOption(select, code) {
+    if (!select || !code) return null;
+
+    return Array.from(select.options || []).find(function (option) {
+      const txt = [
+        option.value,
+        option.textContent,
+        option.dataset.callingCode,
+        option.dataset.code
+      ].join(" ");
+
+      return digits(txt).includes(code);
+    }) || null;
+  }
+
+  function fillPhone(data) {
+    const fullPhone = normalizePhone(data.phone);
+    if (!fullPhone) return;
+
+    const countrySelect = el("phone_country");
+    const localInput = el("phone_local");
+    const hiddenPhone = el("phone") || qs('[name="phone"]');
+
+    if (!localInput || !hiddenPhone) return;
+
+    const code = detectDialCode(fullPhone);
+    let local = digits(fullPhone);
+
+    if (code && local.startsWith(code)) {
+      local = local.slice(code.length);
+    }
+
+    local = local.replace(/^0+/, "");
+
+    if (countrySelect && code) {
+      const option = findDialOption(countrySelect, code);
+      if (option) {
+        countrySelect.value = option.value;
+        countrySelect.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+
+    setValue(localInput, local);
+    setValue(hiddenPhone, fullPhone);
+
+    try {
+      if (typeof window.composePhoneNumber === "function") {
+        window.composePhoneNumber("phone_country", "phone_local", "phone");
+      }
+    } catch (e) {}
+
+    setValue(hiddenPhone, fullPhone);
+  }
+
+  function fillSession(data) {
+    const input = el("pre_onboarding_session_id") || qs('[name="pre_onboarding_session_id"]');
+    setValue(input, data.preSession);
+  }
+
+  function saveNormalizedPayload(data) {
+    try {
+      localStorage.setItem("diaspora_step0_payload", JSON.stringify({
+        pre_onboarding_session_id: data.preSession,
+        email: data.email,
+        phone: data.phone,
+        whatsapp_phone_full: data.phone,
+        residence: data.residence,
+        country_of_residence: data.residence,
+        whatsapp_otp_verified: Boolean(data.otpVerified),
+        whatsapp_otp_verified_at: data.otpVerifiedAt || null,
+        saved_by: "AFB_FINAL_MINIMAL_STEP0_PREFILL_V7",
+        saved_at: new Date().toISOString()
+      }));
+    } catch (e) {}
+  }
+
+  function applyPrefill() {
+    const data = readStep0();
+
+    if (!data.email && !data.residence && !data.phone) return;
+
+    saveNormalizedPayload(data);
+    fillSession(data);
+    fillEmail(data);
+    fillResidence(data);
+    fillPhone(data);
+
+    window.__AFB_FINAL_MINIMAL_STEP0_PREFILL_V7_DATA__ = data;
+  }
+
+  function enrichApplicationPayload(body) {
+    const data = readStep0();
+
+    if (!body || typeof body !== "object") return body;
+
+    if (data.preSession) {
+      body.pre_onboarding_session_id = body.pre_onboarding_session_id || data.preSession;
+    }
+
+    if (data.email) {
+      body.email = body.email || data.email;
+    }
+
+    if (data.residence) {
+      body.residence = body.residence || data.residence;
+    }
+
+    if (data.phone) {
+      body.phone = data.phone;
+      body.whatsapp_phone_full = data.phone;
+    }
+
+    body.whatsapp_otp_verified = Boolean(data.otpVerified);
+
+    if (data.otpVerified) {
+      body.whatsapp_otp_verified_at = data.otpVerifiedAt || new Date().toISOString();
+    }
+
+    return body;
+  }
+
+  function wrapFetch() {
+    if (window.__AFB_FINAL_MINIMAL_STEP0_PREFILL_V7_FETCH) return;
+    window.__AFB_FINAL_MINIMAL_STEP0_PREFILL_V7_FETCH = true;
+
+    const oldFetch = window.fetch;
+
+    window.fetch = function (input, init) {
+      try {
+        const url = typeof input === "string" ? input : String(input && input.url || "");
+
+        if (url.includes("/api/applications") && init && init.body && typeof init.body === "string") {
+          const body = JSON.parse(init.body);
+          init.body = JSON.stringify(enrichApplicationPayload(body));
+        }
+      } catch (e) {}
+
+      return oldFetch.apply(this, arguments);
+    };
+  }
+
+  function bindSubmit() {
+    const form = el("accountForm") || qs("form");
+    if (!form || form.dataset.minimalStep0PrefillV7Submit === "1") return;
+
+    form.dataset.minimalStep0PrefillV7Submit = "1";
+
+    form.addEventListener("submit", function () {
+      applyPrefill();
+    }, true);
+  }
+
+  function init() {
+    wrapFetch();
+    bindSubmit();
+
+    applyPrefill();
+    setTimeout(applyPrefill, 700);
+    setTimeout(applyPrefill, 1800);
+    setTimeout(applyPrefill, 3500);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+
+<script>
+/* AFB_FINAL_WHATSAPP_ONLY_PREFILL_V8 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_FINAL_WHATSAPP_ONLY_PREFILL_V8) return;
+  window.__AFB_FINAL_WHATSAPP_ONLY_PREFILL_V8 = true;
+
+  const KNOWN_CODES = [
+    "237","225","221","239","33","32","1","44","49","39","34","41",
+    "241","242","243","235","236","240","234","229","228","233",
+    "223","226","227","212","213","216","20","27","86","91","90","55"
+  ].sort(function (a, b) {
+    return b.length - a.length;
+  });
+
+  function el(id) {
+    return document.getElementById(id);
+  }
+
+  function qs(selector) {
+    return document.querySelector(selector);
+  }
+
+  function clean(value) {
+    return String(value || "").trim();
+  }
+
+  function digits(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function normalizePhone(value) {
+    const raw = clean(value);
+    if (!raw) return "";
+    return "+" + digits(raw);
+  }
+
+  function readPhone() {
+    const params = new URLSearchParams(window.location.search);
+
+    let stored = {};
+    try {
+      stored = JSON.parse(localStorage.getItem("diaspora_step0_payload") || "{}") || {};
+    } catch (e) {
+      stored = {};
+    }
+
+    return normalizePhone(
+      params.get("step0_phone") ||
+      stored.whatsapp_phone_full ||
+      stored.phone ||
+      localStorage.getItem("diaspora_step0_whatsapp_full") ||
+      localStorage.getItem("diaspora_step0_whatsapp_otp_phone") ||
+      ""
+    );
+  }
+
+  function detectCode(fullPhone) {
+    const all = digits(fullPhone);
+
+    for (const code of KNOWN_CODES) {
+      if (all.startsWith(code)) return code;
+    }
+
+    return "";
+  }
+
+  function findOption(select, code) {
+    if (!select || !code) return null;
+
+    return Array.from(select.options || []).find(function (option) {
+      const source = [
+        option.value,
+        option.textContent,
+        option.dataset.callingCode,
+        option.dataset.code
+      ].join(" ");
+
+      return digits(source).includes(code);
+    }) || null;
+  }
+
+  function setValue(field, value) {
+    if (!field || !value) return false;
+
+    field.value = value;
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    field.dispatchEvent(new Event("change", { bubbles: true }));
+
+    return true;
+  }
+
+  function fillWhatsappOnly() {
+    const fullPhone = readPhone();
+    if (!fullPhone) return false;
+
+    const countrySelect = el("phone_country");
+    const localInput = el("phone_local");
+    const hiddenPhone = el("phone") || qs('[name="phone"]');
+
+    if (!localInput || !hiddenPhone) return false;
+
+    const code = detectCode(fullPhone);
+    let local = digits(fullPhone);
+
+    if (code && local.startsWith(code)) {
+      local = local.slice(code.length);
+    }
+
+    local = local.replace(/^0+/, "");
+
+    if (countrySelect && code && countrySelect.options && countrySelect.options.length) {
+      const option = findOption(countrySelect, code);
+
+      if (option) {
+        countrySelect.value = option.value;
+        countrySelect.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
+
+    setValue(localInput, local);
+    setValue(hiddenPhone, fullPhone);
+
+    try {
+      if (typeof window.composePhoneNumber === "function") {
+        window.composePhoneNumber("phone_country", "phone_local", "phone");
+      }
+    } catch (e) {}
+
+    setValue(hiddenPhone, fullPhone);
+
+    window.__AFB_FINAL_WHATSAPP_ONLY_PREFILL_V8_RESULT__ = {
+      fullPhone: fullPhone,
+      code: code,
+      local: local,
+      countryValue: countrySelect ? countrySelect.value : "",
+      hiddenPhone: hiddenPhone ? hiddenPhone.value : ""
+    };
+
+    return true;
+  }
+
+  function enrichFetchPhone(body) {
+    const fullPhone = readPhone();
+
+    if (!body || typeof body !== "object") return body;
+
+    if (fullPhone) {
+      body.phone = fullPhone;
+      body.whatsapp_phone_full = fullPhone;
+    }
+
+    return body;
+  }
+
+  function wrapFetch() {
+    if (window.__AFB_FINAL_WHATSAPP_ONLY_PREFILL_V8_FETCH) return;
+    window.__AFB_FINAL_WHATSAPP_ONLY_PREFILL_V8_FETCH = true;
+
+    const oldFetch = window.fetch;
+
+    window.fetch = function (input, init) {
+      try {
+        const url = typeof input === "string" ? input : String(input && input.url || "");
+
+        if (url.includes("/api/applications") && init && init.body && typeof init.body === "string") {
+          const body = JSON.parse(init.body);
+          init.body = JSON.stringify(enrichFetchPhone(body));
+        }
+      } catch (e) {}
+
+      return oldFetch.apply(this, arguments);
+    };
+  }
+
+  function bindSubmit() {
+    const form = el("accountForm") || qs("form");
+    if (!form || form.dataset.whatsappOnlyV8Submit === "1") return;
+
+    form.dataset.whatsappOnlyV8Submit = "1";
+
+    form.addEventListener("submit", function () {
+      fillWhatsappOnly();
+    }, true);
+  }
+
+  function init() {
+    wrapFetch();
+    bindSubmit();
+
+    fillWhatsappOnly();
+
+    // Exécutions limitées pour attendre le chargement des indicatifs pays.
+    setTimeout(fillWhatsappOnly, 500);
+    setTimeout(fillWhatsappOnly, 1200);
+    setTimeout(fillWhatsappOnly, 2500);
+    setTimeout(fillWhatsappOnly, 4500);
+    setTimeout(fillWhatsappOnly, 7000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+
+<script>
+/* AFB_GENDER_MAIDEN_AND_AGE_RULES_V1 */
+(function () {
+  "use strict";
+
+  if (window.__AFB_GENDER_MAIDEN_AND_AGE_RULES_V1) return;
+  window.__AFB_GENDER_MAIDEN_AND_AGE_RULES_V1 = true;
+
+  function qs(selector) {
+    return document.querySelector(selector);
+  }
+
+  function clean(value) {
+    return String(value || "").trim();
+  }
+
+  function normalize(value) {
+    return clean(value)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function isMale(value) {
+    const v = normalize(value);
+    return (
+      v === "masculin" ||
+      v === "male" ||
+      v === "homme" ||
+      v === "m" ||
+      v.includes("masculin")
+    );
+  }
+
+  function getFieldContainer(field) {
+    if (!field) return null;
+
+    const gridItem = field.closest(".grid > div");
+    if (gridItem) return gridItem;
+
+    const parentDiv = field.closest("div");
+    if (parentDiv) return parentDiv;
+
+    return field.parentElement;
+  }
+
+  function updateBirthNameVisibility() {
+    const sexField = document.getElementById("sex") || qs('[name="sex"]');
+    const birthNameField = qs('[name="birth_name"]');
+    const birthNameLabel = document.getElementById("birthNameLabel");
+
+    if (!sexField || !birthNameField) return;
+
+    const container = getFieldContainer(birthNameField);
+    const male = isMale(sexField.value);
+
+    if (male) {
+      birthNameField.value = "";
+      birthNameField.required = false;
+      birthNameField.removeAttribute("required");
+      birthNameField.setCustomValidity("");
+
+      if (container) {
+        container.style.display = "none";
+        container.dataset.hiddenByGenderRule = "1";
+      }
+
+      if (birthNameLabel) {
+        birthNameLabel.textContent = "Nom de naissance";
+      }
+    } else {
+      if (container && container.dataset.hiddenByGenderRule === "1") {
+        container.style.display = "";
+      }
+
+      if (birthNameLabel) {
+        birthNameLabel.textContent = "Nom de naissance / Nom de jeune fille";
+      }
+    }
+  }
+
+  function parseBirthDate() {
+    const birthDateField = qs('[name="birth_date"]');
+    if (!birthDateField || !birthDateField.value) return null;
+
+    const d = new Date(birthDateField.value + "T00:00:00");
+    if (Number.isNaN(d.getTime())) return null;
+
+    return d;
+  }
+
+  function calculateAge(birthDate) {
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
+
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age--;
+    }
+
+    return age;
+  }
+
+  function ensureAgeMessage() {
+    const birthDateField = qs('[name="birth_date"]');
+    if (!birthDateField) return null;
+
+    let msg = document.getElementById("afb-age-validation-message");
+
+    if (!msg) {
+      msg = document.createElement("div");
+      msg.id = "afb-age-validation-message";
+      msg.style.marginTop = "6px";
+      msg.style.fontSize = "13px";
+      msg.style.fontWeight = "600";
+      msg.style.display = "none";
+      birthDateField.insertAdjacentElement("afterend", msg);
+    }
+
+    return msg;
+  }
+
+  function maxBirthDateForAdult() {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 18);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function validateAdult(showMessage) {
+    const birthDateField = qs('[name="birth_date"]');
+    const msg = ensureAgeMessage();
+
+    if (!birthDateField) return true;
+
+    birthDateField.max = maxBirthDateForAdult();
+
+    const birthDate = parseBirthDate();
+
+    if (!birthDate) {
+      birthDateField.setCustomValidity("");
+      if (msg) msg.style.display = "none";
+      return true;
+    }
+
+    const age = calculateAge(birthDate);
+
+    if (age < 18) {
+      const message = "Le demandeur doit être majeur : âge minimum requis 18 ans.";
+
+      birthDateField.setCustomValidity(message);
+
+      if (msg) {
+        msg.textContent = message;
+        msg.style.color = "#b91c1c";
+        msg.style.display = "block";
+      }
+
+      if (showMessage) {
+        birthDateField.reportValidity();
+        birthDateField.focus();
+      }
+
+      return false;
+    }
+
+    birthDateField.setCustomValidity("");
+
+    if (msg) {
+      msg.textContent = "Âge vérifié : demandeur majeur.";
+      msg.style.color = "#166534";
+      msg.style.display = "block";
+    }
+
+    return true;
+  }
+
+  function bindRules() {
+    const sexField = document.getElementById("sex") || qs('[name="sex"]');
+    const birthDateField = qs('[name="birth_date"]');
+    const form = document.getElementById("accountForm") || qs("form");
+
+    if (sexField && sexField.dataset.genderAgeRulesBound !== "1") {
+      sexField.dataset.genderAgeRulesBound = "1";
+      sexField.addEventListener("change", updateBirthNameVisibility);
+      sexField.addEventListener("input", updateBirthNameVisibility);
+    }
+
+    if (birthDateField && birthDateField.dataset.ageRulesBound !== "1") {
+      birthDateField.dataset.ageRulesBound = "1";
+      birthDateField.max = maxBirthDateForAdult();
+      birthDateField.addEventListener("change", function () {
+        validateAdult(false);
+      });
+      birthDateField.addEventListener("input", function () {
+        validateAdult(false);
+      });
+    }
+
+    if (form && form.dataset.genderAgeSubmitRulesBound !== "1") {
+      form.dataset.genderAgeSubmitRulesBound = "1";
+
+      form.addEventListener("submit", function (event) {
+        updateBirthNameVisibility();
+
+        if (!validateAdult(true)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return false;
+        }
+      }, true);
+    }
+
+    updateBirthNameVisibility();
+    validateAdult(false);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bindRules);
+  } else {
+    bindRules();
+  }
+
+  setTimeout(bindRules, 500);
+  setTimeout(bindRules, 1500);
+})();
+</script>
+
 </body>
 </html>
 
@@ -12489,9 +15552,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (latest.INCOME_PROOF) {
       markPreloaded(
         findCard([
-          "Preuve de justification de revenu / activité du client",
+          "Preuve de justification de vos revenus ou de votre activité",
           "Preuve de justification de revenu",
-          "revenu / activité du client"
+          "vos revenus ou votre activité"
         ], [".camera-doc-card", ".photo-card"]),
         "Justificatif d’activité / revenus déjà préchargé depuis le pré-onboarding."
       );
@@ -12755,3 +15818,401 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 })();
 </script>
+
+
+<!-- MANAGER_PREONBOARDING_ACCEPT_FINAL_V1 -->
+<script>
+(function () {
+    if (window.__managerPreOnboardingAcceptFinalV1) return;
+    window.__managerPreOnboardingAcceptFinalV1 = true;
+
+    const IDENTITY_TYPES = [
+        "CNI_RECTO",
+        "CNI_VERSO",
+        "PASSPORT_DOCUMENT",
+        "RESIDENCE_PERMIT_RECTO",
+        "RESIDENCE_PERMIT_VERSO",
+        "CONSULAR_CARD_RECTO",
+        "CONSULAR_CARD_VERSO",
+        "IDENTITY_DOCUMENT_RECTO",
+        "IDENTITY_DOCUMENT_VERSO",
+        "IDENTITY_DOCUMENT_IMPORTED"
+    ];
+
+    const ADDRESS_TYPES = [
+        "ADDRESS_PROOF",
+        "PROOF_OF_ADDRESS_PHOTO"
+    ];
+
+    const INCOME_TYPES = [
+        "INCOME_PROOF",
+        "EMPLOYMENT_OR_SCHOOL_CERTIFICATE_PHOTO"
+    ];
+
+    const RIB_TYPES = [
+        "RIB_DOCUMENT"
+    ];
+
+    const SELFIE_TYPES = [
+        "CLIENT_PHOTO",
+        "CLIENT_VIDEO",
+        "SELFIE_PHOTO",
+        "SELFIE_VIDEO"
+    ];
+
+    function normalizeType(value) {
+        return String(value || "").trim().toUpperCase();
+    }
+
+    function getSessionId() {
+        const params = new URLSearchParams(window.location.search);
+        return (
+            params.get("pre_session") ||
+            localStorage.getItem("diaspora_pre_onboarding_session_id") ||
+            ""
+        );
+    }
+
+    function safeJsonParse(value, fallback) {
+        try {
+            return JSON.parse(value || "");
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    function latestByType(docs) {
+        const latest = {};
+
+        (docs || []).forEach(function (doc) {
+            const type = normalizeType(doc.document_type || doc.type || doc.key || "");
+            if (!type) return;
+
+            const created = String(doc.created_at || doc.saved_at || doc.captured_at || "");
+
+            if (!latest[type] || created >= String(latest[type].created_at || latest[type].saved_at || latest[type].captured_at || "")) {
+                latest[type] = Object.assign({}, doc, { document_type: type });
+            }
+        });
+
+        return latest;
+    }
+
+    function mergeLatest(nextLatest) {
+        window.preloadedDocumentTypes = Object.assign(
+            {},
+            window.preloadedDocumentTypes || {},
+            nextLatest || {}
+        );
+
+        return window.preloadedDocumentTypes;
+    }
+
+    function latest() {
+        return window.preloadedDocumentTypes || {};
+    }
+
+    function hasAny(types) {
+        const map = latest();
+
+        return (types || []).some(function (type) {
+            return !!map[normalizeType(type)];
+        });
+    }
+
+    function loadFromLocalStorage() {
+        const docs = [];
+
+        const saved = safeJsonParse(localStorage.getItem("diaspora_pre_onboarding_saved_documents"), {});
+        Object.keys(saved || {}).forEach(function (type) {
+            if (saved[type]) {
+                docs.push(Object.assign({}, saved[type], { document_type: type }));
+            }
+        });
+
+        const ocr = safeJsonParse(localStorage.getItem("diaspora_pre_onboarding_ocr"), {});
+        const ocrSaved = ocr && ocr.saved_documents ? ocr.saved_documents : {};
+
+        Object.keys(ocrSaved || {}).forEach(function (type) {
+            if (ocrSaved[type]) {
+                docs.push(Object.assign({}, ocrSaved[type], { document_type: type }));
+            }
+        });
+
+        return latestByType(docs);
+    }
+
+    async function loadFromServer() {
+        const sessionId = getSessionId();
+
+        if (!sessionId) {
+            return {};
+        }
+
+        try {
+            const response = await fetch("/api/pre-onboarding/session/" + encodeURIComponent(sessionId), {
+                cache: "no-store"
+            });
+
+            if (!response.ok) {
+                throw new Error("Session pré-onboarding indisponible : " + response.status);
+            }
+
+            const data = await response.json();
+            return latestByType(data.documents || []);
+        } catch (error) {
+            console.warn("Pré-onboarding : lecture serveur impossible, fallback localStorage.", error);
+            return {};
+        }
+    }
+
+    function createPreloadedPlaceholder() {
+        return {
+            __preloadedSelfie: true,
+            name: "selfie_precharge_depuis_pre_onboarding",
+            type: "application/x-preloaded"
+        };
+    }
+
+    function markSelfieAsPreloaded() {
+        if (!hasAny(SELFIE_TYPES)) return false;
+
+        window.managerPreloadedSelfieAccepted = true;
+
+        try {
+            if (typeof selfieFiles !== "undefined") {
+                selfieFiles.imported = null;
+
+                if (!selfieFiles.photo) {
+                    selfieFiles.photo = createPreloadedPlaceholder();
+                }
+            }
+        } catch (e) {}
+
+        const status = document.getElementById("selfieCaptureStatus");
+        const preview = document.getElementById("selfiePreview");
+
+        if (status) {
+            status.className = "capture-status success";
+            status.innerText = "✅ Selfie / photo client déjà préchargé depuis le pré-onboarding.";
+        }
+
+        if (preview && !document.getElementById("preloadedSelfieFinalBadge")) {
+            const badge = document.createElement("div");
+            badge.id = "preloadedSelfieFinalBadge";
+            badge.className = "preloaded-final-v12-badge";
+            badge.innerHTML = "✅ Preuve de vie déjà capturée au début du parcours.";
+
+            badge.style.marginTop = "10px";
+            badge.style.padding = "10px 12px";
+            badge.style.borderRadius = "12px";
+            badge.style.background = "#ecfdf5";
+            badge.style.border = "1px solid #bbf7d0";
+            badge.style.color = "#166534";
+            badge.style.fontWeight = "800";
+            badge.style.fontSize = "13px";
+
+            preview.appendChild(badge);
+        }
+
+        return true;
+    }
+
+    function patchUploadSelfieDocument() {
+        if (typeof window.uploadSelfieDocument !== "function") return;
+        if (window.uploadSelfieDocument.__preOnboardingAcceptPatched) return;
+
+        const original = window.uploadSelfieDocument;
+
+        const patched = async function (applicationId) {
+            if (
+                window.managerPreloadedSelfieAccepted ||
+                hasAny(SELFIE_TYPES) ||
+                (
+                    typeof selfieFiles !== "undefined" &&
+                    selfieFiles.photo &&
+                    selfieFiles.photo.__preloadedSelfie
+                )
+            ) {
+                console.log("Pré-onboarding : selfie déjà rattaché via pre_onboarding_session_id.");
+                return { preloaded: true, document_type: "SELFIE_PRELOADED" };
+            }
+
+            return original.apply(this, arguments);
+        };
+
+        patched.__preOnboardingAcceptPatched = true;
+
+        window.uploadSelfieDocument = patched;
+
+        try {
+            uploadSelfieDocument = patched;
+        } catch (e) {}
+    }
+
+    function patchUploadIdentityDocuments() {
+        if (typeof window.uploadIdentityDocuments !== "function") return;
+        if (window.uploadIdentityDocuments.__preOnboardingAcceptPatched) return;
+
+        const original = window.uploadIdentityDocuments;
+
+        const patched = async function (applicationId) {
+            if (hasAny(IDENTITY_TYPES)) {
+                console.log("Pré-onboarding : pièce d’identité déjà rattachée via pre_onboarding_session_id.");
+                return { preloaded: true, document_type: "IDENTITY_PRELOADED" };
+            }
+
+            return original.apply(this, arguments);
+        };
+
+        patched.__preOnboardingAcceptPatched = true;
+
+        window.uploadIdentityDocuments = patched;
+
+        try {
+            uploadIdentityDocuments = patched;
+        } catch (e) {}
+    }
+
+    function patchUploadManagerExtraDocuments() {
+        if (typeof window.uploadManagerExtraDocuments !== "function") return;
+        if (window.uploadManagerExtraDocuments.__preOnboardingAcceptPatched) return;
+
+        const patched = async function (applicationId) {
+            const files = window.managerExtraDocumentFiles || {};
+
+            const incomePreloaded = hasAny(INCOME_TYPES);
+            const ribPreloaded = hasAny(RIB_TYPES);
+
+            if (!files.INCOME_PROOF && !incomePreloaded) {
+                throw new Error("Veuillez photographier ou précharger la preuve de justification de vos revenus ou votre activité.");
+            }
+
+            if (!files.RIB_DOCUMENT && !ribPreloaded) {
+                throw new Error("Veuillez photographier ou précharger le relevé d’identification bancaire - RIB.");
+            }
+
+            if (files.INCOME_PROOF) {
+                await uploadFileObject(applicationId, "INCOME_PROOF", files.INCOME_PROOF);
+            } else {
+                console.log("Pré-onboarding : justificatif revenu déjà rattaché via pre_onboarding_session_id.");
+            }
+
+            if (files.RIB_DOCUMENT) {
+                await uploadFileObject(applicationId, "RIB_DOCUMENT", files.RIB_DOCUMENT);
+            } else {
+                console.log("Pré-onboarding : RIB déjà rattaché via pre_onboarding_session_id.");
+            }
+
+            return {
+                preloaded_income: incomePreloaded,
+                preloaded_rib: ribPreloaded
+            };
+        };
+
+        patched.__preOnboardingAcceptPatched = true;
+
+        window.uploadManagerExtraDocuments = patched;
+
+        try {
+            uploadManagerExtraDocuments = patched;
+        } catch (e) {}
+    }
+
+    function patchUploadPhoto() {
+        if (typeof window.uploadPhoto !== "function") return;
+        if (window.uploadPhoto.__preOnboardingAcceptPatched) return;
+
+        const original = window.uploadPhoto;
+
+        const patched = async function (applicationId, documentType, fileInputId) {
+            const input = document.getElementById(fileInputId);
+            const hasLocalFile = input && input.files && input.files.length > 0;
+
+            if (!hasLocalFile && documentType === "PROOF_OF_ADDRESS_PHOTO" && hasAny(ADDRESS_TYPES)) {
+                console.log("Pré-onboarding : justificatif de domicile déjà rattaché via pre_onboarding_session_id.");
+                return { preloaded: true, document_type: "ADDRESS_PROOF" };
+            }
+
+            return original.apply(this, arguments);
+        };
+
+        patched.__preOnboardingAcceptPatched = true;
+
+        window.uploadPhoto = patched;
+
+        try {
+            uploadPhoto = patched;
+        } catch (e) {}
+    }
+
+    function patchAllUploads() {
+        patchUploadSelfieDocument();
+        patchUploadIdentityDocuments();
+        patchUploadManagerExtraDocuments();
+        patchUploadPhoto();
+    }
+
+    function applyVisualStatus() {
+        markSelfieAsPreloaded();
+
+        if (hasAny(ADDRESS_TYPES)) {
+            const status = document.querySelector("#addressPhotoCaptureStatus, #addressCaptureStatus");
+            if (status && !status.textContent.includes("préchargé")) {
+                status.className = "capture-status success";
+                status.innerText = "✅ Justificatif de domicile déjà préchargé depuis le pré-onboarding.";
+            }
+        }
+
+        if (hasAny(INCOME_TYPES)) {
+            const status = document.getElementById("incomeProofCaptureStatus");
+            if (status && !status.textContent.includes("préchargé")) {
+                status.className = "capture-status success";
+                status.innerText = "✅ Justificatif de revenu déjà préchargé depuis le pré-onboarding.";
+            }
+        }
+
+        if (hasAny(RIB_TYPES)) {
+            const status = document.getElementById("ribDocumentCaptureStatus");
+            if (status && !status.textContent.includes("préchargé")) {
+                status.className = "capture-status success";
+                status.innerText = "✅ RIB déjà préchargé depuis le pré-onboarding.";
+            }
+        }
+    }
+
+    async function refreshPreloadedDocuments() {
+        const localLatest = loadFromLocalStorage();
+        mergeLatest(localLatest);
+
+        const serverLatest = await loadFromServer();
+        mergeLatest(serverLatest);
+
+        applyVisualStatus();
+        patchAllUploads();
+
+        return latest();
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        refreshPreloadedDocuments();
+
+        let tries = 0;
+        const timer = setInterval(function () {
+            refreshPreloadedDocuments();
+            tries += 1;
+
+            if (tries >= 12) {
+                clearInterval(timer);
+            }
+        }, 700);
+    });
+
+    window.addEventListener("focus", refreshPreloadedDocuments);
+})();
+</script>
+
+
+<!-- AFB_CLIENT_COPY_VOUVOIEMENT_PRO_V1 -->
+
+<!-- AFB_FINAL_CLIENT_COPY_CLEANUP_V1 -->

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import AccountApplication, ApplicationDocument
+from app.models import PaymentTransaction, AccountApplication, ApplicationDocument
 from app.schemas import ApplicationResponse, BackOfficeDecision
 from app.services.notification_service import notify_application_status_changed
 from app.services.package_payment_workflow import create_package_payment_after_approval
@@ -159,6 +159,8 @@ def latest_documents_by_type(documents):
 
     return sorted(latest.values(), key=sort_key)
 
+
+from app.services.application_business_rules import can_open_account
 
 router = APIRouter(
     prefix="/api/backoffice",
@@ -333,6 +335,32 @@ def decide_application(
             status_code=400,
             detail=f"Décision invalide. Valeurs autorisées : {allowed}"
         )
+
+
+    # BACKOFFICE_PAYMENT_GUARD_ACCOUNT_OPENED_V2
+    if str(payload.decision).upper() == "ACCOUNT_OPENED":
+        payment = None
+        if getattr(application, "package_payment_reference", None):
+            payment = (
+                db.query(PaymentTransaction)
+                .filter(PaymentTransaction.payment_reference == application.package_payment_reference)
+                .first()
+            )
+
+        allowed_opening, opening_reason = can_open_account(application, payment)
+
+        if not allowed_opening:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "status": "PAYMENT_REQUIRED_NOT_CONFIRMED",
+                    "message": opening_reason,
+                    "application_reference": application.reference,
+                    "package_payment_reference": getattr(application, "package_payment_reference", None),
+                    "package_payment_status": getattr(application, "package_payment_status", None),
+                    "payment_status": getattr(payment, "status", None) if payment else None,
+                }
+            )
 
     application.review_decision = payload.decision
     application.reviewed_by = payload.reviewed_by
@@ -635,13 +663,16 @@ DEFAULT_API_INTEGRATIONS = [
         "description": "Notifications client : lien de paiement, paiement confirmé, dossier approuvé, compte ouvert.",
         "enabled": False,
         "environment": "SANDBOX",
-        "provider": "META_CLOUD_API",
-        "base_url": "https://graph.facebook.com",
+        "provider": "CALLBELL",
+        "base_url": "https://api.callbell.eu",
+        "endpoint_path": "/v1/messages/send",
         "auth_type": "BEARER_TOKEN",
         "api_key": "",
         "client_id": "",
         "client_secret": "",
         "phone_number_id": "",
+        "channel_uuid": "",
+        "template_uuid": "",
         "business_account_id": "",
         "webhook_url": "",
         "callback_url": "",
@@ -751,6 +782,9 @@ def normalize_integration(item: dict):
         "client_id": str(item.get("client_id") or "").strip(),
         "client_secret": str(item.get("client_secret") or "").strip(),
         "phone_number_id": str(item.get("phone_number_id") or "").strip(),
+        "channel_uuid": str(item.get("channel_uuid") or "").strip(),
+        "template_uuid": str(item.get("template_uuid") or "").strip(),
+        "endpoint_path": str(item.get("endpoint_path") or "").strip(),
         "business_account_id": str(item.get("business_account_id") or "").strip(),
         "merchant_id": str(item.get("merchant_id") or "").strip(),
         "webhook_url": str(item.get("webhook_url") or "").strip(),

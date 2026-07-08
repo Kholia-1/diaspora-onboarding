@@ -20,7 +20,7 @@ async def portal_home_page(request: Request):
 def client_open_account(request: Request):
     return templates.TemplateResponse(
         request,
-        "client_open_account.html"
+        "client_open_account_manager.html"
     )
 
 
@@ -102,7 +102,7 @@ def client_status(request: Request):
 
 @router.get("/open-account")
 async def open_account_page(request: Request):
-    return templates.TemplateResponse(request, "client_open_account.html", {"request": request})
+    return templates.TemplateResponse(request, "client_open_account_manager.html", {"request": request})
 
 @router.get("/service-unavailable")
 async def service_unavailable_page(request: Request):
@@ -116,7 +116,7 @@ async def portal_home_page(request: Request):
 
 @router.get("/client/open-account")
 async def client_open_account_page(request: Request):
-    return templates.TemplateResponse(request, "client_open_account.html", {"request": request})
+    return templates.TemplateResponse(request, "client_open_account_manager.html", {"request": request})
 
 
 @router.get("/backoffice/packages")

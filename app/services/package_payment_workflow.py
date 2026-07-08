@@ -10,7 +10,7 @@ from app.services.mastercard_payment_service import (
 from app.services.whatsapp_notification_service import send_whatsapp_notification
 
 
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://80-65-211-49.sslip.io")
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://diaspora-onboarding.com")
 
 
 def payment_to_payload(payment: PaymentTransaction):
@@ -102,11 +102,24 @@ def notify_payment_link_whatsapp(application, payment: PaymentTransaction):
         "currency": payment.currency,
     }
 
+    # BLOCK_WHATSAPP_IF_PAYMENT_URL_EMPTY_V1
+    payment_url = str(context.get("payment_url") or "").strip()
+
+    if not payment_url:
+        return {
+            "provider": "CALLBELL",
+            "channel": "WHATSAPP",
+            "status": "SKIPPED_EMPTY_PAYMENT_URL",
+            "sent": False,
+            "message": "Notification WhatsApp non envoyée : lien de paiement Mastercard absent.",
+            "missing": ["payment_url"]
+        }
+
     return send_whatsapp_notification(
         phone=phone,
         event_type="LIEN_PAIEMENT",
         context=context,
-        dry_run=True
+        dry_run=None
     )
 
 

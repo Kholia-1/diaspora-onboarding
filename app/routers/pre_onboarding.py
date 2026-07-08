@@ -1,8 +1,10 @@
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
 import re
 from typing import Any
 
-from app.services.document_auth_service import extract_text_with_tesseract
+from app.services.document_auth_service import extract_text_with_best_engine, validate_document_type_against_ocr
+from app.services.whatsapp_service import send_whatsapp_message
+from app.services.callbell_delivery_status_service import get_callbell_message_status
 
 
 router = APIRouter(
@@ -974,7 +976,7 @@ async def pre_onboarding_ocr(
     mime_type = file.content_type or "application/octet-stream"
 
     try:
-        ocr_result = extract_text_with_tesseract(content, mime_type)
+        ocr_result = extract_text_with_best_engine(content, mime_type)
     except Exception as exc:
         raise HTTPException(
             status_code=500,
@@ -982,6 +984,46 @@ async def pre_onboarding_ocr(
         )
 
     ocr_text = ocr_result.get("text", "") or ""
+    document_type_validation = validate_document_type_against_ocr(document_type, ocr_text)
+
+    # AFB_PREONBOARDING_RIB_BACKOFFICE_GUARD_V1
+    # Un vrai RIB peut contenir "RIB" ou "numéro de compte", mais une capture back-office
+    # peut aussi contenir ces mots. Cette règle évite de valider une capture d'écran interne
+    # comme justificatif bancaire réel.
+    normalized_ocr_for_guard = normalize_text(ocr_text or "")
+    normalized_document_type_for_guard = normalize_text(document_type or "")
+
+    rib_backoffice_signals = [
+        "back office",
+        "back-office",
+        "informations d ouverture de compte",
+        "information d ouverture de compte",
+        "message au client",
+        "enregistrer la decision",
+        "enregistrer la décision",
+        "notification whatsapp",
+        "simulation",
+        "votre dossier est conforme",
+        "dossier est conforme",
+        "rib final afriland",
+        "saisir ou coller le rib",
+        "saisir ou coller le rlb",
+        "compte a ete ouvert",
+        "compte a été ouvert",
+    ]
+
+    if "RIB_DOCUMENT" in str(document_type or "").upper():
+        hits = [s for s in rib_backoffice_signals if normalize_text(s) in normalized_ocr_for_guard]
+        if hits:
+            document_type_validation = {
+                "status": "DOCUMENT_TYPE_MISMATCH",
+                "expected_category": "RIB",
+                "detected_category": "INTERNAL_BACKOFFICE_SCREEN",
+                "confidence": 98,
+                "signals": hits,
+                "message": "Le fichier contient des indices d'écran back-office interne, pas un RIB bancaire client exploitable."
+            }
+
     extracted_fields = extract_prefill_fields(account_type, document_type, ocr_text)
 
     return {
@@ -995,6 +1037,10 @@ async def pre_onboarding_ocr(
         "ocr_language": ocr_result.get("language"),
         "text_length": len(ocr_text),
         "text_preview": ocr_text[:1200],
+        "document_type_validation": document_type_validation,
+        "document_type_validation_status": document_type_validation.get("status"),
+        "document_type_expected": document_type_validation.get("expected_category"),
+        "document_type_detected": document_type_validation.get("detected_category"),
         "extracted_fields": extracted_fields
     }
 
@@ -1116,3 +1162,310 @@ async def get_pre_onboarding_session(session_id: str):
         "documents_count": len(documents),
         "documents": documents
     }
+
+
+# AFB_PRE_ONBOARDING_WHATSAPP_OTP_DEMO_V1
+import hashlib
+import json
+import os
+import random
+import re
+import secrets
+from datetime import datetime, timedelta, timezone
+from pathlib import Path as _Path
+from fastapi import Body
+
+OTP_STORE_PATH = _Path("data/pre_onboarding_otps.json")
+OTP_TTL_MINUTES = int(os.getenv("PRE_ONBOARDING_OTP_TTL_MINUTES", "10"))
+OTP_MAX_ATTEMPTS = int(os.getenv("PRE_ONBOARDING_OTP_MAX_ATTEMPTS", "5"))
+OTP_DEMO_MODE = os.getenv("PRE_ONBOARDING_OTP_DEMO_MODE", "true").lower() in ("1", "true", "yes", "on")
+OTP_SECRET = os.getenv("PRE_ONBOARDING_OTP_SECRET", "diaspora-onboarding-demo-secret-change-me")
+
+
+def _utcnow():
+    return datetime.now(timezone.utc)
+
+
+def _ensure_otp_store():
+    OTP_STORE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not OTP_STORE_PATH.exists():
+        OTP_STORE_PATH.write_text("{}", encoding="utf-8")
+
+
+def _load_otps():
+    _ensure_otp_store()
+    try:
+        return json.loads(OTP_STORE_PATH.read_text(encoding="utf-8") or "{}")
+    except Exception:
+        return {}
+
+
+def _save_otps(data):
+    _ensure_otp_store()
+    OTP_STORE_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _normalize_phone(value):
+    value = str(value or "").strip()
+    value = value.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    if not value.startswith("+"):
+        value = "+" + re.sub(r"\D", "", value)
+    else:
+        value = "+" + re.sub(r"\D", "", value[1:])
+    return value
+
+
+def _otp_hash(session_id, phone, otp):
+    raw = f"{OTP_SECRET}|{session_id}|{phone}|{otp}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+
+def _public_otp_status(record):
+    return {
+        "sent": bool(record),
+        "verified": bool(record.get("verified")) if record else False,
+        "expires_at": record.get("expires_at") if record else None,
+        "attempts": int(record.get("attempts") or 0) if record else 0,
+        "max_attempts": OTP_MAX_ATTEMPTS,
+    }
+
+
+@router.post("/otp/send")
+async def send_pre_onboarding_otp(payload: dict = Body(...)):
+    # AFB_PRE_ONBOARDING_REAL_WHATSAPP_OTP_V2
+    session_id = str(payload.get("session_id") or "").strip()
+    email = str(payload.get("email") or "").strip().lower()
+    country = str(payload.get("country") or payload.get("country_of_residence") or "").strip()
+    phone = _normalize_phone(payload.get("phone") or payload.get("whatsapp") or payload.get("whatsapp_phone"))
+
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id requis.")
+
+    if not phone or len(phone) < 8:
+        raise HTTPException(status_code=400, detail="Numéro WhatsApp invalide.")
+
+    otp = f"{random.randint(0, 999999):06d}"
+    now = _utcnow()
+    expires_at = (now + timedelta(minutes=OTP_TTL_MINUTES)).isoformat()
+
+    record = {
+        "session_id": session_id,
+        "email": email,
+        "country": country,
+        "phone": phone,
+        "otp_hash": _otp_hash(session_id, phone, otp),
+        "expires_at": expires_at,
+        "attempts": 0,
+        "verified": False,
+        "verified_at": None,
+        "created_at": now.isoformat(),
+        "delivery_channel": "WHATSAPP_CALLBELL",
+        "whatsapp_sent": False,
+        "whatsapp_delivery_status": "PENDING",
+        "whatsapp_delivery_at": None,
+    }
+
+    store = _load_otps()
+    store[session_id] = record
+    _save_otps(store)
+
+    otp_message = (
+        f"Votre code de vérification Afriland First Bank est : {otp}. "
+        f"Il expire dans {OTP_TTL_MINUTES} minutes. "
+        "Ne partagez pas ce code."
+    )
+
+    # AFB_OTP_CALLBELL_UUID_STATUS_V1
+    whatsapp_result = send_whatsapp_message(phone, otp_message)
+
+    callbell_response = whatsapp_result.get("response") or {}
+    callbell_message = callbell_response.get("message") if isinstance(callbell_response, dict) else {}
+    callbell_message = callbell_message or {}
+
+    callbell_uuid = whatsapp_result.get("callbell_message_uuid") or callbell_message.get("uuid")
+    callbell_status = whatsapp_result.get("callbell_message_status") or callbell_message.get("status")
+
+    whatsapp_sent = bool(whatsapp_result.get("success"))
+    whatsapp_status = str(callbell_status or whatsapp_result.get("status") or "UNKNOWN").upper()
+
+    record["whatsapp_sent"] = whatsapp_sent
+    record["whatsapp_delivery_status"] = whatsapp_status
+    record["whatsapp_delivery_at"] = _utcnow().isoformat()
+    record["whatsapp_http_status"] = whatsapp_result.get("http_status")
+    record["callbell_message_uuid"] = callbell_uuid
+    record["callbell_message_status"] = callbell_status
+    store[session_id] = record
+    _save_otps(store)
+
+    response = {
+        "ok": whatsapp_sent or OTP_DEMO_MODE,
+        "message": "Code OTP WhatsApp envoyé." if whatsapp_sent else "Code OTP généré mais non envoyé par WhatsApp.",
+        "phone": phone,
+        "expires_at": expires_at,
+        "demo_mode": OTP_DEMO_MODE,
+        "whatsapp_sent": whatsapp_sent,
+        "whatsapp_delivery_status": whatsapp_status,
+        "delivery": {
+            "success": whatsapp_sent,
+            "status": whatsapp_status,
+            "http_status": whatsapp_result.get("http_status"),
+            "provider": whatsapp_result.get("provider"),
+            "callbell_message_uuid": callbell_uuid,
+            "callbell_message_status": callbell_status,
+        },
+    }
+
+    if OTP_DEMO_MODE:
+        response["demo_otp"] = otp
+
+    print(
+        "[PRE-ONBOARDING OTP] "
+        f"session={session_id} phone={phone} "
+        f"otp={otp if OTP_DEMO_MODE else '******'} "
+        f"delivery={whatsapp_status} sent={whatsapp_sent} "
+        f"expires_at={expires_at}"
+    )
+
+    if not whatsapp_sent and not OTP_DEMO_MODE:
+        raise HTTPException(
+            status_code=502,
+            detail={
+                "message": "Impossible d'envoyer le code OTP par WhatsApp.",
+                "phone": phone,
+                "delivery_status": whatsapp_status,
+                "http_status": whatsapp_result.get("http_status"),
+            },
+        )
+
+    return response
+
+
+@router.post("/otp/verify")
+async def verify_pre_onboarding_otp(payload: dict = Body(...)):
+    session_id = str(payload.get("session_id") or "").strip()
+    phone = _normalize_phone(payload.get("phone") or payload.get("whatsapp") or payload.get("whatsapp_phone"))
+    otp = re.sub(r"\D", "", str(payload.get("otp") or ""))
+
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id requis.")
+
+    if not phone or len(phone) < 8:
+        raise HTTPException(status_code=400, detail="Numéro WhatsApp invalide.")
+
+    if len(otp) != 6:
+        raise HTTPException(status_code=400, detail="Code OTP invalide.")
+
+    store = _load_otps()
+    record = store.get(session_id)
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Aucun code OTP trouvé pour cette session.")
+
+    if record.get("verified"):
+        return {
+            "ok": True,
+            "verified": True,
+            "message": "WhatsApp déjà vérifié.",
+            "phone": record.get("phone"),
+        }
+
+    if str(record.get("phone") or "") != phone:
+        raise HTTPException(status_code=400, detail="Le numéro WhatsApp ne correspond pas au code envoyé.")
+
+    try:
+        expires_at = datetime.fromisoformat(str(record.get("expires_at")))
+    except Exception:
+        expires_at = _utcnow() - timedelta(seconds=1)
+
+    if expires_at < _utcnow():
+        raise HTTPException(status_code=400, detail="Code OTP expiré. Veuillez demander un nouveau code.")
+
+    attempts = int(record.get("attempts") or 0)
+
+    if attempts >= OTP_MAX_ATTEMPTS:
+        raise HTTPException(status_code=429, detail="Nombre maximum de tentatives atteint. Demandez un nouveau code.")
+
+    expected = str(record.get("otp_hash") or "")
+    provided = _otp_hash(session_id, phone, otp)
+
+    if not secrets.compare_digest(expected, provided):
+        record["attempts"] = attempts + 1
+        store[session_id] = record
+        _save_otps(store)
+        raise HTTPException(status_code=400, detail=f"Code OTP incorrect. Tentatives restantes : {max(0, OTP_MAX_ATTEMPTS - record['attempts'])}.")
+
+    # AFB_OTP_VERIFY_RETURN_SESSION_AND_DATE_V1
+    verified_at = _utcnow().isoformat()
+
+    record["verified"] = True
+    record["verified_at"] = verified_at
+    store[session_id] = record
+    _save_otps(store)
+
+    return {
+        "ok": True,
+        "verified": True,
+        "message": "Numéro WhatsApp vérifié.",
+        "session_id": session_id,
+        "phone": phone,
+        "whatsapp_phone_full": phone,
+        "verified_at": verified_at,
+        "whatsapp_otp_verified": True,
+        "whatsapp_otp_verified_at": verified_at,
+    }
+
+
+@router.get("/otp/status/{session_id}")
+async def get_pre_onboarding_otp_status(session_id: str):
+    session_id = str(session_id or "").strip()
+    store = _load_otps()
+    record = store.get(session_id)
+    return {
+        "ok": True,
+        "session_id": session_id,
+        "otp": _public_otp_status(record),
+    }
+
+
+# AFB_OTP_CALLBELL_LIVE_STATUS_ROUTE_V1
+@router.get("/otp/delivery-status/{session_id}")
+async def get_pre_onboarding_otp_delivery_status(session_id: str):
+    session_id = str(session_id or "").strip()
+
+    store = _load_otps()
+    record = store.get(session_id)
+
+    if not record:
+        raise HTTPException(status_code=404, detail="Aucun OTP trouvé pour cette session.")
+
+    uuid = record.get("callbell_message_uuid")
+
+    live_status = None
+
+    if uuid:
+        live_status = get_callbell_message_status(uuid)
+
+        if live_status.get("success"):
+            record["callbell_live_status"] = live_status.get("status")
+            record["callbell_live_errors"] = live_status.get("errors") or []
+            record["whatsapp_delivery_status"] = str(live_status.get("status") or record.get("whatsapp_delivery_status") or "").upper()
+            store[session_id] = record
+            _save_otps(store)
+
+    return {
+        "ok": True,
+        "session_id": session_id,
+        "phone": record.get("phone"),
+        "whatsapp_delivery_status": record.get("whatsapp_delivery_status"),
+        "whatsapp_http_status": record.get("whatsapp_http_status"),
+        "callbell_message_uuid": uuid,
+        "callbell_message_status": record.get("callbell_message_status"),
+        "callbell_live_status": record.get("callbell_live_status"),
+        "callbell_live_errors": record.get("callbell_live_errors") or [],
+        "live": live_status,
+    }
+
+
+# AFB_PREONBOARDING_RAPIDOCR_DOC_TYPE_VALIDATION_V1
+
+# AFB_PREONBOARDING_RETURN_DOC_VALIDATION_V1

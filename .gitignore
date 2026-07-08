@@ -1,23 +1,67 @@
-.venv/
+# Python
 __pycache__/
-*.pyc
-.env
-.fernet_key
-uploads/
-data/
-*.enc
-*.analysis.enc
-.DS_Store
-.idea/
-# Sauvegardes locales générées pendant les corrections
-*.bak*
-*.bak_*
-backups/
-backups_html/
-app/templates.bak_document_labels/
-client_open_account_manager.html
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
 
-# Secrets / variables locales
+# Logs / temp
+*.log
+logs/
+tmp/
+.cache/
+
+# Secrets / environment
 .env
 .env.*
-*.env
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Sensitive runtime data
+data/api_integrations.json
+data/pre_onboarding_otps.json
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+data/*.sqlite*
+
+# Uploads
+uploads/
+app/uploads/
+static/uploads/
+
+# Backups / snapshots
+*.bak
+*.bak_*
+*.bak*
+*STABLE_*
+*BROKEN_*
+*UNSTABLE_*
+*.STABLE_*
+*.BROKEN_*
+*.UNSTABLE_*
+
+# Accidental shell files
+/0
+/=
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build / archives
+node_modules/
+dist/
+build/
+*.zip
+*.tar
+*.tar.gz
+*.rar

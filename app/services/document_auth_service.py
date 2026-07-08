@@ -496,6 +496,425 @@ def match_income_document(ocr_text: str) -> dict[str, Any]:
         }],
     }
 
+
+# AFB_RAPIDOCR_ENGINE_V1
+_RAPIDOCR_ENGINE = None
+
+
+def get_rapidocr_engine():
+    """
+    Charge RapidOCR une seule fois.
+    Compatible avec rapidocr_onnxruntime et rapidocr selon le package installé.
+    """
+    global _RAPIDOCR_ENGINE
+
+    if _RAPIDOCR_ENGINE is not None:
+        return _RAPIDOCR_ENGINE
+
+    try:
+        from rapidocr_onnxruntime import RapidOCR  # type: ignore
+    except Exception:
+        from rapidocr import RapidOCR  # type: ignore
+
+    _RAPIDOCR_ENGINE = RapidOCR()
+    return _RAPIDOCR_ENGINE
+
+
+def _parse_rapidocr_result(result):
+    lines = []
+    scores = []
+
+    if not result:
+        return "", 0
+
+    for item in result:
+        text = ""
+        score = None
+
+        try:
+            # Format courant : [box, text, score]
+            if len(item) >= 3:
+                text = str(item[1] or "").strip()
+                score = item[2]
+
+            # Autres formats possibles : [box, (text, score)]
+            elif len(item) >= 2 and isinstance(item[1], (list, tuple)):
+                text = str(item[1][0] or "").strip()
+                if len(item[1]) > 1:
+                    score = item[1][1]
+
+            elif len(item) >= 2:
+                text = str(item[1] or "").strip()
+
+            if text:
+                lines.append(text)
+
+            if score is not None:
+                try:
+                    scores.append(float(score))
+                except Exception:
+                    pass
+        except Exception:
+            continue
+
+    confidence = int((sum(scores) / len(scores)) * 100) if scores else 0
+    return "\n".join(lines).strip(), confidence
+
+
+def extract_text_with_rapidocr(content: bytes, mime_type: str | None) -> dict[str, Any]:
+    """
+    OCR rapide par RapidOCR.
+    Utilisé comme moteur principal pour les images.
+    """
+    if not mime_type or not str(mime_type).startswith("image/"):
+        return {
+            "engine": "RapidOCR",
+            "ocr_status": "NOT_ANALYZED",
+            "message": "RapidOCR non appliqué à ce type de fichier.",
+            "text": "",
+            "confidence": 0,
+        }
+
+    try:
+        from io import BytesIO
+        import numpy as np
+        from PIL import Image
+
+        image = Image.open(BytesIO(content)).convert("RGB")
+        image_array = np.array(image)
+
+        engine = get_rapidocr_engine()
+        result = engine(image_array)
+
+        # rapidocr_onnxruntime retourne souvent (result, elapsed)
+        if isinstance(result, tuple):
+            raw_result = result[0]
+        else:
+            raw_result = result
+
+        text, confidence = _parse_rapidocr_result(raw_result)
+
+        return {
+            "engine": "RapidOCR",
+            "ocr_status": "TEXT_EXTRACTED" if text else "NO_TEXT_FOUND",
+            "message": "OCR RapidOCR exécuté avec succès." if text else "Aucun texte exploitable détecté par RapidOCR.",
+            "text": text,
+            "confidence": confidence,
+        }
+
+    except Exception as exc:
+        return {
+            "engine": "RapidOCR",
+            "ocr_status": "OCR_UNAVAILABLE",
+            "message": f"RapidOCR indisponible : {exc}",
+            "text": "",
+            "confidence": 0,
+        }
+
+
+def extract_text_with_best_engine(content: bytes, mime_type: str | None) -> dict[str, Any]:
+    """
+    Moteur OCR hybride :
+    1. RapidOCR en priorité.
+    2. Tesseract en fallback.
+    """
+    rapid = extract_text_with_rapidocr(content, mime_type)
+
+    rapid_text = str(rapid.get("text") or "").strip()
+    if rapid.get("ocr_status") == "TEXT_EXTRACTED" and len(rapid_text) >= 10:
+        rapid["fallback_used"] = False
+        return rapid
+
+    tesseract = extract_text_with_tesseract(content, mime_type)
+    tess_text = str(tesseract.get("text") or "").strip()
+
+    if tesseract.get("ocr_status") == "TEXT_EXTRACTED" and tess_text:
+        tesseract["engine"] = "Tesseract"
+        tesseract["fallback_used"] = True
+        tesseract["primary_engine_status"] = rapid.get("ocr_status")
+        tesseract["primary_engine_message"] = rapid.get("message")
+        return tesseract
+
+    rapid["fallback_used"] = False
+    rapid["fallback_engine_status"] = tesseract.get("ocr_status")
+    rapid["fallback_engine_message"] = tesseract.get("message")
+    return rapid
+
+
+
+# AFB_OCR_DOCUMENT_TYPE_VALIDATION_V1
+def _keyword_hits_for_document_type(text: str, keywords: list[str]) -> list[str]:
+    normalized_text = normalize_for_match(text or "")
+    hits = []
+
+    for keyword in keywords:
+        normalized_keyword = normalize_for_match(keyword)
+        if normalized_keyword and normalized_keyword in normalized_text:
+            hits.append(keyword)
+
+    return hits
+
+
+def expected_document_category(document_type: str | None) -> str:
+    dtype = (document_type or "").upper()
+
+    if "RIB" in dtype or "BANK" in dtype:
+        return "RIB"
+
+    if "INCOME" in dtype or "SALARY" in dtype or "EMPLOYMENT" in dtype or "SCHOOL_CERTIFICATE" in dtype:
+        return "INCOME"
+
+    if (
+        "CNI" in dtype
+        or "PASSPORT" in dtype
+        or "IDENTITY" in dtype
+        or "BIRTH_CERTIFICATE" in dtype
+        or "FILIATION" in dtype
+    ):
+        return "IDENTITY"
+
+    if "ADDRESS" in dtype or "RESIDENCE" in dtype or "DOMICILE" in dtype:
+        return "ADDRESS"
+
+    if "TAX" in dtype or "COMPLIANCE" in dtype or "FISCAL" in dtype:
+        return "TAX"
+
+    return "GENERIC_DOCUMENT"
+
+
+def detect_document_category_from_ocr(ocr_text: str) -> dict[str, Any]:
+    text = ocr_text or ""
+
+    suspicious_app_keywords = [
+        "ticket2cash",
+        "cashback",
+        "webhook",
+        "claims",
+        "espace partenaire",
+        "demo_user",
+        "tableau de bord",
+        "campagnes",
+        "commercants",
+        "commerçants",
+        "finance historique",
+        "modele ticket",
+        "modèle ticket",
+    ]
+
+    rib_keywords = [
+        "rib",
+        "releve d identite bancaire",
+        "relevé d identité bancaire",
+        "iban",
+        "bic",
+        "swift",
+        "banque",
+        "bank",
+        "code banque",
+        "code guichet",
+        "numero de compte",
+        "numéro de compte",
+        "compte bancaire",
+        "cle rib",
+        "clé rib",
+        "domiciliation",
+        "titulaire du compte",
+    ]
+
+    income_keywords = [
+        "salaire",
+        "salary",
+        "revenu",
+        "income",
+        "bulletin",
+        "paie",
+        "payslip",
+        "employeur",
+        "employer",
+        "contrat de travail",
+        "attestation de travail",
+        "certificat de travail",
+        "fiche de paie",
+    ]
+
+    identity_keywords = [
+        "carte nationale",
+        "carte d identite",
+        "carte d identité",
+        "cni",
+        "passport",
+        "passeport",
+        "republique",
+        "république",
+        "nationalite",
+        "nationalité",
+        "date de naissance",
+        "lieu de naissance",
+        "surname",
+        "given names",
+        "nom",
+        "prenom",
+        "prénom",
+        "sexe",
+        "sex",
+        "mrz",
+    ]
+
+    address_keywords = [
+        "adresse",
+        "address",
+        "domicile",
+        "residence",
+        "résidence",
+        "facture",
+        "electricite",
+        "électricité",
+        "eau",
+        "telephone",
+        "téléphone",
+        "loyer",
+        "bail",
+        "utility bill",
+    ]
+
+    tax_keywords = [
+        "tax",
+        "fiscal",
+        "impot",
+        "impôt",
+        "conformite fiscale",
+        "conformité fiscale",
+        "quitus",
+        "attestation fiscale",
+        "tax compliance",
+    ]
+
+    suspicious_hits = _keyword_hits_for_document_type(text, suspicious_app_keywords)
+    rib_hits = _keyword_hits_for_document_type(text, rib_keywords)
+    income_hits = _keyword_hits_for_document_type(text, income_keywords)
+    identity_hits = _keyword_hits_for_document_type(text, identity_keywords)
+    address_hits = _keyword_hits_for_document_type(text, address_keywords)
+    tax_hits = _keyword_hits_for_document_type(text, tax_keywords)
+
+    numeric_candidates = re.findall(r"[0-9][0-9\s\-\.]{8,}[0-9]", text or "")
+    normalized_numbers = [
+        normalize_rib_for_matching(candidate)
+        for candidate in numeric_candidates
+        if normalize_rib_for_matching(candidate)
+    ]
+    long_numeric_score = max([len(x) for x in normalized_numbers], default=0)
+
+    if suspicious_hits:
+        return {
+            "detected_category": "TICKET2CASH_APP",
+            "confidence": 95,
+            "signals": suspicious_hits[:12],
+            "long_numeric_score": long_numeric_score,
+        }
+
+    category_scores = {
+        "RIB": len(rib_hits) * 25 + (35 if long_numeric_score >= 18 else 0),
+        "INCOME": len(income_hits) * 25,
+        "IDENTITY": len(identity_hits) * 15,
+        "ADDRESS": len(address_hits) * 25,
+        "TAX": len(tax_hits) * 25,
+    }
+
+    detected_category = max(category_scores, key=category_scores.get)
+    score = category_scores.get(detected_category, 0)
+
+    signals_by_category = {
+        "RIB": rib_hits,
+        "INCOME": income_hits,
+        "IDENTITY": identity_hits,
+        "ADDRESS": address_hits,
+        "TAX": tax_hits,
+    }
+
+    if score <= 0:
+        return {
+            "detected_category": "UNKNOWN",
+            "confidence": 0,
+            "signals": [],
+            "long_numeric_score": long_numeric_score,
+        }
+
+    return {
+        "detected_category": detected_category,
+        "confidence": min(100, score),
+        "signals": signals_by_category.get(detected_category, [])[:12],
+        "long_numeric_score": long_numeric_score,
+    }
+
+
+def validate_document_type_against_ocr(document_type: str | None, ocr_text: str | None) -> dict[str, Any]:
+    expected = expected_document_category(document_type)
+    text = (ocr_text or "").strip()
+
+    if not text:
+        return {
+            "status": "OCR_TEXT_INSUFFICIENT",
+            "expected_category": expected,
+            "detected_category": "UNKNOWN",
+            "confidence": 0,
+            "signals": [],
+            "message": "Aucun texte OCR suffisant pour confirmer le type du document.",
+        }
+
+    detected = detect_document_category_from_ocr(text)
+    detected_category = detected.get("detected_category", "UNKNOWN")
+    confidence = int(detected.get("confidence") or 0)
+
+    if detected_category == "TICKET2CASH_APP":
+        return {
+            "status": "DOCUMENT_TYPE_MISMATCH",
+            "expected_category": expected,
+            "detected_category": detected_category,
+            "confidence": confidence,
+            "signals": detected.get("signals", []),
+            "message": "Le fichier semble être une capture applicative Ticket2Cash, pas une pièce KYC attendue.",
+        }
+
+    if expected == "GENERIC_DOCUMENT":
+        return {
+            "status": "TYPE_NOT_STRICTLY_CHECKED",
+            "expected_category": expected,
+            "detected_category": detected_category,
+            "confidence": confidence,
+            "signals": detected.get("signals", []),
+            "message": "Type documentaire générique : contrôle strict non appliqué.",
+        }
+
+    if detected_category == "UNKNOWN":
+        return {
+            "status": "TYPE_UNCERTAIN",
+            "expected_category": expected,
+            "detected_category": detected_category,
+            "confidence": confidence,
+            "signals": detected.get("signals", []),
+            "message": "Le type réel du document n’a pas pu être confirmé par OCR.",
+        }
+
+    if detected_category == expected:
+        return {
+            "status": "DOCUMENT_TYPE_MATCH",
+            "expected_category": expected,
+            "detected_category": detected_category,
+            "confidence": confidence,
+            "signals": detected.get("signals", []),
+            "message": "Le contenu OCR est cohérent avec le type de document attendu.",
+        }
+
+    return {
+        "status": "DOCUMENT_TYPE_MISMATCH",
+        "expected_category": expected,
+        "detected_category": detected_category,
+        "confidence": confidence,
+        "signals": detected.get("signals", []),
+        "message": "Le contenu OCR ne correspond pas au type de document attendu.",
+    }
+
+
 def analyze_document_content(content: bytes, mime_type: str | None, document_type: str, application: Any) -> dict[str, Any]:
     quality = assess_image_quality(content, mime_type)
 
@@ -505,14 +924,27 @@ def analyze_document_content(content: bytes, mime_type: str | None, document_typ
         "IDENTITY_DOCUMENT_RECTO",
         "IDENTITY_DOCUMENT_VERSO",
         "IDENTITY_DOCUMENT_IMPORTED",
-        "BIRTH_CERTIFICATE_PHOTO",
         "IDENTITY_WITH_FILIATION",
+        "BIRTH_CERTIFICATE_PHOTO",
+
+        "CNI_RECTO",
+        "CNI_VERSO",
+        "PASSPORT_DOCUMENT",
+        "PASSPORT_PHOTO",
+
+        "ADDRESS_PROOF",
+        "PROOF_OF_ADDRESS_PHOTO",
+
         "INCOME_PROOF",
+        "EMPLOYMENT_OR_SCHOOL_CERTIFICATE_PHOTO",
+
         "RIB_DOCUMENT",
+
+        "TAX_COMPLIANCE_CERTIFICATE_PHOTO",
     }
 
     if should_ocr:
-        ocr = extract_text_with_tesseract(content, mime_type)
+        ocr = extract_text_with_best_engine(content, mime_type)
         ocr_text = ocr.get("text", "")
 
         if document_type == "RIB_DOCUMENT":
@@ -534,11 +966,18 @@ def analyze_document_content(content: bytes, mime_type: str | None, document_typ
             "checks": [],
         }
 
+    document_type_validation = validate_document_type_against_ocr(
+        document_type=document_type,
+        ocr_text=ocr.get("text", "") if should_ocr else "",
+    )
+
     quality_score = int(quality.get("quality_score") or 0)
     match_score = int(matching.get("match_score") or 0)
 
     if quality_score < 45:
         verification_status = "QUALITY_REJECTED"
+    elif document_type_validation.get("status") == "DOCUMENT_TYPE_MISMATCH":
+        verification_status = "REVIEW_REQUIRED"
     elif should_ocr and matching["match_status"] in {"MISMATCH", "OCR_REVIEW_REQUIRED"}:
         verification_status = "REVIEW_REQUIRED"
     elif should_ocr and matching["match_status"] in {"MATCH_OK", "PARTIAL_MATCH"}:
@@ -551,6 +990,7 @@ def analyze_document_content(content: bytes, mime_type: str | None, document_typ
         "quality": quality,
         "ocr": ocr,
         "matching": matching,
+        "document_type_validation": document_type_validation,
         "verification_status": verification_status,
         "quality_score": quality_score,
     }
