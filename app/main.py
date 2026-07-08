@@ -11,10 +11,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.database import Base, engine, SessionLocal
-from app.routers import applications, backoffice, web, agencies, nationalities, countries, pre_onboarding
+from app.routers import applications, backoffice, backoffice_auth, web, agencies, nationalities, countries, pre_onboarding
 from app.services.agency_seed import seed_agencies
 from app.services.nationality_seed import seed_nationalities
 from app.services.country_seed import seed_countries
+from app.services.backoffice_auth_service import seed_backoffice_admin
 from app.services.schema_migration import migrate_account_applications
 
 
@@ -26,6 +27,7 @@ try:
     seed_agencies(db)
     seed_nationalities(db)
     seed_countries(db)
+    seed_backoffice_admin(db)
 finally:
     db.close()
 
@@ -69,6 +71,7 @@ app.include_router(whatsapp_notifications.router)
 app.include_router(api_integration_tests.router)
 app.include_router(web.router)
 app.include_router(applications.router)
+app.include_router(backoffice_auth.router)
 app.include_router(backoffice.router)
 app.include_router(agencies.router)
 app.include_router(nationalities.router)

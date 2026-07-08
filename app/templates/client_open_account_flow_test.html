@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/afriland-logo.png">
   <title>Ouverture de compte - Préparation du dossier</title>
   <!-- Capture review before processing PDF preview V5 -->
   <!-- CLIENT_OPEN_ACCOUNT_FLOW_CLEAN_ADVANCED_AUTO_REVIEW_PDF_V5 -->
 
   <style>
     :root {
-      --red: #b5121b;
+      --red: #C90000;
       --dark-red: #8f0e15;
       --gold: #f4b400;
       --green: #12805c;
@@ -40,6 +41,9 @@
       justify-content: space-between;
       gap: 18px;
       flex-wrap: wrap;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
 
     .brand {
@@ -62,8 +66,7 @@
       width: 180px;
       height: 78px;
       object-fit: contain;
-      transform: scale(1.45);
-      transform-origin: center center;
+      object-position: left center;
     }
 
     .brand h1 {
@@ -232,7 +235,7 @@
     .account-card.active {
       border-color: var(--red);
       background: #fffafa;
-      box-shadow: 0 14px 28px rgba(181, 18, 27, 0.14);
+      box-shadow: 0 14px 28px rgba(201, 0, 0, 0.14);
     }
 
     .account-icon {
@@ -332,7 +335,7 @@
     .btn-primary {
       background: var(--red);
       color: white;
-      box-shadow: 0 10px 22px rgba(181, 18, 27, 0.18);
+      box-shadow: 0 10px 22px rgba(201, 0, 0, 0.18);
     }
 
     .btn-light {
@@ -415,8 +418,8 @@
     #documents-section { scroll-margin-top: 20px; }
 
     #documents-section.documents-focus {
-      border-color: #b5121b !important;
-      box-shadow: 0 0 0 5px rgba(181, 18, 27, 0.12) !important;
+      border-color: #C90000 !important;
+      box-shadow: 0 0 0 5px rgba(201, 0, 0, 0.12) !important;
       transition: 0.25s ease;
     }
 
@@ -438,11 +441,21 @@
     }
 
     @media(max-width: 640px) {
-      .topbar { flex-direction: column; align-items: flex-start; }
-      .brand-logo, .brand-logo img { width: 130px; height: 60px; }
+      .topbar { padding: 8px 4%; gap: 8px; }
+      .brand { gap: 10px; }
+      .brand h1 { font-size: 15px; }
+      .brand p { display: none; } /* sous-titre masqué : le header sticky doit rester compact */
+      .topbar-actions { gap: 6px; }
+      .topbar-actions a { font-size: 13px; padding: 6px 10px; }
+      .brand-logo, .brand-logo img { width: 110px; height: 44px; }
+      .brand-logo img { transform: scale(1.1); }
       .doc-card { grid-template-columns: 1fr; }
       .doc-actions { justify-content: flex-start; }
       .media-grid { grid-template-columns: 1fr; }
+      .step0-preinscription { margin: 16px 4%; padding: 16px; }
+      input, select, textarea { font-size: 16px; } /* évite le zoom automatique iOS */
+      img, video, canvas { max-width: 100%; }
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     }
   
 /* AFB_FLOW_STEP0_PREINSCRIPTION_V1 */
@@ -1686,7 +1699,7 @@
   align-items: center;
   justify-content: center;
   background: #fee2e2;
-  color: #b5121b;
+  color: #C90000;
   font-size: 22px;
   flex: 0 0 auto;
 }
@@ -1719,7 +1732,7 @@
 }
 .review-actions .btn-danger-light {
   background: #fff;
-  color: #b5121b;
+  color: #C90000;
   border: 1px solid #f0c3c6;
 }
 
@@ -1840,7 +1853,7 @@
   <header class="topbar">
     <div class="brand">
       <div class="brand-logo">
-        <img src="/static/bank-logo.png" alt="Afriland First Bank">
+        <img src="/static/afriland-logo.png" alt="Afriland First Bank">
       </div>
       <div>
         <h1 data-i18n="title.account_opening">Ouverture de compte</h1>
@@ -1882,26 +1895,32 @@
         <div class="step">
           <div class="step-number">2</div>
           <div>
-            <strong data-i18n="steps.upload_docs.title">Importer vos pièces</strong>
-            <span data-i18n="steps.upload_docs.desc">Pièce d’identité, justificatifs, RIB 
-            .</span>
+            <strong data-i18n="steps.verify_contact.title">Renseigner et vérifier vos contacts</strong>
+            <span data-i18n="steps.verify_contact.desc">Email, pays de résidence et numéro WhatsApp confirmé par code OTP.</span>
           </div>
         </div>
 
         <div class="step">
           <div class="step-number">3</div>
           <div>
-            <strong data-i18n="steps.auto_check.title">Contrôle automatique</strong>
-            <span data-i18n="steps.auto_check.desc">Le système extrait les informations utiles sans afficher de texte technique.</span>
+            <strong data-i18n="steps.upload_docs.title">Importer vos pièces</strong>
+            <span data-i18n="steps.upload_docs.desc">Pièce d’identité, justificatifs, RIB ou documents entreprise.</span>
           </div>
         </div>
 
         <div class="step">
           <div class="step-number">4</div>
           <div>
-<strong data-i18n="steps.continue.title">Continuer vers le formulaire</strong>
-<span data-i18n="steps.continue.desc">Les champs détectés seront préremplis dans votre formulaire.</span>
-          .</span>
+            <strong data-i18n="steps.auto_check.title">Contrôle automatique</strong>
+            <span data-i18n="steps.auto_check.desc">Le système vérifie vos documents et extrait les informations utiles.</span>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">5</div>
+          <div>
+            <strong data-i18n="steps.continue.title">Poursuivre votre dossier (profil KYC)</strong>
+            <span data-i18n="steps.continue.desc">La suite du parcours : vos informations détectées y sont déjà préremplies.</span>
           </div>
         </div>
       </div>
@@ -1938,12 +1957,7 @@
   Renseignez ensuite votre email, votre numéro WhatsApp et votre pays de résidence/localisation.
   Ces informations nous permettent de sécuriser votre demande et d’identifier les pièces justificatives adaptées à votre situation.
 </p>
-    
-    <p>
-  Renseignez ensuite votre email, votre numéro WhatsApp et votre pays de résidence/localisation.
-  Ces informations nous permettent de sécuriser votre demande et d’identifier les pièces justificatives adaptées à votre situation.
-</p>
-    
+
 
     <div class="step0-grid">
       <div class="step0-field">
@@ -2117,7 +2131,7 @@
 
       <div class="section-box" id="documents-section">
         <h4 data-i18n="docs.title">Documents à fournir</h4>
-        <p data-i18n="docs.desc">Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préchargées vers le formulaire.</p>
+        <p data-i18n="docs.desc">Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préremplies dans la suite de votre dossier.</p>
         <div class="doc-list" id="doc-list"></div>
       </div>
 
@@ -2150,7 +2164,7 @@
         <div class="selected-label" id="selected-label"></div>
         <div>
           <a class="btn btn-light" href="/" data-i18n="buttons.back">Retour</a>
-          <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Continuer vers le formulaire</button>
+          <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Poursuivre mon dossier</button>
         </div>
       </div>
     </section>
@@ -2527,12 +2541,14 @@
           "intro.heading": "Préparer votre demande d’ouverture de compte",
           "steps.choose_account.title": "Choisir le type de compte",
           "steps.choose_account.desc": "Compte personnel ou compte entreprise.",
+          "steps.verify_contact.title": "Renseigner et vérifier vos contacts",
+          "steps.verify_contact.desc": "Email, pays de résidence et numéro WhatsApp confirmé par code OTP.",
           "steps.upload_docs.title": "Importer vos pièces",
           "steps.upload_docs.desc": "Pièce d’identité, justificatifs, RIB ou documents entreprise.",
           "steps.auto_check.title": "Contrôle automatique",
-          "steps.auto_check.desc": "Le système extrait les informations utiles sans afficher de texte technique.",
-          "steps.continue.title": "Continuer vers le formulaire",
-          "steps.continue.desc": "Les champs détectés seront préremplis dans votre formulaire.",
+          "steps.auto_check.desc": "Le système vérifie vos documents et extrait les informations utiles.",
+          "steps.continue.title": "Poursuivre votre dossier (profil KYC)",
+          "steps.continue.desc": "La suite du parcours : vos informations détectées y sont déjà préremplies.",
           "account_type.title": "Type de compte",
           "welcome.title": "Bienvenue dans votre parcours d’ouverture de compte à distance.",
           "welcome.badge": "Ouverture de compte à distance",
@@ -2550,7 +2566,7 @@
           "identity.residence_permit": "Titre de séjour",
           "identity.consular_card": "Carte consulaire",
           "docs.title": "Documents à fournir",
-          "docs.desc": "Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préchargées vers le formulaire.",
+          "docs.desc": "Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préremplies dans la suite de votre dossier.",
           "docs.no_account.title": "Type de compte non sélectionné",
           "docs.no_account.desc": "Choisissez compte personnel ou entreprise pour afficher les documents requis.",
           "media.title": "Photo / vidéo de vérification",
@@ -2571,7 +2587,7 @@
           "selected.label": "Type de compte sélectionné :",
           "selected.none": "Aucun",
           "buttons.back": "Retour",
-          "buttons.continue": "Continuer vers le formulaire",
+          "buttons.continue": "Poursuivre mon dossier",
           "buttons.upload": "Importer",
           "buttons.photo": "Photographier",
           "status.not_analyzed": "Non analysé",
@@ -2602,12 +2618,14 @@
           "intro.heading": "Prepare your account opening request",
           "steps.choose_account.title": "Choose the account type",
           "steps.choose_account.desc": "Personal or business account.",
+          "steps.verify_contact.title": "Provide and verify your contact details",
+          "steps.verify_contact.desc": "Email, country of residence and WhatsApp number confirmed with an OTP code.",
           "steps.upload_docs.title": "Upload your documents",
           "steps.upload_docs.desc": "Identity document, supporting documents, RIB or business documents.",
           "steps.auto_check.title": "Automatic check",
-          "steps.auto_check.desc": "The system extracts useful information without showing technical text.",
-          "steps.continue.title": "Continue to the form",
-          "steps.continue.desc": "Detected fields will be pre-filled in your form.",
+          "steps.auto_check.desc": "The system checks your documents and extracts useful information.",
+          "steps.continue.title": "Continue your application (KYC profile)",
+          "steps.continue.desc": "The next part of the journey: your detected information is already pre-filled.",
           "account_type.title": "Account type",
           "welcome.badge": "Remote account opening",
           "account_type.desc": "Choose the account type you want to open.",
@@ -2644,7 +2662,7 @@
           "selected.label": "Selected account type:",
           "selected.none": "None",
           "buttons.back": "Back",
-          "buttons.continue": "Continue to the form",
+          "buttons.continue": "Continue my application",
           "buttons.upload": "Upload",
           "buttons.photo": "Take photo",
           "status.not_analyzed": "Not analyzed",
@@ -2964,7 +2982,7 @@
 
         if (box) {
           box.className = "required-docs-message-afb ok";
-          box.textContent = "Tous les documents obligatoires sont fournis. Vous pouvez continuer vers le formulaire.";
+          box.textContent = "Tous les documents obligatoires sont fournis. Vous pouvez poursuivre votre dossier.";
         }
 
         return true;
@@ -3462,7 +3480,7 @@
         }
 
         if (!updateContinueAvailability()) {
-          alert("Veuillez fournir toutes les pièces obligatoires avant de continuer vers le formulaire.");
+          alert("Veuillez fournir toutes les pièces obligatoires avant de poursuivre votre dossier.");
           return;
         }
 
@@ -3529,16 +3547,45 @@
 
         const url = "/open-account-test?" + params.toString();
 
+        /* AFB_STEP0_TRANSITION_OVERLAY_V1 — écran de transition avant le formulaire */
+        showFormTransitionOverlay();
+
         /* AFB_STEP0_FORCE_URL_PREFILL_V4_REDIRECT */
-        try {
-          if (typeof window.afbBuildFinalUrlWithStep0V4 === "function") {
-            window.location.href = window.afbBuildFinalUrlWithStep0V5(url);
-          } else {
+        setTimeout(function () {
+          try {
+            if (typeof window.afbBuildFinalUrlWithStep0V4 === "function") {
+              window.location.href = window.afbBuildFinalUrlWithStep0V5(url);
+            } else {
+              window.location.href = url;
+            }
+          } catch (e) {
             window.location.href = url;
           }
-        } catch (e) {
-          window.location.href = url;
-        }
+        }, 1100);
+      }
+
+      function showFormTransitionOverlay() {
+        if (document.getElementById("afb-form-transition")) return;
+
+        const isEn = localStorage.getItem("diaspora_client_lang") === "en";
+
+        const overlay = document.createElement("div");
+        overlay.id = "afb-form-transition";
+        overlay.style.cssText = "position:fixed;inset:0;background:rgba(255,255,255,0.96);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;";
+
+        overlay.innerHTML =
+          '<div style="width:52px;height:52px;border:5px solid #e5e7eb;border-top-color:#C90000;border-radius:50%;animation:afbspin 0.9s linear infinite;"></div>' +
+          '<h2 style="margin:0;color:#C90000;font-size:22px;">' +
+          (isEn ? "Pre-registration completed ✓" : "Pré-inscription validée ✓") +
+          "</h2>" +
+          '<p style="margin:0;color:#4b5563;max-width:420px;line-height:1.6;">' +
+          (isEn
+            ? "We are preparing the next part of your application (KYC profile). Your contact details and documents have been saved."
+            : "Nous préparons la suite de votre dossier (profil KYC). Vos informations de contact et vos documents ont bien été conservés.") +
+          "</p>" +
+          "<style>@keyframes afbspin{to{transform:rotate(360deg)}}</style>";
+
+        document.body.appendChild(overlay);
       }
 
       function escapeHtml(value) {
@@ -3712,7 +3759,7 @@
         continueBtn.addEventListener("click", function (event) {
           if (!updateContinueAvailability()) {
             event.preventDefault();
-            alert("Veuillez fournir toutes les pièces obligatoires avant de continuer vers le formulaire.");
+            alert("Veuillez fournir toutes les pièces obligatoires avant de poursuivre votre dossier.");
             return;
           }
           goToFinalForm();
@@ -5271,8 +5318,16 @@ body.selfie-capture-active {
         demo.classList.add("show");
       }
 
-      setOtpStatus("Code envoyé. Saisissez le code OTP reçu sur WhatsApp.", true);
-      setMainStep0Status("Code OTP envoyé. Vérifiez le numéro WhatsApp pour continuer.", true);
+      if (data.whatsapp_sent === false) {
+        const fallbackMessage = data.demo_mode
+          ? "Envoi WhatsApp non confirmé (mode démo). Utilisez le code démo affiché."
+          : "L’envoi du code WhatsApp a échoué. Vérifiez le numéro puis réessayez.";
+        setOtpStatus(fallbackMessage, Boolean(data.demo_mode));
+        setMainStep0Status(fallbackMessage, Boolean(data.demo_mode));
+      } else {
+        setOtpStatus("Code envoyé. Saisissez le code OTP reçu sur WhatsApp.", true);
+        setMainStep0Status("Code OTP envoyé. Vérifiez le numéro WhatsApp pour continuer.", true);
+      }
     } catch (error) {
       setOtpStatus(error.message || "Impossible d’envoyer le code OTP.", false);
       setMainStep0Status(error.message || "Impossible d’envoyer le code OTP.", false);
@@ -8981,15 +9036,50 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
       enableOtpInput();
       showDemoOtp(data.demo_otp);
 
-      const delivery = data.whatsapp_delivery_status || (data.delivery && data.delivery.status) || "";
-      setOtpStatus(
-        delivery ? "Code de sécurité transmis. Vérifiez votre WhatsApp. Statut : " + delivery + "." : "Code de sécurité transmis. Vérifiez votre WhatsApp.",
-        "ok"
-      );
+      if (data.whatsapp_sent === false) {
+        if (data.demo_mode) {
+          setOtpStatus("L’envoi WhatsApp n’a pas pu être confirmé (mode démo). Utilisez le code affiché ci-dessous.", "warning");
+        } else {
+          setOtpStatus("L’envoi du code WhatsApp a échoué. Vérifiez le numéro puis réessayez.", "error");
+          return;
+        }
+      } else {
+        setOtpStatus("Code de sécurité transmis. Vérifiez votre WhatsApp.", "ok");
+        watchOtpDelivery(payload.session_id);
+      }
 
     } catch (err) {
       setOtpStatus("Erreur technique pendant l’envoi du code OTP WhatsApp.", "error");
     }
+  }
+
+  var otpDeliveryWatchTimer = null;
+
+  function watchOtpDelivery(sessionId) {
+    if (!sessionId) return;
+    if (otpDeliveryWatchTimer) clearTimeout(otpDeliveryWatchTimer);
+
+    var attempts = 0;
+    var failedStatuses = ["FAILED", "ERROR", "REJECTED", "UNDELIVERED", "CALLBELL_HTTP_ERROR", "CALLBELL_ERROR"];
+
+    function poll() {
+      attempts += 1;
+      fetch("/api/pre-onboarding/otp/delivery-status/" + encodeURIComponent(sessionId))
+        .then(function (response) { return response.json(); })
+        .then(function (data) {
+          var status = String(data.whatsapp_delivery_status || "").toUpperCase();
+          if (failedStatuses.indexOf(status) !== -1) {
+            setOtpStatus("La livraison du code WhatsApp a échoué (statut : " + status + "). Vérifiez le numéro puis renvoyez le code.", "error");
+            return;
+          }
+          if (attempts < 4) {
+            otpDeliveryWatchTimer = setTimeout(poll, 5000);
+          }
+        })
+        .catch(function () { /* suivi best-effort : ne pas perturber l'utilisateur */ });
+    }
+
+    otpDeliveryWatchTimer = setTimeout(poll, 5000);
   }
 
   async function verifyOtp(event) {

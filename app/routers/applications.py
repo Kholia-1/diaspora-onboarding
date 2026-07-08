@@ -2,15 +2,16 @@ import os
 import hashlib
 import mimetypes
 from uuid import uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import AccountApplication, ApplicationDocument
 from app.schemas import ApplicationCreate, ApplicationResponse
+from app.services.audit_service import log_action
 from app.services.blackmodule_client import screen_client_with_blackmodule
 from app.services.document_auth_service import (
     analyze_document_content,
@@ -203,7 +204,7 @@ def get_safe_extension(filename: str | None, content_type: str | None):
 
 
 @router.post("", response_model=ApplicationResponse)
-def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)):
+def create_application(payload: ApplicationCreate, request: Request, db: Session = Depends(get_db)):
     application = AccountApplication(
         reference=generate_reference(),
 
@@ -291,6 +292,18 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
         db.commit()
         db.refresh(application)
 
+    log_action(
+        db,
+        action="APPLICATION_SUBMITTED",
+        actor=application.email,
+        resource_type="AccountApplication",
+        resource_id=application.reference,
+        details={
+            "account_type": application.account_type,
+            "preferred_branch": application.preferred_branch,
+        },
+        request=request,
+    )
 
     return application
 

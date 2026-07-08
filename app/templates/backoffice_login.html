@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion back-office</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        :root {
+            --red: #C90000;
+            --red-dark: #9E0000;
+            --black: #111111;
+            --white: #FFFFFF;
+            --gray-bg: #F4F6F9;
+            --border: #DADDE5;
+            --muted: #6B7280;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--gray-bg);
+            color: #111827;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: var(--black);
+            color: var(--white);
+            padding: 18px 30px;
+            border-bottom: 4px solid var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header img {
+            height: 34px;
+            background: var(--white);
+            border-radius: 8px;
+            padding: 4px 10px;
+        }
+
+        .wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 14px;
+            padding: 32px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            margin: 0 0 6px;
+            color: var(--red);
+            font-size: 22px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 14px;
+            margin: 0 0 22px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            background: var(--red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 13px 16px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: var(--red-dark);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+        }
+
+        .error {
+            background: #FEE2E2;
+            color: #991B1B;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <strong>First Diaspora Onboarding — Back-office</strong>
+    <img src="/static/afriland-logo.png" alt="Afriland First Bank" onerror="this.style.display='none'">
+</div>
+
+<div class="wrap">
+    <form class="card" id="loginForm" novalidate>
+        <h1>Connexion</h1>
+        <p class="subtitle">Accès réservé aux utilisateurs habilités. Toutes les actions sont journalisées.</p>
+
+        <div class="error" id="loginError" role="alert"></div>
+
+        <label for="username">Identifiant</label>
+        <input id="username" type="text" autocomplete="username" required autofocus>
+
+        <label for="password">Mot de passe</label>
+        <input id="password" type="password" autocomplete="current-password" required>
+
+        <button type="submit" id="loginBtn">Se connecter</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const btn = document.getElementById("loginBtn");
+        const errorBox = document.getElementById("loginError");
+
+        errorBox.classList.remove("show");
+        btn.disabled = true;
+        btn.textContent = "Connexion en cours...";
+
+        try {
+            const response = await fetch("/api/backoffice/auth/login", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    username: document.getElementById("username").value.trim(),
+                    password: document.getElementById("password").value
+                })
+            });
+
+            const data = await response.json().catch(function () { return {}; });
+
+            if (!response.ok || !data.ok) {
+                errorBox.textContent = data.detail || "Identifiants incorrects.";
+                errorBox.classList.add("show");
+                return;
+            }
+
+            window.location.href = "/backoffice/applications";
+
+        } catch (err) {
+            errorBox.textContent = "Erreur technique. Veuillez réessayer.";
+            errorBox.classList.add("show");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Se connecter";
+        }
+    });
+</script>
+
+</body>
+</html>

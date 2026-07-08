@@ -213,6 +213,21 @@ def send_whatsapp_message(to_phone: str, message: str) -> dict[str, Any]:
             callbell_uuid = message_obj.get("uuid")
             callbell_status = message_obj.get("status")
 
+            # Un HTTP 200 sans UUID de message signifie que Callbell n'a pas
+            # réellement accepté le message : ne pas le compter comme envoyé.
+            failed_statuses = {"failed", "error", "rejected", "undelivered"}
+            if not callbell_uuid or str(callbell_status or "").lower() in failed_statuses:
+                return {
+                    "success": False,
+                    "status": str(callbell_status or "CALLBELL_NOT_ACCEPTED").upper(),
+                    "http_status": response.status,
+                    "to": normalized_phone,
+                    "provider": "CALLBELL",
+                    "callbell_message_uuid": callbell_uuid,
+                    "callbell_message_status": callbell_status,
+                    "response": parsed_body,
+                }
+
             return {
                 "success": True,
                 "status": str(callbell_status or "ACCEPTED_BY_CALLBELL").upper(),

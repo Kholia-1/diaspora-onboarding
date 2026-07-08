@@ -1,5 +1,5 @@
 from app.models import AccountApplication
-from app.database import get_db
+from app.database import get_db, SessionLocal
 from sqlalchemy.orm import Session
 from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi import Depends
@@ -12,9 +12,63 @@ router = APIRouter(tags=["Interface Web"])
 templates = Jinja2Templates(directory="app/templates")
 
 
+# BACKOFFICE_PAGE_GUARD_V1 — les pages back-office exigent une session valide
+def _backoffice_user_or_none(request: Request):
+    from app.services.backoffice_auth_service import get_user_from_request
+
+    db = SessionLocal()
+    try:
+        return get_user_from_request(request, db)
+    finally:
+        db.close()
+
+
+def _require_backoffice_page(request: Request):
+    """Renvoie une redirection vers /backoffice/login si non authentifié, sinon None."""
+    if _backoffice_user_or_none(request) is None:
+        return RedirectResponse(url="/backoffice/login", status_code=303)
+    return None
+
+
+@router.get("/backoffice/login")
+def backoffice_login_page(request: Request):
+    if _backoffice_user_or_none(request) is not None:
+        return RedirectResponse(url="/backoffice/applications", status_code=303)
+
+    return templates.TemplateResponse(
+        request,
+        "backoffice_login.html"
+    )
+
+
+@router.get("/backoffice/logout")
+def backoffice_logout_page(request: Request):
+    from app.services.backoffice_auth_service import SESSION_COOKIE_NAME, delete_session
+
+    token = request.cookies.get(SESSION_COOKIE_NAME)
+
+    if token:
+        db = SessionLocal()
+        try:
+            delete_session(db, token)
+        finally:
+            db.close()
+
+    response = RedirectResponse(url="/backoffice/login", status_code=303)
+    response.delete_cookie(SESSION_COOKIE_NAME, path="/")
+    return response
+
+
 @router.get("/")
 async def portal_home_page(request: Request):
     return templates.TemplateResponse(request, "portal_home.html", {"request": request})
+
+
+@router.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    from fastapi.responses import FileResponse
+    return FileResponse("app/static/afriland-logo.png", media_type="image/png")
+
 
 @router.get("/client/open-account")
 def client_open_account(request: Request):
@@ -26,6 +80,10 @@ def client_open_account(request: Request):
 
 @router.get("/backoffice/applications")
 def backoffice_applications(request: Request):
+    redirect = _require_backoffice_page(request)
+    if redirect:
+        return redirect
+
     return templates.TemplateResponse(
         request,
         "backoffice_applications.html"
@@ -38,6 +96,10 @@ def backoffice_application_detail(request: Request, application_id: str, db: Ses
     Affiche le détail d'un dossier back-office.
     Accepte soit l'ID numérique interne, soit la référence publique DIA-...
     """
+    redirect = _require_backoffice_page(request)
+    if redirect:
+        return redirect
+
     raw = str(application_id or "").strip()
 
     # Si l'URL contient une référence DIA-..., on retrouve l'ID interne
@@ -81,13 +143,34 @@ def backoffice_application_detail(request: Request, application_id: str, db: Ses
 
 @router.get("/backoffice/agencies")
 def backoffice_agencies(request: Request):
+    redirect = _require_backoffice_page(request)
+    if redirect:
+        return redirect
+
     return templates.TemplateResponse(
         request,
         "backoffice_agencies.html"
     )
 
+
+# BACKOFFICE_AUDIT_LOGS_PAGE_V1
+@router.get("/backoffice/audit-logs")
+def backoffice_audit_logs(request: Request):
+    redirect = _require_backoffice_page(request)
+    if redirect:
+        return redirect
+
+    return templates.TemplateResponse(
+        request,
+        "backoffice_audit_logs.html"
+    )
+
 @router.get("/backoffice/nationalities")
 def backoffice_nationalities(request: Request):
+    redirect = _require_backoffice_page(request)
+    if redirect:
+        return redirect
+
     return templates.TemplateResponse(
         request,
         "backoffice_nationalities.html"
@@ -121,6 +204,10 @@ async def client_open_account_page(request: Request):
 
 @router.get("/backoffice/packages")
 async def backoffice_packages_page(request: Request):
+    redirect = _require_backoffice_page(request)
+    if redirect:
+        return redirect
+
     return templates.TemplateResponse(request, "backoffice_packages.html", {"request": request})
 
 
@@ -214,7 +301,11 @@ async def card_reload_page(request: Request):
 
 # BACKOFFICE_API_INTEGRATIONS_PAGE_FORCE_CLEAN_V5
 @router.get("/backoffice/api-integrations")
-def backoffice_api_integrations_page():
+def backoffice_api_integrations_page(request: Request):
+    redirect = _require_backoffice_page(request)
+    if redirect:
+        return redirect
+
     from pathlib import Path
     from fastapi.responses import HTMLResponse
 

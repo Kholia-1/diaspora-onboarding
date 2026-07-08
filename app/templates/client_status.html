@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Suivi de dossier - First Diaspora Onboarding</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/static/afriland-logo.png">
 
     <style>
         :root {
@@ -32,6 +33,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .topbar h2 {
@@ -178,9 +182,17 @@
 
         @media (max-width: 700px) {
             .topbar {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
+                padding: 10px 14px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+
+            .topbar h2 {
+                font-size: 15px;
+            }
+
+            .topbar a {
+                font-size: 13px;
             }
         }
     </style>

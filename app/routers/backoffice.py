@@ -3,12 +3,13 @@ import json
 import os
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, Request
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import PaymentTransaction, AccountApplication, ApplicationDocument
+from app.models import PaymentTransaction, AccountApplication, ApplicationDocument, AuditLog
 from app.schemas import ApplicationResponse, BackOfficeDecision
+from app.services.audit_service import log_action
 from app.services.notification_service import notify_application_status_changed
 from app.services.package_payment_workflow import create_package_payment_after_approval
 
@@ -162,9 +163,27 @@ def latest_documents_by_type(documents):
 
 from app.services.application_business_rules import can_open_account
 
+# BACKOFFICE_API_GUARD_V1 — toutes les routes back-office exigent une session,
+# sauf la lecture des packages (consommée par le formulaire client public).
+def backoffice_guard(request: Request, db: Session = Depends(get_db)):
+    from app.services.backoffice_auth_service import get_user_from_request
+
+    if request.method == "GET" and request.url.path == "/api/backoffice/packages":
+        return None
+
+    user = get_user_from_request(request, db)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Authentification back-office requise.")
+
+    request.state.backoffice_user = user
+    return user
+
+
 router = APIRouter(
     prefix="/api/backoffice",
-    tags=["Back Office"]
+    tags=["Back Office"],
+    dependencies=[Depends(backoffice_guard)]
 )
 
 
@@ -313,6 +332,7 @@ def get_application_detail(application_id: str, db: Session = Depends(get_db)):
 def decide_application(
     application_id: int,
     payload: BackOfficeDecision,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     application = db.query(AccountApplication).filter(
@@ -379,6 +399,22 @@ def decide_application(
 
     db.commit()
     db.refresh(application)
+
+    session_user = getattr(request.state, "backoffice_user", None)
+
+    log_action(
+        db,
+        action="APPLICATION_DECISION",
+        actor=(session_user.username if session_user else payload.reviewed_by),
+        resource_type="AccountApplication",
+        resource_id=application.reference,
+        details={
+            "decision": payload.decision,
+            "comment": payload.comment,
+            "account_number": payload.account_number,
+        },
+        request=request,
+    )
 
     return {
         "message": "Décision back-office enregistrée",
@@ -578,7 +614,7 @@ def get_packages_config():
 
 
 @router.post("/packages")
-def save_packages_config(payload: dict = Body(...)):
+def save_packages_config(request: Request, payload: dict = Body(...), db: Session = Depends(get_db)):
     packages = payload.get("packages")
 
     if not isinstance(packages, list):
@@ -606,6 +642,14 @@ def save_packages_config(payload: dict = Body(...)):
     PACKAGES_CONFIG_PATH.write_text(
         json.dumps({"packages": cleaned}, ensure_ascii=False, indent=2),
         encoding="utf-8"
+    )
+
+    log_action(
+        db,
+        action="PACKAGES_CONFIG_UPDATED",
+        resource_type="PackagesConfig",
+        details={"packages_count": len(cleaned)},
+        request=request,
     )
 
     return {
@@ -836,7 +880,7 @@ def get_api_integrations_config():
 
 
 @router.post("/api-integrations")
-def save_api_integrations_config(payload: dict = Body(...)):
+def save_api_integrations_config(request: Request, payload: dict = Body(...), db: Session = Depends(get_db)):
     incoming = payload.get("integrations")
 
     if not isinstance(incoming, list):
@@ -877,10 +921,58 @@ def save_api_integrations_config(payload: dict = Body(...)):
         encoding="utf-8"
     )
 
+    log_action(
+        db,
+        action="API_INTEGRATIONS_UPDATED",
+        resource_type="ApiIntegrationsConfig",
+        details={"integrations": [item.get("code") for item in cleaned]},
+        request=request,
+    )
+
     return {
         "message": "Configuration des intégrations API enregistrée.",
         "integrations": [
             public_integration_payload(item)
             for item in cleaned
         ]
+    }
+
+
+# AUDIT_LOG_ENDPOINT_V1
+@router.get("/audit-logs")
+def list_audit_logs(
+    actor: str = None,
+    action: str = None,
+    limit: int = 200,
+    db: Session = Depends(get_db),
+):
+    limit = max(1, min(int(limit or 200), 1000))
+
+    query = db.query(AuditLog)
+
+    if actor:
+        query = query.filter(AuditLog.actor.ilike(f"%{actor}%"))
+
+    if action:
+        query = query.filter(AuditLog.action == action)
+
+    logs = query.order_by(AuditLog.created_at.desc(), AuditLog.id.desc()).limit(limit).all()
+
+    return {
+        "ok": True,
+        "count": len(logs),
+        "logs": [
+            {
+                "id": log.id,
+                "actor": log.actor,
+                "action": log.action,
+                "resource_type": log.resource_type,
+                "resource_id": log.resource_id,
+                "details": log.details,
+                "ip_address": log.ip_address,
+                "user_agent": log.user_agent,
+                "created_at": log.created_at.isoformat() if log.created_at else None,
+            }
+            for log in logs
+        ],
     }

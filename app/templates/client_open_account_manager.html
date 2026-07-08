@@ -21,6 +21,7 @@
          4. Miroir caméra frontale à l'export selfie
     -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="/static/afriland-logo.png">
 
     <style>
         :root {
@@ -47,11 +48,15 @@
             color: var(--text);
         }
 
+        /* AFB_UNIFIED_HEADER_V1 — même header blanc que le pré-onboarding et le portail */
         .topbar {
-            background: var(--black);
-            color: var(--white);
-            border-bottom: 4px solid var(--red);
+            background: var(--white);
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
             padding: 18px 30px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .topbar-content {
@@ -70,33 +75,33 @@
         }
 
         .logo-box {
-            width: 145px;
-            height: 55px;
-            background: var(--white);
-            border-radius: 10px;
+            width: 215px;
+            height: 58px;
+            background: transparent;
             display: flex;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
-            padding: 8px;
         }
 
         .logo-box img {
-            max-width: 125px;
-            max-height: 45px;
+            max-width: 100%;
+            max-height: 46px;
         }
 
         .brand-title {
-            font-size: 16px;
+            font-size: 19px;
             font-weight: bold;
+            color: var(--red);
         }
 
         .secure {
-            background: rgba(22, 163, 74, 0.12);
-            color: #22C55E;
-            border: 1px solid rgba(34, 197, 94, 0.35);
+            background: #E8F7EE;
+            color: #166534;
+            border: 1px solid rgba(22, 101, 52, 0.25);
             padding: 8px 14px;
             border-radius: 20px;
             font-size: 13px;
+            font-weight: 800;
         }
 
         .steps {
@@ -127,10 +132,59 @@
             border-color: var(--red);
         }
 
+        .step.done {
+            background: #16A34A;
+            color: var(--white);
+            border-color: #16A34A;
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            font: inherit;
+            color: inherit;
+        }
+
+        .step-label {
+            font-size: 11px;
+            max-width: 92px;
+            text-align: center;
+            line-height: 1.25;
+            color: var(--muted);
+        }
+
+        .step-item.is-active .step-label {
+            color: var(--red);
+            font-weight: bold;
+        }
+
+        .step-item.is-done .step-label {
+            color: #16A34A;
+        }
+
         .line {
             width: 50px;
             height: 2px;
             background: var(--border);
+            align-self: flex-start;
+            margin-top: 17px;
+        }
+
+        @media (max-width: 800px) {
+            .step-label {
+                display: none;
+            }
+
+            .line {
+                align-self: center;
+                margin-top: 0;
+            }
         }
 
         .container {
@@ -518,17 +572,19 @@
 }
 
 .client-nav a {
-    color: white;
+    color: var(--red);
     text-decoration: none;
-    font-weight: bold;
-    background: rgba(255, 255, 255, 0.12);
-    padding: 9px 13px;
-    border-radius: 8px;
-    font-size: 14px;
+    font-weight: 800;
+    background: #fff;
+    border: 1px solid #f0c3c6;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 13px;
 }
 
 .client-nav a:hover {
-    background: #C90000;
+    background: var(--red);
+    color: #fff;
 }
 
 .client-nav .secure {
@@ -1117,102 +1173,376 @@
   border-color: #10b981 !important;
 }
 
+/* AFB_RESPONSIVE_CONSOLIDATED_V1 — breakpoint mobile unifié */
+img, video, canvas {
+    max-width: 100%;
+}
+
+.section {
+    scroll-margin-top: 120px; /* compense le header sticky lors du scroll vers une section */
+}
+
+/* AFB_SECTION_WIZARD_NAV_V1 — boutons Précédent / Étape suivante */
+.section-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+}
+
+.section-nav button {
+    border-radius: 8px;
+    padding: 11px 18px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.section-nav-prev {
+    background: var(--white);
+    color: var(--text);
+    border: 1px solid var(--border);
+}
+
+.section-nav-prev:hover {
+    border-color: var(--red);
+    color: var(--red);
+}
+
+.section-nav-next {
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    margin-left: auto;
+}
+
+.section-nav-next:hover {
+    background: var(--red-dark);
+}
+
+@media (max-width: 480px) {
+    .section-nav {
+        flex-direction: row; /* garder Précédent/Suivant côte à côte même en mobile */
+    }
+
+    .section-nav button {
+        flex: 1;
+    }
+}
+
+/* AFB_NEXT_STEPS_BOX_V1 — étapes post-soumission (revue conformité, signature, activation) */
+.next-steps-box {
+    background: #F0F7FF;
+    border: 1px solid #BFDBFE;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 16px auto;
+    max-width: 520px;
+    text-align: left;
+    font-size: 14px;
+}
+
+.next-steps-box ol {
+    margin: 8px 0 0;
+    padding-left: 20px;
+    line-height: 1.7;
+    color: #1E3A5F;
+}
+
+/* AFB_INLINE_VALIDATION_V1 */
+.field-invalid {
+    border-color: #C90000 !important;
+    box-shadow: 0 0 0 3px rgba(201, 0, 0, 0.12);
+}
+
+.field-error-msg {
+    display: block;
+    color: #C90000;
+    font-size: 12px;
+    margin-top: 4px;
+    font-weight: bold;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 800px) {
+    .topbar {
+        padding: 8px 12px;
+    }
+
+    .topbar-content {
+        gap: 6px;
+    }
+
+    .brand {
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .logo-box {
+        width: 160px;
+        height: 44px;
+        padding: 5px 8px;
+    }
+
+    .logo-box img {
+        max-height: 34px;
+    }
+
+    .brand-title {
+        font-size: 13px;
+    }
+
+    .client-nav {
+        gap: 8px;
+    }
+
+    .client-nav a {
+        font-size: 13px;
+    }
+
+    .secure {
+        font-size: 11px;
+        padding: 4px 9px;
+    }
+
+    /* stepper scrollable horizontalement : pas de retour à la ligne */
+    .steps {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        justify-content: flex-start;
+        padding: 0 12px 6px;
+        scrollbar-width: none;
+    }
+
+    .steps::-webkit-scrollbar {
+        display: none;
+    }
+
+    .step-item {
+        flex: 0 0 auto;
+    }
+
+    .line {
+        flex: 0 0 22px;
+    }
+
+    .step {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
+    }
+
+    input, select, textarea {
+        font-size: 16px; /* évite le zoom automatique iOS */
+    }
+
+    .actions, .form-actions {
+        flex-direction: column;
+    }
+
+    .actions button, .form-actions button {
+        width: 100%;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 14px 10px;
+    }
+
+    h1 { font-size: 20px; }
+    h2 { font-size: 17px; }
+
+    /* header ultra-compact : le sticky ne doit pas manger l'écran */
+    .brand-title {
+        display: none;
+    }
+
+    .secure {
+        display: none;
+    }
+
+    .topbar-content {
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: left;
+    }
+
+    .client-nav {
+        justify-content: flex-end;
+        gap: 6px;
+    }
+
+    .client-nav a {
+        font-size: 12px;
+        padding: 6px 9px;
+    }
+
+    .logo-box {
+        width: 140px;
+        height: 40px;
+    }
+}
+
 </style>
 
 
-    <!-- OpenCV.js + MediaPipe FaceDetector pour capture intelligente réelle -->
+    <!-- AFB_LAZY_VISION_V1 — OpenCV.js et MediaPipe ne sont téléchargés qu'à la première
+         utilisation de la caméra (gros gain réseau/CPU sur mobile). Les promesses globales
+         MEDIAPIPE_FACE_READY / MEDIAPIPE_FACE_LANDMARKER_READY / OPENCV_READY gardent la
+         même interface : elles sont créées à la première lecture (getter). -->
     <script>
-        window.OPENCV_READY = new Promise(function (resolve) {
-            window.onOpenCvReady = function () {
-                if (window.cv && cv.onRuntimeInitialized) {
-                    cv.onRuntimeInitialized = function () {
-                        console.log("OpenCV.js prêt");
-                        resolve(true);
+        (function () {
+            let opencvPromise = null;
+
+            function loadOpenCv() {
+                return new Promise(function (resolve) {
+                    window.onOpenCvReady = function () {
+                        if (window.cv && cv.onRuntimeInitialized) {
+                            cv.onRuntimeInitialized = function () {
+                                console.log("OpenCV.js prêt");
+                                resolve(true);
+                            };
+                        } else {
+                            console.log("OpenCV.js prêt");
+                            resolve(true);
+                        }
                     };
-                } else {
-                    console.log("OpenCV.js prêt");
-                    resolve(true);
+
+                    const script = document.createElement("script");
+                    script.async = true;
+                    script.src = "https://docs.opencv.org/4.x/opencv.js";
+                    script.onload = function () { window.onOpenCvReady(); };
+                    script.onerror = function () {
+                        console.warn("OpenCV.js indisponible : capture en mode simple.");
+                        resolve(false);
+                    };
+                    document.head.appendChild(script);
+                });
+            }
+
+            Object.defineProperty(window, "OPENCV_READY", {
+                configurable: true,
+                get: function () {
+                    if (!opencvPromise) opencvPromise = loadOpenCv();
+                    return opencvPromise;
                 }
+            });
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const CDN = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22";
+            let visionModulePromise = null;
+            let faceDetectorPromise = null;
+            let faceLandmarkerPromise = null;
+
+            function loadVisionModule() {
+                if (!visionModulePromise) {
+                    visionModulePromise = import(CDN);
+                }
+                return visionModulePromise;
+            }
+
+            function initFaceDetector() {
+                return (async function () {
+                    try {
+                        const mod = await loadVisionModule();
+                        const vision = await mod.FilesetResolver.forVisionTasks(CDN + "/wasm");
+
+                        const detector = await mod.FaceDetector.createFromOptions(vision, {
+                            baseOptions: {
+                                modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
+                            },
+                            runningMode: "VIDEO",
+                            minDetectionConfidence: 0.60
+                        });
+
+                        window.mediaPipeFaceDetector = detector;
+                        console.log("MediaPipe FaceDetector prêt");
+                        return detector;
+                    } catch (error) {
+                        console.error("MediaPipe FaceDetector indisponible :", error);
+                        return null;
+                    }
+                })();
+            }
+
+            function initFaceLandmarker() {
+                return (async function () {
+                    try {
+                        const mod = await loadVisionModule();
+                        const vision = await mod.FilesetResolver.forVisionTasks(CDN + "/wasm");
+
+                        const landmarker = await mod.FaceLandmarker.createFromOptions(vision, {
+                            baseOptions: {
+                                modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+                                delegate: "GPU"
+                            },
+                            runningMode: "VIDEO",
+                            numFaces: 1
+                        });
+
+                        window.mediaPipeFaceLandmarker = landmarker;
+                        console.log("MediaPipe FaceLandmarker prêt");
+                        return landmarker;
+                    } catch (error) {
+                        console.warn("MediaPipe FaceLandmarker indisponible, fallback FaceDetector/manual :", error);
+                        return null;
+                    }
+                })();
+            }
+
+            Object.defineProperty(window, "MEDIAPIPE_FACE_READY", {
+                configurable: true,
+                get: function () {
+                    if (!faceDetectorPromise) faceDetectorPromise = initFaceDetector();
+                    return faceDetectorPromise;
+                }
+            });
+
+            Object.defineProperty(window, "MEDIAPIPE_FACE_LANDMARKER_READY", {
+                configurable: true,
+                get: function () {
+                    if (!faceLandmarkerPromise) faceLandmarkerPromise = initFaceLandmarker();
+                    return faceLandmarkerPromise;
+                }
+            });
+
+            window.detectFacesWithMediaPipe = async function (video) {
+                const detector = await window.MEDIAPIPE_FACE_READY;
+                if (!detector) {
+                    return [];
+                }
+
+                const result = detector.detectForVideo(video, performance.now());
+                return result && result.detections ? result.detections : [];
             };
-        });
-    </script>
-    <script async src="https://docs.opencv.org/4.x/opencv.js" onload="onOpenCvReady();"></script>
 
-    <script type="module">
-        import { FaceDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22";
+            window.detectFaceLandmarksWithMediaPipe = async function (video) {
+                const landmarker = await window.MEDIAPIPE_FACE_LANDMARKER_READY;
+                if (!landmarker || !video || !video.videoWidth || !video.videoHeight) {
+                    return [];
+                }
 
-        window.MEDIAPIPE_FACE_READY = (async function () {
-            try {
-                const vision = await FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
-                );
-
-                const detector = await FaceDetector.createFromOptions(vision, {
-                    baseOptions: {
-                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite"
-                    },
-                    runningMode: "VIDEO",
-                    minDetectionConfidence: 0.60
-                });
-
-                window.mediaPipeFaceDetector = detector;
-                console.log("MediaPipe FaceDetector prêt");
-                return detector;
-            } catch (error) {
-                console.error("MediaPipe FaceDetector indisponible :", error);
-                return null;
-            }
+                const result = landmarker.detectForVideo(video, performance.now());
+                return result && result.faceLandmarks ? result.faceLandmarks : [];
+            };
         })();
-
-        window.detectFacesWithMediaPipe = async function (video) {
-            const detector = await window.MEDIAPIPE_FACE_READY;
-            if (!detector) {
-                return [];
-            }
-
-            const result = detector.detectForVideo(video, performance.now());
-            return result && result.detections ? result.detections : [];
-        };
-    </script>
-
-
-    <!-- V10 - MediaPipe FaceLandmarker pour selfie intelligent selon machine à états KYC -->
-    <script type="module">
-        import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22";
-
-        window.MEDIAPIPE_FACE_LANDMARKER_READY = (async function () {
-            try {
-                const vision = await FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
-                );
-
-                const landmarker = await FaceLandmarker.createFromOptions(vision, {
-                    baseOptions: {
-                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-                        delegate: "GPU"
-                    },
-                    runningMode: "VIDEO",
-                    numFaces: 1
-                });
-
-                window.mediaPipeFaceLandmarker = landmarker;
-                console.log("MediaPipe FaceLandmarker prêt");
-                return landmarker;
-            } catch (error) {
-                console.warn("MediaPipe FaceLandmarker indisponible, fallback FaceDetector/manual :", error);
-                return null;
-            }
-        })();
-
-        window.detectFaceLandmarksWithMediaPipe = async function (video) {
-            const landmarker = await window.MEDIAPIPE_FACE_LANDMARKER_READY;
-            if (!landmarker || !video || !video.videoWidth || !video.videoHeight) {
-                return [];
-            }
-
-            const result = landmarker.detectForVideo(video, performance.now());
-            return result && result.faceLandmarks ? result.faceLandmarks : [];
-        };
     </script>
 
 
@@ -1329,8 +1659,8 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: rgba(255,255,255,0.14);
-    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(17, 24, 39, 0.08);
+    border: 1px solid rgba(17, 24, 39, 0.15);
     border-radius: 999px;
     padding: 4px;
 }
@@ -1343,7 +1673,7 @@
     font-size: 12px;
     cursor: pointer;
     background: transparent;
-    color: #FFFFFF;
+    color: #111827;
 }
 
 .manager-lang-switcher button.active {
@@ -1370,7 +1700,7 @@
     <div class="topbar-content">
         <div class="brand">
             <div class="logo-box">
-                <img src="/static/img/afriland logo.png" alt="Afriland First Bank" onerror="this.style.display='none'">
+                <img src="/static/afriland-logo.png" alt="Afriland First Bank" onerror="this.style.display='none'">
             </div>
             <div class="brand-title">Ouverture de compte à distance</div>
         </div>
@@ -1383,17 +1713,7 @@
     </div>
 </header>
 
-<div class="steps">
-    <div class="step active">1</div>
-    <div class="line"></div>
-    <div class="step">2</div>
-    <div class="line"></div>
-    <div class="step">3</div>
-    <div class="line"></div>
-    <div class="step">4</div>
-    <div class="line"></div>
-    <div class="step">5</div>
-</div>
+<div class="steps" id="formStepper" aria-label="Progression du formulaire"></div>
 
 <main class="container">
 
@@ -2124,6 +2444,15 @@
         Conservez cette référence. Elle vous permettra de suivre l’évolution de votre demande.
     </p>
 
+    <div class="next-steps-box">
+        <strong>Les prochaines étapes de votre dossier</strong>
+        <ol>
+            <li>Revue de votre dossier par un agent conformité (sous 48h ouvrées).</li>
+            <li>Signature électronique de la convention de compte (un code OTP vous sera envoyé).</li>
+            <li>Activation de votre compte et remise de votre RIB.</li>
+        </ol>
+    </div>
+
     <div class="success-actions">
         <a id="trackRequestLink" href="/client/status" class="btn-success-primary">
             Suivre ma demande
@@ -2586,6 +2915,317 @@
         });
     });
 
+    // AFB_FORM_STEPPER_V1 — stepper dynamique synchronisé avec les sections du formulaire
+    (function initFormStepper() {
+        const stepper = document.getElementById("formStepper");
+        const sections = Array.from(document.querySelectorAll("#accountForm .section"));
+
+        if (!stepper || !sections.length) return;
+
+        const stepperLang = (localStorage.getItem("diaspora_client_lang") === "en") ? "en" : "fr";
+        const shortLabels = {
+            "0": {fr: "Pré-inscription", en: "Pre-registration"},
+            "1": {fr: "Identité", en: "Identity"},
+            "2": {fr: "Parents / tuteurs", en: "Parents / guardians"},
+            "3": {fr: "Coordonnées", en: "Contact details"},
+            "4": {fr: "Pièce & activité", en: "ID & activity"},
+            "5": {fr: "Votre compte", en: "Your account"},
+            "6": {fr: "Documents", en: "Documents"},
+            "7": {fr: "Consentement", en: "Consent"}
+        };
+
+        function stepLabel(number) {
+            const entry = shortLabels[number];
+            if (!entry) return (stepperLang === "en" ? "Step " : "Étape ") + number;
+            return entry[stepperLang];
+        }
+
+        stepper.innerHTML = "";
+
+        const preDone = localStorage.getItem("diaspora_step0_whatsapp_otp_verified") === "true";
+        const preItem = document.createElement("button");
+        preItem.type = "button";
+        preItem.className = "step-item" + (preDone ? " is-done" : "");
+        preItem.title = stepperLang === "en"
+            ? "Pre-registration (WhatsApp verification and documents)"
+            : "Pré-inscription (vérification WhatsApp et documents)";
+        preItem.innerHTML = '<div class="step' + (preDone ? ' done' : '') + '">' + (preDone ? "✓" : "0") + '</div><div class="step-label">' + stepLabel("0") + '</div>';
+        stepper.appendChild(preItem);
+
+        sections.forEach(function (section, index) {
+            const line = document.createElement("div");
+            line.className = "line";
+            stepper.appendChild(line);
+
+            const numEl = section.querySelector(".section-number");
+            const number = numEl ? numEl.textContent.trim() : String(index + 1);
+            const label = stepLabel(number);
+
+            const item = document.createElement("button");
+            item.type = "button";
+            item.className = "step-item";
+            item.title = label;
+            item.innerHTML = '<div class="step">' + number + '</div><div class="step-label">' + label + '</div>';
+
+            item.addEventListener("click", function () {
+                sections.forEach(function (other) { other.classList.remove("open"); });
+                section.classList.add("open");
+                section.scrollIntoView({behavior: "smooth", block: "start"});
+            });
+
+            stepper.appendChild(item);
+        });
+
+        function syncStepper() {
+            const openIndex = sections.findIndex(function (s) { return s.classList.contains("open"); });
+            const items = stepper.querySelectorAll(".step-item");
+
+            items.forEach(function (item, i) {
+                if (i === 0) return; // pastille pré-inscription gérée à part
+
+                const sectionIndex = i - 1;
+                const circle = item.querySelector(".step");
+                const isActive = sectionIndex === openIndex;
+                const isDone = openIndex >= 0 && sectionIndex < openIndex;
+
+                item.classList.toggle("is-active", isActive);
+                item.classList.toggle("is-done", isDone);
+                circle.classList.toggle("active", isActive);
+                circle.classList.toggle("done", isDone && !isActive);
+
+                if (isActive) {
+                    item.setAttribute("aria-current", "step");
+                    // centre la pastille active quand le stepper défile horizontalement (mobile)
+                    if (stepper.scrollWidth > stepper.clientWidth) {
+                        item.scrollIntoView({behavior: "smooth", block: "nearest", inline: "center"});
+                    }
+                } else {
+                    item.removeAttribute("aria-current");
+                }
+            });
+        }
+
+        const stepperObserver = new MutationObserver(syncStepper);
+        sections.forEach(function (section) {
+            stepperObserver.observe(section, {attributes: true, attributeFilter: ["class"]});
+        });
+
+        syncStepper();
+    })();
+
+    // AFB_SECTION_WIZARD_NAV_V1 — navigation Précédent / Étape suivante en bas de chaque section
+    (function initSectionWizardNav() {
+        const sections = Array.from(document.querySelectorAll("#accountForm .section"));
+        if (sections.length < 2) return;
+
+        const isEn = localStorage.getItem("diaspora_client_lang") === "en";
+
+        function openSection(index) {
+            sections.forEach(function (s, i) { s.classList.toggle("open", i === index); });
+            sections[index].scrollIntoView({behavior: "smooth", block: "start"});
+        }
+
+        sections.forEach(function (section, index) {
+            const body = section.querySelector(".section-body");
+            if (!body || body.querySelector(".section-nav")) return;
+
+            const nav = document.createElement("div");
+            nav.className = "section-nav";
+
+            if (index > 0) {
+                const prev = document.createElement("button");
+                prev.type = "button";
+                prev.className = "section-nav-prev";
+                prev.textContent = isEn ? "← Previous" : "← Précédent";
+                prev.addEventListener("click", function () { openSection(index - 1); });
+                nav.appendChild(prev);
+            }
+
+            if (index < sections.length - 1) {
+                const next = document.createElement("button");
+                next.type = "button";
+                next.className = "section-nav-next";
+                next.textContent = isEn ? "Next step →" : "Étape suivante →";
+                next.addEventListener("click", function () { openSection(index + 1); });
+                nav.appendChild(next);
+            }
+
+            if (nav.children.length) body.appendChild(nav);
+        });
+    })();
+
+    // AFB_FORM_DRAFT_V1 — brouillon local de la saisie client, purgé à l'envoi du formulaire
+    (function initFormDraft() {
+        const DRAFT_KEY = "diaspora_form_draft_v1";
+        const form = document.getElementById("accountForm");
+        if (!form) return;
+
+        let draftSaveTimer = null;
+
+        function collectDraft() {
+            const fields = {};
+            form.querySelectorAll("input, select, textarea").forEach(function (field) {
+                const key = field.name || field.id;
+                if (!key || field.type === "file" || field.type === "password") return;
+
+                if (field.type === "checkbox" || field.type === "radio") {
+                    fields[key + "::" + field.value] = field.checked;
+                } else {
+                    fields[key] = field.value;
+                }
+            });
+            return fields;
+        }
+
+        function saveDraft() {
+            try {
+                localStorage.setItem(DRAFT_KEY, JSON.stringify({
+                    saved_at: new Date().toISOString(),
+                    fields: collectDraft()
+                }));
+            } catch (err) { /* stockage local indisponible ou plein */ }
+        }
+
+        function scheduleDraftSave() {
+            if (draftSaveTimer) clearTimeout(draftSaveTimer);
+            draftSaveTimer = setTimeout(saveDraft, 800);
+        }
+
+        function restoreDraft() {
+            let raw = null;
+            try { raw = localStorage.getItem(DRAFT_KEY); } catch (err) { return; }
+            if (!raw) return;
+
+            let draft = null;
+            try { draft = JSON.parse(raw); } catch (err) { return; }
+            const fields = draft && draft.fields;
+            if (!fields) return;
+
+            let restoredCount = 0;
+
+            form.querySelectorAll("input, select, textarea").forEach(function (field) {
+                const key = field.name || field.id;
+                if (!key || field.type === "file" || field.type === "password") return;
+
+                if (field.type === "checkbox" || field.type === "radio") {
+                    const stored = fields[key + "::" + field.value];
+                    if (typeof stored === "boolean" && field.checked !== stored) {
+                        field.checked = stored;
+                        restoredCount += 1;
+                    }
+                    return;
+                }
+
+                const stored = fields[key];
+                if (typeof stored !== "string" || stored === "") return;
+
+                if ((field.tagName === "SELECT" || !field.value) && field.value !== stored) {
+                    field.value = stored;
+                    restoredCount += 1;
+                }
+            });
+
+            if (restoredCount > 0) {
+                showDraftNotice(draft.saved_at);
+            }
+        }
+
+        function showDraftNotice(savedAt) {
+            const isEn = localStorage.getItem("diaspora_client_lang") === "en";
+            let savedLabel = "";
+
+            try {
+                if (savedAt) {
+                    savedLabel = new Date(savedAt).toLocaleString(isEn ? "en-GB" : "fr-FR");
+                }
+            } catch (err) { /* date invalide : on affiche sans horodatage */ }
+
+            const notice = document.createElement("div");
+            notice.id = "draftRestoreNotice";
+            notice.style.cssText = "background:#FFF7E0;border:1px solid #F0C36D;border-radius:10px;padding:12px 16px;margin:0 0 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;";
+
+            const message = document.createElement("span");
+            message.textContent = isEn
+                ? ("We restored your previous answers" + (savedLabel ? " (saved on " + savedLabel + ")" : "") + ". Your input is saved automatically on this device.")
+                : ("Nous avons repris votre saisie précédente" + (savedLabel ? " (enregistrée le " + savedLabel + ")" : "") + ". Vos réponses sont sauvegardées automatiquement sur cet appareil.");
+
+            const resetBtn = document.createElement("button");
+            resetBtn.type = "button";
+            resetBtn.textContent = isEn ? "Start over" : "Recommencer à zéro";
+            resetBtn.style.cssText = "background:none;border:1px solid #B45309;color:#B45309;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:bold;";
+            resetBtn.addEventListener("click", function () {
+                try { localStorage.removeItem(DRAFT_KEY); } catch (err) {}
+                form.reset();
+                notice.remove();
+            });
+
+            notice.appendChild(message);
+            notice.appendChild(resetBtn);
+            form.parentElement.insertBefore(notice, form);
+        }
+
+        window.clearClientFormDraft = function () {
+            try {
+                localStorage.removeItem(DRAFT_KEY);
+
+                const toRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.indexOf("diaspora_step0_") === 0 || key.indexOf("diaspora_pre_onboarding_") === 0)) {
+                        toRemove.push(key);
+                    }
+                }
+                toRemove.forEach(function (key) { localStorage.removeItem(key); });
+            } catch (err) { /* stockage local indisponible */ }
+        };
+
+        form.addEventListener("input", scheduleDraftSave);
+        form.addEventListener("change", scheduleDraftSave);
+
+        restoreDraft();
+    })();
+
+    // AFB_STEP0_HANDOFF_BANNER_V1 — confirme la reprise des données de pré-inscription
+    (function showStep0HandoffBanner() {
+        const form = document.getElementById("accountForm");
+        if (!form || document.getElementById("step0HandoffBanner")) return;
+
+        let payload = null;
+        try {
+            payload = JSON.parse(localStorage.getItem("diaspora_step0_payload") || "null");
+        } catch (err) { return; }
+        if (!payload || (!payload.email && !payload.whatsapp_phone_full)) return;
+
+        const isEn = localStorage.getItem("diaspora_client_lang") === "en";
+        const parts = [];
+
+        if (payload.email) parts.push(payload.email);
+        if (payload.whatsapp_phone_full) {
+            parts.push(payload.whatsapp_phone_full + (payload.whatsapp_otp_verified ? (isEn ? " (WhatsApp verified ✓)" : " (WhatsApp vérifié ✓)") : ""));
+        }
+        if (payload.residence) parts.push(payload.residence);
+
+        const banner = document.createElement("div");
+        banner.id = "step0HandoffBanner";
+        banner.style.cssText = "background:#E8F7EE;border:1px solid #86D3A5;border-radius:10px;padding:12px 16px;margin:0 0 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;color:#14532D;";
+
+        const message = document.createElement("span");
+        message.textContent = (isEn
+            ? "Your pre-registration details were carried over: "
+            : "Vos informations de pré-inscription ont bien été reprises : ") + parts.join(" · ");
+
+        const closeBtn = document.createElement("button");
+        closeBtn.type = "button";
+        closeBtn.setAttribute("aria-label", isEn ? "Close" : "Fermer");
+        closeBtn.textContent = "✕";
+        closeBtn.style.cssText = "background:none;border:none;color:#14532D;cursor:pointer;font-size:16px;font-weight:bold;";
+        closeBtn.addEventListener("click", function () { banner.remove(); });
+
+        banner.appendChild(message);
+        banner.appendChild(closeBtn);
+        form.parentElement.insertBefore(banner, form);
+    })();
+
     function updateIdentityLabels() {
         const sex = document.getElementById("sex") ? document.getElementById("sex").value : "";
         const maritalStatus = document.getElementById("marital_status") ? document.getElementById("marital_status").value : "";
@@ -2688,14 +3328,101 @@
         return await response.json();
     }
 
+    // AFB_SUBMIT_HARDENING_V1 — verrou anti double-soumission + reprise des uploads
+    let isSubmitting = false;
+
+    function setSubmitButtonBusy(busy) {
+        const submitBtn = document.querySelector(".submit-btn");
+        if (!submitBtn) return;
+
+        if (busy) {
+            if (!submitBtn.dataset.originalLabel) {
+                submitBtn.dataset.originalLabel = submitBtn.textContent;
+            }
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Envoi en cours... Merci de patienter.";
+        } else {
+            submitBtn.disabled = false;
+            if (submitBtn.dataset.originalLabel) {
+                submitBtn.textContent = submitBtn.dataset.originalLabel;
+            }
+        }
+    }
+
+    const DOCUMENT_UPLOAD_STEPS = [
+        {key: "identity", label: "Pièce d’identité", run: function (id) { return uploadIdentityDocuments(id); }},
+        {key: "extra", label: "Documents complémentaires", run: function (id) { return uploadManagerExtraDocuments(id); }},
+        {key: "address", label: "Justificatif de domicile", run: function (id) { return uploadPhoto(id, "PROOF_OF_ADDRESS_PHOTO", "address_photo"); }},
+        {key: "selfie", label: "Selfie", run: function (id) { return uploadSelfieDocument(id); }},
+        {key: "birth", label: "Acte de naissance", run: function (id) { return uploadPhoto(id, "BIRTH_CERTIFICATE_PHOTO", "birth_certificate_photo"); }},
+        {key: "employment", label: "Attestation d’emploi / scolarité", run: function (id) { return uploadPhoto(id, "EMPLOYMENT_OR_SCHOOL_CERTIFICATE_PHOTO", "employment_school_photo"); }},
+        {key: "tax", label: "Attestation de conformité fiscale", run: function (id) { return uploadPhoto(id, "TAX_COMPLIANCE_CERTIFICATE_PHOTO", "tax_compliance_photo"); }}
+    ];
+
+    async function runDocumentUploads(applicationId, steps) {
+        const failedSteps = [];
+
+        for (const step of steps) {
+            try {
+                await step.run(applicationId);
+            } catch (err) {
+                console.error("Échec upload " + step.key + " :", err);
+                failedSteps.push(step);
+            }
+        }
+
+        return failedSteps;
+    }
+
+    function showUploadRetry(application, failedSteps) {
+        const resultBox = document.getElementById("result");
+        resultBox.style.display = "block";
+        resultBox.className = "result error";
+        resultBox.innerHTML = "";
+
+        const message = document.createElement("p");
+        message.style.margin = "0 0 10px";
+        message.textContent =
+            "Votre dossier " + application.reference + " a bien été créé, mais certains documents n’ont pas pu être envoyés : " +
+            failedSteps.map(function (s) { return s.label; }).join(", ") +
+            ". Vérifiez votre connexion puis réessayez — seuls les documents manquants seront renvoyés.";
+
+        const retryBtn = document.createElement("button");
+        retryBtn.type = "button";
+        retryBtn.textContent = "Réessayer l’envoi des documents manquants";
+        retryBtn.style.cssText = "background:var(--red);color:#fff;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:bold;";
+        retryBtn.addEventListener("click", async function () {
+            retryBtn.disabled = true;
+            retryBtn.textContent = "Nouvel envoi en cours...";
+
+            const stillFailed = await runDocumentUploads(application.id, failedSteps);
+
+            if (stillFailed.length > 0) {
+                showUploadRetry(application, stillFailed);
+            } else {
+                await completeSubmission(application);
+            }
+        });
+
+        resultBox.appendChild(message);
+        resultBox.appendChild(retryBtn);
+    }
+
     document.getElementById("accountForm").addEventListener("submit", async function (event) {
     event.preventDefault();
 
         const form = event.target;
 
+        if (isSubmitting) {
+            return;
+        }
+
         if (!validateRequiredFields(form)) {
             return;
         }
+
+        isSubmitting = true;
+        setSubmitButtonBusy(true);
 
         const resultBox = document.getElementById("result");
         const successPanel = document.getElementById("successPanel");
@@ -2826,69 +3553,85 @@ Package : ${getFormValue(form, "selected_package_ui")}
             });
 
             if (!createResponse.ok) {
-                const errorText = await createResponse.text();
-                throw new Error("Erreur création dossier : " + errorText);
+                console.error("Erreur création dossier :", createResponse.status, await createResponse.text());
+                throw new Error(
+                    "Le serveur n’a pas pu enregistrer votre dossier. Veuillez réessayer dans quelques instants. " +
+                    "(code " + createResponse.status + ")"
+                );
             }
 
             const application = await createResponse.json();
-            const applicationId = application.id;
 
             resultBox.innerHTML = "Dossier créé. Envoi et authentification des documents en cours...";
 
-            await uploadIdentityDocuments(applicationId);
-            await uploadManagerExtraDocuments(applicationId);
-            await uploadPhoto(applicationId, "PROOF_OF_ADDRESS_PHOTO", "address_photo");
-            await uploadSelfieDocument(applicationId);
-            await uploadPhoto(applicationId, "BIRTH_CERTIFICATE_PHOTO", "birth_certificate_photo");
-            await uploadPhoto(applicationId, "EMPLOYMENT_OR_SCHOOL_CERTIFICATE_PHOTO", "employment_school_photo");
-            await uploadPhoto(applicationId, "TAX_COMPLIANCE_CERTIFICATE_PHOTO", "tax_compliance_photo");
+            const failedSteps = await runDocumentUploads(application.id, DOCUMENT_UPLOAD_STEPS);
 
-
-            resultBox.innerHTML = "Documents envoyés. Filtrage BLACKMODULE en cours...";
-
-            const screenResponse = await fetch(`${API_BASE}/api/applications/${applicationId}/screen-blackmodule`, {
-                method: "POST"
-            });
-
-            let screening = null;
-
-            if (screenResponse.ok) {
-                screening = await screenResponse.json();
+            if (failedSteps.length > 0) {
+                showUploadRetry(application, failedSteps);
+                return;
             }
 
-            resultBox.style.display = "none";
-            resultBox.className = "result";
-
-            showSubmissionSuccess(application.reference, getFormValue(form, "email"));
-
-            form.reset();
-
-            document.getElementById("preferred_branch").value = "";
-            document.getElementById("agencySearch").value = "";
-
-            document.getElementById("nationality").value = "";
-            document.getElementById("nationalitySearch").value = "";
-
-            setFieldMessage("agencyHelper", "Tapez quelques lettres puis cliquez sur une agence proposée.");
-            setFieldMessage("nationalityHelper", "Tapez quelques lettres puis cliquez sur une nationalité proposée.");
-            syncAllPhoneFields();
-
-            document.querySelectorAll(".package-card").forEach(item => {
-                item.classList.remove("selected");
-            });
-
-            const defaultPackageCard = document.querySelector(".package-card");
-            if (defaultPackageCard) {
-                defaultPackageCard.classList.add("selected");
-            }
-
-            document.querySelector("input[name='selected_package_ui']").value = "Package Budget";
+            await completeSubmission(application);
 
         } catch (error) {
             resultBox.className = "result error";
             resultBox.innerHTML = "Erreur : " + error.message;
+            isSubmitting = false;
+            setSubmitButtonBusy(false);
         }
     });
+
+    async function completeSubmission(application) {
+        const form = document.getElementById("accountForm");
+        const resultBox = document.getElementById("result");
+
+        resultBox.style.display = "block";
+        resultBox.className = "result loading";
+        resultBox.innerHTML = "Documents envoyés. Vérifications de conformité en cours...";
+
+        try {
+            await fetch(`${API_BASE}/api/applications/${application.id}/screen-blackmodule`, {
+                method: "POST"
+            });
+        } catch (err) {
+            console.error("Vérification de conformité indisponible :", err);
+        }
+
+        resultBox.style.display = "none";
+        resultBox.className = "result";
+
+        showSubmissionSuccess(application.reference, getFormValue(form, "email"));
+
+        if (typeof window.clearClientFormDraft === "function") {
+            window.clearClientFormDraft();
+        }
+
+        form.reset();
+
+        document.getElementById("preferred_branch").value = "";
+        document.getElementById("agencySearch").value = "";
+
+        document.getElementById("nationality").value = "";
+        document.getElementById("nationalitySearch").value = "";
+
+        setFieldMessage("agencyHelper", "Tapez quelques lettres puis cliquez sur une agence proposée.");
+        setFieldMessage("nationalityHelper", "Tapez quelques lettres puis cliquez sur une nationalité proposée.");
+        syncAllPhoneFields();
+
+        document.querySelectorAll(".package-card").forEach(item => {
+            item.classList.remove("selected");
+        });
+
+        const defaultPackageCard = document.querySelector(".package-card");
+        if (defaultPackageCard) {
+            defaultPackageCard.classList.add("selected");
+        }
+
+        document.querySelector("input[name='selected_package_ui']").value = "Package Budget";
+
+        isSubmitting = false;
+        setSubmitButtonBusy(false);
+    }
 
     function showSubmissionSuccess(reference, email) {
         const successPanel = document.getElementById("successPanel");
@@ -4188,39 +4931,110 @@ function openSectionForField(field) {
     }, 100);
 }
 
+// AFB_INLINE_VALIDATION_V1 — remplace les alert() : toutes les erreurs affichées sous les champs
+function clearFieldError(field) {
+    field.classList.remove("field-invalid");
+    field.removeAttribute("aria-invalid");
+
+    const box = field.closest("div");
+    const msg = box ? box.querySelector(".field-error-msg") : null;
+    if (msg) msg.remove();
+}
+
+function markFieldError(field, message) {
+    field.classList.add("field-invalid");
+    field.setAttribute("aria-invalid", "true");
+
+    const box = field.closest("div");
+    if (!box || box.querySelector(".field-error-msg")) return;
+
+    const msg = document.createElement("span");
+    msg.className = "field-error-msg";
+    msg.id = (field.id || field.name || "champ") + "-error";
+    msg.textContent = message;
+    field.setAttribute("aria-describedby", msg.id);
+    box.appendChild(msg);
+
+    field.addEventListener("input", function onFix() {
+        if ((field.value || "").trim()) {
+            clearFieldError(field);
+            field.removeEventListener("input", onFix);
+        }
+    });
+    field.addEventListener("change", function onFixChange() {
+        if ((field.value || "").trim()) {
+            clearFieldError(field);
+            field.removeEventListener("change", onFixChange);
+        }
+    });
+}
+
 function validateRequiredFields(form) {
     const requiredFields = Array.from(form.querySelectorAll("[required]"));
+    const invalidFields = [];
+
+    requiredFields.forEach(clearFieldError);
 
     for (const field of requiredFields) {
-        if (field.disabled) {
-            continue;
-        }
-
-        if (field.type === "hidden") {
+        if (field.disabled || field.type === "hidden") {
             continue;
         }
 
         const value = (field.value || "").trim();
 
         if (!value) {
-            openSectionForField(field);
-
-            const label = field.closest("div")
-                ? field.closest("div").querySelector("label")
-                : null;
-
-            const labelText = label
-                ? label.innerText.replace("*", "").trim()
-                : field.name;
-
-            alert("Veuillez renseigner le champ obligatoire : " + labelText);
-
-            return false;
+            markFieldError(field, "Ce champ est obligatoire.");
+            invalidFields.push(field);
         }
+    }
+
+    const summary = document.getElementById("result");
+
+    if (invalidFields.length > 0) {
+        if (summary) {
+            summary.style.display = "block";
+            summary.className = "result error";
+            summary.textContent = invalidFields.length === 1
+                ? "1 champ obligatoire reste à compléter. Il est signalé en rouge."
+                : invalidFields.length + " champs obligatoires restent à compléter. Ils sont signalés en rouge.";
+        }
+
+        const first = invalidFields[0];
+        openSectionForField(first);
+        setTimeout(function () {
+            first.scrollIntoView({behavior: "smooth", block: "center"});
+            first.focus({preventScroll: true});
+        }, 150);
+
+        return false;
+    }
+
+    if (summary && summary.classList.contains("error")) {
+        summary.style.display = "none";
     }
 
     return true;
 }
+
+// AFB_LABEL_AUTOLINK_V1 — associe chaque label au champ voisin (accessibilité)
+document.addEventListener("DOMContentLoaded", function () {
+    let autoId = 0;
+
+    document.querySelectorAll("#accountForm label:not([for])").forEach(function (label) {
+        const box = label.closest("div");
+        if (!box) return;
+
+        const field = box.querySelector("input, select, textarea");
+        if (!field) return;
+
+        if (!field.id) {
+            autoId += 1;
+            field.id = "afb-field-" + (field.name || "auto") + "-" + autoId;
+        }
+
+        label.setAttribute("for", field.id);
+    });
+});
 
 
 
@@ -13421,7 +14235,14 @@ document.addEventListener("DOMContentLoaded", function () {
         ["La devise de cette tranche est sélectionnée dans le champ Devise de la tranche de revenu.", "The currency for this range is selected in the Income range currency field."],
         ["Les tranches sont converties depuis les montants FCFA avec le taux indicatif 1 EUR = 655.957 FCFA.", "The ranges are converted from FCFA amounts using the indicative rate 1 EUR = 655.957 FCFA."],
         ["Document attendu : registre de commerce, justificatif fiscal ou preuve d’activité commerciale.", "Expected document: business registration, tax certificate, or proof of business activity."],
-        ["Document attendu : registre de commerce, justificatif fiscal ou preuve d'activité commerciale.", "Expected document: business registration, tax certificate, or proof of business activity."]
+        ["Document attendu : registre de commerce, justificatif fiscal ou preuve d'activité commerciale.", "Expected document: business registration, tax certificate, or proof of business activity."],
+
+        ["Pré-inscription", "Pre-registration"],
+        ["Identité", "Identity"],
+        ["Parents / tuteurs", "Parents / guardians"],
+        ["Pièce & activité", "ID & activity"],
+        ["Votre compte", "Your account"],
+        ["Consentement", "Consent"]
     ];
 
     function currentLang() {

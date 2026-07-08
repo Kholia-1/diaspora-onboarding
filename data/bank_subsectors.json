@@ -1,0 +1,62 @@
+[
+  {"code": "AGR-01", "label": "Agriculture vivrière", "sector_code": "AGR", "sector": "Agriculture, élevage et pêche"},
+  {"code": "AGR-02", "label": "Cultures d'exportation (cacao, café, coton)", "sector_code": "AGR", "sector": "Agriculture, élevage et pêche"},
+  {"code": "AGR-03", "label": "Élevage", "sector_code": "AGR", "sector": "Agriculture, élevage et pêche"},
+  {"code": "AGR-04", "label": "Pêche et aquaculture", "sector_code": "AGR", "sector": "Agriculture, élevage et pêche"},
+
+  {"code": "IND-01", "label": "Agroalimentaire", "sector_code": "IND", "sector": "Industrie et production"},
+  {"code": "IND-02", "label": "Textile et habillement", "sector_code": "IND", "sector": "Industrie et production"},
+  {"code": "IND-03", "label": "Industrie extractive et minière", "sector_code": "IND", "sector": "Industrie et production"},
+  {"code": "IND-04", "label": "Énergie et eau", "sector_code": "IND", "sector": "Industrie et production"},
+
+  {"code": "BTP-01", "label": "Construction de bâtiments", "sector_code": "BTP", "sector": "Bâtiment et travaux publics"},
+  {"code": "BTP-02", "label": "Travaux publics et génie civil", "sector_code": "BTP", "sector": "Bâtiment et travaux publics"},
+  {"code": "BTP-03", "label": "Second œuvre (électricité, plomberie, peinture)", "sector_code": "BTP", "sector": "Bâtiment et travaux publics"},
+
+  {"code": "COM-01", "label": "Commerce de détail", "sector_code": "COM", "sector": "Commerce et distribution"},
+  {"code": "COM-02", "label": "Commerce de gros", "sector_code": "COM", "sector": "Commerce et distribution"},
+  {"code": "COM-03", "label": "Import / export", "sector_code": "COM", "sector": "Commerce et distribution"},
+  {"code": "COM-04", "label": "Commerce en ligne", "sector_code": "COM", "sector": "Commerce et distribution"},
+
+  {"code": "TRA-01", "label": "Transport de personnes", "sector_code": "TRA", "sector": "Transport et logistique"},
+  {"code": "TRA-02", "label": "Transport de marchandises", "sector_code": "TRA", "sector": "Transport et logistique"},
+  {"code": "TRA-03", "label": "Logistique et entreposage", "sector_code": "TRA", "sector": "Transport et logistique"},
+
+  {"code": "HOT-01", "label": "Hôtellerie", "sector_code": "HOT", "sector": "Hôtellerie et restauration"},
+  {"code": "HOT-02", "label": "Restauration", "sector_code": "HOT", "sector": "Hôtellerie et restauration"},
+  {"code": "HOT-03", "label": "Tourisme et loisirs", "sector_code": "HOT", "sector": "Hôtellerie et restauration"},
+
+  {"code": "INF-01", "label": "Développement logiciel et services numériques", "sector_code": "INF", "sector": "Informatique et télécommunications"},
+  {"code": "INF-02", "label": "Télécommunications", "sector_code": "INF", "sector": "Informatique et télécommunications"},
+  {"code": "INF-03", "label": "Vente et maintenance de matériel informatique", "sector_code": "INF", "sector": "Informatique et télécommunications"},
+
+  {"code": "FIN-01", "label": "Banque", "sector_code": "FIN", "sector": "Banque, finance et assurance"},
+  {"code": "FIN-02", "label": "Microfinance", "sector_code": "FIN", "sector": "Banque, finance et assurance"},
+  {"code": "FIN-03", "label": "Assurance", "sector_code": "FIN", "sector": "Banque, finance et assurance"},
+  {"code": "FIN-04", "label": "Transfert d'argent et fintech", "sector_code": "FIN", "sector": "Banque, finance et assurance"},
+
+  {"code": "SAN-01", "label": "Médecine et soins", "sector_code": "SAN", "sector": "Santé et action sociale"},
+  {"code": "SAN-02", "label": "Pharmacie", "sector_code": "SAN", "sector": "Santé et action sociale"},
+  {"code": "SAN-03", "label": "Action sociale et humanitaire", "sector_code": "SAN", "sector": "Santé et action sociale"},
+
+  {"code": "EDU-01", "label": "Enseignement primaire et secondaire", "sector_code": "EDU", "sector": "Éducation et formation"},
+  {"code": "EDU-02", "label": "Enseignement supérieur", "sector_code": "EDU", "sector": "Éducation et formation"},
+  {"code": "EDU-03", "label": "Formation professionnelle", "sector_code": "EDU", "sector": "Éducation et formation"},
+
+  {"code": "ADM-01", "label": "Fonction publique", "sector_code": "ADM", "sector": "Administration publique"},
+  {"code": "ADM-02", "label": "Collectivités territoriales", "sector_code": "ADM", "sector": "Administration publique"},
+  {"code": "ADM-03", "label": "Organisations internationales et diplomatie", "sector_code": "ADM", "sector": "Administration publique"},
+
+  {"code": "SRV-01", "label": "Conseil et services aux entreprises", "sector_code": "SRV", "sector": "Services aux entreprises et aux particuliers"},
+  {"code": "SRV-02", "label": "Sécurité et gardiennage", "sector_code": "SRV", "sector": "Services aux entreprises et aux particuliers"},
+  {"code": "SRV-03", "label": "Nettoyage et entretien", "sector_code": "SRV", "sector": "Services aux entreprises et aux particuliers"},
+  {"code": "SRV-04", "label": "Coiffure, esthétique et bien-être", "sector_code": "SRV", "sector": "Services aux entreprises et aux particuliers"},
+
+  {"code": "ART-01", "label": "Menuiserie et ébénisterie", "sector_code": "ART", "sector": "Artisanat et métiers"},
+  {"code": "ART-02", "label": "Couture et stylisme", "sector_code": "ART", "sector": "Artisanat et métiers"},
+  {"code": "ART-03", "label": "Mécanique et réparation", "sector_code": "ART", "sector": "Artisanat et métiers"},
+
+  {"code": "SSE-01", "label": "Étudiant", "sector_code": "SSE", "sector": "Sans emploi / étudiant / retraité"},
+  {"code": "SSE-02", "label": "Retraité", "sector_code": "SSE", "sector": "Sans emploi / étudiant / retraité"},
+  {"code": "SSE-03", "label": "Sans activité", "sector_code": "SSE", "sector": "Sans emploi / étudiant / retraité"}
+]

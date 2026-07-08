@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/static/afriland-logo.png">
   <title>Afriland First Bank - Portail Digital</title>
 
   <style>
     :root {
-      --red: #b5121b;
+      --red: #C90000;
       --dark-red: #8f0e15;
       --gold: #f4b400;
       --green: #12805c;
@@ -40,6 +41,9 @@
       align-items: center;
       gap: 16px;
       min-height: 96px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
 
     .brand {
@@ -67,10 +71,8 @@
       width: 180px;
       height: 78px;
       object-fit: contain;
-      object-position: center center;
+      object-position: left center;
       display: block;
-      transform: scale(1.45);
-      transform-origin: center center;
     }
 
     .brand-mark {
@@ -83,7 +85,7 @@
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      box-shadow: 0 10px 24px rgba(181, 18, 27, 0.25);
+      box-shadow: 0 10px 24px rgba(201, 0, 0, 0.25);
     }
 
     .brand h1 {
@@ -281,7 +283,7 @@
     .btn-primary {
       background: var(--red);
       color: white;
-      box-shadow: 0 10px 22px rgba(181, 18, 27, 0.22);
+      box-shadow: 0 10px 22px rgba(201, 0, 0, 0.22);
     }
 
     .btn-disabled {
@@ -334,7 +336,27 @@
 
     @media (max-width: 640px) {
       .topbar {
-        align-items: flex-start;
+        padding: 8px 4%;
+        min-height: 0;
+        gap: 10px;
+      }
+
+      .brand {
+        gap: 12px;
+      }
+
+      .brand-logo,
+      .brand-logo img {
+        width: 120px;
+        height: 48px;
+      }
+
+      .brand h1 {
+        font-size: 15px;
+      }
+
+      .brand p {
+        display: none;
       }
 
       .hero-main {
@@ -393,7 +415,7 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="brand-logo"><img src="/static/bank-logo.png" alt="Afriland First Bank"></div>
+      <div class="brand-logo"><img src="/static/afriland-logo.png" alt="Afriland First Bank"></div>
       <div>
         <h1>Afriland First Bank</h1>
         <p>Portail digital de services bancaires</p>

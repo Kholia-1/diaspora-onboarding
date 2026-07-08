@@ -231,3 +231,49 @@ class AccountOpeningRecord(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
     raw_payload = Column(Text, nullable=True)
+
+
+# BACKOFFICE_AUTH_MODELS_V1
+class BackofficeUser(Base):
+    __tablename__ = "backoffice_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(80), unique=True, index=True, nullable=False)
+    full_name = Column(String(150), nullable=True)
+    password_hash = Column(String(300), nullable=False)
+    role = Column(String(50), default="AGENT")
+    active = Column(Boolean, default=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login_at = Column(DateTime, nullable=True)
+
+
+class BackofficeSession(Base):
+    __tablename__ = "backoffice_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String(120), unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("backoffice_users.id"), nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+
+
+# AUDIT_LOG_MODEL_V1
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    actor = Column(String(150), nullable=True, index=True)
+    action = Column(String(100), nullable=False, index=True)
+
+    resource_type = Column(String(100), nullable=True, index=True)
+    resource_id = Column(String(100), nullable=True, index=True)
+
+    details = Column(Text, nullable=True)
+
+    ip_address = Column(String(60), nullable=True)
+    user_agent = Column(String(300), nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)

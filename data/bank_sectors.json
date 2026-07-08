@@ -1,0 +1,16 @@
+[
+  {"code": "AGR", "name": "Agriculture, élevage et pêche"},
+  {"code": "IND", "name": "Industrie et production"},
+  {"code": "BTP", "name": "Bâtiment et travaux publics"},
+  {"code": "COM", "name": "Commerce et distribution"},
+  {"code": "TRA", "name": "Transport et logistique"},
+  {"code": "HOT", "name": "Hôtellerie et restauration"},
+  {"code": "INF", "name": "Informatique et télécommunications"},
+  {"code": "FIN", "name": "Banque, finance et assurance"},
+  {"code": "SAN", "name": "Santé et action sociale"},
+  {"code": "EDU", "name": "Éducation et formation"},
+  {"code": "ADM", "name": "Administration publique"},
+  {"code": "SRV", "name": "Services aux entreprises et aux particuliers"},
+  {"code": "ART", "name": "Artisanat et métiers"},
+  {"code": "SSE", "name": "Sans emploi / étudiant / retraité"}
+]
