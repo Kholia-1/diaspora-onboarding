@@ -566,17 +566,23 @@ def _word_spaced_text(text: str, char_boxes) -> str:
         if median_width <= 0:
             return text
 
-        # 0.6 × largeur médiane : compromis mesuré — en dessous, le crénage
-        # inter-lettres sur-découpe les noms (« MBAR GA ») ; au-dessus, les
-        # vrais espaces des photos correctes ne sont plus détectés.
-        threshold = max(4.0, 0.6 * median_width)
-
-        pieces = [text[0]]
+        gaps = []
         for i in range(1, len(text)):
             prev_xs = [float(p[0]) for p in char_boxes[i - 1]]
             cur_xs = [float(p[0]) for p in char_boxes[i]]
-            gap = min(cur_xs) - max(prev_xs)
-            if gap > threshold:
+            gaps.append(min(cur_xs) - max(prev_xs))
+
+        # Seuil adaptatif : un espace est un écart nettement supérieur au
+        # crénage courant de la zone (médiane des écarts positifs). Le ratio
+        # fixe sur la largeur des caractères sur-découpait les polices serrées
+        # et ratait les espaces des polices larges.
+        positive_gaps = sorted(g for g in gaps if g > 0)
+        median_gap = positive_gaps[len(positive_gaps) // 2] if positive_gaps else 0.0
+        threshold = max(4.0, 0.35 * median_width, 2.0 * median_gap)
+
+        pieces = [text[0]]
+        for i in range(1, len(text)):
+            if gaps[i - 1] > threshold:
                 pieces.append(" ")
             pieces.append(text[i])
 
@@ -672,28 +678,40 @@ def _parse_rapidocr_result(result):
     return _deglue_known_labels("\n".join(lines).strip()), confidence
 
 
-# AFB_OCR_LABEL_DEGLUE_V1 : la reconnaissance colle parfois les mots des
-# libellés officiels (« DATEDENAISSANCE », « PLACEOFBIRTH »), ce qui fait
+# AFB_OCR_LABEL_DEGLUE_V1 : la reconnaissance colle ou sur-découpe parfois les
+# libellés officiels (« DATEDENAISSANCE », « PLA CE OF BIRTH »), ce qui fait
 # rater les extracteurs de champs et la validation du type de document.
-# On ré-espace uniquement des libellés connus des pièces camerounaises —
-# aucune retouche des valeurs (noms, numéros).
+# Chaque libellé canonique est matché lettre à lettre avec espaces optionnels
+# entre elles, puis remplacé par sa forme normalisée — aucune retouche des
+# valeurs (noms, numéros). Libellés longs uniquement : pas de faux positifs.
+_CANONICAL_LABELS = [
+    "DATE DE NAISSANCE",
+    "DATE OF BIRTH",
+    "LIEU DE NAISSANCE",
+    "PLACE OF BIRTH",
+    "GIVEN NAMES",
+    "DATE DE DELIVRANCE",
+    "DATE OF ISSUE",
+    "DATE D EXPIRATION",
+    "DATE OF EXPIRY",
+    "IDENTIFIANT UNIQUE",
+    "UNIQUE IDENTIFIER",
+    "CARTE NATIONALE D'IDENTITE",
+    "NATIONAL IDENTITY CARD",
+    "REPUBLIQUE DU CAMEROUN",
+    "REPUBLIC OF CAMEROON",
+    "NUMERO DE PASSEPORT",
+    "PASSPORT NUMBER",
+]
+
+
+def _label_pattern(label: str) -> re.Pattern:
+    chars = [c for c in label if not c.isspace()]
+    return re.compile(r"\s*".join(re.escape(c) for c in chars), re.IGNORECASE)
+
+
 _GLUED_LABEL_PATTERNS: list[tuple[re.Pattern, str]] = [
-    (re.compile(r"DATE\s*DE\s*NAISSANCE", re.IGNORECASE), "DATE DE NAISSANCE"),
-    (re.compile(r"DATE\s*OF\s*BIRTH", re.IGNORECASE), "DATE OF BIRTH"),
-    (re.compile(r"LIEU\s*DE\s*NAISSANCE", re.IGNORECASE), "LIEU DE NAISSANCE"),
-    (re.compile(r"PLACE\s*OF\s*BIRTH", re.IGNORECASE), "PLACE OF BIRTH"),
-    (re.compile(r"GIVEN\s*NAMES?", re.IGNORECASE), "GIVEN NAMES"),
-    (re.compile(r"DATE\s*DE\s*DELIVRANCE", re.IGNORECASE), "DATE DE DELIVRANCE"),
-    (re.compile(r"DATE\s*OF\s*ISSUE", re.IGNORECASE), "DATE OF ISSUE"),
-    (re.compile(r"DATE\s*D['\s]*EXPIRATION", re.IGNORECASE), "DATE D EXPIRATION"),
-    (re.compile(r"DATE\s*OF\s*EXPIRY", re.IGNORECASE), "DATE OF EXPIRY"),
-    (re.compile(r"IDENTIFIANT\s*UNIQUE", re.IGNORECASE), "IDENTIFIANT UNIQUE"),
-    (re.compile(r"CARTE\s*NATIONALE\s*D['\s]*IDENTITE", re.IGNORECASE), "CARTE NATIONALE D'IDENTITE"),
-    (re.compile(r"NATIONAL\s*IDENTITY\s*CARD", re.IGNORECASE), "NATIONAL IDENTITY CARD"),
-    (re.compile(r"REPUBLIQUE\s*DU\s*CAMEROUN", re.IGNORECASE), "REPUBLIQUE DU CAMEROUN"),
-    (re.compile(r"REPUBLIC\s*OF\s*CAMEROON", re.IGNORECASE), "REPUBLIC OF CAMEROON"),
-    (re.compile(r"NUMERO\s*DE\s*PASSEPORT", re.IGNORECASE), "NUMERO DE PASSEPORT"),
-    (re.compile(r"PASSPORT\s*N(?:O|UMBER)", re.IGNORECASE), "PASSPORT NUMBER"),
+    (_label_pattern(label), label) for label in _CANONICAL_LABELS
 ]
 
 

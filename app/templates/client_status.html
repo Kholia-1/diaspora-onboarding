@@ -25,29 +25,106 @@
             color: #111827;
         }
 
+        /* CLIENT_STATUS_TOPBAR_ALIGNED_V1 : même header que le portail principal */
         .topbar {
-            background: var(--black);
-            color: white;
-            padding: 18px 30px;
-            border-bottom: 4px solid var(--red);
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 18px 7%;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 16px;
+            min-height: 96px;
             position: sticky;
             top: 0;
             z-index: 1000;
         }
 
-        .topbar h2 {
-            margin: 0;
-            font-size: 20px;
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 22px;
         }
 
-        .topbar a {
-            color: white;
+        .brand-logo {
+            width: 180px;
+            height: 78px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .brand-logo img {
+            width: 180px;
+            height: 78px;
+            object-fit: contain;
+            object-position: left center;
+            display: block;
+        }
+
+        .topnav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            flex: 1 1 auto;
+            min-width: 0;
+            flex-wrap: wrap;
+        }
+
+        .topnav a {
             text-decoration: none;
-            font-weight: bold;
-            margin-left: 18px;
+            color: #111827;
+            font-weight: 800;
+            font-size: 14px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            white-space: nowrap;
+            transition: 0.15s ease;
+        }
+
+        .topnav a:hover {
+            background: rgba(201, 0, 0, 0.08);
+            color: var(--red);
+        }
+
+        .topnav a.active {
+            background: var(--red);
+            color: white;
+        }
+
+        /* AFB_MOBILE_BURGER_NAV_V1 : bouton hamburger (repris du parcours d'ouverture) */
+        .nav-toggle {
+            display: none;
+            background: #fff;
+            border: 1px solid #f0c3c6;
+            border-radius: 12px;
+            padding: 8px 10px;
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .nav-toggle span {
+            display: block;
+            width: 22px;
+            height: 3px;
+            border-radius: 3px;
+            background: var(--red);
+            margin: 4px 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        .nav-toggle[aria-expanded="true"] span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
+
+        .nav-toggle[aria-expanded="true"] span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .nav-toggle[aria-expanded="true"] span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
         }
 
         .container {
@@ -180,19 +257,74 @@
             margin-top: 16px;
         }
 
+        @media (max-width: 980px) {
+            .nav-toggle {
+                display: block;
+                margin-left: auto;
+            }
+
+            .topbar {
+                flex-wrap: nowrap;
+                gap: 10px;
+            }
+
+            .brand {
+                flex: 1 1 auto;
+                min-width: 0;
+                gap: 10px;
+            }
+
+            /* Le menu devient un panneau déroulant sous le header */
+            .topnav {
+                display: none;
+                position: absolute;
+                left: 0;
+                right: 0;
+                top: 100%;
+                background: #fff;
+                border-bottom: 1px solid var(--border);
+                box-shadow: 0 20px 32px rgba(15, 23, 42, 0.14);
+                padding: 14px 18px 18px;
+                flex-direction: column;
+                align-items: stretch;
+                justify-content: flex-start;
+                gap: 10px;
+                flex-wrap: nowrap;
+            }
+
+            .topnav.open {
+                display: flex;
+            }
+
+            .topnav a {
+                display: block;
+                text-align: center;
+                font-size: 15px;
+                padding: 12px 14px;
+                white-space: normal;
+            }
+        }
+
         @media (max-width: 700px) {
             .topbar {
-                padding: 10px 14px;
-                gap: 8px;
-                flex-wrap: wrap;
+                padding: 8px 4%;
+                min-height: 0;
+                gap: 10px;
             }
 
-            .topbar h2 {
-                font-size: 15px;
+            .brand-logo,
+            .brand-logo img {
+                width: 140px;
+                height: 60px;
             }
 
-            .topbar a {
-                font-size: 13px;
+            /* CLIENT_STATUS_MOBILE_NO_CARD_V1 : formulaire sans carte sur mobile */
+            .container > .card {
+                background: transparent;
+                border: none;
+                box-shadow: none;
+                border-radius: 0;
+                padding: 0;
             }
         }
     </style>
@@ -200,33 +332,70 @@
 
 <body>
 
-<div class="topbar">
-    <h2>First Diaspora Onboarding</h2>
-    <div>
-        <a href="/">Accueil</a>
-        <a href="/open-account-test">Ouvrir un compte</a>
+<header class="topbar">
+    <div class="brand">
+        <div class="brand-logo">
+            <img src="/static/afriland-logo.png" alt="Afriland First Bank">
+        </div>
     </div>
-</div>
+
+    <nav class="topnav" id="topnavMenu" aria-label="Menu des services">
+        <a href="/">Accueil</a>
+        <a href="/open-account-flow-test">Ouverture de compte</a>
+        <a href="/souscrire-carte">Carte bancaire</a>
+        <a href="/recharger-carte">Recharge de carte</a>
+        <a href="/client/status" class="active" aria-current="page">Suivre ma demande</a>
+    </nav>
+
+    <!-- AFB_MOBILE_BURGER_NAV_V1 : bouton hamburger (visible <= 980px) -->
+    <button type="button" class="nav-toggle" id="navToggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="topnavMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+</header>
+
+<script>
+/* AFB_MOBILE_BURGER_NAV_V1 : ouverture/fermeture du menu mobile */
+(function () {
+    var btn = document.getElementById("navToggle");
+    var nav = document.getElementById("topnavMenu");
+    if (!btn || !nav) return;
+
+    function setOpen(open) {
+        nav.classList.toggle("open", open);
+        btn.setAttribute("aria-expanded", open ? "true" : "false");
+        btn.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
+    }
+
+    btn.addEventListener("click", function () {
+        setOpen(!nav.classList.contains("open"));
+    });
+
+    nav.addEventListener("click", function (event) {
+        if (event.target.closest("a")) setOpen(false);
+    });
+
+    document.addEventListener("click", function (event) {
+        if (!nav.classList.contains("open")) return;
+        if (event.target.closest(".topbar")) return;
+        setOpen(false);
+    });
+})();
+</script>
 
 <div class="container">
     <div class="card">
         <h1>Suivi de votre demande</h1>
 
         <p class="muted">
-            Vous pouvez suivre votre dossier avec votre email seul.  
-            La référence du dossier reste optionnelle si vous voulez rechercher une demande précise.
+            Saisissez l’email ou le numéro de téléphone utilisé lors de la demande :
+            nous retrouverons le ou les dossiers correspondants.
         </p>
 
         <form id="statusForm">
-            <label for="email">Email utilisé lors de la demande <span style="color:#C90000">*</span></label>
-            <input id="email" name="email" type="email" placeholder="exemple@email.com" required>
-
-            <label for="reference">Référence dossier <span class="muted">(optionnelle)</span></label>
-            <input id="reference" name="reference" type="text" placeholder="Ex : DIA-20260630-42C46275">
-
-            <div class="hint">
-                Si vous ne connaissez pas votre référence, saisissez uniquement votre email.
-            </div>
+            <label for="identifier">Email ou numéro de téléphone <span style="color:#C90000">*</span></label>
+            <input id="identifier" name="identifier" type="text" placeholder="exemple@email.com ou +237 6XX XX XX XX" autocomplete="on" required>
 
             <button class="btn" type="submit">Rechercher mon dossier</button>
         </form>
@@ -236,11 +405,10 @@
 </div>
 
 <script>
-/* CLIENT_STATUS_EMAIL_ONLY_CLEAN_V2 */
+/* CLIENT_STATUS_CONTACT_SINGLE_FIELD_V1 (ex EMAIL_ONLY_CLEAN_V2) */
 (function () {
     const form = document.getElementById("statusForm");
-    const emailInput = document.getElementById("email");
-    const referenceInput = document.getElementById("reference");
+    const identifierInput = document.getElementById("identifier");
     const resultBox = document.getElementById("statusResult");
 
     function escapeHtml(value) {
@@ -314,13 +482,13 @@
         const apps = data.applications || [];
 
         if (!apps.length) {
-            resultBox.innerHTML = `<div class="error">Aucun dossier trouvé pour cette adresse email.</div>`;
+            resultBox.innerHTML = `<div class="error">Aucun dossier trouvé pour ce contact.</div>`;
             return;
         }
 
         resultBox.innerHTML = `
             <p class="muted">
-                <strong>${apps.length}</strong> dossier(s) trouvé(s) pour <strong>${escapeHtml(data.email)}</strong>.
+                <strong>${apps.length}</strong> dossier(s) trouvé(s) pour <strong>${escapeHtml(data.identifier || data.email || "")}</strong>.
             </p>
             ${apps.map(renderApplication).join("")}
         `;
@@ -329,24 +497,17 @@
     async function searchStatus(event) {
         event.preventDefault();
 
-        const email = emailInput.value.trim();
-        const reference = referenceInput.value.trim();
+        const identifier = identifierInput.value.trim();
 
-        if (!email) {
-            resultBox.innerHTML = `<div class="error">Veuillez saisir votre email.</div>`;
+        if (!identifier) {
+            resultBox.innerHTML = `<div class="error">Veuillez saisir votre email ou votre numéro de téléphone.</div>`;
             return;
         }
 
         resultBox.innerHTML = `<div class="loading">Recherche en cours...</div>`;
 
         try {
-            let url;
-
-            if (reference) {
-                url = `/api/applications/status/${encodeURIComponent(reference)}?email=${encodeURIComponent(email)}`;
-            } else {
-                url = `/api/applications/status-by-email?email=${encodeURIComponent(email)}`;
-            }
+            const url = `/api/applications/status-by-contact?identifier=${encodeURIComponent(identifier)}`;
 
             const response = await fetch(url, {
                 cache: "no-store"
@@ -379,7 +540,13 @@
         }
     }
 
-    form.addEventListener("submit", searchStatus);
+    // CLIENT_STATUS_CONTACT_SINGLE_FIELD_V1 : le rendu détaillé (V3 plus bas) gère la soumission.
+    // Ce handler ne sert que de secours si le script V3 n'a pas été chargé.
+    document.addEventListener("DOMContentLoaded", function () {
+        if (!window.__clientStatusV3Active) {
+            form.addEventListener("submit", searchStatus);
+        }
+    });
 })();
 </script>
 
@@ -626,6 +793,9 @@
     if (window.__clientStatusVisualTrackingV3) return;
     window.__clientStatusVisualTrackingV3 = true;
 
+    // Signale au premier script que ce gestionnaire prend en charge la soumission du formulaire.
+    window.__clientStatusV3Active = true;
+
     function escapeHtmlV3(value) {
         return String(value ?? "")
             .replaceAll("&", "&amp;")
@@ -798,7 +968,7 @@
 
         resultBox.innerHTML =
             renderTrackingDetailsV3(app) +
-            `<h3 class="tracking-list-title">Autres dossiers associés à cet email</h3>` +
+            `<h3 class="tracking-list-title">Autres dossiers associés à ce contact</h3>` +
             window.__lastTrackingAppsV3
                 .map(renderSmallCardV3)
                 .join("");
@@ -808,29 +978,25 @@
 
     async function improvedSearch(event) {
         const form = document.getElementById("statusForm");
-        const emailInput = document.getElementById("email");
-        const referenceInput = document.getElementById("reference");
+        const identifierInput = document.getElementById("identifier");
         const resultBox = document.getElementById("statusResult");
 
-        if (!form || !emailInput || !resultBox) return;
+        if (!form || !identifierInput || !resultBox) return;
 
         event.preventDefault();
         event.stopImmediatePropagation();
 
-        const email = emailInput.value.trim();
-        const reference = referenceInput ? referenceInput.value.trim() : "";
+        const identifier = identifierInput.value.trim();
 
-        if (!email) {
-            resultBox.innerHTML = `<div class="error">Veuillez saisir votre email.</div>`;
+        if (!identifier) {
+            resultBox.innerHTML = `<div class="error">Veuillez saisir votre email ou votre numéro de téléphone.</div>`;
             return;
         }
 
         resultBox.innerHTML = `<div class="loading">Recherche en cours...</div>`;
 
         try {
-            const url = reference
-                ? `/api/applications/status/${encodeURIComponent(reference)}?email=${encodeURIComponent(email)}`
-                : `/api/applications/status-by-email?email=${encodeURIComponent(email)}`;
+            const url = `/api/applications/status-by-contact?identifier=${encodeURIComponent(identifier)}`;
 
             const response = await fetch(url, { cache: "no-store" });
 
@@ -863,7 +1029,7 @@
             }
 
             resultBox.innerHTML = `
-                <h3 class="tracking-list-title">${apps.length} dossier(s) trouvé(s) pour ${escapeHtmlV3(email)}</h3>
+                <h3 class="tracking-list-title">${apps.length} dossier(s) trouvé(s) pour ${escapeHtmlV3(identifier)}</h3>
                 <p class="muted">Sélectionnez un dossier pour afficher son suivi détaillé.</p>
                 ${apps.map(renderSmallCardV3).join("")}
             `;
@@ -2029,7 +2195,15 @@
 
     const anyWithEmail = inputs.find(input => String(input.value || "").includes("@"));
 
-    return anyWithEmail ? anyWithEmail.value.trim() : "";
+    if (anyWithEmail) {
+      return anyWithEmail.value.trim();
+    }
+
+    // Recherche par téléphone : on récupère l'email depuis les dossiers déjà trouvés.
+    const apps = window.__lastTrackingAppsV3 || [];
+    const fromApps = apps.map(a => a && a.email).find(e => e && String(e).includes("@"));
+
+    return fromApps ? String(fromApps).trim() : "";
   }
 
   function extractReferences() {

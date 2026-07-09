@@ -1,9 +1,10 @@
-﻿from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body
 
 from app.services.mastercard_gateway_service import (
     public_config_status,
     initiate_checkout_session,
     retrieve_order,
+    save_mastercard_operational_config,
 )
 
 
@@ -315,3 +316,15 @@ Merci également de confirmer si le paiement Hosted Checkout est bien le mode re
 
 Cordialement."""
     }
+
+# MASTERCARD_OPERATIONAL_CONFIG_ROUTES_V1
+
+@router.get("/operational-config")
+def get_mastercard_operational_config():
+    return public_config_status()
+
+
+@router.post("/operational-config")
+def save_mastercard_operational_config_route(payload: dict = Body(default={})):
+    return save_mastercard_operational_config(payload)
+

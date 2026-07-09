@@ -1,0 +1,30 @@
+{
+  "integrations": [
+    {
+      "code": "WHATSAPP_CALLBELL",
+      "name": "WhatsApp - Callbell",
+      "description": "Configuration WhatsApp Callbell",
+      "enabled": true,
+      "environment": "PRODUCTION",
+      "provider": "CALLBELL",
+      "base_url": "https://api.callbell.eu",
+      "auth_type": "API_KEY",
+      "api_key": "A_REMPLACER_SUR_LE_SERVEUR",
+      "client_id": "",
+      "client_secret": "",
+      "phone_number_id": "",
+      "channel_uuid": "A_REMPLACER_SUR_LE_SERVEUR",
+      "use_template": false,
+      "template_uuid": "",
+      "endpoint_path": "",
+      "business_account_id": "",
+      "merchant_id": "",
+      "webhook_url": "",
+      "callback_url": "",
+      "notes": "",
+      "access_token": "",
+      "password": "",
+      "private_key": ""
+    }
+  ]
+}

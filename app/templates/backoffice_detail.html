@@ -5,6 +5,8 @@
     <title>Détail dossier diaspora</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <link rel="stylesheet" href="/static/css/backoffice.css">
+
     <style>
         :root {
             --red: #C90000;
@@ -684,6 +686,143 @@
 }
 </style>
 
+
+<style>
+/* AFB_BACKOFFICE_CALLBELL_DIAGNOSTIC_CARD_V1 */
+body > .afb-otp-card {
+    display: none !important;
+}
+
+.afb-callbell-card-v1 {
+    margin: 18px 0 22px 0;
+    padding: 18px 20px;
+    border-radius: 18px;
+    border: 1px solid #e5e7eb;
+    border-left: 6px solid #D22630;
+    background: #ffffff;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+.afb-callbell-head-v1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.afb-callbell-title-v1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 950;
+    color: #111827;
+}
+
+.afb-callbell-sub-v1 {
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.afb-callbell-pill-v1 {
+    display: inline-flex;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 950;
+    white-space: nowrap;
+}
+
+.afb-callbell-success-v1 {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.afb-callbell-warning-v1 {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.afb-callbell-danger-v1 {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.afb-callbell-info-v1 {
+    background: #e0f2fe;
+    color: #075985;
+}
+
+.afb-callbell-grid-v1 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+}
+
+.afb-callbell-item-v1 {
+    padding: 13px 14px;
+    border: 1px solid #eef2f7;
+    border-radius: 14px;
+    background: #f9fafb;
+}
+
+.afb-callbell-label-v1 {
+    margin-bottom: 6px;
+    color: #6b7280;
+    font-size: 12px;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.afb-callbell-value-v1 {
+    color: #111827;
+    font-size: 14px;
+    font-weight: 900;
+    word-break: break-word;
+}
+
+.afb-callbell-message-v1 {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    color: #334155;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.afb-callbell-message-v1.danger {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    color: #991b1b;
+}
+
+.afb-callbell-actions-v1 {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.afb-callbell-btn-v1 {
+    background: #111827;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.afb-callbell-btn-v1:hover {
+    background: #000000;
+}
+</style>
+
 </head>
 
 <body>
@@ -764,13 +903,18 @@
 
 
 <div class="topbar no-print">
-    <h2>Détail du dossier</h2>
+    <h2>First Diaspora Onboarding - Back-office</h2>
 
-    <div>
-        <a href="/backoffice/applications">Retour dossiers</a>
-        
+    <nav>
+        <a href="/backoffice/applications" class="active">Dossiers</a>
+        <a href="/backoffice/agencies">Agences</a>
+        <a href="/backoffice/nationalities">Nationalités</a>
+        <a href="/backoffice/packages">Packages</a>
+        <a href="/backoffice/api-integrations">API à intégrer</a>
+        <a href="/backoffice/audit-logs">Journal d'audit</a>
+        <a href="/backoffice/logout">Déconnexion</a>
         <button class="print-btn" onclick="exportDossierPdf()">Exporter PDF</button>
-    </div>
+    </nav>
 </div>
 
 <div class="container">
@@ -3577,6 +3721,278 @@ async function renderComplianceSummaryV30(data) {
 </script>
 
 
+
+
+<script>
+/* AFB_BACKOFFICE_CALLBELL_DIAGNOSTIC_CARD_V1 */
+(function () {
+    if (window.__afbBackofficeCallbellDiagnosticCardV1) return;
+    window.__afbBackofficeCallbellDiagnosticCardV1 = true;
+
+    function safeText(value) {
+        if (value === null || value === undefined || value === "") return "—";
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function getReference() {
+        try {
+            if (typeof currentApplication !== "undefined" && currentApplication && currentApplication.reference) {
+                return String(currentApplication.reference).trim();
+            }
+        } catch (e) {}
+
+        const title = document.getElementById("referenceTitle");
+        if (title && title.innerText) {
+            const m = String(title.innerText).match(/DIA-[0-9]{8}-[A-Z0-9]+/);
+            if (m && m[0]) return m[0];
+        }
+
+        const bodyText = document.body ? document.body.innerText : "";
+        const m2 = String(bodyText).match(/DIA-[0-9]{8}-[A-Z0-9]+/);
+        if (m2 && m2[0]) return m2[0];
+
+        return "";
+    }
+
+    function ensureCard() {
+        let card = document.getElementById("afbCallbellDiagnosticCardV1");
+
+        if (card) return card;
+
+        card = document.createElement("div");
+        card.id = "afbCallbellDiagnosticCardV1";
+        card.className = "afb-callbell-card-v1";
+        card.innerHTML = `
+            <div class="afb-callbell-head-v1">
+                <div>
+                    <h3 class="afb-callbell-title-v1">Diagnostic WhatsApp / Callbell</h3>
+                    <div class="afb-callbell-sub-v1">Chargement du statut de vérification WhatsApp...</div>
+                </div>
+                <span class="afb-callbell-pill-v1 afb-callbell-info-v1">Chargement</span>
+            </div>
+        `;
+
+        const headerCard = document.querySelector(".header-card");
+        if (headerCard && headerCard.parentNode) {
+            headerCard.parentNode.insertBefore(card, headerCard.nextSibling);
+            return card;
+        }
+
+        const container = document.querySelector(".container") || document.body;
+        container.insertBefore(card, container.firstChild);
+        return card;
+    }
+
+    function severityClass(severity) {
+        if (severity === "success") return "afb-callbell-success-v1";
+        if (severity === "danger") return "afb-callbell-danger-v1";
+        if (severity === "warning") return "afb-callbell-warning-v1";
+        return "afb-callbell-info-v1";
+    }
+
+    function renderLoading(refresh) {
+        const card = ensureCard();
+        card.innerHTML = `
+            <div class="afb-callbell-head-v1">
+                <div>
+                    <h3 class="afb-callbell-title-v1">Diagnostic WhatsApp / Callbell</h3>
+                    <div class="afb-callbell-sub-v1">${refresh ? "Rafraîchissement du statut live Callbell..." : "Chargement du diagnostic..."}</div>
+                </div>
+                <span class="afb-callbell-pill-v1 afb-callbell-info-v1">Chargement</span>
+            </div>
+        `;
+    }
+
+    function renderDiagnostic(data) {
+        const card = ensureCard();
+
+        const app = data.application || {};
+        const whatsapp = data.whatsapp || {};
+        const summary = whatsapp.summary || {};
+        const otp = whatsapp.otp || {};
+        const last = whatsapp.last || {};
+
+        const severity = summary.severity || "info";
+        const pillClass = severityClass(severity);
+
+        const status = summary.status || otp.whatsapp_delivery_status || last.delivery_status || "UNKNOWN";
+        const label = summary.label || "Statut WhatsApp à vérifier";
+
+        const errors = summary.errors || otp.callbell_live_errors || [];
+        const errorHtml = errors.length ? `
+            <div class="afb-callbell-message-v1 danger">
+                <strong>Erreur technique Callbell / Meta</strong><br>
+                ${errors.map(function (err) {
+                    return `
+                        Code : ${safeText(err.code)}<br>
+                        Titre : ${safeText(err.title)}<br>
+                        Message : ${safeText(err.message)}<br>
+                        Détail : ${safeText(err.details)}
+                    `;
+                }).join("<hr>")}
+            </div>
+        ` : "";
+
+        card.innerHTML = `
+            <div class="afb-callbell-head-v1">
+                <div>
+                    <h3 class="afb-callbell-title-v1">Diagnostic WhatsApp / Callbell</h3>
+                    <div class="afb-callbell-sub-v1">
+                        Suivi OTP, statut Callbell live et erreurs techniques associées au dossier.
+                    </div>
+                </div>
+                <span class="afb-callbell-pill-v1 ${pillClass}">${safeText(label)}</span>
+            </div>
+
+            <div class="afb-callbell-grid-v1">
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">Référence dossier</div>
+                    <div class="afb-callbell-value-v1">${safeText(app.reference)}</div>
+                </div>
+
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">Client</div>
+                    <div class="afb-callbell-value-v1">${safeText(app.client)}</div>
+                </div>
+
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">Numéro WhatsApp</div>
+                    <div class="afb-callbell-value-v1">${safeText(otp.phone || app.whatsapp_phone_full || app.phone)}</div>
+                </div>
+
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">Session OTP</div>
+                    <div class="afb-callbell-value-v1">${safeText(otp.session_id || app.pre_onboarding_session_id)}</div>
+                </div>
+
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">OTP vérifié</div>
+                    <div class="afb-callbell-value-v1">${otp.verified === true || app.whatsapp_otp_verified === true ? "Oui" : "Non"}</div>
+                </div>
+
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">Date vérification OTP</div>
+                    <div class="afb-callbell-value-v1">${safeText(otp.verified_at || app.whatsapp_otp_verified_at)}</div>
+                </div>
+
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">Statut initial</div>
+                    <div class="afb-callbell-value-v1">${safeText(summary.initial_status || otp.callbell_message_status || last.initial_status)}</div>
+                </div>
+
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">Statut live</div>
+                    <div class="afb-callbell-value-v1">${safeText(summary.live_status || otp.callbell_live_status || status)}</div>
+                </div>
+
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">UUID message Callbell</div>
+                    <div class="afb-callbell-value-v1">${safeText(otp.callbell_message_uuid || last.uuid)}</div>
+                </div>
+
+                <div class="afb-callbell-item-v1">
+                    <div class="afb-callbell-label-v1">HTTP Callbell</div>
+                    <div class="afb-callbell-value-v1">${safeText(otp.whatsapp_http_status || last.http_status)}</div>
+                </div>
+            </div>
+
+            <div class="afb-callbell-message-v1 ${severity === "danger" ? "danger" : ""}">
+                <strong>Message administrateur</strong><br>
+                ${safeText(summary.admin_message)}
+            </div>
+
+            ${summary.client_message ? `
+                <div class="afb-callbell-message-v1">
+                    <strong>Message client recommandé</strong><br>
+                    ${safeText(summary.client_message)}
+                </div>
+            ` : ""}
+
+            ${errorHtml}
+
+            <div class="afb-callbell-actions-v1">
+                <button type="button" class="afb-callbell-btn-v1" id="afbRefreshCallbellStatusV1">
+                    Rafraîchir statut WhatsApp
+                </button>
+            </div>
+        `;
+    }
+
+    async function loadDiagnostic(refresh) {
+        const ref = getReference();
+
+        if (!ref) {
+            setTimeout(function () {
+                loadDiagnostic(refresh);
+            }, 900);
+            return;
+        }
+
+        renderLoading(refresh);
+
+        try {
+            const url = "/api/backoffice/diagnostics/payment/" + encodeURIComponent(ref)
+                + "?refresh_callbell=" + (refresh ? "true" : "false")
+                + "&refresh_mastercard=false";
+
+            const response = await fetch(url, { cache: "no-store" });
+
+            if (!response.ok) {
+                const card = ensureCard();
+                card.innerHTML = `
+                    <div class="afb-callbell-head-v1">
+                        <div>
+                            <h3 class="afb-callbell-title-v1">Diagnostic WhatsApp / Callbell</h3>
+                            <div class="afb-callbell-sub-v1">Impossible de charger le diagnostic.</div>
+                        </div>
+                        <span class="afb-callbell-pill-v1 afb-callbell-danger-v1">Erreur</span>
+                    </div>
+                `;
+                return;
+            }
+
+            const data = await response.json();
+            renderDiagnostic(data);
+        } catch (e) {
+            const card = ensureCard();
+            card.innerHTML = `
+                <div class="afb-callbell-head-v1">
+                    <div>
+                        <h3 class="afb-callbell-title-v1">Diagnostic WhatsApp / Callbell</h3>
+                        <div class="afb-callbell-sub-v1">Erreur JavaScript ou réseau : ${safeText(e.message || e)}</div>
+                    </div>
+                    <span class="afb-callbell-pill-v1 afb-callbell-danger-v1">Erreur</span>
+                </div>
+            `;
+        }
+    }
+
+    document.addEventListener("click", function (event) {
+        const btn = event.target.closest ? event.target.closest("#afbRefreshCallbellStatusV1") : null;
+        if (!btn) return;
+
+        event.preventDefault();
+        loadDiagnostic(true);
+    });
+
+    function boot() {
+        ensureCard();
+        setTimeout(function () { loadDiagnostic(false); }, 1000);
+        setTimeout(function () { loadDiagnostic(false); }, 2500);
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", boot);
+    } else {
+        boot();
+    }
+})();
+</script>
 
 </body>
 </html>

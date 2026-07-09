@@ -131,12 +131,20 @@ def backoffice_application_detail(request: Request, application_id: str, db: Ses
                 status_code=303
             )
 
+    # Le template rend les champs OTP WhatsApp côté serveur via l'ORM
+    application = None
+    if raw.isdigit():
+        application = db.query(AccountApplication).filter(
+            AccountApplication.id == int(raw)
+        ).first()
+
     return templates.TemplateResponse(
         request,
         "backoffice_detail.html",
         {
             "request": request,
-            "application_id": raw
+            "application_id": raw,
+            "application": application
         }
     )
 
@@ -299,26 +307,16 @@ async def card_reload_page(request: Request):
 
 # BACKOFFICE_API_INTEGRATIONS_PAGE_HTMLRESPONSE_V4
 
-# BACKOFFICE_API_INTEGRATIONS_PAGE_FORCE_CLEAN_V5
+# BACKOFFICE_API_INTEGRATIONS_PAGE_JINJA_V6 — le template étend backoffice_base.html
 @router.get("/backoffice/api-integrations")
 def backoffice_api_integrations_page(request: Request):
     redirect = _require_backoffice_page(request)
     if redirect:
         return redirect
 
-    from pathlib import Path
-    from fastapi.responses import HTMLResponse
-
-    template_path = Path(__file__).resolve().parents[1] / "templates" / "backoffice_api_integrations.html"
-
-    if not template_path.exists():
-        return HTMLResponse(
-            content="<h1>Erreur</h1><p>Template backoffice_api_integrations.html introuvable.</p>",
-            status_code=500
-        )
-
-    return HTMLResponse(
-        content=template_path.read_text(encoding="utf-8"),
-        status_code=200
+    return templates.TemplateResponse(
+        request,
+        "backoffice_api_integrations.html",
+        {"request": request}
     )
 

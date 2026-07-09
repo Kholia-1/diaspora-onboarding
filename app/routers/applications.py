@@ -1,4 +1,5 @@
 import os
+import re
 import hashlib
 import mimetypes
 from uuid import uuid4
@@ -23,6 +24,7 @@ from app.services.document_auth_service import (
 
 
 from app.services.notification_service import notify_application_submitted
+from app.services.whatsapp_service import send_whatsapp_message
 
 router = APIRouter(
     prefix="/api/applications",
@@ -305,6 +307,19 @@ def create_application(payload: ApplicationCreate, request: Request, db: Session
         request=request,
     )
 
+    # WHATSAPP_NOTIFY_APPLICATION_SUBMITTED_V1 — accusé de réception via Callbell
+    try:
+        if application.phone:
+            whatsapp_submit_result = send_whatsapp_message(
+                application.phone,
+                f"Bonjour {application.first_name}, votre demande d'ouverture de compte Diaspora "
+                f"a bien été reçue. Référence dossier : {application.reference}. "
+                f"Afriland First Bank vous notifiera après analyse de votre dossier."
+            )
+            print("[WHATSAPP][APPLICATION_SUBMITTED]", application.reference, whatsapp_submit_result)
+    except Exception as exc:
+        print("[WHATSAPP][APPLICATION_SUBMITTED][ERROR]", application.reference, str(exc))
+
     return application
 
 
@@ -367,6 +382,67 @@ def get_application_status_by_email(email: str, db: Session = Depends(get_db)):
 
     return {
         "email": email_clean,
+        "count": len(applications),
+        "applications": [
+            application_status_payload(application)
+            for application in applications
+        ]
+    }
+
+
+@router.get("/status-by-contact")
+def get_application_status_by_contact(identifier: str, db: Session = Depends(get_db)):
+    """Recherche les dossiers d'un client à partir de son email OU de son numéro de téléphone."""
+    value = (identifier or "").strip()
+
+    if not value:
+        raise HTTPException(
+            status_code=400,
+            detail="Veuillez saisir votre email ou votre numéro de téléphone."
+        )
+
+    if "@" in value:
+        email_clean = value.lower()
+
+        applications = (
+            db.query(AccountApplication)
+            .filter(AccountApplication.email.ilike(email_clean))
+            .order_by(AccountApplication.created_at.desc())
+            .all()
+        )
+    else:
+        digits = re.sub(r"\D", "", value)
+
+        if len(digits) < 8:
+            raise HTTPException(
+                status_code=400,
+                detail="Veuillez saisir un numéro de téléphone valide (au moins 8 chiffres) ou un email."
+            )
+
+        candidates = (
+            db.query(AccountApplication)
+            .filter(AccountApplication.phone.isnot(None))
+            .order_by(AccountApplication.created_at.desc())
+            .all()
+        )
+
+        def phone_matches(stored: str) -> bool:
+            stored_digits = re.sub(r"\D", "", stored or "")
+            # Comparaison sur les derniers chiffres pour ignorer l'indicatif pays
+            # et les différences de format (+237 6XX..., 006237..., 6XX...).
+            tail = min(len(stored_digits), len(digits), 9)
+            return tail >= 8 and stored_digits[-tail:] == digits[-tail:]
+
+        applications = [app for app in candidates if phone_matches(app.phone)]
+
+    if not applications:
+        raise HTTPException(
+            status_code=404,
+            detail="Aucun dossier trouvé pour cet email ou ce numéro de téléphone."
+        )
+
+    return {
+        "identifier": value,
         "count": len(applications),
         "applications": [
             application_status_payload(application)

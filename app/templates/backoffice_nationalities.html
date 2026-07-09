@@ -1,208 +1,21 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Paramétrage des nationalités</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "backoffice_base.html" %}
 
-    <style>
-        :root {
-            --red: #C90000;
-            --red-dark: #9E0000;
-            --black: #111111;
-            --white: #FFFFFF;
-            --gray-bg: #F4F6F9;
-            --border: #DADDE5;
-            --muted: #6B7280;
-        }
+{% block title %}Paramétrage des nationalités{% endblock %}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: var(--gray-bg);
-            color: #111827;
-        }
-
-        .header {
-            background: var(--black);
-            color: var(--white);
-            padding: 18px 30px;
-            border-bottom: 4px solid var(--red);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header a {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-            margin-left: 15px;
-        }
-
-        .container {
-            max-width: 1050px;
-            margin: 25px auto;
-            background: var(--white);
-            border-radius: 14px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        }
-
-        h1 {
-            margin-top: 0;
-            color: var(--red);
-        }
-
-        .description {
-            color: var(--muted);
-            line-height: 1.6;
-            margin-bottom: 22px;
-        }
-
-        .form-box {
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 18px;
-            margin-bottom: 25px;
-            background: #FAFAFA;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 180px 1fr 160px;
-            gap: 12px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        button {
-            background: var(--red);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 11px 15px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background: var(--red-dark);
-        }
-
-        .btn-secondary {
-            background: #111827;
-        }
-
-        .btn-secondary:hover {
-            background: #000000;
-        }
-
-        .search {
-            margin-bottom: 15px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: var(--black);
-            color: white;
-            padding: 12px;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        td {
-            border-bottom: 1px solid var(--border);
-            padding: 10px;
-            font-size: 14px;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .active {
-            background: #E8F7EE;
-            color: #166534;
-        }
-
-        .inactive {
-            background: #FEE2E2;
-            color: #991B1B;
-        }
-
-        .msg {
-            margin-top: 12px;
-            font-weight: bold;
-        }
-
-        .actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .edit-input {
-            margin-bottom: 6px;
-        }
-
-        @media (max-width: 850px) {
-            .header {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            table {
-                font-size: 12px;
-            }
-
-            .actions {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="header">
-    <strong>Paramétrage des nationalités</strong>
-
-    <div>
-        <a href="/backoffice/applications">Dossiers</a>
-        <a href="/backoffice/agencies">Agences</a>
-    </div>
-</div>
-
+{% block content %}
 <div class="container">
-    <h1>Nationalités</h1>
 
-    <p class="description">
-        Cette page permet d’ajouter, modifier, activer ou désactiver les nationalités disponibles
-        dans le formulaire d’ouverture de compte à distance.
-    </p>
+    <div class="page-title">
+        <div>
+            <h1>Nationalités</h1>
+            <p>Ajouter, modifier, activer ou désactiver les nationalités disponibles dans le formulaire d’ouverture de compte à distance.</p>
+        </div>
+    </div>
 
-    <div class="form-box">
-        <h3>Ajouter une nationalité</h3>
+    <div class="panel" style="margin-bottom: 20px;">
+        <h3 style="margin-top: 0;">Ajouter une nationalité</h3>
 
-        <div class="grid">
+        <div class="filters" style="grid-template-columns: 180px 1fr 160px;">
             <input id="code" placeholder="Code, ex: CM">
             <input id="label" placeholder="Libellé, ex: Camerounaise">
             <select id="active">
@@ -213,27 +26,31 @@
 
         <br>
 
-        <button onclick="createNationality()">Ajouter la nationalité</button>
+        <button class="btn" onclick="createNationality()">Ajouter la nationalité</button>
 
-        <div id="message" class="msg"></div>
+        <div id="message" class="muted" style="margin-top: 12px; font-weight: bold;"></div>
     </div>
 
-    <input class="search" id="search" placeholder="Rechercher par code ou libellé..." oninput="loadNationalities()">
+    <div class="panel">
+        <input id="search" placeholder="Rechercher par code ou libellé..." oninput="loadNationalities()" style="margin-bottom: 15px;">
 
-    <table>
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Nationalité</th>
-                <th>Statut</th>
-                <th style="width: 260px;">Actions</th>
-            </tr>
-        </thead>
+        <table>
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Nationalité</th>
+                    <th>Statut</th>
+                    <th style="width: 260px;">Actions</th>
+                </tr>
+            </thead>
 
-        <tbody id="nationalityBody"></tbody>
-    </table>
+            <tbody id="nationalityBody"></tbody>
+        </table>
+    </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
     let currentRows = [];
 
@@ -251,17 +68,17 @@
         nationalities.forEach(nationality => {
             body.innerHTML += `
                 <tr id="row-${nationality.id}">
-                    <td>${nationality.code}</td>
-                    <td>${nationality.label}</td>
+                    <td>${escapeHtml(nationality.code)}</td>
+                    <td>${escapeHtml(nationality.label)}</td>
                     <td>
-                        <span class="badge ${nationality.active ? "active" : "inactive"}">
+                        <span class="badge ${nationality.active ? "badge-active" : "badge-inactive"}">
                             ${nationality.active ? "Active" : "Inactive"}
                         </span>
                     </td>
                     <td>
-                        <div class="actions">
-                            <button class="btn-secondary" onclick="showEditForm(${nationality.id})">Modifier</button>
-                            <button onclick="toggleNationality(${nationality.id}, ${nationality.active})">
+                        <div class="actions" style="display:flex; gap:8px;">
+                            <button class="btn btn-dark" onclick="showEditForm(${nationality.id})">Modifier</button>
+                            <button class="btn btn-muted" onclick="toggleNationality(${nationality.id}, ${nationality.active})">
                                 ${nationality.active ? "Désactiver" : "Activer"}
                             </button>
                         </div>
@@ -322,10 +139,10 @@
 
         row.innerHTML = `
             <td>
-                <input class="edit-input" id="edit-code-${id}" value="${nationality.code}">
+                <input class="edit-input" id="edit-code-${id}" value="${escapeHtml(nationality.code)}">
             </td>
             <td>
-                <input class="edit-input" id="edit-label-${id}" value="${nationality.label}">
+                <input class="edit-input" id="edit-label-${id}" value="${escapeHtml(nationality.label)}">
             </td>
             <td>
                 <select id="edit-active-${id}">
@@ -334,9 +151,9 @@
                 </select>
             </td>
             <td>
-                <div class="actions">
-                    <button onclick="updateNationality(${id})">Enregistrer</button>
-                    <button class="btn-secondary" onclick="loadNationalities()">Annuler</button>
+                <div class="actions" style="display:flex; gap:8px;">
+                    <button class="btn" onclick="updateNationality(${id})">Enregistrer</button>
+                    <button class="btn btn-dark" onclick="loadNationalities()">Annuler</button>
                 </div>
             </td>
         `;
@@ -382,6 +199,4 @@
 
     loadNationalities();
 </script>
-
-</body>
-</html>
+{% endblock %}

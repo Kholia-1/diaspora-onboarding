@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/afriland-logo.png">
-  <title>Afriland First Bank - Ouverture de compte</title>
+  <title>Afriland First Bank - Portail d'onboarding client</title>
 
   <style>
     :root {
@@ -96,6 +96,15 @@
       margin: 0;
       font-size: 18px;
       color: var(--red);
+    }
+
+    /* AFB_PORTAL_BRAND_TITLE_V1 : le titre du portail reste sur une ligne
+       en desktop ; en dessous de 980px le menu passe sur sa propre ligne
+       et le titre peut se replier sans gêner. */
+    @media (min-width: 981px) {
+      .brand h1 {
+        white-space: nowrap;
+      }
     }
 
     .brand p {
@@ -491,8 +500,8 @@
     <div class="brand">
       <div class="brand-logo"><img src="/static/afriland-logo.png" alt="Afriland First Bank"></div>
       <div>
-        <h1>Ouverture de compte</h1>
-        <p>Portail digital de services bancaires</p>
+        <h1>Portail d'onboarding client</h1>
+        <p>Services bancaires digitaux à distance</p>
       </div>
     </div>
 
@@ -502,6 +511,7 @@
       <a href="/open-account-flow-test">Ouverture de compte</a>
       <a href="/souscrire-carte">Carte bancaire</a>
       <a href="/recharger-carte">Recharge de carte</a>
+      <a href="/client/status">Suivre ma demande</a>
     </nav>
   </header>
 
@@ -634,6 +644,9 @@
         ["© Afriland First Bank - Portail digital client", "© Afriland First Bank - Digital customer portal"],
         ["Portail digital client", "Digital customer portal"],
         ["Portail digital de services bancaires", "Digital banking services portal"],
+        ["Portail d'onboarding client", "Client onboarding portal"],
+        ["Services bancaires digitaux à distance", "Remote digital banking services"],
+        ["Suivre ma demande", "Track my request"],
         ["Services bancaires en ligne", "Online banking services"],
         ["Online banking services", "Online banking services"],
 

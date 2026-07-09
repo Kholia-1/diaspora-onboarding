@@ -1,4 +1,4 @@
-﻿import base64
+import base64
 import json
 import os
 import uuid
@@ -55,8 +55,10 @@ def load_mastercard_config():
         "api_version": os.getenv("MASTERCARD_API_VERSION", str(item.get("api_version") or "100")),
         "currency": os.getenv("MASTERCARD_CURRENCY", item.get("currency") or "XAF"),
         "operation": os.getenv("MASTERCARD_OPERATION", item.get("operation") or "PURCHASE"),
-        "return_url": os.getenv("MASTERCARD_RETURN_URL", item.get("callback_url") or "https://80-65-211-49.sslip.io/api/payments/mastercard/return"),
-        "webhook_url": os.getenv("MASTERCARD_WEBHOOK_URL", item.get("webhook_url") or "https://80-65-211-49.sslip.io/api/payments/mastercard/webhook"),
+        "merchant_name": os.getenv("MASTERCARD_MERCHANT_NAME", str(item.get("merchant_name") or "Afriland First Bank")),
+        "merchant_url": os.getenv("MASTERCARD_MERCHANT_URL", str(item.get("merchant_url") or "https://example.com")),
+        "return_url": os.getenv("MASTERCARD_RETURN_URL", item.get("callback_url") or "https://diaspora-onboarding.com/api/payments/mastercard/return"),
+        "webhook_url": os.getenv("MASTERCARD_WEBHOOK_URL", item.get("webhook_url") or "https://diaspora-onboarding.com/api/payments/mastercard/webhook"),
     }
 
     config["base_url"] = str(config["base_url"] or "").rstrip("/")
@@ -73,7 +75,9 @@ def public_config_status():
         "environment": config["environment"],
         "provider": config["provider"],
         "base_url": config["base_url"],
-        "merchant_id": config["merchant_id"],
+        "merchant_id_configured": bool(config["merchant_id"]),
+        "merchant_id": mask_secret(config["merchant_id"]),
+        "api_password_configured": bool(config["api_password"]),
         "api_password": mask_secret(config["api_password"]),
         "api_version": config["api_version"],
         "currency": config["currency"],
@@ -107,6 +111,15 @@ def validate_mastercard_config(config=None):
 
     if not config.get("currency"):
         missing.append("Devise manquante.")
+
+    if not config.get("operation"):
+        missing.append("Type d’opération Mastercard manquant.")
+
+    if not config.get("return_url"):
+        missing.append("Return URL Mastercard manquante.")
+
+    if not config.get("webhook_url"):
+        missing.append("Webhook URL Mastercard manquante.")
 
     return missing
 
@@ -247,7 +260,8 @@ def build_initiate_checkout_payload(order_id, amount, currency=None, description
             "operation": config["operation"],
             "returnUrl": config["return_url"],
             "merchant": {
-                "name": "Afriland First Bank - Diaspora Onboarding"
+                "name": config.get("merchant_name") or "Afriland First Bank",
+                "url": config.get("merchant_url") or "https://example.com"
             },
             "displayControl": {
                 "billingAddress": "HIDE",
@@ -344,3 +358,159 @@ def retrieve_order(order_id, dry_run=True):
         "path": path,
         "gateway_response": result
     }
+
+# MASTERCARD_OPERATIONAL_CONFIG_V1
+
+def mastercard_env_overrides():
+    keys = [
+        "MASTERCARD_ENABLED",
+        "MASTERCARD_ENVIRONMENT",
+        "MASTERCARD_GATEWAY_BASE_URL",
+        "MASTERCARD_MERCHANT_ID",
+        "MASTERCARD_API_PASSWORD",
+        "MASTERCARD_API_VERSION",
+        "MASTERCARD_CURRENCY",
+        "MASTERCARD_OPERATION",
+        "MASTERCARD_RETURN_URL",
+        "MASTERCARD_WEBHOOK_URL",
+    ]
+
+    return [key for key in keys if os.getenv(key)]
+
+
+def load_api_integrations_data():
+    if CONFIG_PATH.exists():
+        try:
+            data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+        except Exception:
+            data = {}
+    else:
+        data = {}
+
+    if not isinstance(data, dict):
+        data = {}
+
+    if not isinstance(data.get("integrations"), list):
+        data["integrations"] = []
+
+    return data
+
+
+def find_or_create_mastercard_integration(data):
+    for integration in data.get("integrations", []):
+        if str(integration.get("code", "")).upper() == "MASTERCARD":
+            return integration
+
+    integration = {
+        "code": "MASTERCARD",
+        "name": "Mastercard Gateway",
+        "enabled": False,
+        "environment": "SANDBOX",
+        "provider": "MASTERCARD_GATEWAY",
+        "base_url": "https://test-gateway.mastercard.com",
+        "merchant_id": "",
+        "api_password": "",
+        "api_version": "100",
+        "currency": "XAF",
+        "operation": "PURCHASE",
+        "callback_url": "https://diaspora-onboarding.com/api/payments/mastercard/return",
+        "webhook_url": "https://diaspora-onboarding.com/api/payments/mastercard/webhook",
+    }
+
+    data["integrations"].append(integration)
+
+    return integration
+
+
+def clean_text(value):
+    if value is None:
+        return ""
+
+    return str(value).strip()
+
+
+def upper_or_default(value, default_value):
+    value = clean_text(value)
+
+    if not value:
+        return default_value
+
+    return value.upper()
+
+
+def save_mastercard_operational_config(payload):
+    payload = payload or {}
+
+    data = load_api_integrations_data()
+    integration = find_or_create_mastercard_integration(data)
+
+    integration["code"] = "MASTERCARD"
+    integration["name"] = payload.get("name") or integration.get("name") or "Mastercard Gateway"
+    integration["provider"] = "MASTERCARD_GATEWAY"
+
+    if "enabled" in payload:
+        integration["enabled"] = bool_value(payload.get("enabled"))
+
+    integration["environment"] = upper_or_default(
+        payload.get("environment", integration.get("environment")),
+        "SANDBOX"
+    )
+
+    integration["base_url"] = clean_text(
+        payload.get("base_url", integration.get("base_url") or "https://test-gateway.mastercard.com")
+    ).rstrip("/")
+
+    merchant_id = clean_text(payload.get("merchant_id"))
+    if merchant_id:
+        integration["merchant_id"] = merchant_id
+
+    api_password = clean_text(payload.get("api_password"))
+    if api_password:
+        integration["api_password"] = api_password
+
+        # Compatibilité avec l’ancienne structure générique des intégrations.
+        integration["api_key"] = api_password
+
+    integration["api_version"] = clean_text(
+        payload.get("api_version", integration.get("api_version") or "100")
+    ) or "100"
+
+    integration["currency"] = upper_or_default(
+        payload.get("currency", integration.get("currency")),
+        "XAF"
+    )
+
+    integration["operation"] = upper_or_default(
+        payload.get("operation", integration.get("operation")),
+        "PURCHASE"
+    )
+
+    return_url = clean_text(payload.get("return_url", integration.get("callback_url") or integration.get("return_url")))
+    if return_url:
+        integration["callback_url"] = return_url
+        integration["return_url"] = return_url
+
+    webhook_url = clean_text(payload.get("webhook_url", integration.get("webhook_url")))
+    if webhook_url:
+        integration["webhook_url"] = webhook_url
+
+    CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CONFIG_PATH.write_text(
+        json.dumps(data, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+
+    status = public_config_status()
+
+    return {
+        "success": True,
+        "message": "Configuration opérationnelle Mastercard enregistrée.",
+        "config": status,
+        "env_overrides": mastercard_env_overrides(),
+        "warning": (
+            "Certaines variables d’environnement Mastercard sont définies et peuvent avoir priorité sur data/api_integrations.json."
+            if mastercard_env_overrides()
+            else ""
+        )
+    }
+

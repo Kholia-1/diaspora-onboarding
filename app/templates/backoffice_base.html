@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Back-office - First Diaspora Onboarding{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/static/css/backoffice.css">
+    {% block extra_style %}{% endblock %}
+</head>
+
+<body>
+
+<div class="topbar no-print">
+    <h2>First Diaspora Onboarding - Back-office</h2>
+
+    <nav>
+        <a href="/backoffice/applications" class="{{ 'active' if request.url.path.startswith('/backoffice/applications') else '' }}">Dossiers</a>
+        <a href="/backoffice/agencies" class="{{ 'active' if request.url.path.startswith('/backoffice/agencies') else '' }}">Agences</a>
+        <a href="/backoffice/nationalities" class="{{ 'active' if request.url.path.startswith('/backoffice/nationalities') else '' }}">Nationalités</a>
+        <a href="/backoffice/packages" class="{{ 'active' if request.url.path.startswith('/backoffice/packages') else '' }}">Packages</a>
+        <a href="/backoffice/api-integrations" class="{{ 'active' if request.url.path.startswith('/backoffice/api-integrations') else '' }}">API à intégrer</a>
+        <a href="/backoffice/audit-logs" class="{{ 'active' if request.url.path.startswith('/backoffice/audit-logs') else '' }}">Journal d'audit</a>
+        <a href="/backoffice/logout">Déconnexion</a>
+    </nav>
+</div>
+
+{% block content %}{% endblock %}
+
+<script src="/static/js/backoffice-common.js"></script>
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

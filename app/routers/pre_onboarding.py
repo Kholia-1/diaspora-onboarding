@@ -32,14 +32,20 @@ def normalize_text(value: str | None) -> str:
 
 
 def extract_dates(text: str) -> list[str]:
+    # AFB_OCR_DOTTED_DATES_V1 : les CNI camerounaises impriment les dates avec
+    # des points (15.01.1990) — formats « . » acceptés au même titre que / et -.
     patterns = [
-        r"\b\d{2}[/-]\d{2}[/-]\d{4}\b",
-        r"\b\d{4}[/-]\d{2}[/-]\d{2}\b",
+        r"\b\d{2}[.//-]\d{2}[.//-]\d{4}\b",
+        r"\b\d{4}[.//-]\d{2}[.//-]\d{2}\b",
     ]
 
     dates = []
     for pattern in patterns:
         dates.extend(re.findall(pattern, text or ""))
+
+    # Les consommateurs (préremplissage du formulaire) attendent le format
+    # avec « / » — les dates à points sont normalisées à la source.
+    dates = [d.replace(".", "/") for d in dates]
 
     return list(dict.fromkeys(dates))
 
@@ -444,8 +450,9 @@ def v2_clean_name(value: str | None) -> str | None:
     value = normalize_text(value)
 
     # Supprimer libellés normaux et variantes OCR
+    # (GIVEM/G1VEN/GLVEN : déformations fréquentes de GIVEN ; NAMES seul aussi)
     value = re.sub(
-        r"\b(NOMS?|SURNAME|SURNAMES|SURAAWE|SURAWE|SURNARNE|PRENOMS?|PRENOM|GIVEN NAMES?|FIRST NAME|FORENAMES?)\b",
+        r"\b(NOMS?|SURNAME|SURNAMES|SURAAWE|SURAWE|SURNARNE|PRENOMS?|PRENOM|(?:GIVEN|GIVEM|G1VEN|GLVEN)\s*NAMES?|NAMES|FIRST NAME|FORENAMES?)\b",
         " ",
         value,
         flags=re.I
@@ -758,6 +765,9 @@ def v2_extract_cni_number(text: str) -> str | None:
     patterns = [
         r"\bNUMERO\s+CNI\s*/?\s*NIC\s+NUMBER\s*[:\-]?\s*([A-Z0-9]{6,20})",
         r"\bNIC\s+NUMBER\s*[:\-]?\s*([A-Z0-9]{6,20})",
+        # AFB_CNI_2024_IDENTIFIANT_UNIQUE_V1 : libellé de la nouvelle CNI.
+        r"\bIDENTIFIANT\s+UNIQUE\s*[:\-]?\s*([A-Z0-9]{6,20})",
+        r"\bUNIQUE\s+IDENTIFIER\s*[:\-]?\s*([A-Z0-9]{6,20})",
         r"\bCNI\s*[:\-]?\s*([A-Z0-9]{6,20})",
         r"\bN[°O]\s*[:\-]?\s*([A-Z0-9]{6,20})"
     ]

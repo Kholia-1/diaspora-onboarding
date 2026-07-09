@@ -9096,14 +9096,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 Secteur d’activité <span class="required-doc">*</span>
             </label>
 
-            <input
-                type="text"
-                id="activity_sector_search"
-                class="manager-sector-search"
-                placeholder="Rechercher un secteur : commerce, santé, BTP, finance..."
-                autocomplete="off"
-            >
-
             <select id="activity_sector" name="activity_sector" required>
                 <option value="">Chargement des secteurs...</option>
             </select>
@@ -10879,7 +10871,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ensureSwitcher();
         updateButtons();
 
-        setText(".brand-title", "Ouverture de compte à distance", "Remote account opening");
+        setText(".brand-title", "Portail d'onboarding client", "Client onboarding portal");
 
         // AFB_TOPNAV_PROCESS_ACTIVE_V1 : traduction par texte, pas par position —
         // l'ancien index [0] renommait « Accueil » en « Ouvrir un compte ».

@@ -11,6 +11,7 @@ from app.models import PaymentTransaction, AccountApplication, ApplicationDocume
 from app.schemas import ApplicationResponse, BackOfficeDecision
 from app.services.audit_service import log_action
 from app.services.notification_service import notify_application_status_changed
+from app.services.whatsapp_service import send_whatsapp_message
 from app.services.package_payment_workflow import create_package_payment_after_approval
 
 
@@ -416,13 +417,87 @@ def decide_application(
         request=request,
     )
 
+    # WHATSAPP_NOTIFY_BACKOFFICE_DECISION_V1 — notification client via Callbell
+    whatsapp_result = None
+    try:
+        if application.phone:
+            decision = str(application.review_decision or "").upper()
+
+            if decision == "APPROVED":
+                payment_url = getattr(application, "package_payment_url", None)
+                if payment_url:
+                    message = (
+                        f"Bonjour {application.first_name}, votre dossier Diaspora "
+                        f"référence {application.reference} a été validé. "
+                        f"Veuillez finaliser le paiement via ce lien : {payment_url}"
+                    )
+                else:
+                    message = (
+                        f"Bonjour {application.first_name}, votre dossier Diaspora "
+                        f"référence {application.reference} a été validé. "
+                        f"Afriland First Bank vous notifiera pour la suite."
+                    )
+
+            elif decision == "REJECTED":
+                reason = application.client_message or application.review_comment or "Motif non précisé."
+                message = (
+                    f"Bonjour {application.first_name}, votre dossier Diaspora "
+                    f"référence {application.reference} a été rejeté. "
+                    f"Motif : {reason}"
+                )
+
+            elif decision == "NEED_MORE_DOCUMENTS":
+                details = application.client_message or application.review_comment or "Documents complémentaires requis."
+                message = (
+                    f"Bonjour {application.first_name}, votre dossier Diaspora "
+                    f"référence {application.reference} nécessite des documents complémentaires. "
+                    f"Détails : {details}"
+                )
+
+            elif decision == "COMPLIANCE_REVIEW":
+                message = (
+                    f"Bonjour {application.first_name}, votre dossier Diaspora "
+                    f"référence {application.reference} est en revue conformité. "
+                    f"Vous serez notifié après analyse."
+                )
+
+            elif decision == "ACCOUNT_OPENED":
+                account_number = getattr(application, "account_number", None)
+                final_rib = getattr(application, "final_rib", None)
+                message = (
+                    f"Bonjour {application.first_name}, votre compte Diaspora a été ouvert avec succès. "
+                    f"Référence dossier : {application.reference}."
+                )
+                if account_number:
+                    message += f" Numéro de compte : {account_number}."
+                if final_rib:
+                    message += f" RIB : {final_rib}."
+
+            else:
+                message = (
+                    f"Bonjour {application.first_name}, le statut de votre dossier Diaspora "
+                    f"référence {application.reference} est maintenant : {decision}."
+                )
+
+            whatsapp_result = send_whatsapp_message(application.phone, message)
+            print("[WHATSAPP][BACKOFFICE_DECISION]", application.reference, decision, whatsapp_result)
+
+    except Exception as exc:
+        whatsapp_result = {
+            "success": False,
+            "status": "WHATSAPP_EXCEPTION",
+            "error": str(exc)
+        }
+        print("[WHATSAPP][BACKOFFICE_DECISION][ERROR]", application.reference, str(exc))
+
     return {
         "message": "Décision back-office enregistrée",
         "reference": application.reference,
         "decision": application.review_decision,
         "reviewed_by": application.reviewed_by,
         "status": application.status,
-        "payment_workflow": payment_workflow
+        "payment_workflow": payment_workflow,
+        "whatsapp_result": whatsapp_result
     }
 
 

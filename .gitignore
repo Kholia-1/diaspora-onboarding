@@ -24,6 +24,10 @@ tmp/
 *.pfx
 .fernet_key
 
+# Fichiers temporaires SQLite
+*.db-shm
+*.db-wal
+
 # Sensitive runtime data
 data/api_integrations.json
 data/pre_onboarding_otps.json
