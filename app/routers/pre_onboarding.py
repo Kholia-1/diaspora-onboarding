@@ -796,6 +796,19 @@ def v2_extract_simple_value(text: str, label_patterns: list[str]) -> str | None:
                 if value:
                     return value.upper()
 
+            # AFB_OCR_SAMELINE_VALUE_V1 : valeur sur la même ligne, sans « : »
+            # (cas CNI courant : « LIEU DE NAISSANCE/PLACE OF BIRTH YAOUNDE »).
+            # On retire les libellés (FR et EN) et les séparateurs ; le reste
+            # est la valeur.
+            residue = nline
+            for pattern in label_patterns:
+                residue = re.sub(pattern, " ", residue, flags=re.I)
+            residue = re.sub(r"[/|]", " ", residue)
+            residue = clean_text(residue)
+
+            if residue and 2 <= len(residue) <= 40:
+                return residue.upper()
+
             # Ligne suivante
             for j in range(i + 1, min(i + 3, len(lines))):
                 value = clean_text(lines[j])

@@ -111,11 +111,22 @@ def get_callbell_config() -> dict[str, str | None]:
         or ""
     )
 
+    # AFB_CALLBELL_FREEFORM_OTP_V1
+    # use_template=false -> envoi en texte libre (conversation de service, gratuite
+    # chez Meta) : contourne le blocage facturation 131042 qui ne touche que les
+    # conversations template (facturées). Nécessite une fenêtre de service ouverte
+    # (le destinataire a écrit au numéro dans les dernières 24 h), sinon l'envoi
+    # échoue et le fallback d'affichage du code prend le relais.
+    use_template_value = os.getenv("CALLBELL_USE_TEMPLATE")
+    if use_template_value is None and "use_template" in item:
+        use_template_value = item.get("use_template")
+
     return {
         "api_url": os.getenv("CALLBELL_API_URL") or build_callbell_api_url(base_url),
         "bearer_token": bearer_token,
         "channel_uuid": channel_uuid,
         "template_uuid": template_uuid,
+        "use_template": bool_value(use_template_value) if use_template_value is not None else True,
     }
 
 
@@ -150,7 +161,7 @@ def validate_callbell_config() -> list[str]:
     if not config["channel_uuid"]:
         missing.append("Channel UUID Callbell manquant.")
 
-    if not config["template_uuid"]:
+    if config["use_template"] and not config["template_uuid"]:
         missing.append("Template UUID Callbell manquant.")
 
     return missing
@@ -179,13 +190,17 @@ def send_whatsapp_message(
         "from": "whatsapp",
         "type": "text",
         "channel_uuid": config["channel_uuid"],
-        "template_uuid": config["template_uuid"],
-        "template_values": template_values if template_values is not None else [message],
         "content": {
             "text": message
         },
         "optin_contact": True
     }
+
+    # AFB_CALLBELL_FREEFORM_OTP_V1 : sans template_uuid, Callbell envoie le
+    # texte libre tel quel (pas d'habillage « Bonjour cher(e) client ... »).
+    if config["use_template"]:
+        payload["template_uuid"] = config["template_uuid"]
+        payload["template_values"] = template_values if template_values is not None else [message]
 
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
 

@@ -500,6 +500,14 @@ def match_income_document(ocr_text: str) -> dict[str, Any]:
 # AFB_RAPIDOCR_ENGINE_V1
 _RAPIDOCR_ENGINE = None
 
+# AFB_OCR_LATIN_MODEL_V1 : modèle de reconnaissance « latin » (repris du projet
+# fbrs) — nettement plus fiable que le modèle par défaut (orienté chinois) pour
+# les pièces camerounaises : accents français, espaces entre les mots, lettres
+# proches (O/0, I/1). Utilisé automatiquement si les fichiers sont présents.
+OCR_MODELS_DIR = Path(__file__).resolve().parents[1] / "ocr_models"
+LATIN_REC_MODEL = OCR_MODELS_DIR / "latin_PP-OCRv3_rec_infer.onnx"
+LATIN_REC_KEYS = OCR_MODELS_DIR / "latin_dict.txt"
+
 
 def get_rapidocr_engine():
     """
@@ -516,38 +524,119 @@ def get_rapidocr_engine():
     except Exception:
         from rapidocr import RapidOCR  # type: ignore
 
+    if LATIN_REC_MODEL.exists() and LATIN_REC_KEYS.exists():
+        try:
+            # det_limit_side_len relevé (comme dans fbrs) : à la valeur par
+            # défaut (736 px), les petites zones — numéro de pièce, dates —
+            # disparaissent de la détection.
+            _RAPIDOCR_ENGINE = RapidOCR(
+                rec_model_path=str(LATIN_REC_MODEL),
+                rec_keys_path=str(LATIN_REC_KEYS),
+                det_limit_side_len=1536,
+            )
+            return _RAPIDOCR_ENGINE
+        except Exception:
+            pass
+
     _RAPIDOCR_ENGINE = RapidOCR()
     return _RAPIDOCR_ENGINE
 
 
-def _parse_rapidocr_result(result):
-    lines = []
-    scores = []
+def _word_spaced_text(text: str, char_boxes) -> str:
+    """
+    AFB_OCR_WORD_SPACING_V1 : le modèle de reconnaissance ne produit pas
+    d'espaces (absents du dictionnaire). Avec return_word_box, RapidOCR fournit
+    la boîte de chaque caractère : un écart horizontal nettement supérieur à la
+    largeur médiane d'un caractère marque un espace (technique équivalente au
+    rapidLinesToWords de fbrs).
+    """
+    try:
+        if not char_boxes or len(char_boxes) != len(text) or len(text) < 2:
+            return text
 
+        widths = []
+        for box in char_boxes:
+            xs = [float(p[0]) for p in box]
+            widths.append(max(xs) - min(xs))
+
+        positive = sorted(w for w in widths if w > 0)
+        if not positive:
+            return text
+        median_width = positive[len(positive) // 2]
+        if median_width <= 0:
+            return text
+
+        # 0.6 × largeur médiane : compromis mesuré — en dessous, le crénage
+        # inter-lettres sur-découpe les noms (« MBAR GA ») ; au-dessus, les
+        # vrais espaces des photos correctes ne sont plus détectés.
+        threshold = max(4.0, 0.6 * median_width)
+
+        pieces = [text[0]]
+        for i in range(1, len(text)):
+            prev_xs = [float(p[0]) for p in char_boxes[i - 1]]
+            cur_xs = [float(p[0]) for p in char_boxes[i]]
+            gap = min(cur_xs) - max(prev_xs)
+            if gap > threshold:
+                pieces.append(" ")
+            pieces.append(text[i])
+
+        return "".join(pieces)
+    except Exception:
+        return text
+
+
+def _parse_rapidocr_result(result):
+    # AFB_OCR_LINE_RECONSTRUCTION_V1 (technique reprise de fbrs) : regrouper les
+    # boîtes détectées par ligne visuelle (Y proche) puis les ordonner de gauche
+    # à droite. Sans cela, les zones d'une même ligne de CNI (libellé à gauche,
+    # valeur à droite) sortent dans un ordre arbitraire et sans espaces, ce qui
+    # casse l'extraction des champs en aval.
     if not result:
         return "", 0
 
-    for item in result:
-        text = ""
-        score = None
+    items = []
+    scores = []
 
+    for item in result:
         try:
+            box = None
+            text = ""
+            score = None
+
             # Format courant : [box, text, score]
+            # Avec return_word_box : [box, text, score, char_boxes, chars, char_scores]
             if len(item) >= 3:
+                box = item[0]
                 text = str(item[1] or "").strip()
                 score = item[2]
 
+                if len(item) >= 4:
+                    text = _word_spaced_text(text, item[3]).strip()
+
             # Autres formats possibles : [box, (text, score)]
             elif len(item) >= 2 and isinstance(item[1], (list, tuple)):
+                box = item[0]
                 text = str(item[1][0] or "").strip()
                 if len(item[1]) > 1:
                     score = item[1][1]
 
             elif len(item) >= 2:
+                box = item[0]
                 text = str(item[1] or "").strip()
 
-            if text:
-                lines.append(text)
+            if not text:
+                continue
+
+            try:
+                xs = [float(p[0]) for p in box]
+                ys = [float(p[1]) for p in box]
+                x_left = min(xs)
+                y_center = (min(ys) + max(ys)) / 2.0
+                height = max(ys) - min(ys)
+            except Exception:
+                x_left, y_center, height = 0.0, float(len(items)) * 1000.0, 0.0
+
+            items.append({"text": text, "x": x_left, "y": y_center, "h": height})
 
             if score is not None:
                 try:
@@ -557,8 +646,129 @@ def _parse_rapidocr_result(result):
         except Exception:
             continue
 
+    if not items:
+        return "", 0
+
+    heights = sorted(i["h"] for i in items if i["h"] > 0)
+    median_height = heights[len(heights) // 2] if heights else 10.0
+    tolerance = max(6.0, median_height * 0.6)
+
+    items.sort(key=lambda i: i["y"])
+    rows = []
+    for entry in items:
+        if rows and abs(entry["y"] - rows[-1]["y"]) <= tolerance:
+            rows[-1]["items"].append(entry)
+            # moyenne glissante : la ligne suit la dérive verticale des boîtes
+            rows[-1]["y"] += (entry["y"] - rows[-1]["y"]) / len(rows[-1]["items"])
+        else:
+            rows.append({"y": entry["y"], "items": [entry]})
+
+    lines = []
+    for row in rows:
+        row["items"].sort(key=lambda i: i["x"])
+        lines.append(" ".join(i["text"] for i in row["items"]))
+
     confidence = int((sum(scores) / len(scores)) * 100) if scores else 0
-    return "\n".join(lines).strip(), confidence
+    return _deglue_known_labels("\n".join(lines).strip()), confidence
+
+
+# AFB_OCR_LABEL_DEGLUE_V1 : la reconnaissance colle parfois les mots des
+# libellés officiels (« DATEDENAISSANCE », « PLACEOFBIRTH »), ce qui fait
+# rater les extracteurs de champs et la validation du type de document.
+# On ré-espace uniquement des libellés connus des pièces camerounaises —
+# aucune retouche des valeurs (noms, numéros).
+_GLUED_LABEL_PATTERNS: list[tuple[re.Pattern, str]] = [
+    (re.compile(r"DATE\s*DE\s*NAISSANCE", re.IGNORECASE), "DATE DE NAISSANCE"),
+    (re.compile(r"DATE\s*OF\s*BIRTH", re.IGNORECASE), "DATE OF BIRTH"),
+    (re.compile(r"LIEU\s*DE\s*NAISSANCE", re.IGNORECASE), "LIEU DE NAISSANCE"),
+    (re.compile(r"PLACE\s*OF\s*BIRTH", re.IGNORECASE), "PLACE OF BIRTH"),
+    (re.compile(r"GIVEN\s*NAMES?", re.IGNORECASE), "GIVEN NAMES"),
+    (re.compile(r"DATE\s*DE\s*DELIVRANCE", re.IGNORECASE), "DATE DE DELIVRANCE"),
+    (re.compile(r"DATE\s*OF\s*ISSUE", re.IGNORECASE), "DATE OF ISSUE"),
+    (re.compile(r"DATE\s*D['\s]*EXPIRATION", re.IGNORECASE), "DATE D EXPIRATION"),
+    (re.compile(r"DATE\s*OF\s*EXPIRY", re.IGNORECASE), "DATE OF EXPIRY"),
+    (re.compile(r"IDENTIFIANT\s*UNIQUE", re.IGNORECASE), "IDENTIFIANT UNIQUE"),
+    (re.compile(r"CARTE\s*NATIONALE\s*D['\s]*IDENTITE", re.IGNORECASE), "CARTE NATIONALE D'IDENTITE"),
+    (re.compile(r"NATIONAL\s*IDENTITY\s*CARD", re.IGNORECASE), "NATIONAL IDENTITY CARD"),
+    (re.compile(r"REPUBLIQUE\s*DU\s*CAMEROUN", re.IGNORECASE), "REPUBLIQUE DU CAMEROUN"),
+    (re.compile(r"REPUBLIC\s*OF\s*CAMEROON", re.IGNORECASE), "REPUBLIC OF CAMEROON"),
+    (re.compile(r"NUMERO\s*DE\s*PASSEPORT", re.IGNORECASE), "NUMERO DE PASSEPORT"),
+    (re.compile(r"PASSPORT\s*N(?:O|UMBER)", re.IGNORECASE), "PASSPORT NUMBER"),
+]
+
+
+def _deglue_known_labels(text: str) -> str:
+    if not text:
+        return text
+
+    for pattern, spaced in _GLUED_LABEL_PATTERNS:
+        text = pattern.sub(spaced, text)
+
+    return text
+
+
+def _enhance_image_for_rapidocr(image_array):
+    """
+    AFB_OCR_ENHANCE_V1 — prétraitement repris de fbrs pour les photos difficiles
+    (CNI sombre, inclinée, petite) : redressement léger (deskew Otsu), contraste
+    local (CLAHE) et agrandissement. Utilisé en second passage uniquement.
+    """
+    import cv2
+    import numpy as np
+
+    gray = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
+
+    # Redressement si l'inclinaison est légère (au-delà, c'est probablement
+    # la géométrie de la photo, pas un défaut de cadrage).
+    try:
+        thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+        coords = cv2.findNonZero(thresh)
+        if coords is not None:
+            angle = cv2.minAreaRect(coords)[-1]
+            if angle > 45:
+                angle -= 90
+            if 0.3 <= abs(angle) <= 15:
+                h, w = gray.shape[:2]
+                matrix = cv2.getRotationMatrix2D((w / 2, h / 2), angle, 1.0)
+                gray = cv2.warpAffine(
+                    gray, matrix, (w, h),
+                    flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE,
+                )
+    except Exception:
+        pass
+
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    gray = clahe.apply(gray)
+
+    # Les petits caractères (numéro de pièce, dates) passent sous la taille
+    # minimale de détection sur une photo trop petite.
+    biggest_side = max(gray.shape[:2])
+    if biggest_side < 1400:
+        scale = 1400.0 / biggest_side
+        gray = cv2.resize(
+            gray,
+            (round(gray.shape[1] * scale), round(gray.shape[0] * scale)),
+            interpolation=cv2.INTER_CUBIC,
+        )
+
+    return cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
+
+
+def _run_rapidocr(image_array) -> tuple[str, int]:
+    engine = get_rapidocr_engine()
+
+    # return_word_box fournit la boîte de chaque caractère : nécessaire pour
+    # restaurer les espaces (voir _word_spaced_text). Repli silencieux pour
+    # les versions de rapidocr qui ne le supportent pas.
+    try:
+        result = engine(image_array, return_word_box=True)
+    except TypeError:
+        result = engine(image_array)
+
+    # rapidocr_onnxruntime retourne souvent (result, elapsed)
+    raw_result = result[0] if isinstance(result, tuple) else result
+
+    return _parse_rapidocr_result(raw_result)
 
 
 def extract_text_with_rapidocr(content: bytes, mime_type: str | None) -> dict[str, Any]:
@@ -578,21 +788,27 @@ def extract_text_with_rapidocr(content: bytes, mime_type: str | None) -> dict[st
     try:
         from io import BytesIO
         import numpy as np
-        from PIL import Image
+        from PIL import Image, ImageOps
 
-        image = Image.open(BytesIO(content)).convert("RGB")
-        image_array = np.array(image)
+        image = Image.open(BytesIO(content))
+        image = ImageOps.exif_transpose(image)  # respecte l'orientation photo
+        image_array = np.array(image.convert("RGB"))
 
-        engine = get_rapidocr_engine()
-        result = engine(image_array)
+        text, confidence = _run_rapidocr(image_array)
 
-        # rapidocr_onnxruntime retourne souvent (result, elapsed)
-        if isinstance(result, tuple):
-            raw_result = result[0]
-        else:
-            raw_result = result
-
-        text, confidence = _parse_rapidocr_result(raw_result)
+        # AFB_OCR_ENHANCE_V1 : résultat pauvre -> second passage sur image
+        # prétraitée (deskew + CLAHE + agrandissement), on garde le meilleur.
+        enhanced_used = False
+        if len(text) < 40 or confidence < 60:
+            try:
+                enhanced_text, enhanced_confidence = _run_rapidocr(
+                    _enhance_image_for_rapidocr(image_array)
+                )
+                if len(enhanced_text) > len(text):
+                    text, confidence = enhanced_text, enhanced_confidence
+                    enhanced_used = True
+            except Exception:
+                pass
 
         return {
             "engine": "RapidOCR",
@@ -600,6 +816,7 @@ def extract_text_with_rapidocr(content: bytes, mime_type: str | None) -> dict[st
             "message": "OCR RapidOCR exécuté avec succès." if text else "Aucun texte exploitable détecté par RapidOCR.",
             "text": text,
             "confidence": confidence,
+            "enhanced_pass": enhanced_used,
         }
 
     except Exception as exc:

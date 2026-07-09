@@ -2024,6 +2024,118 @@
   }
 </style>
 
+<style>
+/* AFB_MOBILE_BURGER_NAV_V1 — menu hamburger en vue mobile.
+   Placé en dernier dans <head> pour l'emporter sur la media query 960px
+   qui affichait le menu en ligne défilable sous le logo. */
+.nav-toggle {
+    display: none;
+    background: #fff;
+    border: 1px solid #f0c3c6;
+    border-radius: 12px;
+    padding: 8px 10px;
+    cursor: pointer;
+    flex: 0 0 auto;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 22px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--red);
+    margin: 4px 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.nav-toggle[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+@media (max-width: 960px) {
+    .nav-toggle {
+        display: block;
+    }
+
+    /* Header sur une seule ligne : logo/titre à gauche, langue + burger
+       collés à droite (sans ça, .topbar { flex-wrap: wrap } faisait
+       passer les actions sous le logo, burger à gauche). */
+    .topbar {
+        flex-wrap: nowrap;
+        gap: 10px;
+    }
+
+    .topbar .brand {
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 10px;
+    }
+
+    .topbar .brand-logo,
+    .topbar .brand-logo img {
+        width: 132px;
+        height: 56px;
+    }
+
+    .topbar .brand > div {
+        min-width: 0;
+    }
+
+    .topbar .brand h1 {
+        font-size: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .topbar-actions {
+        flex: 0 0 auto;
+        flex-wrap: nowrap;
+        margin-left: auto;
+    }
+
+    .topbar .topnav {
+        display: none;
+        order: initial;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 20px 32px rgba(15, 23, 42, 0.14);
+        padding: 14px 18px 18px;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 10px;
+        flex-basis: auto;
+        flex-wrap: nowrap;
+        overflow: visible;
+    }
+
+    .topbar .topnav.open {
+        display: flex;
+    }
+
+    .topbar .topnav a {
+        display: block;
+        text-align: center;
+        font-size: 15px;
+        padding: 12px 14px;
+        white-space: normal;
+    }
+}
+</style>
+
 </head>
 
 <body>
@@ -2039,11 +2151,11 @@
     </div>
 
     <!-- AFB_TOPNAV_PROCESS_ACTIVE_V1 : parcours ouverture de compte en cours -->
-    <nav class="topnav" aria-label="Menu des services">
+    <nav class="topnav" id="topnavMenu" aria-label="Menu des services">
       <a href="/" data-i18n="nav.home">Accueil</a>
       <a href="/open-account-flow-test" class="active" aria-current="page" data-i18n="nav.open_account">Ouverture de compte</a>
-      <a href="/#service-carte" data-i18n="nav.card">Carte bancaire</a>
-      <a href="/#service-recharge" data-i18n="nav.topup">Recharge de carte</a>
+      <a href="/souscrire-carte" data-i18n="nav.card">Carte bancaire</a>
+      <a href="/recharger-carte" data-i18n="nav.topup">Recharge de carte</a>
     </nav>
 
     <div class="topbar-actions">
@@ -2051,8 +2163,44 @@
         <button id="lang-fr" type="button">FR</button>
         <button id="lang-en" type="button">EN</button>
       </div>
+
+      <!-- AFB_MOBILE_BURGER_NAV_V1 : bouton hamburger (visible <= 960px) -->
+      <button type="button" class="nav-toggle" id="navToggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="topnavMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </header>
+
+  <script>
+  /* AFB_MOBILE_BURGER_NAV_V1 : ouverture/fermeture du menu mobile */
+  (function () {
+    var btn = document.getElementById("navToggle");
+    var nav = document.getElementById("topnavMenu");
+    if (!btn || !nav) return;
+
+    function setOpen(open) {
+      nav.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
+    }
+
+    btn.addEventListener("click", function () {
+      setOpen(!nav.classList.contains("open"));
+    });
+
+    nav.addEventListener("click", function (event) {
+      if (event.target.closest("a")) setOpen(false);
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!nav.classList.contains("open")) return;
+      if (event.target.closest(".topbar")) return;
+      setOpen(false);
+    });
+  })();
+  </script>
   <main class="page">
   
   <!-- AFB_REMOTE_ACCOUNT_WELCOME_ABOVE_PREONBOARDING_V1 -->
@@ -9823,6 +9971,153 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
   }
 
   setTimeout(bind, 800);
+})();
+</script>
+
+<!-- AFB_STEP0_AUTO_VALIDATE_AFTER_OTP_V1 :
+     après vérification automatique du code OTP, le bouton « Valider mes
+     informations de contact » devient redondant : on le masque, on affiche
+     un loader le temps de rejouer la validation existante, puis le label
+     « Informations de contact validées ». Si le numéro change (OTP réinitialisé),
+     le bouton réapparaît. -->
+<style>
+#step0-otp-validated-box {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  font-weight: 900;
+  font-size: 14px;
+}
+
+#step0-otp-validated-box.show { display: inline-flex; }
+
+#step0-otp-validated-box .step0-loader {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 3px solid rgba(201, 0, 0, 0.18);
+  border-top-color: #C90000;
+  animation: step0-validate-spin 0.8s linear infinite;
+}
+
+@keyframes step0-validate-spin {
+  to { transform: rotate(360deg); }
+}
+
+#step0-otp-validated-box .step0-validating-label { color: #6b7280; }
+
+#step0-otp-validated-box .step0-validated-label {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  color: #12805c;
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  border-radius: 999px;
+  padding: 10px 16px;
+}
+
+#step0-otp-validated-box.done .step0-loader { display: none; }
+#step0-otp-validated-box.done .step0-validating-label { display: none; }
+#step0-otp-validated-box.done .step0-validated-label { display: inline-flex; }
+</style>
+<script>
+(function () {
+  var VERIFIED_KEY = "diaspora_step0_whatsapp_otp_verified";
+  var PHONE_KEY = "diaspora_step0_whatsapp_otp_phone";
+  var LOADER_MS = 1400;
+  var wasVerified = null;
+
+  function currentFullPhone() {
+    if (typeof window.__AFB_BUILD_STEP0_WHATSAPP_FULL__ === "function") {
+      try {
+        return window.__AFB_BUILD_STEP0_WHATSAPP_FULL__() || "";
+      } catch (e) {}
+    }
+    return localStorage.getItem("diaspora_step0_whatsapp_full") || "";
+  }
+
+  function isVerifiedNow() {
+    if (localStorage.getItem(VERIFIED_KEY) !== "true") return false;
+
+    var verifiedPhone = localStorage.getItem(PHONE_KEY) || "";
+    var current = currentFullPhone();
+
+    // même règle que isOtpVerifiedForCurrentPhone : un numéro modifié
+    // invalide la vérification.
+    return !current || !verifiedPhone || verifiedPhone === current;
+  }
+
+  function ensureBox(btn) {
+    var box = document.getElementById("step0-otp-validated-box");
+
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "step0-otp-validated-box";
+      box.innerHTML =
+        '<span class="step0-loader" aria-hidden="true"></span>' +
+        '<span class="step0-validating-label">Validation de vos informations de contact...</span>' +
+        '<span class="step0-validated-label">✓ Informations de contact validées</span>';
+      btn.insertAdjacentElement("afterend", box);
+    }
+
+    return box;
+  }
+
+  function showValidated(btn, withLoader) {
+    var box = ensureBox(btn);
+
+    btn.style.display = "none";
+    box.classList.add("show");
+
+    if (withLoader) {
+      box.classList.remove("done");
+      setTimeout(function () { box.classList.add("done"); }, LOADER_MS);
+    } else {
+      box.classList.add("done");
+    }
+  }
+
+  function showButtonAgain(btn) {
+    var box = document.getElementById("step0-otp-validated-box");
+
+    btn.style.display = "";
+    if (box) box.classList.remove("show", "done");
+  }
+
+  function tick() {
+    var btn = document.getElementById("step0-validate-btn");
+    if (!btn) return;
+
+    var verified = isVerifiedNow();
+    if (verified === wasVerified) return;
+
+    if (verified) {
+      if (wasVerified === false) {
+        // L'OTP vient d'être vérifié : loader, puis rejouer la validation
+        // existante du bouton (validateStep0 + défilement vers la suite).
+        showValidated(btn, true);
+        try { btn.click(); } catch (e) {}
+      } else {
+        // Déjà vérifié au chargement : label direct, sans loader ni défilement.
+        showValidated(btn, false);
+      }
+    } else {
+      showButtonAgain(btn);
+    }
+
+    wasVerified = verified;
+  }
+
+  setInterval(tick, 300);
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", tick);
+  } else {
+    tick();
+  }
 })();
 </script>
 

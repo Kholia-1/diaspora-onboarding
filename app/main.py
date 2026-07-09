@@ -38,6 +38,21 @@ title="First Diaspora Onboarding API",
     version="1.0.0"
 )
 
+# AFB_GZIP_RESPONSES_V1 : les pages client font ~600 Ko de HTML inline ;
+# sans compression, le chargement mobile est sensiblement ralenti.
+from fastapi.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=1024)
+
+
+# AFB_STATIC_CACHE_V1 : les assets statiques sont référencés avec ?v=<hash>
+# (cache-busting) ; le navigateur peut donc les garder en cache sans revalider.
+@app.middleware("http")
+async def static_cache_headers(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static/"):
+        response.headers.setdefault("Cache-Control", "public, max-age=86400")
+    return response
+
 # FORCE_REDIRECT_OLD_OPEN_ACCOUNT_ROUTES_TO_TEST_V1
 @app.middleware("http")
 async def force_redirect_old_open_account_routes(request, call_next):
