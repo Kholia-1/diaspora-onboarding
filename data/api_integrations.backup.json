@@ -1,0 +1,16 @@
+{
+  "integrations": [
+    {
+      "code": "WHATSAPP_CALLBELL",
+      "provider": "CALLBELL",
+      "enabled": true,
+      "environment": "PRODUCTION",
+      "base_url": "https://api.callbell.eu/v1",
+      "api_key": "e4zdvmXhjRVjvpoA8qAc1oiJjsoT3iRG.7b423e833c6bf93878fc17827908f5652ee76cbee33e206d003109d2d0ac3bd4",
+      "channel_uuid": "36c1b1927262494984f9aefc45b2e3b7",
+      "template_uuid": "14af6cbdbc264f58bc8eb71375bea51b",
+      "from": "whatsapp",
+      "ready_for_real_call": true
+    }
+  ]
+}

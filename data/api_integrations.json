@@ -1,0 +1,55 @@
+{
+  "integrations": [
+    {
+      "code": "WHATSAPP_CALLBELL",
+      "name": "WhatsApp Business API (Callbell)",
+      "description": "Notifications client : OTP, lien de paiement, paiement confirmé, dossier approuvé, compte ouvert.",
+      "provider": "CALLBELL",
+      "enabled": true,
+      "environment": "PRODUCTION",
+      "base_url": "https://api.callbell.eu/v1",
+      "endpoint_path": "/v1/messages/send",
+      "auth_type": "BEARER_TOKEN",
+      "api_key": "e4zdvmXhjRVjvpoA8qAc1oiJjsoT3iRG.7b423e833c6bf93878fc17827908f5652ee76cbee33e206d003109d2d0ac3bd4",
+      "channel_uuid": "36c1b1927262494984f9aefc45b2e3b7",
+      "template_uuid": "14af6cbdbc264f58bc8eb71375bea51b",
+      "from": "whatsapp",
+      "ready_for_real_call": true,
+      "use_template": false,
+      "notes": "Canal Callbell actif. Blocage Meta 131042 sur les templates : envoi en texte libre (use_template=false, surchargé par CALLBELL_USE_TEMPLATE si présent dans .env). Remettre true une fois la facturation Meta corrigée."
+    },
+    {
+      "code": "MASTERCARD",
+      "name": "Mastercard Payment Gateway",
+      "description": "Paiement des frais de souscription package après validation back-office.",
+      "enabled": false,
+      "environment": "SANDBOX",
+      "provider": "MASTERCARD_GATEWAY",
+      "base_url": "",
+      "auth_type": "API_KEY",
+      "api_key": "",
+      "client_id": "",
+      "client_secret": "",
+      "merchant_id": "",
+      "webhook_url": "",
+      "callback_url": "",
+      "notes": "Ne jamais stocker ni manipuler les numéros de carte dans l’application."
+    },
+    {
+      "code": "BLACKMODULE",
+      "name": "BLACKMODULE conformité",
+      "description": "Screening sanctions, PPE, listes internes et résultat conformité.",
+      "enabled": false,
+      "environment": "INTERNAL",
+      "provider": "BLACKMODULE",
+      "base_url": "",
+      "auth_type": "API_KEY",
+      "api_key": "",
+      "client_id": "",
+      "client_secret": "",
+      "webhook_url": "",
+      "callback_url": "",
+      "notes": "Intégration avec le moteur de filtrage conformité."
+    }
+  ]
+}

@@ -28,10 +28,9 @@ tmp/
 *.db-shm
 *.db-wal
 
-# Sensitive runtime data (clés API en clair, y compris les copies de sauvegarde)
-data/api_integrations.json
-data/api_integrations.*.json
-data/api_integrations.backup.json
+# Sensitive runtime data
+# data/api_integrations.json est volontairement versionné (dépôt privé) pour
+# retrouver la config Callbell en changeant de poste.
 data/pre_onboarding_otps.json
 data/*.db
 data/*.sqlite
