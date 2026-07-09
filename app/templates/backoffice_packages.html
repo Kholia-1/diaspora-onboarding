@@ -1,277 +1,137 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Configuration des packages - Back-office</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "backoffice_base.html" %}
 
-    <style>
-        :root {
-            --red: #C90000;
-            --red-dark: #9E0000;
-            --black: #111111;
-            --gray-bg: #F4F6F9;
-            --border: #DADDE5;
-            --muted: #6B7280;
-            --green: #166534;
-            --orange: #B45309;
-        }
+{% block title %}Configuration des packages - Back-office{% endblock %}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: var(--gray-bg);
-            color: #111827;
-        }
+{% block extra_style %}
+<style>
+    .toolbar {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 18px;
+    }
 
-        .topbar {
-            background: var(--black);
-            color: white;
-            padding: 18px 30px;
-            border-bottom: 4px solid var(--red);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .message {
+        margin: 12px 0;
+        font-weight: bold;
+    }
 
-        .topbar h2 {
-            margin: 0;
-            font-size: 20px;
-        }
+    .package-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
 
-        .topbar a {
-            color: white;
-            text-decoration: none;
-            margin-left: 18px;
-            font-weight: bold;
-            font-size: 14px;
-        }
+    .package-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 18px;
+        border: 1px solid #EEF0F5;
+        box-shadow: var(--shadow);
+    }
 
-        .container {
-            max-width: 1250px;
-            margin: 28px auto;
-            padding: 0 18px;
-        }
+    .package-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 14px;
+    }
 
-        .header-card {
-            background: white;
-            border-left: 6px solid var(--red);
-            border-radius: 16px;
-            padding: 22px;
-            box-shadow: 0 8px 22px rgba(0,0,0,0.07);
-            margin-bottom: 18px;
-        }
+    .package-title h3 {
+        margin: 0;
+        color: #111827;
+    }
 
-        .header-card h1 {
-            margin: 0;
-            color: var(--red);
-        }
+    .package-title small {
+        color: var(--muted);
+        font-weight: bold;
+    }
 
-        .header-card p {
-            color: var(--muted);
-            margin-bottom: 0;
-            line-height: 1.5;
-        }
+    .package-card .badge {
+        border-radius: 999px;
+    }
 
-        .toolbar {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 18px;
-        }
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
 
-        .btn {
-            border: none;
-            border-radius: 10px;
-            padding: 11px 15px;
-            font-weight: bold;
-            cursor: pointer;
-            color: white;
-            background: var(--red);
-        }
+    .form-grid .full {
+        grid-column: 1 / -1;
+    }
 
-        .btn:hover {
-            background: var(--red-dark);
-        }
+    .form-grid .half {
+        grid-column: span 2;
+    }
 
-        .btn-dark {
-            background: #111827;
-        }
+    label {
+        display: block;
+        font-weight: bold;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
 
-        .btn-dark:hover {
-            background: #000;
-        }
+    textarea {
+        min-height: 90px;
+        resize: vertical;
+    }
 
-        .btn-muted {
-            background: #6B7280;
-        }
+    .switch-line {
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-top: 12px;
+    }
 
-        .btn-danger {
-            background: #991B1B;
-        }
+    .switch-line label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 14px;
+    }
 
-        .message {
-            margin: 12px 0;
-            font-weight: bold;
-        }
+    .switch-line input {
+        width: auto;
+    }
 
-        .package-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 18px;
-        }
+    .fee-preview {
+        background: #FAFAFA;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 12px;
+        color: #374151;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-top: 12px;
+    }
 
-        .package-card {
-            background: white;
-            border-radius: 16px;
-            padding: 18px;
-            border: 1px solid #EEF0F5;
-            box-shadow: 0 8px 22px rgba(0,0,0,0.06);
-        }
-
-        .package-head {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 14px;
-            margin-bottom: 14px;
-        }
-
-        .package-title h3 {
-            margin: 0;
-            color: #111827;
-        }
-
-        .package-title small {
-            color: var(--muted);
-            font-weight: bold;
-        }
-
-        .badge {
-            display: inline-block;
-            border-radius: 999px;
-            padding: 5px 9px;
-            font-size: 12px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        .badge-active {
-            background: #DCFCE7;
-            color: #166534;
-        }
-
-        .badge-inactive {
-            background: #E5E7EB;
-            color: #374151;
-        }
-
+    @media (max-width: 950px) {
         .form-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
+            grid-template-columns: repeat(2, 1fr);
         }
+    }
 
-        .form-grid .full {
-            grid-column: 1 / -1;
+    @media (max-width: 650px) {
+        .form-grid {
+            grid-template-columns: 1fr;
         }
 
         .form-grid .half {
-            grid-column: span 2;
+            grid-column: 1 / -1;
         }
 
-        label {
-            display: block;
-            font-weight: bold;
-            font-size: 13px;
-            margin-bottom: 6px;
+        .package-head {
+            flex-direction: column;
         }
+    }
+</style>
+{% endblock %}
 
-        input, select, textarea {
-            width: 100%;
-            box-sizing: border-box;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 14px;
-            font-family: Arial, sans-serif;
-        }
-
-        textarea {
-            min-height: 90px;
-            resize: vertical;
-        }
-
-        .switch-line {
-            display: flex;
-            gap: 18px;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }
-
-        .switch-line label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .switch-line input {
-            width: auto;
-        }
-
-        .fee-preview {
-            background: #FAFAFA;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            color: #374151;
-            font-size: 13px;
-            line-height: 1.5;
-            margin-top: 12px;
-        }
-
-        @media (max-width: 950px) {
-            .form-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 650px) {
-            .topbar {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .form-grid .half {
-                grid-column: 1 / -1;
-            }
-
-            .package-head {
-                flex-direction: column;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="topbar">
-    <h2>Back-office - Packages bancaires</h2>
-    <div>
-        <a href="/backoffice/applications">Dossiers</a>
-        <a href="/backoffice/packages">Packages</a>
-        <a href="/backoffice/api-integrations">API à intégrer</a>
-    </div>
-</div>
-
+{% block content %}
 <div class="container">
     <div class="header-card">
         <h1>Configuration manuelle des packages</h1>
@@ -290,18 +150,11 @@
     <div id="message" class="message"></div>
     <div id="packagesContainer" class="package-grid">Chargement...</div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
 let packages = [];
-
-function escapeHtml(value) {
-    return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-}
 
 function toNumber(value) {
     const n = Number(String(value || "0").replace(",", "."));
@@ -566,6 +419,4 @@ async function savePackages() {
 
 document.addEventListener("DOMContentLoaded", loadPackages);
 </script>
-
-</body>
-</html>
+{% endblock %}

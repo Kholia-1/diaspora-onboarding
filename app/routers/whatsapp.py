@@ -1,5 +1,6 @@
 import os
-from fastapi import APIRouter, Header, HTTPException, HTTPException, Header, HTTPException
+from fastapi import APIRouter, Header, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 
 from app.services.whatsapp_service import (
@@ -62,7 +63,8 @@ async def whatsapp_test_send(
 ):
     require_test_key(x_whatsapp_test_key)
 
-    result = send_whatsapp_message(
+    result = await run_in_threadpool(
+        send_whatsapp_message,
         to_phone=payload.to,
         message=payload.message
     )

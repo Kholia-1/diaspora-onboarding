@@ -5,6 +5,8 @@
     <title>Détail dossier diaspora</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <link rel="stylesheet" href="/static/css/backoffice.css">
+
     <style>
         :root {
             --red: #C90000;
@@ -898,13 +900,16 @@ body > .afb-otp-card {
 
 
 <div class="topbar no-print">
-    <h2>Détail du dossier</h2>
+    <h2>First Diaspora Onboarding - Back-office</h2>
 
-    <div>
-        <a href="/backoffice/applications">Retour dossiers</a>
-        
+    <nav>
+        <a href="/backoffice/applications" class="active">Dossiers</a>
+        <a href="/backoffice/agencies">Agences</a>
+        <a href="/backoffice/nationalities">Nationalités</a>
+        <a href="/backoffice/packages">Packages</a>
+        <a href="/backoffice/api-integrations">API à intégrer</a>
         <button class="print-btn" onclick="exportDossierPdf()">Exporter PDF</button>
-    </div>
+    </nav>
 </div>
 
 <div class="container">

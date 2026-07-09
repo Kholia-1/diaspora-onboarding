@@ -1,297 +1,8 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Back-office - Dossiers diaspora</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "backoffice_base.html" %}
 
-    <style>
-        :root {
-            --red: #C90000;
-            --red-dark: #9E0000;
-            --black: #111111;
-            --white: #FFFFFF;
-            --gray-bg: #F4F6F9;
-            --border: #DADDE5;
-            --muted: #6B7280;
-            --green: #166534;
-            --orange: #B45309;
-            --blue: #1D4ED8;
-        }
+{% block title %}Back-office - Dossiers diaspora{% endblock %}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: var(--gray-bg);
-            color: #111827;
-        }
-
-        .topbar {
-            background: var(--black);
-            color: var(--white);
-            padding: 18px 30px;
-            border-bottom: 4px solid var(--red);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .topbar h2 {
-            margin: 0;
-            font-size: 20px;
-        }
-
-        .topbar nav a {
-            color: white;
-            text-decoration: none;
-            margin-left: 18px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .container {
-            max-width: 1250px;
-            margin: 25px auto;
-            padding: 0 18px;
-        }
-
-        .page-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-        }
-
-        .page-title h1 {
-            margin: 0;
-            color: var(--red);
-            font-size: 28px;
-        }
-
-        .page-title p {
-            color: var(--muted);
-            margin: 6px 0 0 0;
-        }
-
-        .btn {
-            background: var(--red);
-            color: white;
-            border: none;
-            border-radius: 9px;
-            padding: 11px 16px;
-            cursor: pointer;
-            text-decoration: none;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .btn:hover {
-            background: var(--red-dark);
-        }
-
-        .btn-dark {
-            background: #111827;
-        }
-
-        .btn-dark:hover {
-            background: #000;
-        }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 14px;
-            margin-bottom: 22px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 8px 22px rgba(0,0,0,0.07);
-            border: 1px solid #EEF0F5;
-        }
-
-        .card span {
-            color: var(--muted);
-            font-size: 13px;
-        }
-
-        .card strong {
-            display: block;
-            font-size: 28px;
-            margin-top: 8px;
-        }
-
-        .panel {
-            background: white;
-            border-radius: 14px;
-            padding: 20px;
-            box-shadow: 0 8px 22px rgba(0,0,0,0.07);
-            border: 1px solid #EEF0F5;
-        }
-
-        .filters {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr 180px;
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            font-size: 14px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: var(--black);
-            color: white;
-            padding: 13px 10px;
-            text-align: left;
-            font-size: 13px;
-        }
-
-        td {
-            padding: 12px 10px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-            vertical-align: top;
-        }
-
-        tr:hover td {
-            background: #FAFAFA;
-        }
-
-        .muted {
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .badge {
-            padding: 5px 9px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            display: inline-block;
-            white-space: nowrap;
-        }
-
-        .status-submitted {
-            background: #E0F2FE;
-            color: #075985;
-        }
-
-        .status-ok {
-            background: #DCFCE7;
-            color: #166534;
-        }
-
-        .status-review {
-            background: #FEF3C7;
-            color: #92400E;
-        }
-
-        .status-alert {
-            background: #FEE2E2;
-            color: #991B1B;
-        }
-
-        .status-rejected {
-            background: #E5E7EB;
-            color: #374151;
-        }
-
-        .score {
-            font-weight: bold;
-        }
-
-        .score-good {
-            color: var(--green);
-        }
-
-        .score-mid {
-            color: var(--orange);
-        }
-
-        .score-low {
-            color: #991B1B;
-        }
-
-        .empty {
-            padding: 25px;
-            text-align: center;
-            color: var(--muted);
-        }
-
-        .loading {
-            color: var(--muted);
-            font-weight: bold;
-            padding: 20px 0;
-        }
-
-        @media (max-width: 1050px) {
-            .cards {
-                grid-template-columns: repeat(3, 1fr);
-            }
-
-            .filters {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        @media (max-width: 750px) {
-            .topbar {
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-
-            .cards {
-                grid-template-columns: 1fr;
-            }
-
-            .filters {
-                grid-template-columns: 1fr;
-            }
-
-            table {
-                font-size: 12px;
-            }
-
-            th, td {
-                padding: 9px 7px;
-            }
-
-            .page-title {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="topbar">
-    <h2>First Diaspora Onboarding - Back-office</h2>
-
-    <nav>
-        
-        <a href="/backoffice/applications">Dossiers</a>
-        <a href="/backoffice/agencies">Agences</a>
-        <a href="/backoffice/nationalities">Nationalités</a>
-    </nav>
-</div>
-
+{% block content %}
 <div class="container">
 
     <div class="page-title">
@@ -299,8 +10,6 @@
             <h1>Dossiers d’ouverture de compte</h1>
             <p>Suivi des demandes diaspora, vérification KYC, documents et décisions back-office.</p>
         </div>
-
-        
     </div>
 
     <div class="cards">
@@ -388,22 +97,11 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
     let allApplications = [];
-
-    function escapeHtml(value) {
-        if (value === null || value === undefined) {
-            return "";
-        }
-
-        return String(value)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
-    }
 
     function statusLabel(status) {
         const labels = {
@@ -575,19 +273,6 @@
         });
     }
 
-    function formatDate(value) {
-        if (!value) {
-            return "";
-        }
-
-        try {
-            const date = new Date(value);
-            return date.toLocaleString("fr-FR");
-        } catch (e) {
-            return value;
-        }
-    }
-
     async function refreshData() {
         document.getElementById("loading").style.display = "block";
         document.getElementById("loading").innerText = "Actualisation...";
@@ -600,7 +285,6 @@
 
     refreshData();
 </script>
-
 
 <script>
 /* BACKOFFICE_PREVENT_JSON_NAVIGATION_V1 */
@@ -620,6 +304,4 @@
   }, true);
 })();
 </script>
-
-</body>
-</html>
+{% endblock %}

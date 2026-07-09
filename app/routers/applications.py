@@ -5,7 +5,7 @@ from uuid import uuid4
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -534,7 +534,8 @@ async def upload_document(
     file_hash = sha256_bytes(content)
     extension = get_safe_extension(file.filename, file.content_type)
 
-    analysis = analyze_document_content(
+    analysis = await run_in_threadpool(
+        analyze_document_content,
         content=content,
         mime_type=file.content_type,
         document_type=document_type,

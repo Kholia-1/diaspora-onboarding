@@ -1,0 +1,65 @@
+{
+  "packages": [
+    {
+      "code": "BUDGET",
+      "name": "Package Budget",
+      "description": "Destiné aux clients recherchant l’essentiel bancaire à coût maîtrisé.",
+      "services": [
+        "SMS First",
+        "Carte Fellow",
+        "SARA Banking"
+      ],
+      "currency": "XAF",
+      "opening_fee": 0,
+      "subscription_fee": 0,
+      "monthly_fee": 0,
+      "payment_required": false,
+      "active": true,
+      "display_order": 1,
+      "customer_type": "PARTICULIER",
+      "mastercard_item_code": "PKG_BUDGET",
+      "whatsapp_template": "package_budget_selected"
+    },
+    {
+      "code": "BUSINESS",
+      "name": "Package Business",
+      "description": "Pour les professionnels et clients ayant des besoins bancaires étendus.",
+      "services": [
+        "SMS First",
+        "Assurance",
+        "Découvert permanent",
+        "Carte Visa Classique"
+      ],
+      "currency": "XAF",
+      "opening_fee": 0,
+      "subscription_fee": 0,
+      "monthly_fee": 0,
+      "payment_required": false,
+      "active": true,
+      "display_order": 2,
+      "customer_type": "PROFESSIONNEL",
+      "mastercard_item_code": "PKG_BUSINESS",
+      "whatsapp_template": "package_business_selected"
+    },
+    {
+      "code": "ECO",
+      "name": "Package Eco",
+      "description": "L’essentiel au meilleur prix pour une ouverture de compte simplifiée.",
+      "services": [
+        "SMS First",
+        "Assurance",
+        "SARA Banking"
+      ],
+      "currency": "XAF",
+      "opening_fee": 0,
+      "subscription_fee": 0,
+      "monthly_fee": 0,
+      "payment_required": false,
+      "active": true,
+      "display_order": 3,
+      "customer_type": "PARTICULIER",
+      "mastercard_item_code": "PKG_ECO",
+      "whatsapp_template": "package_eco_selected"
+    }
+  ]
+}

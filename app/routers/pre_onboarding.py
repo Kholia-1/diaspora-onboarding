@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
+from fastapi.concurrency import run_in_threadpool
 import re
 from typing import Any
 
@@ -976,7 +977,7 @@ async def pre_onboarding_ocr(
     mime_type = file.content_type or "application/octet-stream"
 
     try:
-        ocr_result = extract_text_with_best_engine(content, mime_type)
+        ocr_result = await run_in_threadpool(extract_text_with_best_engine, content, mime_type)
     except Exception as exc:
         raise HTTPException(
             status_code=500,
@@ -1174,8 +1175,13 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path as _Path
 from fastapi import Body
+from filelock import FileLock
 
 OTP_STORE_PATH = _Path("data/pre_onboarding_otps.json")
+# Verrou inter-process : le store est un fichier JSON entier réécrit à chaque
+# mise à jour, donc deux requêtes concurrentes (workers différents ou threads)
+# peuvent s'écraser mutuellement sans ce verrou.
+_otp_lock = FileLock(str(OTP_STORE_PATH) + ".lock")
 OTP_TTL_MINUTES = int(os.getenv("PRE_ONBOARDING_OTP_TTL_MINUTES", "10"))
 OTP_MAX_ATTEMPTS = int(os.getenv("PRE_ONBOARDING_OTP_MAX_ATTEMPTS", "5"))
 OTP_DEMO_MODE = os.getenv("PRE_ONBOARDING_OTP_DEMO_MODE", "true").lower() in ("1", "true", "yes", "on")
@@ -1265,9 +1271,10 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
         "whatsapp_delivery_at": None,
     }
 
-    store = _load_otps()
-    store[session_id] = record
-    _save_otps(store)
+    with _otp_lock:
+        store = _load_otps()
+        store[session_id] = record
+        _save_otps(store)
 
     otp_message = (
         f"Votre code de vérification Afriland First Bank est : {otp}. "
@@ -1275,8 +1282,8 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
         "Ne partagez pas ce code."
     )
 
-    # AFB_OTP_CALLBELL_UUID_STATUS_V1
-    whatsapp_result = send_whatsapp_message(phone, otp_message)
+    # AFB_OTP_CALLBELL_UUID_STATUS_V1 — appel réseau bloquant, déporté hors de l'event loop
+    whatsapp_result = await run_in_threadpool(send_whatsapp_message, phone, otp_message)
 
     callbell_response = whatsapp_result.get("response") or {}
     callbell_message = callbell_response.get("message") if isinstance(callbell_response, dict) else {}
@@ -1294,8 +1301,11 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
     record["whatsapp_http_status"] = whatsapp_result.get("http_status")
     record["callbell_message_uuid"] = callbell_uuid
     record["callbell_message_status"] = callbell_status
-    store[session_id] = record
-    _save_otps(store)
+
+    with _otp_lock:
+        store = _load_otps()
+        store[session_id] = record
+        _save_otps(store)
 
     response = {
         "ok": whatsapp_sent or OTP_DEMO_MODE,
@@ -1355,52 +1365,53 @@ async def verify_pre_onboarding_otp(payload: dict = Body(...)):
     if len(otp) != 6:
         raise HTTPException(status_code=400, detail="Code OTP invalide.")
 
-    store = _load_otps()
-    record = store.get(session_id)
+    with _otp_lock:
+        store = _load_otps()
+        record = store.get(session_id)
 
-    if not record:
-        raise HTTPException(status_code=404, detail="Aucun code OTP trouvé pour cette session.")
+        if not record:
+            raise HTTPException(status_code=404, detail="Aucun code OTP trouvé pour cette session.")
 
-    if record.get("verified"):
-        return {
-            "ok": True,
-            "verified": True,
-            "message": "WhatsApp déjà vérifié.",
-            "phone": record.get("phone"),
-        }
+        if record.get("verified"):
+            return {
+                "ok": True,
+                "verified": True,
+                "message": "WhatsApp déjà vérifié.",
+                "phone": record.get("phone"),
+            }
 
-    if str(record.get("phone") or "") != phone:
-        raise HTTPException(status_code=400, detail="Le numéro WhatsApp ne correspond pas au code envoyé.")
+        if str(record.get("phone") or "") != phone:
+            raise HTTPException(status_code=400, detail="Le numéro WhatsApp ne correspond pas au code envoyé.")
 
-    try:
-        expires_at = datetime.fromisoformat(str(record.get("expires_at")))
-    except Exception:
-        expires_at = _utcnow() - timedelta(seconds=1)
+        try:
+            expires_at = datetime.fromisoformat(str(record.get("expires_at")))
+        except Exception:
+            expires_at = _utcnow() - timedelta(seconds=1)
 
-    if expires_at < _utcnow():
-        raise HTTPException(status_code=400, detail="Code OTP expiré. Veuillez demander un nouveau code.")
+        if expires_at < _utcnow():
+            raise HTTPException(status_code=400, detail="Code OTP expiré. Veuillez demander un nouveau code.")
 
-    attempts = int(record.get("attempts") or 0)
+        attempts = int(record.get("attempts") or 0)
 
-    if attempts >= OTP_MAX_ATTEMPTS:
-        raise HTTPException(status_code=429, detail="Nombre maximum de tentatives atteint. Demandez un nouveau code.")
+        if attempts >= OTP_MAX_ATTEMPTS:
+            raise HTTPException(status_code=429, detail="Nombre maximum de tentatives atteint. Demandez un nouveau code.")
 
-    expected = str(record.get("otp_hash") or "")
-    provided = _otp_hash(session_id, phone, otp)
+        expected = str(record.get("otp_hash") or "")
+        provided = _otp_hash(session_id, phone, otp)
 
-    if not secrets.compare_digest(expected, provided):
-        record["attempts"] = attempts + 1
+        if not secrets.compare_digest(expected, provided):
+            record["attempts"] = attempts + 1
+            store[session_id] = record
+            _save_otps(store)
+            raise HTTPException(status_code=400, detail=f"Code OTP incorrect. Tentatives restantes : {max(0, OTP_MAX_ATTEMPTS - record['attempts'])}.")
+
+        # AFB_OTP_VERIFY_RETURN_SESSION_AND_DATE_V1
+        verified_at = _utcnow().isoformat()
+
+        record["verified"] = True
+        record["verified_at"] = verified_at
         store[session_id] = record
         _save_otps(store)
-        raise HTTPException(status_code=400, detail=f"Code OTP incorrect. Tentatives restantes : {max(0, OTP_MAX_ATTEMPTS - record['attempts'])}.")
-
-    # AFB_OTP_VERIFY_RETURN_SESSION_AND_DATE_V1
-    verified_at = _utcnow().isoformat()
-
-    record["verified"] = True
-    record["verified_at"] = verified_at
-    store[session_id] = record
-    _save_otps(store)
 
     return {
         "ok": True,

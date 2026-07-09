@@ -30,6 +30,8 @@ data/*.db
 data/*.sqlite
 data/*.sqlite3
 data/*.sqlite*
+*.db-shm
+*.db-wal
 
 # Uploads
 uploads/
@@ -40,6 +42,10 @@ static/uploads/
 *.bak
 *.bak_*
 *.bak*
+*.backup
+*.backup_*
+*backup_*
+*.BAK*
 *STABLE_*
 *BROKEN_*
 *UNSTABLE_*
