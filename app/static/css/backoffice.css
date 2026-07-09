@@ -1,13 +1,21 @@
-/* Systeme de design partage - Back-office First Diaspora Onboarding */
+/* ============================================================
+   Système de design partagé — Back-office First Diaspora Onboarding
+   BACKOFFICE_PREMIUM_THEME_V1 : refonte visuelle premium.
+   Les noms de classes et les comportements (sticky, burger,
+   media queries, print) sont inchangés — seul le style évolue.
+   ============================================================ */
 
 :root {
     --red: #C90000;
     --red-dark: #9E0000;
+    --red-soft: rgba(201, 0, 0, 0.08);
     --black: #111111;
+    --ink: #0B1220;
     --white: #FFFFFF;
-    --gray-bg: #F4F6F9;
-    --border: #DADDE5;
-    --muted: #6B7280;
+    --gray-bg: #F3F5F9;
+    --border: #E2E6EF;
+    --border-strong: #D3D9E4;
+    --muted: #64748B;
     --green: #166534;
     --green-bg: #DCFCE7;
     --orange: #B45309;
@@ -17,31 +25,72 @@
     --danger: #991B1B;
     --danger-bg: #FEE2E2;
 
-    --radius-sm: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
 
-    --shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 10px 28px rgba(16, 24, 40, 0.07);
+    --shadow-hover: 0 2px 4px rgba(16, 24, 40, 0.06), 0 16px 38px rgba(16, 24, 40, 0.12);
+    --focus-ring: 0 0 0 4px rgba(201, 0, 0, 0.14);
+
+    --font: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
 
 * {
     box-sizing: border-box;
 }
 
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: var(--gray-bg);
-    color: #111827;
+html {
+    scroll-behavior: smooth;
 }
 
-/* Topbar / navigation */
+body {
+    margin: 0;
+    font-family: var(--font);
+    background:
+        radial-gradient(1100px 420px at 85% -140px, rgba(201, 0, 0, 0.05), transparent 60%),
+        var(--gray-bg);
+    color: #101828;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+::selection {
+    background: rgba(201, 0, 0, 0.16);
+}
+
+/* Barres de défilement discrètes */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #C4CBD8 transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: #C4CBD8;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* ------------------------------------------------------------
+   Topbar / navigation
+   ------------------------------------------------------------ */
 
 .topbar {
-    background: var(--black);
+    background: linear-gradient(180deg, #16181D 0%, #0C0D10 100%);
     color: var(--white);
-    padding: 18px 30px;
-    border-bottom: 4px solid var(--red);
+    padding: 14px 30px;
+    border-bottom: 3px solid var(--red);
+    box-shadow: 0 14px 30px rgba(4, 8, 20, 0.28);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -54,41 +103,251 @@ body {
 
 .topbar h2 {
     margin: 0;
-    font-size: 20px;
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+/* BACKOFFICE_TOPBAR_BRAND_V1 — logo Afriland dans le bandeau une fois connecté */
+.topbar .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.topbar .topbar-logo {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 5px 12px;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.topbar .topbar-logo img {
+    width: 120px;
+    height: 44px;
+    object-fit: contain;
+    display: block;
+}
+
+/* Titre sur deux niveaux : plus de tiret séparateur après le logo */
+.topbar .topbar-titles {
+    min-width: 0;
+}
+
+.topbar .topbar-titles h2 {
+    margin: 0;
+    line-height: 1.15;
+}
+
+.topbar .topbar-subtitle {
+    margin: 2px 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.35px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 900px) {
+    .topbar .topbar-brand h2 {
+        font-size: 15px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .topbar .topbar-logo img {
+        width: 90px;
+        height: 34px;
+    }
 }
 
 .topbar nav {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 4px;
 }
 
 .topbar nav a {
-    color: white;
+    color: rgba(255, 255, 255, 0.78);
     text-decoration: none;
-    margin-left: 6px;
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    font-weight: bold;
-    font-size: 14px;
-    opacity: 0.85;
+    margin-left: 4px;
+    padding: 9px 13px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13.5px;
+    letter-spacing: 0.1px;
+    border: 1px solid transparent;
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
 }
 
 .topbar nav a:hover {
-    opacity: 1;
-    background: rgba(255, 255, 255, 0.08);
+    color: var(--white);
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(255, 255, 255, 0.10);
 }
 
 .topbar nav a.active {
-    opacity: 1;
-    background: var(--red);
+    color: var(--white);
+    background: linear-gradient(135deg, #E01414, var(--red-dark));
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 18px rgba(201, 0, 0, 0.38);
 }
 
-/* Layout */
+/* BACKOFFICE_TOPBAR_USER_V1 — utilisateur de session affiché dans le bandeau.
+   BACKOFFICE_TOPBAR_PROFILE_RIGHT_V1 : le profil est poussé à l'extrême droite. */
+.topbar .topbar-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 18px;
+    padding: 8px 13px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--white);
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+/* BACKOFFICE_TOPBAR_PROFILE_RIGHT_V1 — icône de déconnexion */
+.topbar .logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    margin-left: 6px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+    flex: 0 0 auto;
+}
+
+.topbar .logout-btn:hover {
+    color: var(--white);
+    background: linear-gradient(135deg, #E01414, var(--red-dark));
+    border-color: rgba(255, 255, 255, 0.20);
+    box-shadow: 0 8px 18px rgba(201, 0, 0, 0.38);
+}
+
+.topbar .logout-btn svg {
+    display: block;
+}
+
+/* BACKOFFICE_MOBILE_BURGER_V1 — menu hamburger en vue mobile */
+.topbar .nav-toggle {
+    display: none;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-radius: 12px;
+    padding: 8px 10px;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background 0.16s ease;
+}
+
+.topbar .nav-toggle:hover {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.topbar .nav-toggle span {
+    display: block;
+    width: 22px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--white);
+    margin: 4px 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.topbar .nav-toggle[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.topbar .nav-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+}
+
+.topbar .nav-toggle[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+@media (max-width: 900px) {
+    .topbar {
+        flex-wrap: nowrap;
+    }
+
+    .topbar h2 {
+        font-size: 16px;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Burger collé au bord droit du bandeau */
+    .topbar .nav-toggle {
+        display: block;
+        order: 99;
+        margin-left: auto;
+    }
+
+    /* Le menu devient un panneau déroulant sous le bandeau sticky */
+    .topbar nav {
+        display: none;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        background: linear-gradient(180deg, #16181D 0%, #0C0D10 100%);
+        border-bottom: 3px solid var(--red);
+        box-shadow: 0 24px 38px rgba(4, 8, 20, 0.45);
+        padding: 14px 18px 18px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .topbar nav.open {
+        display: flex;
+    }
+
+    .topbar nav a {
+        margin-left: 0;
+        text-align: center;
+        font-size: 15px;
+        padding: 12px 14px;
+        color: var(--white);
+    }
+
+    .topbar .topbar-user {
+        margin-left: 0;
+        justify-content: center;
+    }
+
+    .topbar .logout-btn {
+        margin-left: 0;
+        align-self: center;
+    }
+}
+
+/* ------------------------------------------------------------
+   Layout
+   ------------------------------------------------------------ */
 
 .container {
     max-width: 1250px;
-    margin: 25px auto;
+    margin: 28px auto;
     padding: 0 18px;
 }
 
@@ -96,27 +355,42 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 18px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
     gap: 12px;
 }
 
 .page-title h1 {
     margin: 0;
-    color: var(--red);
-    font-size: 28px;
+    color: var(--ink);
+    font-size: 27px;
+    font-weight: 800;
+    letter-spacing: -0.4px;
+}
+
+.page-title h1::after {
+    content: "";
+    display: block;
+    width: 46px;
+    height: 4px;
+    border-radius: 4px;
+    margin-top: 8px;
+    background: linear-gradient(90deg, var(--red), #F0A5A5);
 }
 
 .page-title p {
     color: var(--muted);
-    margin: 6px 0 0 0;
+    margin: 8px 0 0 0;
+    font-size: 14.5px;
+    line-height: 1.55;
 }
 
 .header-card {
-    background: white;
+    background: var(--white);
+    border: 1px solid var(--border);
     border-left: 6px solid var(--red);
     border-radius: var(--radius-lg);
-    padding: 22px;
+    padding: 22px 24px;
     box-shadow: var(--shadow);
     margin-bottom: 18px;
 }
@@ -124,94 +398,151 @@ body {
 .header-card h1 {
     margin: 0;
     color: var(--red);
+    letter-spacing: -0.3px;
 }
 
 .header-card p {
     color: var(--muted);
     margin-bottom: 0;
-    line-height: 1.5;
+    line-height: 1.55;
 }
 
-/* Buttons */
+/* ------------------------------------------------------------
+   Buttons
+   ------------------------------------------------------------ */
 
 .btn {
-    background: var(--red);
+    background: linear-gradient(135deg, #E01414, var(--red-dark));
     color: white;
     border: none;
     border-radius: var(--radius-sm);
-    padding: 11px 16px;
+    padding: 11px 18px;
     cursor: pointer;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 700;
     font-size: 14px;
+    font-family: inherit;
     display: inline-block;
+    box-shadow: 0 8px 18px rgba(201, 0, 0, 0.24);
+    transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
 }
 
 .btn:hover {
-    background: var(--red-dark);
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(201, 0, 0, 0.30);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 5px 12px rgba(201, 0, 0, 0.24);
+}
+
+.btn:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
 }
 
 .btn-dark {
-    background: #111827;
+    background: linear-gradient(135deg, #1F2937, #0B1220);
+    box-shadow: 0 8px 18px rgba(11, 18, 32, 0.28);
 }
 
 .btn-dark:hover {
-    background: #000;
+    filter: brightness(1.15);
+    box-shadow: 0 12px 24px rgba(11, 18, 32, 0.34);
 }
 
 .btn-muted {
-    background: #6B7280;
+    background: linear-gradient(135deg, #6B7280, #4B5563);
+    box-shadow: 0 8px 18px rgba(75, 85, 99, 0.26);
 }
 
 .btn-muted:hover {
-    background: #4B5563;
+    filter: brightness(1.08);
 }
 
 .btn-danger {
-    background: var(--danger);
+    background: linear-gradient(135deg, #B91C1C, #7F1D1D);
+    box-shadow: 0 8px 18px rgba(153, 27, 27, 0.28);
 }
 
 .btn-danger:hover {
-    background: #7F1D1D;
+    filter: brightness(1.08);
 }
 
-/* Cards / panels */
+/* ------------------------------------------------------------
+   Cards / panels
+   ------------------------------------------------------------ */
 
 .cards {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 14px;
-    margin-bottom: 22px;
+    margin-bottom: 24px;
 }
 
 .card {
-    background: white;
+    position: relative;
+    background: var(--white);
     border-radius: var(--radius-lg);
     padding: 18px;
     box-shadow: var(--shadow);
-    border: 1px solid #EEF0F5;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.16s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border-strong);
+}
+
+.card:hover::before {
+    opacity: 1;
 }
 
 .card span {
     color: var(--muted);
-    font-size: 13px;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
 }
 
 .card strong {
     display: block;
-    font-size: 28px;
+    font-size: 30px;
     margin-top: 8px;
+    font-weight: 800;
+    letter-spacing: -0.6px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
 }
 
 .panel {
-    background: white;
+    background: var(--white);
     border-radius: var(--radius-lg);
-    padding: 20px;
+    padding: 22px;
     box-shadow: var(--shadow);
-    border: 1px solid #EEF0F5;
+    border: 1px solid var(--border);
 }
 
-/* Forms */
+/* ------------------------------------------------------------
+   Forms
+   ------------------------------------------------------------ */
 
 .filters {
     display: grid;
@@ -222,37 +553,67 @@ body {
 
 input, select, textarea {
     width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border);
+    padding: 11px 13px;
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius-sm);
     font-size: 14px;
     font-family: inherit;
+    background: var(--white);
+    color: inherit;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Tables */
+input::placeholder, textarea::placeholder {
+    color: #9AA3B2;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--red);
+    box-shadow: var(--focus-ring);
+}
+
+/* ------------------------------------------------------------
+   Tables
+   ------------------------------------------------------------ */
 
 table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 th {
-    background: var(--black);
-    color: white;
-    padding: 13px 10px;
+    background: linear-gradient(180deg, #1A1D24, #101318);
+    color: rgba(255, 255, 255, 0.92);
+    padding: 13px 12px;
     text-align: left;
-    font-size: 13px;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+th:first-child {
+    border-top-left-radius: var(--radius-sm);
+}
+
+th:last-child {
+    border-top-right-radius: var(--radius-sm);
 }
 
 td {
-    padding: 12px 10px;
+    padding: 13px 12px;
     border-bottom: 1px solid var(--border);
     font-size: 14px;
     vertical-align: top;
+    background: transparent;
+    transition: background 0.12s ease;
 }
 
 tr:hover td {
-    background: #FAFAFA;
+    background: #FAF6F6;
 }
 
 .muted {
@@ -260,15 +621,19 @@ tr:hover td {
     font-size: 12px;
 }
 
-/* Badges */
+/* ------------------------------------------------------------
+   Badges & scores
+   ------------------------------------------------------------ */
 
 .badge {
-    padding: 5px 9px;
-    border-radius: 20px;
+    padding: 5px 11px;
+    border-radius: 999px;
     font-size: 11px;
-    font-weight: bold;
+    font-weight: 700;
+    letter-spacing: 0.25px;
     display: inline-block;
     white-space: nowrap;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 
 .badge-active {
@@ -307,7 +672,8 @@ tr:hover td {
 }
 
 .score {
-    font-weight: bold;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
 }
 
 .score-good {
@@ -322,21 +688,25 @@ tr:hover td {
     color: #991B1B;
 }
 
-/* States */
+/* ------------------------------------------------------------
+   States
+   ------------------------------------------------------------ */
 
 .empty {
-    padding: 25px;
+    padding: 28px;
     text-align: center;
     color: var(--muted);
 }
 
 .loading {
     color: var(--muted);
-    font-weight: bold;
+    font-weight: 600;
     padding: 20px 0;
 }
 
-/* Responsive */
+/* ------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------ */
 
 @media (max-width: 1050px) {
     .cards {
@@ -349,15 +719,8 @@ tr:hover td {
 }
 
 @media (max-width: 750px) {
-    .topbar {
-        flex-direction: column;
-        gap: 12px;
-        text-align: center;
-    }
-
-    .topbar nav a {
-        margin-left: 0;
-    }
+    /* (le bandeau reste en ligne : la navigation mobile passe par le burger,
+       voir BACKOFFICE_MOBILE_BURGER_V1 dans la media query 900px) */
 
     .cards {
         grid-template-columns: 1fr;

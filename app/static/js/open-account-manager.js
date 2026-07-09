@@ -832,6 +832,9 @@ const API_BASE = "";
 
     // AFB_STEP0_HANDOFF_BANNER_V1 — confirme la reprise des données de pré-inscription
     (function showStep0HandoffBanner() {
+        // AFB_CLIENT_VIEW_CLEAN_V1 : bannière désactivée pour épurer la vue client.
+        return;
+
         const form = document.getElementById("accountForm");
         if (!form || document.getElementById("step0HandoffBanner")) return;
 
@@ -9324,6 +9327,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const banner = document.createElement("div");
         banner.id = "managerAccountTypeBanner";
         banner.className = "manager-account-type-banner";
+        // AFB_CLIENT_VIEW_CLEAN_V1 : carte masquée pour épurer la vue client ;
+        // les champs cachés (type de compte) restent injectés plus bas.
+        banner.style.display = "none";
 
         if (type === "BUSINESS") {
             banner.innerHTML = `
@@ -9507,6 +9513,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function insertPrefillBanner(count, prefill) {
+        // AFB_CLIENT_VIEW_CLEAN_V1 : bannière de préremplissage désactivée pour
+        // épurer la vue client (le préremplissage des champs reste actif).
+        return;
+
         if (document.getElementById("ocrPrefillBanner")) return;
 
         const form = document.querySelector("form");
@@ -9529,7 +9539,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function applyOcrPrefill() {
         const store = getOcrStore();
-        const prefill = store.prefill || {};
+        // AFB_OCR_PREFILL_KEY_FIX_V1 : la page de pré-onboarding écrit les champs
+        // fusionnés sous `extracted_fields` — `prefill` n'a jamais existé côté
+        // producteur, ce qui laissait le formulaire vide.
+        const prefill = store.prefill || store.extracted_fields || {};
 
         if (!prefill || Object.keys(prefill).length === 0) {
             console.log("Aucune donnée OCR à préremplir.");
@@ -9849,7 +9862,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function applyOcrPrefillV2() {
         const store = getOcrStoreV2();
-        const prefill = store.prefill || {};
+        // AFB_OCR_PREFILL_KEY_FIX_V1 : même correction que le module V1 —
+        // les champs OCR sont stockés sous `extracted_fields`.
+        const prefill = store.prefill || store.extracted_fields || {};
 
         if (!prefill || Object.keys(prefill).length === 0) {
             console.log("OCR V2 : aucune donnée disponible.");
@@ -10204,6 +10219,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if (hiddenInput) {
         hiddenInput.value = sessionId;
       }
+
+      // AFB_CLIENT_VIEW_CLEAN_V1 : la carte « Documents préchargés » reste masquée
+      // pour épurer la vue client ; le rattachement des documents passe toujours
+      // par le champ caché pre_onboarding_session_id.
+      return;
 
       if (!box || !message || !list) {
         return;
@@ -13945,3 +13965,150 @@ document.addEventListener("DOMContentLoaded", function () {
 
     window.addEventListener("focus", refreshPreloadedDocuments);
 })();
+
+;/* ==== AFB_OCR_PRIORITY_OVER_DRAFT_V1 ====
+   Le préremplissage OCR des documents a priorité sur le brouillon local :
+   après les modules OCR V1/V2 (700/1400 ms) et la restauration du brouillon
+   (immédiate), ce module force les valeurs OCR sur les champs d'identité.
+   Si le brouillon contenait d'autres valeurs, une option « Utiliser les
+   données du brouillon » est proposée pour les rétablir. */
+
+document.addEventListener("DOMContentLoaded", function () {
+    if (window.afbOcrPriorityOverDraftInstalled === true) return;
+    window.afbOcrPriorityOverDraftInstalled = true;
+
+    const OCR_KEY = "diaspora_pre_onboarding_ocr";
+
+    function readJson(key) {
+        try {
+            return JSON.parse(localStorage.getItem(key) || "null");
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function isEn() {
+        return localStorage.getItem("diaspora_client_lang") === "en";
+    }
+
+    function normalizeDate(value) {
+        const v = String(value || "").trim();
+        const m = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+        return v;
+    }
+
+    function getField(key) {
+        return document.querySelector(`[name="${key}"]`) || document.getElementById(key);
+    }
+
+    function setValue(el, value) {
+        el.value = value;
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+        el.classList.add("ocr-prefilled-field");
+    }
+
+    function buildNotice(conflicts) {
+        const form = document.getElementById("accountForm");
+        if (!form || document.getElementById("ocrDraftChoiceNotice")) return;
+
+        const notice = document.createElement("div");
+        notice.id = "ocrDraftChoiceNotice";
+        notice.style.cssText =
+            "background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;" +
+            "padding:12px 16px;margin:0 0 18px;display:flex;justify-content:space-between;" +
+            "align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;color:#1e3a8a;";
+
+        const message = document.createElement("span");
+        const button = document.createElement("button");
+        button.type = "button";
+        button.style.cssText =
+            "background:none;border:1px solid #1d4ed8;color:#1d4ed8;border-radius:8px;" +
+            "padding:6px 12px;cursor:pointer;font-weight:bold;";
+
+        let usingOcr = true;
+
+        function refreshLabels() {
+            if (usingOcr) {
+                message.textContent = isEn()
+                    ? `OCR prefill from your documents was prioritized for ${conflicts.length} field(s) over your saved draft.`
+                    : `Le préremplissage OCR de vos documents a été privilégié pour ${conflicts.length} champ(s) par rapport à votre brouillon.`;
+                button.textContent = isEn() ? "Use my draft data" : "Utiliser les données du brouillon";
+            } else {
+                message.textContent = isEn()
+                    ? "Your draft data was restored for those fields."
+                    : "Les données de votre brouillon ont été rétablies pour ces champs.";
+                button.textContent = isEn() ? "Reapply text extraction prefill" : "Réappliquer le préremplissage par extraction de texte";
+            }
+        }
+
+        button.addEventListener("click", function () {
+            conflicts.forEach(function (item) {
+                const el = getField(item.key);
+                if (!el) return;
+                setValue(el, usingOcr ? item.draftValue : item.ocrValue);
+                if (usingOcr) el.classList.remove("ocr-prefilled-field");
+            });
+            usingOcr = !usingOcr;
+            refreshLabels();
+        });
+
+        refreshLabels();
+        notice.appendChild(message);
+        notice.appendChild(button);
+        form.parentElement.insertBefore(notice, form);
+    }
+
+    function run() {
+        const store = readJson(OCR_KEY) || {};
+        const prefill = store.prefill || store.extracted_fields || {};
+        if (!prefill || Object.keys(prefill).length === 0) return;
+
+        const mapping = [
+            ["last_name", prefill.last_name || prefill.surname, false],
+            ["first_name", prefill.first_name || prefill.given_names, false],
+            ["birth_date", prefill.birth_date, true],
+            ["birth_place", prefill.place_of_birth || prefill.birth_place, false],
+            [
+                "identity_document_number",
+                prefill.identity_document_number || prefill.cni_number || prefill.passport_number,
+                false
+            ]
+        ];
+
+        const conflicts = [];
+
+        mapping.forEach(function (entry) {
+            const key = entry[0];
+            let value = entry[1];
+            if (value === undefined || value === null || value === "") return;
+            if (entry[2]) value = normalizeDate(value);
+            value = String(value);
+
+            const el = getField(key);
+            if (!el) return;
+
+            const current = String(el.value || "").trim();
+            if (current === value) return;
+
+            // La valeur en place vient du brouillon (restauré au chargement)
+            // ou d'une saisie précédente : l'OCR a priorité, mais on garde la
+            // valeur pour proposer le retour au brouillon.
+            if (current) {
+                conflicts.push({ key: key, draftValue: current, ocrValue: value });
+            }
+
+            setValue(el, value);
+        });
+
+        if (conflicts.length > 0) {
+            buildNotice(conflicts);
+        }
+    }
+
+    // Après la restauration du brouillon (0 ms) et les modules OCR (700/1400 ms).
+    setTimeout(run, 2000);
+
+    console.log("AFB_OCR_PRIORITY_OVER_DRAFT_V1 actif.");
+});

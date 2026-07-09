@@ -1,0 +1,320 @@
+{% extends "backoffice_base.html" %}
+
+{% block title %}Back-office - Utilisateurs et rôles{% endblock %}
+
+{% block extra_style %}
+<style>
+/* BACKOFFICE_USERS_PAGE_V1 */
+.users-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 18px;
+    align-items: start;
+}
+
+.users-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.users-actions .btn,
+.users-actions .btn-muted,
+.users-actions .btn-danger {
+    padding: 7px 10px;
+    font-size: 12px;
+}
+
+.role-select {
+    width: auto;
+    padding: 7px 9px;
+    font-size: 13px;
+}
+
+.create-form label {
+    display: block;
+    font-weight: bold;
+    font-size: 13px;
+    margin: 12px 0 5px;
+}
+
+.create-form .form-error {
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.create-form .form-success {
+    color: var(--green);
+    font-size: 13px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.users-feedback {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.users-feedback.error { color: var(--danger); }
+.users-feedback.success { color: var(--green); }
+
+@media (max-width: 900px) {
+    .users-layout {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <div class="page-title">
+        <div>
+            <h1>Utilisateurs et rôles</h1>
+            <p>Gestion des comptes back-office : Administrateur, GFC, Directeur d'Agence, Conformité.</p>
+        </div>
+    </div>
+
+    <div class="users-layout">
+        <div class="panel">
+            <p class="users-feedback" id="usersFeedback"></p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Identifiant</th>
+                        <th>Nom complet</th>
+                        <th>Rôle</th>
+                        <th>Statut</th>
+                        <th>Dernière connexion</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <tr><td colspan="6" class="muted">Chargement...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="panel create-form">
+            <h3 style="margin-top:0;">Créer un utilisateur</h3>
+
+            <form id="createUserForm">
+                <label for="newUsername">Identifiant</label>
+                <input id="newUsername" name="username" type="text" placeholder="ex : j.mballa" autocomplete="off" required>
+
+                <label for="newFullName">Nom complet</label>
+                <input id="newFullName" name="full_name" type="text" placeholder="ex : Jean MBALLA">
+
+                <label for="newRole">Rôle</label>
+                <select id="newRole" name="role" required></select>
+
+                <label for="newPassword">Mot de passe initial</label>
+                <input id="newPassword" name="password" type="password" placeholder="8 caractères minimum" autocomplete="new-password" required>
+
+                <div style="margin-top:16px;">
+                    <button type="submit" class="btn">Créer l'utilisateur</button>
+                </div>
+
+                <p class="form-error" id="createError"></p>
+                <p class="form-success" id="createSuccess"></p>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* BACKOFFICE_USERS_PAGE_V1 — gestion des utilisateurs et des rôles */
+(function () {
+    const tableBody = document.getElementById("usersTableBody");
+    const feedback = document.getElementById("usersFeedback");
+    const createForm = document.getElementById("createUserForm");
+    const createError = document.getElementById("createError");
+    const createSuccess = document.getElementById("createSuccess");
+    const roleSelect = document.getElementById("newRole");
+
+    let roles = [];
+
+    function escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+    function setFeedback(message, isError) {
+        feedback.textContent = message || "";
+        feedback.className = "users-feedback " + (isError ? "error" : "success");
+    }
+
+    async function apiCall(url, options) {
+        const response = await fetch(url, Object.assign({
+            headers: { "Content-Type": "application/json" },
+            cache: "no-store"
+        }, options || {}));
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Erreur lors de l'appel à l'API.");
+        }
+
+        return data;
+    }
+
+    function formatDate(value) {
+        if (!value) return "—";
+        const date = new Date(value);
+        if (isNaN(date.getTime())) return escapeHtml(value);
+        return date.toLocaleString("fr-FR");
+    }
+
+    function roleOptions(selected) {
+        return roles.map(role =>
+            `<option value="${escapeHtml(role.code)}" ${role.code === selected ? "selected" : ""}>${escapeHtml(role.label)}</option>`
+        ).join("");
+    }
+
+    function renderUsers(users) {
+        if (!users.length) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="muted">Aucun utilisateur.</td></tr>`;
+            return;
+        }
+
+        tableBody.innerHTML = users.map(user => `
+            <tr>
+                <td><strong>${escapeHtml(user.username)}</strong></td>
+                <td>${escapeHtml(user.full_name || "—")}</td>
+                <td>
+                    <select class="role-select" data-user-id="${user.id}" data-current-role="${escapeHtml(user.role)}">
+                        ${roleOptions(user.role)}
+                    </select>
+                </td>
+                <td>
+                    <span class="badge ${user.active ? "badge-active" : "badge-inactive"}">
+                        ${user.active ? "Actif" : "Désactivé"}
+                    </span>
+                </td>
+                <td>${formatDate(user.last_login_at)}</td>
+                <td>
+                    <div class="users-actions">
+                        <button type="button" class="${user.active ? "btn-danger" : "btn"}" data-action="toggle" data-user-id="${user.id}" data-active="${user.active}">
+                            ${user.active ? "Désactiver" : "Réactiver"}
+                        </button>
+                        <button type="button" class="btn-muted" data-action="password" data-user-id="${user.id}" data-username="${escapeHtml(user.username)}">
+                            Réinitialiser le mot de passe
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join("");
+    }
+
+    async function loadUsers() {
+        try {
+            const data = await apiCall("/api/backoffice/users");
+            renderUsers(data.users || []);
+        } catch (error) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(error.message)}</td></tr>`;
+        }
+    }
+
+    async function loadRoles() {
+        const data = await apiCall("/api/backoffice/users/roles");
+        roles = data.roles || [];
+        roleSelect.innerHTML = roleOptions("GFC");
+    }
+
+    async function patchUser(userId, payload, successMessage) {
+        try {
+            await apiCall(`/api/backoffice/users/${userId}`, {
+                method: "PATCH",
+                body: JSON.stringify(payload)
+            });
+            setFeedback(successMessage, false);
+        } catch (error) {
+            setFeedback(error.message, true);
+        }
+        await loadUsers();
+    }
+
+    tableBody.addEventListener("change", function (event) {
+        const select = event.target.closest(".role-select");
+        if (!select) return;
+
+        const userId = select.dataset.userId;
+        const newRole = select.value;
+
+        patchUser(userId, { role: newRole }, "Rôle mis à jour.");
+    });
+
+    tableBody.addEventListener("click", function (event) {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+
+        const userId = button.dataset.userId;
+
+        if (button.dataset.action === "toggle") {
+            const currentlyActive = button.dataset.active === "true";
+            patchUser(
+                userId,
+                { active: !currentlyActive },
+                currentlyActive ? "Compte désactivé (sessions fermées)." : "Compte réactivé."
+            );
+        }
+
+        if (button.dataset.action === "password") {
+            const newPassword = window.prompt(
+                `Nouveau mot de passe pour « ${button.dataset.username} » (8 caractères minimum) :`
+            );
+
+            if (newPassword === null) return;
+
+            patchUser(userId, { password: newPassword }, "Mot de passe réinitialisé.");
+        }
+    });
+
+    createForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        createError.textContent = "";
+        createSuccess.textContent = "";
+
+        try {
+            const data = await apiCall("/api/backoffice/users", {
+                method: "POST",
+                body: JSON.stringify({
+                    username: document.getElementById("newUsername").value,
+                    full_name: document.getElementById("newFullName").value,
+                    role: roleSelect.value,
+                    password: document.getElementById("newPassword").value
+                })
+            });
+
+            createSuccess.textContent = `Utilisateur « ${data.user.username} » créé.`;
+            createForm.reset();
+            roleSelect.innerHTML = roleOptions("GFC");
+            await loadUsers();
+        } catch (error) {
+            createError.textContent = error.message;
+        }
+    });
+
+    (async function init() {
+        try {
+            await loadRoles();
+            await loadUsers();
+        } catch (error) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="muted">${escapeHtml(error.message)}</td></tr>`;
+        }
+    })();
+})();
+</script>
+{% endblock %}

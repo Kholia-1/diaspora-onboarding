@@ -815,22 +815,6 @@ DEFAULT_API_INTEGRATIONS = [
         "notes": "Ne jamais stocker ni manipuler les numéros de carte dans l’application."
     },
     {
-        "code": "CORE_BANKING",
-        "name": "Core Banking / CBS",
-        "description": "Création du compte, génération du numéro de compte, génération du RIB, activation package.",
-        "enabled": False,
-        "environment": "INTERNAL",
-        "provider": "BANK_CORE",
-        "base_url": "",
-        "auth_type": "OAUTH2",
-        "api_key": "",
-        "client_id": "",
-        "client_secret": "",
-        "webhook_url": "",
-        "callback_url": "",
-        "notes": "À connecter au système bancaire central validé par la banque."
-    },
-    {
         "code": "BLACKMODULE",
         "name": "BLACKMODULE conformité",
         "description": "Screening sanctions, PPE, listes internes et résultat conformité.",
@@ -845,22 +829,6 @@ DEFAULT_API_INTEGRATIONS = [
         "webhook_url": "",
         "callback_url": "",
         "notes": "Intégration avec le moteur de filtrage conformité."
-    },
-    {
-        "code": "GED",
-        "name": "GED / archivage documentaire",
-        "description": "Archivage des pièces client : CNI, passeport, justificatifs, vidéo, photo.",
-        "enabled": False,
-        "environment": "INTERNAL",
-        "provider": "GED",
-        "base_url": "",
-        "auth_type": "API_KEY",
-        "api_key": "",
-        "client_id": "",
-        "client_secret": "",
-        "webhook_url": "",
-        "callback_url": "",
-        "notes": "Prévoir politique de conservation et droits d’accès."
     }
 ]
 

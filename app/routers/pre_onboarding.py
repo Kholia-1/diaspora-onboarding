@@ -849,7 +849,10 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
             "BIRTH",
             "NE LE",
             "NEE LE",
-            "DOB"
+            "DOB",
+            # AFB_OCR_NOISY_LABELS_V1 : l'OCR colle souvent les libellés
+            # (« DAYEDENAISSANCE ») — le mot seul suffit en sous-chaîne.
+            "NAISSANCE"
         ]
     )
 
@@ -914,7 +917,11 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
         ]
     )
 
-    if occupation:
+    # AFB_OCR_NOISY_LABELS_V1 : rejeter les valeurs qui sont en réalité des
+    # résidus du libellé de la carte (« CARTE NATIONALE D'IDENTITE » collé).
+    if occupation and not re.search(
+        r"IDENTIT|NATIONALE|NATIONAL\s*ID|REPUBLI", normalize_text(occupation)
+    ):
         fields["profession"] = occupation
 
     # Numéros document
@@ -926,6 +933,21 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
             fields["identity_document_number"] = passport_number
 
     cni_number = v2_extract_cni_number(ocr_text)
+
+    # AFB_CNI_NUMBER_FALLBACK_NO_LABEL_V1 : sur les scans bruités les libellés
+    # (« NIC NUMBER », « IDENTIFIANT UNIQUE ») sont détruits par l'OCR. Pour un
+    # document explicitement CNI, on repêche le numéro sans libellé :
+    # - identifiant unique nouvelle CNI (2024) : 17 chiffres commençant par 20 ;
+    # - ancienne CNI : un nombre isolé de 9 chiffres, uniquement s'il est le
+    #   seul candidat (on ne devine pas entre plusieurs).
+    if not cni_number and "CNI" in normalized_doc:
+        m = re.search(r"\b(20\d{15})\b", normalized_text)
+        if m:
+            cni_number = m.group(1)
+        else:
+            nine_digit_candidates = sorted(set(re.findall(r"\b(\d{9})\b", normalized_text)))
+            if len(nine_digit_candidates) == 1:
+                cni_number = nine_digit_candidates[0]
 
     if cni_number:
         fields["cni_number"] = cni_number

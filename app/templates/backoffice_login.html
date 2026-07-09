@@ -16,31 +16,49 @@
             --muted: #6B7280;
         }
 
+        /* BACKOFFICE_LOGIN_PREMIUM_V1 — même langage visuel que le back-office */
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: var(--gray-bg);
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background:
+                radial-gradient(900px 460px at 80% -120px, rgba(201, 0, 0, 0.22), transparent 62%),
+                radial-gradient(700px 420px at -10% 110%, rgba(201, 0, 0, 0.10), transparent 60%),
+                linear-gradient(160deg, #14161B 0%, #0B0C0F 100%);
             color: #111827;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
+        ::selection {
+            background: rgba(201, 0, 0, 0.25);
+            color: #fff;
+        }
+
         .header {
-            background: var(--black);
+            background: rgba(10, 11, 14, 0.65);
+            backdrop-filter: blur(8px);
             color: var(--white);
-            padding: 18px 30px;
-            border-bottom: 4px solid var(--red);
+            padding: 16px 30px;
+            border-bottom: 3px solid var(--red);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 12px;
+        }
+
+        .header strong {
+            font-weight: 700;
+            letter-spacing: 0.2px;
         }
 
         .header img {
-            height: 34px;
+            height: 38px;
             background: var(--white);
-            border-radius: 8px;
-            padding: 4px 10px;
+            border-radius: 10px;
+            padding: 5px 12px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
         }
 
         .wrap {
@@ -53,61 +71,99 @@
 
         .card {
             background: var(--white);
-            border-radius: 14px;
-            padding: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 20px;
+            padding: 36px 32px;
             width: 100%;
-            max-width: 380px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            max-width: 400px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
         }
 
         h1 {
             margin: 0 0 6px;
-            color: var(--red);
-            font-size: 22px;
+            color: #0B1220;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
+        }
+
+        h1::after {
+            content: "";
+            display: block;
+            width: 44px;
+            height: 4px;
+            border-radius: 4px;
+            margin-top: 10px;
+            background: linear-gradient(90deg, var(--red), #F0A5A5);
         }
 
         .subtitle {
             color: var(--muted);
-            font-size: 14px;
-            margin: 0 0 22px;
+            font-size: 13.5px;
+            line-height: 1.55;
+            margin: 14px 0 24px;
         }
 
         label {
             display: block;
-            font-weight: bold;
-            font-size: 14px;
+            font-weight: 700;
+            font-size: 13px;
             margin-bottom: 6px;
+            color: #1F2937;
         }
 
         input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            padding: 12px 14px;
+            border: 1px solid #D3D9E4;
+            border-radius: 10px;
             box-sizing: border-box;
             margin-bottom: 16px;
-            font-size: 16px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--red);
+            box-shadow: 0 0 0 4px rgba(201, 0, 0, 0.14);
         }
 
         button {
             width: 100%;
-            background: var(--red);
+            background: linear-gradient(135deg, #E01414, var(--red-dark));
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 13px 16px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 700;
             font-size: 15px;
+            font-family: inherit;
+            box-shadow: 0 10px 22px rgba(201, 0, 0, 0.35);
+            transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
         }
 
         button:hover {
-            background: var(--red-dark);
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 28px rgba(201, 0, 0, 0.42);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(201, 0, 0, 0.30);
         }
 
         button:disabled {
             opacity: 0.6;
             cursor: wait;
+            transform: none;
         }
 
         .error {

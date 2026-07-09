@@ -30,6 +30,15 @@ def _require_backoffice_page(request: Request):
     return None
 
 
+# BACKOFFICE_PAGE_USER_CONTEXT_V1 — expose l'utilisateur de session aux templates
+def _backoffice_page_or_redirect(request: Request):
+    """Renvoie (redirect, user) : redirection vers le login si non authentifié."""
+    user = _backoffice_user_or_none(request)
+    if user is None:
+        return RedirectResponse(url="/backoffice/login", status_code=303), None
+    return None, user
+
+
 @router.get("/backoffice/login")
 def backoffice_login_page(request: Request):
     if _backoffice_user_or_none(request) is not None:
@@ -80,13 +89,14 @@ def client_open_account(request: Request):
 
 @router.get("/backoffice/applications")
 def backoffice_applications(request: Request):
-    redirect = _require_backoffice_page(request)
+    redirect, user = _backoffice_page_or_redirect(request)
     if redirect:
         return redirect
 
     return templates.TemplateResponse(
         request,
-        "backoffice_applications.html"
+        "backoffice_applications.html",
+        {"backoffice_user": user}
     )
 
 
@@ -96,7 +106,7 @@ def backoffice_application_detail(request: Request, application_id: str, db: Ses
     Affiche le détail d'un dossier back-office.
     Accepte soit l'ID numérique interne, soit la référence publique DIA-...
     """
-    redirect = _require_backoffice_page(request)
+    redirect, user = _backoffice_page_or_redirect(request)
     if redirect:
         return redirect
 
@@ -144,45 +154,66 @@ def backoffice_application_detail(request: Request, application_id: str, db: Ses
         {
             "request": request,
             "application_id": raw,
-            "application": application
+            "application": application,
+            "backoffice_user": user
         }
     )
 
 
 @router.get("/backoffice/agencies")
 def backoffice_agencies(request: Request):
-    redirect = _require_backoffice_page(request)
+    redirect, user = _backoffice_page_or_redirect(request)
     if redirect:
         return redirect
 
     return templates.TemplateResponse(
         request,
-        "backoffice_agencies.html"
+        "backoffice_agencies.html",
+        {"backoffice_user": user}
     )
 
 
 # BACKOFFICE_AUDIT_LOGS_PAGE_V1
 @router.get("/backoffice/audit-logs")
 def backoffice_audit_logs(request: Request):
-    redirect = _require_backoffice_page(request)
+    redirect, user = _backoffice_page_or_redirect(request)
     if redirect:
         return redirect
 
     return templates.TemplateResponse(
         request,
-        "backoffice_audit_logs.html"
+        "backoffice_audit_logs.html",
+        {"backoffice_user": user}
     )
 
 @router.get("/backoffice/nationalities")
 def backoffice_nationalities(request: Request):
-    redirect = _require_backoffice_page(request)
+    redirect, user = _backoffice_page_or_redirect(request)
     if redirect:
         return redirect
 
     return templates.TemplateResponse(
         request,
-        "backoffice_nationalities.html"
+        "backoffice_nationalities.html",
+        {"backoffice_user": user}
     )
+
+# BACKOFFICE_USERS_PAGE_V1 — gestion des utilisateurs et rôles (réservée ADMIN)
+@router.get("/backoffice/users")
+def backoffice_users_page(request: Request):
+    redirect, user = _backoffice_page_or_redirect(request)
+    if redirect:
+        return redirect
+
+    if user.role != "ADMIN":
+        return RedirectResponse(url="/backoffice/applications", status_code=303)
+
+    return templates.TemplateResponse(
+        request,
+        "backoffice_users.html",
+        {"backoffice_user": user}
+    )
+
 
 @router.get("/client/status")
 def client_status(request: Request):
@@ -212,11 +243,15 @@ async def client_open_account_page(request: Request):
 
 @router.get("/backoffice/packages")
 async def backoffice_packages_page(request: Request):
-    redirect = _require_backoffice_page(request)
+    redirect, user = _backoffice_page_or_redirect(request)
     if redirect:
         return redirect
 
-    return templates.TemplateResponse(request, "backoffice_packages.html", {"request": request})
+    return templates.TemplateResponse(
+        request,
+        "backoffice_packages.html",
+        {"request": request, "backoffice_user": user}
+    )
 
 
 @router.get("/open-account-test")
@@ -310,13 +345,13 @@ async def card_reload_page(request: Request):
 # BACKOFFICE_API_INTEGRATIONS_PAGE_JINJA_V6 — le template étend backoffice_base.html
 @router.get("/backoffice/api-integrations")
 def backoffice_api_integrations_page(request: Request):
-    redirect = _require_backoffice_page(request)
+    redirect, user = _backoffice_page_or_redirect(request)
     if redirect:
         return redirect
 
     return templates.TemplateResponse(
         request,
         "backoffice_api_integrations.html",
-        {"request": request}
+        {"request": request, "backoffice_user": user}
     )
 

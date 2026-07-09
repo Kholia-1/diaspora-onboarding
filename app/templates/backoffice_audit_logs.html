@@ -1,191 +1,87 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Journal d'audit</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "backoffice_base.html" %}
 
-    <style>
-        :root {
-            --red: #C90000;
-            --red-dark: #9E0000;
-            --black: #111111;
-            --white: #FFFFFF;
-            --gray-bg: #F4F6F9;
-            --border: #DADDE5;
-            --muted: #6B7280;
-        }
+{% block title %}Back-office - Journal d'audit{% endblock %}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: var(--gray-bg);
-            color: #111827;
-        }
+{% block extra_style %}
+<style>
+/* BACKOFFICE_AUDIT_LOGS_PREMIUM_V1 — la page étend désormais backoffice_base.html */
+.audit-filters {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 180px;
+    gap: 12px;
+    margin-bottom: 18px;
+}
 
-        .header {
-            background: var(--black);
-            color: var(--white);
-            padding: 18px 30px;
-            border-bottom: 4px solid var(--red);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+.table-wrap {
+    overflow-x: auto;
+}
 
-        .header a {
-            color: white;
-            text-decoration: none;
-            font-weight: bold;
-        }
+.badge-audit {
+    background: #EEF2FF;
+    color: #3730A3;
+}
 
-        .container {
-            max-width: 1150px;
-            margin: 25px auto;
-            background: var(--white);
-            border-radius: 14px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-        }
+.details-cell {
+    max-width: 340px;
+    word-break: break-word;
+}
 
-        h1 {
-            margin-top: 0;
-            color: var(--red);
-        }
+@media (max-width: 700px) {
+    .audit-filters {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
 
-        .filters {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-        }
-
-        .filters input, .filters select {
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            min-width: 200px;
-        }
-
-        button {
-            background: var(--red);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 16px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        button:hover {
-            background: var(--red-dark);
-        }
-
-        .table-wrap {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: var(--black);
-            color: white;
-            padding: 12px;
-            text-align: left;
-            white-space: nowrap;
-        }
-
-        td {
-            border-bottom: 1px solid var(--border);
-            padding: 10px;
-            vertical-align: top;
-            font-size: 14px;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-            background: #EEF2FF;
-            color: #3730A3;
-            white-space: nowrap;
-        }
-
-        .muted {
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .details-cell {
-            max-width: 340px;
-            word-break: break-word;
-        }
-
-        .empty {
-            text-align: center;
-            color: var(--muted);
-            padding: 30px 0;
-        }
-
-        @media (max-width: 700px) {
-            .filters input, .filters select {
-                min-width: 100%;
-            }
-        }
-    </style>
-</head>
-<body>
-
-<div class="header">
-    <strong>Back-office — Journal d'audit</strong>
-    <a href="/backoffice/applications">← Retour aux demandes</a>
-</div>
-
+{% block content %}
 <div class="container">
-    <h1>Journal des actions utilisateurs</h1>
-    <p class="muted">
-        Trace des actions réalisées dans l'application : décisions back-office,
-        modifications de configuration, soumissions de dossiers.
-    </p>
 
-    <div class="filters">
-        <input id="filterActor" type="text" placeholder="Filtrer par utilisateur (ex : agent KYC)">
-        <select id="filterAction">
-            <option value="">Toutes les actions</option>
-            <option value="APPLICATION_SUBMITTED">Soumission de dossier</option>
-            <option value="APPLICATION_DECISION">Décision back-office</option>
-            <option value="PACKAGES_CONFIG_UPDATED">Configuration des packages</option>
-            <option value="API_INTEGRATIONS_UPDATED">Configuration des intégrations API</option>
-        </select>
-        <button id="refreshBtn" type="button">Actualiser</button>
+    <div class="page-title">
+        <div>
+            <h1>Journal des actions utilisateurs</h1>
+            <p>
+                Trace des actions réalisées dans l'application : décisions back-office,
+                modifications de configuration, soumissions de dossiers.
+            </p>
+        </div>
     </div>
 
-    <div class="table-wrap">
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Utilisateur</th>
-                    <th>Action</th>
-                    <th>Ressource</th>
-                    <th>Détails</th>
-                    <th>IP</th>
-                </tr>
-            </thead>
-            <tbody id="logsBody">
-                <tr><td colspan="6" class="empty">Chargement...</td></tr>
-            </tbody>
-        </table>
+    <div class="panel">
+        <div class="audit-filters">
+            <input id="filterActor" type="text" placeholder="Filtrer par utilisateur (ex : agent KYC)">
+            <select id="filterAction">
+                <option value="">Toutes les actions</option>
+                <option value="APPLICATION_SUBMITTED">Soumission de dossier</option>
+                <option value="APPLICATION_DECISION">Décision back-office</option>
+                <option value="PACKAGES_CONFIG_UPDATED">Configuration des packages</option>
+                <option value="API_INTEGRATIONS_UPDATED">Configuration des intégrations API</option>
+            </select>
+            <button id="refreshBtn" type="button" class="btn">Actualiser</button>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Utilisateur</th>
+                        <th>Action</th>
+                        <th>Ressource</th>
+                        <th>Détails</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody id="logsBody">
+                    <tr><td colspan="6" class="empty">Chargement...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
     function escapeHtml(value) {
         return String(value == null ? "" : value)
@@ -249,7 +145,7 @@
                 return "<tr>" +
                     "<td>" + escapeHtml(formatDate(log.created_at)) + "</td>" +
                     "<td>" + escapeHtml(log.actor || "anonyme") + "</td>" +
-                    '<td><span class="badge">' + escapeHtml(log.action) + "</span></td>" +
+                    '<td><span class="badge badge-audit">' + escapeHtml(log.action) + "</span></td>" +
                     "<td>" + resource + "</td>" +
                     '<td class="details-cell">' + formatDetails(log.details) + "</td>" +
                     "<td>" + escapeHtml(log.ip_address || "—") + "</td>" +
@@ -269,6 +165,4 @@
 
     loadLogs();
 </script>
-
-</body>
-</html>
+{% endblock %}

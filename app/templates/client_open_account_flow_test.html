@@ -2136,6 +2136,7 @@
 }
 </style>
 
+<link rel="stylesheet" href="/static/css/premium.css?v=1">
 </head>
 
 <body>
@@ -2625,7 +2626,6 @@
       <div class="actions-bottom">
         <div class="selected-label" id="selected-label"></div>
         <div>
-          <a class="btn btn-light" href="/" data-i18n="buttons.back">Retour</a>
           <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Compléter mon profil KYC</button>
         </div>
       </div>
@@ -2695,7 +2695,7 @@
     <h3 id="capture-review-title">Confirmer le code la capture</h3>
     <p id="capture-review-help">Vérifiez que le document est net, complet et lisible avant de l’envoyer.</p>
     <div id="capture-review-stage" class="review-preview-stage"></div>
-    <div id="capture-review-warning" class="review-warning">Aucun traitement OCR ni sauvegarde ne sera lancé avant votre validation.</div>
+    <div id="capture-review-warning" class="review-warning">Aucune extraction de texte ni sauvegarde ne sera lancée avant votre validation.</div>
     <div class="review-actions">
       <button class="btn btn-light" id="capture-review-cancel" type="button">Annuler</button>
       <button class="btn btn-danger-light" id="capture-review-retake" type="button">Reprendre</button>
@@ -3060,7 +3060,7 @@
           "media.video.empty": "Aucune vidéo prise",
           "summary.title": "Vérification des informations",
           "summary.empty": "Aucun document analysé pour l’instant.",
-          "summary.ocr_title": "Préchargement OCR",
+          "summary.ocr_title": "Extraction de texte",
           "summary.detected": "Informations détectées",
           "summary.no_structured": "Aucune information structurée détectée pour l’instant.",
           "selected.label": "Type de compte sélectionné :",
@@ -3477,8 +3477,10 @@
         continueBtn.title = "";
 
         if (box) {
-          box.className = "required-docs-message-afb ok";
-          box.textContent = "Tous les documents obligatoires sont fournis. Vous pouvez poursuivre votre dossier.";
+          // Plus de message de confirmation quand tout est fourni : on masque la boîte.
+          box.className = "required-docs-message-afb";
+          box.textContent = "";
+          box.style.display = "none";
         }
 
         return true;
@@ -3683,6 +3685,9 @@
           pre_onboarding_session_id: getOrCreatePreSessionId(),
           results: ocrResults,
           extracted_fields: collectExtractedFields(),
+          // AFB_OCR_PREFILL_KEY_FIX_V1 : alias attendu par les modules de
+          // préremplissage du formulaire d'ouverture de compte.
+          prefill: collectExtractedFields(),
           saved_documents: savedDocuments,
           updated_at: new Date().toISOString()
         };

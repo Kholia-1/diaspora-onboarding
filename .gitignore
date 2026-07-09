@@ -28,8 +28,10 @@ tmp/
 *.db-shm
 *.db-wal
 
-# Sensitive runtime data
+# Sensitive runtime data (clés API en clair, y compris les copies de sauvegarde)
 data/api_integrations.json
+data/api_integrations.*.json
+data/api_integrations.backup.json
 data/pre_onboarding_otps.json
 data/*.db
 data/*.sqlite

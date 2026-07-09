@@ -14,6 +14,14 @@ SESSION_COOKIE_NAME = "bo_session"
 SESSION_TTL_HOURS = int(os.getenv("BACKOFFICE_SESSION_TTL_HOURS", "12"))
 PBKDF2_ITERATIONS = 200_000
 
+# BACKOFFICE_ROLES_V1 — rôles reconnus du back-office
+BACKOFFICE_ROLES = {
+    "ADMIN": "Administrateur",
+    "GFC": "GFC",
+    "DA": "Directeur d'Agence",
+    "CONFORMITE": "Conformité",
+}
+
 
 def hash_password(password: str, salt: Optional[str] = None) -> str:
     salt = salt or secrets.token_hex(16)
@@ -78,6 +86,25 @@ def get_user_from_request(request: Request, db: Session) -> Optional[BackofficeU
 
     if not user or not user.active:
         return None
+
+    return user
+
+
+# BACKOFFICE_ROLE_GUARD_V1 — dépendance d'authentification avec contrôle de rôle
+def require_backoffice_user(request: Request, db: Session, roles=None) -> BackofficeUser:
+    """Retourne l'utilisateur de session ou lève 401/403 si absent ou rôle insuffisant."""
+    from fastapi import HTTPException
+
+    user = get_user_from_request(request, db)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Non authentifié.")
+
+    if roles and user.role not in roles:
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé au rôle : " + ", ".join(sorted(roles)) + "."
+        )
 
     return user
 
