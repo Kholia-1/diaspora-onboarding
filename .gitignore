@@ -22,6 +22,7 @@ tmp/
 *.crt
 *.p12
 *.pfx
+.fernet_key
 
 # Sensitive runtime data
 data/api_integrations.json
@@ -56,6 +57,10 @@ static/uploads/
 .idea/
 .DS_Store
 Thumbs.db
+.claude/
+
+# Binaires locaux (tunnel)
+cloudflared-windows-amd64.exe
 
 # Build / archives
 node_modules/

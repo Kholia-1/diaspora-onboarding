@@ -1180,6 +1180,11 @@ OTP_TTL_MINUTES = int(os.getenv("PRE_ONBOARDING_OTP_TTL_MINUTES", "10"))
 OTP_MAX_ATTEMPTS = int(os.getenv("PRE_ONBOARDING_OTP_MAX_ATTEMPTS", "5"))
 OTP_DEMO_MODE = os.getenv("PRE_ONBOARDING_OTP_DEMO_MODE", "true").lower() in ("1", "true", "yes", "on")
 OTP_SECRET = os.getenv("PRE_ONBOARDING_OTP_SECRET", "diaspora-onboarding-demo-secret-change-me")
+# AFB_OTP_FALLBACK_DISPLAY_V1
+# Contournement temporaire (souci de facturation Meta/Callbell) : si l'envoi
+# WhatsApp échoue, le code est renvoyé au client pour affichage à l'écran.
+# Mettre PRE_ONBOARDING_OTP_FALLBACK_DISPLAY=false dès que WhatsApp refonctionne.
+OTP_FALLBACK_DISPLAY = os.getenv("PRE_ONBOARDING_OTP_FALLBACK_DISPLAY", "true").lower() in ("1", "true", "yes", "on")
 
 
 def _utcnow():
@@ -1265,6 +1270,11 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
         "whatsapp_delivery_at": None,
     }
 
+    # AFB_OTP_FALLBACK_DISPLAY_V1 : le code en clair est conservé pour pouvoir
+    # l'afficher au client si la livraison WhatsApp échoue après coup.
+    if OTP_FALLBACK_DISPLAY:
+        record["fallback_otp"] = otp
+
     store = _load_otps()
     store[session_id] = record
     _save_otps(store)
@@ -1276,7 +1286,9 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
     )
 
     # AFB_OTP_CALLBELL_UUID_STATUS_V1
-    whatsapp_result = send_whatsapp_message(phone, otp_message)
+    # Le template Callbell approuvé injecte template_values[0] dans {{1}} :
+    # on passe uniquement le code OTP, le texte complet sert de fallback texte libre.
+    whatsapp_result = send_whatsapp_message(phone, otp_message, template_values=[otp])
 
     callbell_response = whatsapp_result.get("response") or {}
     callbell_message = callbell_response.get("message") if isinstance(callbell_response, dict) else {}
@@ -1299,7 +1311,9 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
 
     response = {
         "ok": whatsapp_sent or OTP_DEMO_MODE,
-        "message": "Code OTP WhatsApp envoyé." if whatsapp_sent else "Code OTP généré mais non envoyé par WhatsApp.",
+        # AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : à ce stade Callbell a seulement
+        # accepté le message ; la livraison n'est pas encore confirmée.
+        "message": "Code OTP en cours d'envoi via WhatsApp." if whatsapp_sent else "Code OTP généré mais non envoyé par WhatsApp.",
         "phone": phone,
         "expires_at": expires_at,
         "demo_mode": OTP_DEMO_MODE,
@@ -1318,6 +1332,16 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
     if OTP_DEMO_MODE:
         response["demo_otp"] = otp
 
+    # AFB_OTP_FALLBACK_DISPLAY_V1 : envoi WhatsApp KO -> on renvoie le code
+    # pour affichage à l'écran afin de ne pas bloquer le parcours client.
+    if not whatsapp_sent and not OTP_DEMO_MODE and OTP_FALLBACK_DISPLAY:
+        response["ok"] = True
+        response["fallback_otp"] = otp
+        response["fallback_display"] = True
+        response["message"] = (
+            "Envoi WhatsApp indisponible. Utilisez le code affiché à l'écran pour continuer."
+        )
+
     print(
         "[PRE-ONBOARDING OTP] "
         f"session={session_id} phone={phone} "
@@ -1326,7 +1350,7 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
         f"expires_at={expires_at}"
     )
 
-    if not whatsapp_sent and not OTP_DEMO_MODE:
+    if not whatsapp_sent and not OTP_DEMO_MODE and not OTP_FALLBACK_DISPLAY:
         raise HTTPException(
             status_code=502,
             detail={
@@ -1452,7 +1476,7 @@ async def get_pre_onboarding_otp_delivery_status(session_id: str):
             store[session_id] = record
             _save_otps(store)
 
-    return {
+    payload = {
         "ok": True,
         "session_id": session_id,
         "phone": record.get("phone"),
@@ -1464,6 +1488,23 @@ async def get_pre_onboarding_otp_delivery_status(session_id: str):
         "callbell_live_errors": record.get("callbell_live_errors") or [],
         "live": live_status,
     }
+
+    # AFB_OTP_FALLBACK_DISPLAY_V1 : la livraison a échoué après acceptation
+    # par Callbell -> exposer le code pour affichage à l'écran.
+    delivery_failed = str(payload["whatsapp_delivery_status"] or "").upper() in {
+        "FAILED", "ERROR", "REJECTED", "UNDELIVERED",
+        "CALLBELL_HTTP_ERROR", "CALLBELL_ERROR", "CALLBELL_NOT_ACCEPTED",
+    }
+    if (
+        OTP_FALLBACK_DISPLAY
+        and delivery_failed
+        and not record.get("verified")
+        and record.get("fallback_otp")
+    ):
+        payload["fallback_otp"] = record["fallback_otp"]
+        payload["fallback_display"] = True
+
+    return payload
 
 
 # AFB_PREONBOARDING_RAPIDOCR_DOC_TYPE_VALIDATION_V1

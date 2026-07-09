@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/png" href="/static/afriland-logo.png">
-  <title>Afriland First Bank - Portail Digital</title>
+  <title>Afriland First Bank - Ouverture de compte</title>
 
   <style>
     :root {
@@ -22,6 +22,10 @@
 
     * {
       box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
@@ -98,6 +102,76 @@
       margin: 2px 0 0;
       color: var(--muted);
       font-size: 13px;
+    }
+
+    /* AFB_HOME_TOPNAV_V1 — menu horizontal d'ancres vers les services.
+       Organisation du header : logo à gauche, menu centré, langue à droite. */
+    .topnav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex: 1 1 auto;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+
+    .topnav a {
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 800;
+      font-size: 14px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      white-space: nowrap;
+      transition: 0.15s ease;
+    }
+
+    .topnav a:hover {
+      background: rgba(201, 0, 0, 0.08);
+      color: var(--red);
+    }
+
+    .topnav a.active {
+      background: var(--red);
+      color: white;
+    }
+
+    /* Les cibles d'ancre restent visibles sous le header collant */
+    #accueil,
+    #services,
+    #service-compte,
+    #service-carte,
+    #service-recharge {
+      scroll-margin-top: 120px;
+    }
+
+    @media (max-width: 1180px) {
+      /* Largeurs intermédiaires : le sous-titre laisse la place au menu */
+      .brand p {
+        display: none;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .topbar {
+        flex-wrap: wrap;
+      }
+
+      .topnav {
+        order: 3;
+        flex-basis: 100%;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+      }
+
+      .topnav a {
+        font-size: 13px;
+        padding: 8px 12px;
+      }
     }
 
     .hero {
@@ -417,14 +491,22 @@
     <div class="brand">
       <div class="brand-logo"><img src="/static/afriland-logo.png" alt="Afriland First Bank"></div>
       <div>
-        <h1>Afriland First Bank</h1>
+        <h1>Ouverture de compte</h1>
         <p>Portail digital de services bancaires</p>
       </div>
     </div>
+
+    <!-- AFB_HOME_TOPNAV_V1 : ancres vers les services de la page -->
+    <nav class="topnav" aria-label="Menu des services">
+      <a href="#accueil" class="active">Accueil</a>
+      <a href="#service-compte">Ouverture de compte</a>
+      <a href="#service-carte">Carte bancaire</a>
+      <a href="#service-recharge">Recharge de carte</a>
+    </nav>
   </header>
 
   <main>
-    <section class="hero">
+    <section class="hero" id="accueil">
       <div class="hero-main">
         <div class="badge">Services bancaires en ligne</div>
         <h2>Comment pouvons-nous <span>vous accompagner ?</span></h2>
@@ -443,14 +525,14 @@
       </aside>
     </section>
 
-    <section class="section">
+    <section class="section" id="services">
       <div class="section-title">
         <h3>Services disponibles</h3>
         <p>Choisissez le service qui correspond à votre besoin.</p>
       </div>
 
       <div class="services-grid">
-        <article class="service-card">
+        <article class="service-card" id="service-compte">
           <div>
             <div class="service-icon">🏦</div>
             <div class="service-status ready">Disponible</div>
@@ -466,7 +548,7 @@
           </div>
         </article>
 
-        <article class="service-card">
+        <article class="service-card" id="service-carte">
           <div>
             <div class="service-icon">💳</div>
             <div class="service-status evolution">Bientôt disponible</div>
@@ -482,7 +564,7 @@
           </div>
         </article>
 
-        <article class="service-card">
+        <article class="service-card" id="service-recharge">
           <div>
             <div class="service-icon">🔁</div>
             <div class="service-status evolution">Bientôt disponible</div>
@@ -526,6 +608,18 @@
         toast.classList.remove("show");
       }, 4200);
     }
+
+    // AFB_HOME_TOPNAV_V1 : surbrillance du lien actif du menu
+    (function () {
+      const links = document.querySelectorAll(".topnav a");
+
+      links.forEach(function (link) {
+        link.addEventListener("click", function () {
+          links.forEach(function (item) { item.classList.remove("active"); });
+          link.classList.add("active");
+        });
+      });
+    })();
   </script>
 
 <!-- DG_HOME_LANGUAGE_SWITCHER_SCRIPT_V2 -->
@@ -590,6 +684,9 @@
         ["Access", "Access"],
 
         ["Menu des services", "Services menu"],
+        ["Accueil", "Home"],
+        ["Carte bancaire", "Bank card"],
+        ["Recharge de carte", "Card top-up"],
         ["Service digital en cours d’évolution", "Digital service under development"],
 
         ["Ce service sera disponible prochainement.", "This service will be available soon."],

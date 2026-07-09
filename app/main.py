@@ -51,6 +51,23 @@ async def force_redirect_old_open_account_routes(request, call_next):
     return await call_next(request)
 
 
+# FORCE_HTTPS_BEHIND_TUNNEL_V1
+@app.middleware("http")
+async def force_https_behind_tunnel(request, call_next):
+    """
+    L'accès caméra (getUserMedia) exige un contexte sécurisé : si la page
+    arrive en HTTP via le tunnel Cloudflare (X-Forwarded-Proto), on redirige
+    vers HTTPS. Sans effet en local (l'en-tête est absent).
+    """
+    if request.headers.get("x-forwarded-proto", "").lower() == "http":
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(
+            url=str(request.url.replace(scheme="https")), status_code=308
+        )
+
+    return await call_next(request)
+
+
 
 app.add_middleware(
     CORSMiddleware,

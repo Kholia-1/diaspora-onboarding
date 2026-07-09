@@ -88,6 +88,65 @@
       flex-wrap: wrap;
     }
 
+    /* AFB_TOPNAV_PROCESS_ACTIVE_V1 — menu horizontal commun, élément actif = parcours en cours.
+       Organisation du header : logo à gauche, menu centré, langue à droite. */
+    .topnav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex: 1 1 auto;
+      min-width: 0;
+      flex-wrap: wrap;
+    }
+
+    .topbar .topnav a {
+      text-decoration: none;
+      color: var(--text, #1f2937);
+      border: none;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      white-space: nowrap;
+      transition: 0.15s ease;
+    }
+
+    .topbar .topnav a:hover {
+      background: rgba(201, 0, 0, 0.08);
+      color: var(--red);
+    }
+
+    .topbar .topnav a.active {
+      background: var(--red);
+      color: white;
+    }
+
+    @media (max-width: 1180px) {
+      /* Largeurs intermédiaires : le sous-titre laisse la place au menu */
+      .topbar .brand p {
+        display: none;
+      }
+    }
+
+    @media (max-width: 960px) {
+      /* Le menu passe sur sa propre ligne, défilable horizontalement */
+      .topbar .topnav {
+        order: 3;
+        flex-basis: 100%;
+        justify-content: flex-start;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+      }
+
+      .topbar .topnav a {
+        font-size: 13px;
+        padding: 8px 12px;
+      }
+    }
+
     .topbar a {
       text-decoration: none;
       color: var(--red);
@@ -265,6 +324,17 @@
       background: #fbfdff;
       padding: 20px;
       margin-top: 18px;
+    }
+
+    .step-tag {
+      display: inline-flex;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #fff3cd;
+      color: #7a4b00;
+      font-weight: 800;
+      font-size: 13px;
+      margin: 18px 0 8px;
     }
 
     .section-box h4 { margin: 0 0 8px; font-size: 19px; }
@@ -1789,8 +1859,7 @@
     margin-top: 12px !important;
   }
 
-  #step0-send-otp-btn,
-  #step0-verify-otp-btn {
+  #step0-send-otp-btn {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1801,6 +1870,12 @@
     border-radius: 12px !important;
     font-weight: 800 !important;
     line-height: 1 !important;
+  }
+
+  /* AFB_OTP_AUTO_VERIFY_V1 : la vérification est automatique à la saisie,
+     le bouton « Confirmer le code » est retiré de la vue. */
+  #step0-verify-otp-btn {
+    display: none !important;
   }
 
   #step0-otp-code {
@@ -1836,6 +1911,108 @@
     visibility: hidden !important;
   }
 
+  /* AFB_OTP_FALLBACK_DISPLAY_V1 : code de secours affiché quand WhatsApp est KO */
+  #step0-demo-otp.show.fallback {
+    display: block !important;
+    visibility: visible !important;
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px dashed #f59e0b;
+    user-select: all;
+  }
+
+  /* AFB_MOBILE_STEPS_FIRST_V1 : sur mobile, afficher d'abord les étapes,
+     puis révéler les formulaires après le bouton Commencer */
+  .mobile-start-wrap {
+    display: none;
+  }
+
+  @media (max-width: 760px) {
+    .mobile-start-wrap {
+      display: block;
+      margin-top: 18px;
+      text-align: center;
+    }
+
+    #mobile-start-btn {
+      width: 100%;
+      min-height: 48px;
+      font-weight: 800;
+      border-radius: 12px;
+    }
+
+    body:not(.flow-started) .panel.workspace {
+      display: none !important;
+    }
+
+    /* Vue formulaires : la vue des étapes est masquée (le bouton
+       « Retour aux étapes » permet d'y revenir, sans doublon d'affichage) */
+    body.flow-started #remote-account-welcome,
+    body.flow-started .panel.intro {
+      display: none !important;
+    }
+
+    body.flow-started .mobile-start-wrap {
+      display: none;
+    }
+
+    body.flow-started #mobile-back-steps-btn {
+      display: block;
+      width: 100%;
+      min-height: 44px;
+      margin-bottom: 14px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    /* AFB_MOBILE_STEP3_AFTER_CONTACTS_V1 : les étapes 3+ n'apparaissent
+       qu'une fois les infos de contact (étape 2) validées */
+    body:not(.step2-validated) .mobile-step3-locked {
+      display: none !important;
+    }
+
+    /* AFB_MOBILE_FLAT_FORM_V1 : sur mobile, pas de cards imbriquées autour
+       du formulaire — contenu à plat, pleine largeur */
+    .panel.workspace {
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+    }
+
+    .workspace {
+      padding: 10px 2px !important;
+    }
+
+    .section-box {
+      border: none !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      padding: 14px 0 !important;
+      margin-top: 6px !important;
+      border-top: 1px solid var(--border) !important;
+    }
+
+    .step0-preinscription {
+      margin: 12px 0 !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      padding: 10px 0 !important;
+    }
+
+    .step0-preinscription::before {
+      display: none !important;
+    }
+  }
+
+  /* Caché partout sauf sur mobile une fois le parcours commencé */
+  #mobile-back-steps-btn {
+    display: none;
+  }
+
   @media (max-width: 680px) {
     #step0-send-otp-btn,
     #step0-verify-otp-btn,
@@ -1861,12 +2038,19 @@
       </div>
     </div>
 
+    <!-- AFB_TOPNAV_PROCESS_ACTIVE_V1 : parcours ouverture de compte en cours -->
+    <nav class="topnav" aria-label="Menu des services">
+      <a href="/" data-i18n="nav.home">Accueil</a>
+      <a href="/open-account-flow-test" class="active" aria-current="page" data-i18n="nav.open_account">Ouverture de compte</a>
+      <a href="/#service-carte" data-i18n="nav.card">Carte bancaire</a>
+      <a href="/#service-recharge" data-i18n="nav.topup">Recharge de carte</a>
+    </nav>
+
     <div class="topbar-actions">
       <div class="lang-switcher" aria-label="Language selector">
         <button id="lang-fr" type="button">FR</button>
         <button id="lang-en" type="button">EN</button>
       </div>
-      <a href="/" data-i18n="nav.back_home">Retour accueil</a>
     </div>
   </header>
   <main class="page">
@@ -1923,12 +2107,138 @@
             <span data-i18n="steps.continue.desc">La suite du parcours : vos informations détectées y sont déjà préremplies.</span>
           </div>
         </div>
+
+        <div class="step">
+          <div class="step-number">6</div>
+          <div>
+            <strong data-i18n="steps.package.title">Choisir votre formule de compte</strong>
+            <span data-i18n="steps.package.desc">Sélectionnez la formule adaptée et complétez les derniers documents demandés.</span>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">7</div>
+          <div>
+            <strong data-i18n="steps.submit.title">Consentement et soumission</strong>
+            <span data-i18n="steps.submit.desc">Acceptez les conditions, soumettez votre demande et recevez votre référence de suivi.</span>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">8</div>
+          <div>
+            <strong data-i18n="steps.decision.title">Traitement et décision de la banque</strong>
+            <span data-i18n="steps.decision.desc">La banque examine votre dossier ; vous êtes notifié par WhatsApp et pouvez suivre l’avancement en ligne.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AFB_MOBILE_STEPS_FIRST_V1 : sur mobile, les formulaires ne s'affichent qu'après ce bouton -->
+      <div class="mobile-start-wrap">
+        <button class="btn btn-primary" id="mobile-start-btn" type="button" data-i18n="steps.start_button">Commencer</button>
       </div>
     </section>
 
+    <script>
+    /* AFB_MOBILE_STEPS_FIRST_V1 */
+    (function () {
+      var KEY = "afb_flow_started";
+
+      function start(scroll) {
+        document.body.classList.add("flow-started");
+        try { sessionStorage.setItem(KEY, "1"); } catch (e) {}
+        if (scroll) {
+          var workspace = document.querySelector(".panel.workspace");
+          if (workspace) workspace.scrollIntoView({behavior: "smooth", block: "start"});
+        }
+      }
+
+      function backToSteps() {
+        document.body.classList.remove("flow-started");
+        try { sessionStorage.setItem(KEY, "0"); } catch (e) {}
+        var intro = document.getElementById("remote-account-welcome");
+        if (intro) intro.scrollIntoView({behavior: "smooth", block: "start"});
+      }
+
+      var stored = null;
+      try { stored = sessionStorage.getItem(KEY); } catch (e) {}
+
+      // Un parcours déjà entamé (retour, rechargement) ne doit pas être re-masqué,
+      // sauf si l'utilisateur a explicitement choisi de revenir aux étapes ("0").
+      if (stored === "1" || (stored !== "0" && localStorage.getItem("diaspora_step0_whatsapp_otp_verified") === "true")) {
+        start(false);
+      }
+
+      // Délégation : le bouton « Retour aux étapes » est défini plus loin dans
+      // le HTML (zone formulaires) ; un getElementById exécuté ici le manquerait.
+      document.addEventListener("click", function (ev) {
+        if (!ev.target || !ev.target.closest) return;
+
+        if (ev.target.closest("#mobile-start-btn")) {
+          start(true);
+        } else if (ev.target.closest("#mobile-back-steps-btn")) {
+          backToSteps();
+        }
+      });
+
+      /* AFB_MOBILE_STEP3_AFTER_CONTACTS_V1 : sur mobile, les blocs situés après
+         l'étape 2 (contacts) restent masqués tant qu'elle n'est pas validée. */
+      var STEP2_KEY = "afb_step2_validated";
+
+      function unlockStep3() {
+        document.body.classList.add("step2-validated");
+        try { sessionStorage.setItem(STEP2_KEY, "1"); } catch (e) {}
+      }
+
+      function initStep3Gate() {
+        var workspace = document.querySelector(".panel.workspace");
+        if (!workspace) return;
+
+        var children = Array.prototype.slice.call(workspace.children);
+        var step0Index = -1;
+
+        children.forEach(function (child, i) {
+          if (step0Index === -1 && child.querySelector && child.querySelector("#step0-validate-btn")) {
+            step0Index = i;
+          }
+        });
+
+        if (step0Index === -1) return;
+
+        for (var i = step0Index + 1; i < children.length; i++) {
+          children[i].classList.add("mobile-step3-locked");
+        }
+
+        var restored = false;
+        try { restored = sessionStorage.getItem(STEP2_KEY) === "1"; } catch (e) {}
+        if (restored) unlockStep3();
+
+        document.addEventListener("click", function (ev) {
+          if (!ev.target || !ev.target.closest) return;
+          if (!ev.target.closest("#step0-validate-btn")) return;
+
+          // La validation existante pose window.__AFB_STEP0_OK__ après le clic ;
+          // on vérifie juste après (avant le scroll auto qui part à 180 ms).
+          setTimeout(function () {
+            if (window.__AFB_STEP0_OK__ === true) unlockStep3();
+          }, 150);
+        }, true);
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initStep3Gate);
+      } else {
+        initStep3Gate();
+      }
+    })();
+    </script>
+
     <section class="panel workspace">
-    
-    
+
+      <!-- AFB_MOBILE_STEPS_FIRST_V1 : retour vers la vue des étapes sur mobile -->
+      <button class="btn btn-light" id="mobile-back-steps-btn" type="button" data-i18n="steps.back_button">← Retour aux étapes</button>
+
+      <div class="step-tag" data-i18n="steptag.step1">Étape 1 — Choisir le type de compte</div>
       <h3 data-i18n="account_type.title">Type de compte</h3>
       <p data-i18n="account_type.desc">Choisissez le type de compte que vous souhaitez ouvrir.</p>
 
@@ -1948,7 +2258,7 @@
 
       <!-- AFB_FLOW_STEP0_PREINSCRIPTION_V1 -->
   <section class="section-box step0-preinscription" id="step0-preinscription">
-    <div class="badge-step0">Pré-inscription</div>
+    <div class="badge-step0">Étape 2 — Renseigner et vérifier vos contacts</div>
 
 
 <h2>Vos informations de contact</h2>
@@ -2089,6 +2399,7 @@
       <div class="step0-otp-title">Validation du numéro WhatsApp</div>
       <div class="step0-otp-help">
         Un code de sécurité sera envoyé sur WhatsApp afin de confirmer votre numéro et protéger votre demande.
+        Saisissez ou collez le code reçu : il est vérifié automatiquement.
       </div>
 
       <div class="step0-otp-row">
@@ -2099,8 +2410,10 @@
       </div>
 
       <div class="step0-otp-row">
-        <input id="step0-otp-code" type="text" inputmode="numeric" maxlength="6" placeholder="Saisir le code à 6 chiffres" autocomplete="one-time-code" disabled>
-        <button class="btn btn-primary" id="step0-verify-otp-btn" type="button" disabled>
+        <input id="step0-otp-code" type="text" inputmode="numeric" maxlength="6" placeholder="Saisir ou coller le code à 6 chiffres" autocomplete="one-time-code" disabled>
+        <!-- AFB_OTP_AUTO_VERIFY_V1 : le bouton reste dans le DOM pour compatibilité
+             avec les scripts existants, mais la vérification est automatique. -->
+        <button class="btn btn-primary" id="step0-verify-otp-btn" type="button" disabled hidden>
           Confirmer le code
         </button>
       </div>
@@ -2110,11 +2423,13 @@
 
     <div class="step0-actions">
       <button class="btn btn-primary" id="step0-validate-btn" type="button">
-        Valider la pré-inscription
+        Valider mes informations de contact
       </button>
       <span id="step0-status"></span>
     </div>
   </section>
+
+<div class="step-tag" data-i18n="steptag.step3">Étape 3 — Importer vos pièces</div>
 
 <div class="section-box">
         <h4 data-i18n="identity.title">Type de document d’identité</h4>
@@ -2158,13 +2473,15 @@
         </div>
       </div>
 
+      <div class="step-tag" data-i18n="steptag.step4">Étape 4 — Contrôle automatique</div>
       <div class="summary" id="ocr-summary"></div>
 
+      <div class="step-tag" data-i18n="steptag.step5">Étape 5 — Poursuivre votre dossier (profil KYC)</div>
       <div class="actions-bottom">
         <div class="selected-label" id="selected-label"></div>
         <div>
           <a class="btn btn-light" href="/" data-i18n="buttons.back">Retour</a>
-          <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Poursuivre mon dossier</button>
+          <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Compléter mon profil KYC</button>
         </div>
       </div>
     </section>
@@ -2537,6 +2854,10 @@
           "title.account_opening": "Ouverture de compte",
           "title.customer_file_preparation": "Préparez votre dossier",
           "nav.back_home": "Retour accueil",
+          "nav.home": "Accueil",
+          "nav.open_account": "Ouverture de compte",
+          "nav.card": "Carte bancaire",
+          "nav.topup": "Recharge de carte",
           "intro.badge": "Pré-onboarding",
           "intro.heading": "Préparer votre demande d’ouverture de compte",
           "steps.choose_account.title": "Choisir le type de compte",
@@ -2549,7 +2870,19 @@
           "steps.auto_check.desc": "Le système vérifie vos documents et extrait les informations utiles.",
           "steps.continue.title": "Poursuivre votre dossier (profil KYC)",
           "steps.continue.desc": "La suite du parcours : vos informations détectées y sont déjà préremplies.",
+          "steps.package.title": "Choisir votre formule de compte",
+          "steps.package.desc": "Sélectionnez la formule adaptée et complétez les derniers documents demandés.",
+          "steps.submit.title": "Consentement et soumission",
+          "steps.submit.desc": "Acceptez les conditions, soumettez votre demande et recevez votre référence de suivi.",
+          "steps.decision.title": "Traitement et décision de la banque",
+          "steps.decision.desc": "La banque examine votre dossier ; vous êtes notifié par WhatsApp et pouvez suivre l’avancement en ligne.",
+          "steps.start_button": "Commencer",
+          "steps.back_button": "← Retour aux étapes",
           "account_type.title": "Type de compte",
+          "steptag.step1": "Étape 1 — Choisir le type de compte",
+          "steptag.step3": "Étape 3 — Importer vos pièces",
+          "steptag.step4": "Étape 4 — Contrôle automatique",
+          "steptag.step5": "Étape 5 — Poursuivre votre dossier (profil KYC)",
           "welcome.title": "Bienvenue dans votre parcours d’ouverture de compte à distance.",
           "welcome.badge": "Ouverture de compte à distance",
           "welcome.desc": "Ouvrez votre compte Afriland First Bank simplement, que vous soyez au Cameroun ou à l’étranger. Préparez vos informations personnelles, vos justificatifs et votre téléphone WhatsApp pour finaliser votre demande.",
@@ -2587,7 +2920,7 @@
           "selected.label": "Type de compte sélectionné :",
           "selected.none": "Aucun",
           "buttons.back": "Retour",
-          "buttons.continue": "Poursuivre mon dossier",
+          "buttons.continue": "Compléter mon profil KYC",
           "buttons.upload": "Importer",
           "buttons.photo": "Photographier",
           "status.not_analyzed": "Non analysé",
@@ -2614,6 +2947,10 @@
           "title.account_opening": "Account opening",
           "title.customer_file_preparation": "Prepare your file",
           "nav.back_home": "Back to home",
+          "nav.home": "Home",
+          "nav.open_account": "Account opening",
+          "nav.card": "Bank card",
+          "nav.topup": "Card top-up",
           "intro.badge": "Pre-onboarding",
           "intro.heading": "Prepare your account opening request",
           "steps.choose_account.title": "Choose the account type",
@@ -2626,7 +2963,19 @@
           "steps.auto_check.desc": "The system checks your documents and extracts useful information.",
           "steps.continue.title": "Continue your application (KYC profile)",
           "steps.continue.desc": "The next part of the journey: your detected information is already pre-filled.",
+          "steps.package.title": "Choose your account package",
+          "steps.package.desc": "Select the package that suits you and complete the last required documents.",
+          "steps.submit.title": "Consent and submission",
+          "steps.submit.desc": "Accept the terms, submit your application and receive your tracking reference.",
+          "steps.decision.title": "Bank review and decision",
+          "steps.decision.desc": "The bank reviews your application; you are notified on WhatsApp and can track progress online.",
+          "steps.start_button": "Start",
+          "steps.back_button": "← Back to steps",
           "account_type.title": "Account type",
+          "steptag.step1": "Step 1 — Choose the account type",
+          "steptag.step3": "Step 3 — Upload your documents",
+          "steptag.step4": "Step 4 — Automatic check",
+          "steptag.step5": "Step 5 — Continue your application (KYC profile)",
           "welcome.badge": "Remote account opening",
           "account_type.desc": "Choose the account type you want to open.",
           "account.personal.title": "Personal account",
@@ -2662,7 +3011,7 @@
           "selected.label": "Selected account type:",
           "selected.none": "None",
           "buttons.back": "Back",
-          "buttons.continue": "Continue my application",
+          "buttons.continue": "Complete my KYC profile",
           "buttons.upload": "Upload",
           "buttons.photo": "Take photo",
           "status.not_analyzed": "Not analyzed",
@@ -3576,7 +3925,7 @@
         overlay.innerHTML =
           '<div style="width:52px;height:52px;border:5px solid #e5e7eb;border-top-color:#C90000;border-radius:50%;animation:afbspin 0.9s linear infinite;"></div>' +
           '<h2 style="margin:0;color:#C90000;font-size:22px;">' +
-          (isEn ? "Pre-registration completed ✓" : "Pré-inscription validée ✓") +
+          (isEn ? "Step 2 completed — contact details verified ✓" : "Étape 2 validée — contacts vérifiés ✓") +
           "</h2>" +
           '<p style="margin:0;color:#4b5563;max-width:420px;line-height:1.6;">' +
           (isEn
@@ -4057,6 +4406,41 @@
     }, 850);
   }
 
+  let cameraBlockHintShown = false;
+
+  function explainCameraBlock(error) {
+    // N'affiche l'explication qu'une fois, uniquement pour un vrai blocage
+    // d'autorisation ou un contexte non sécurisé (http). Les autres échecs
+    // basculent silencieusement vers la caméra native comme avant.
+    if (cameraBlockHintShown) return;
+
+    const insecure = window.isSecureContext === false;
+    const denied = error && (error.name === "NotAllowedError" || error.name === "SecurityError");
+
+    if (!insecure && !denied) return;
+
+    cameraBlockHintShown = true;
+
+    if (insecure) {
+      alert(text(
+        "L’accès à la caméra nécessite une connexion sécurisée. Ouvrez le site avec une adresse commençant par https:// puis réessayez.",
+        "Camera access requires a secure connection. Open the site with an address starting with https:// and try again."
+      ));
+      return;
+    }
+
+    alert(text(
+      "L’accès à la caméra est bloqué par le navigateur.\n\n" +
+      "1) Si vous avez ouvert ce lien depuis WhatsApp, Facebook ou un email, ouvrez-le plutôt directement dans Chrome ou Safari (menu ⋮ → « Ouvrir dans le navigateur »).\n" +
+      "2) Sinon, touchez le cadenas à gauche de l’adresse → Autorisations → Appareil photo → Autoriser, puis rechargez la page.\n\n" +
+      "En attendant, l’appareil photo natif du téléphone va s’ouvrir pour prendre la photo.",
+      "Camera access is blocked by the browser.\n\n" +
+      "1) If you opened this link from WhatsApp, Facebook or an email, open it directly in Chrome or Safari instead (menu ⋮ → “Open in browser”).\n" +
+      "2) Otherwise, tap the padlock next to the address → Permissions → Camera → Allow, then reload the page.\n\n" +
+      "Meanwhile, the phone’s native camera will open to take the photo."
+    ));
+  }
+
   async function openAdvancedCamera(mode, target) {
     stopAutoCaptureMonitor();
     const modal = document.getElementById("advanced-camera-modal");
@@ -4099,6 +4483,7 @@
       return true;
     } catch (error) {
       console.warn("Caméra directe indisponible:", error);
+      explainCameraBlock(error);
       return false;
     }
   }
@@ -4188,6 +4573,7 @@
       return true;
     } catch (error) {
       console.warn("Enregistrement vidéo direct indisponible:", error);
+      explainCameraBlock(error);
       return false;
     }
   }
@@ -4547,14 +4933,14 @@ body.selfie-capture-active {
     if (!country) return "";
 
     if (country === "Cameroun") {
-      return "Pré-inscription validée. Règle documentaire : CNI possible.";
+      return "Étape 2 validée. Règle documentaire : CNI possible.";
     }
 
     if (CEMAC.includes(country)) {
-      return "Pré-inscription validée. Pays CEMAC : CNI possible si disponible, sinon passeport.";
+      return "Étape 2 validée. Pays CEMAC : CNI possible si disponible, sinon passeport.";
     }
 
-    return "Pré-inscription validée. Hors CEMAC : passeport et titre de séjour/résidence à prévoir.";
+    return "Étape 2 validée. Hors CEMAC : passeport et titre de séjour/résidence à prévoir.";
   }
 
   function validateStep0(showMessage) {
@@ -5213,7 +5599,7 @@ body.selfie-capture-active {
     } else {
       btn.disabled = true;
       btn.classList.add("otp-locked");
-      btn.title = "Vérifiez le numéro WhatsApp par OTP avant de valider la pré-inscription.";
+      btn.title = "Vérifiez le numéro WhatsApp par OTP avant de valider vos informations de contact.";
     }
   }
 
@@ -5313,20 +5699,35 @@ body.selfie-capture-active {
 
       if (verifyBtn) verifyBtn.disabled = false;
 
-      if (demo && data.demo_otp) {
-        demo.textContent = "Code démo : " + data.demo_otp;
-        demo.classList.add("show");
+      if (demo && data.fallback_otp) {
+        if (typeof window.__afbShowOtpCode === "function") {
+          window.__afbShowOtpCode(data.fallback_otp, true);
+        } else {
+          demo.textContent = "Envoi WhatsApp indisponible — votre code OTP : " + data.fallback_otp;
+          demo.classList.add("show", "fallback");
+        }
+      } else if (demo && data.demo_otp) {
+        if (typeof window.__afbShowOtpCode === "function") {
+          window.__afbShowOtpCode(data.demo_otp, false);
+        } else {
+          demo.textContent = "Code démo : " + data.demo_otp;
+          demo.classList.add("show");
+        }
       }
 
       if (data.whatsapp_sent === false) {
-        const fallbackMessage = data.demo_mode
-          ? "Envoi WhatsApp non confirmé (mode démo). Utilisez le code démo affiché."
-          : "L’envoi du code WhatsApp a échoué. Vérifiez le numéro puis réessayez.";
-        setOtpStatus(fallbackMessage, Boolean(data.demo_mode));
-        setMainStep0Status(fallbackMessage, Boolean(data.demo_mode));
+        const fallbackOk = Boolean(data.demo_mode || data.fallback_otp);
+        const fallbackMessage = data.fallback_otp
+          ? "Envoi WhatsApp indisponible. Utilisez le code affiché pour continuer."
+          : (data.demo_mode
+            ? "Envoi WhatsApp non confirmé (mode démo). Utilisez le code démo affiché."
+            : "L’envoi du code WhatsApp a échoué. Vérifiez le numéro puis réessayez.");
+        setOtpStatus(fallbackMessage, fallbackOk);
+        setMainStep0Status(fallbackMessage, fallbackOk);
       } else {
-        setOtpStatus("Code envoyé. Saisissez le code OTP reçu sur WhatsApp.", true);
-        setMainStep0Status("Code OTP envoyé. Vérifiez le numéro WhatsApp pour continuer.", true);
+        // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : livraison non encore confirmée à ce stade.
+        setOtpStatus("Envoi du code en cours... Saisissez le code dès réception sur WhatsApp.", true);
+        setMainStep0Status("Code OTP en cours d’envoi. Vérifiez votre WhatsApp pour continuer.", true);
       }
     } catch (error) {
       setOtpStatus(error.message || "Impossible d’envoyer le code OTP.", false);
@@ -5340,7 +5741,13 @@ body.selfie-capture-active {
     }
   }
 
+  // AFB_OTP_AUTO_VERIFY_V1 : évite les doubles vérifications simultanées
+  // quand la saisie/le collage déclenche automatiquement verifyOtp.
+  let otpVerifyInFlight = false;
+
   async function verifyOtp() {
+    if (otpVerifyInFlight) return;
+
     const checked = validateStep0FieldsForOtp();
     if (!checked) return;
 
@@ -5353,6 +5760,9 @@ body.selfie-capture-active {
       setOtpStatus("Saisissez un code OTP à 6 chiffres.", false);
       return;
     }
+
+    otpVerifyInFlight = true;
+    setOtpStatus("Vérification du code en cours...", true);
 
     if (verifyBtn) {
       verifyBtn.disabled = true;
@@ -5387,8 +5797,8 @@ body.selfie-capture-active {
       window.__AFB_STEP0_COUNTRY__ = checked.country;
       window.__AFB_STEP0_WHATSAPP_VERIFIED__ = true;
 
-      setOtpStatus("WhatsApp vérifié. Vous pouvez valider la pré-inscription.", true);
-      setMainStep0Status("WhatsApp vérifié. Pré-inscription prête à être validée.", true);
+      setOtpStatus("WhatsApp vérifié. Vous pouvez valider vos informations de contact.", true);
+      setMainStep0Status("WhatsApp vérifié. Informations de contact prêtes à être validées.", true);
       syncValidateButton();
     } catch (error) {
       localStorage.removeItem(OTP_VERIFIED_KEY);
@@ -5396,6 +5806,8 @@ body.selfie-capture-active {
       setMainStep0Status(error.message || "Code OTP incorrect.", false);
       syncValidateButton();
     } finally {
+      otpVerifyInFlight = false;
+
       if (verifyBtn) {
         verifyBtn.disabled = false;
         verifyBtn.textContent = "Confirmer le code";
@@ -5436,6 +5848,12 @@ body.selfie-capture-active {
       codeInput.dataset.otpBound = "1";
       codeInput.addEventListener("input", function () {
         codeInput.value = String(codeInput.value || "").replace(/\D/g, "").slice(0, 6);
+
+        // AFB_OTP_AUTO_VERIFY_V1 : dès que 6 chiffres sont saisis ou collés,
+        // la vérification part automatiquement (plus de bouton à cliquer).
+        if (codeInput.value.length === 6 && !isOtpVerifiedForCurrentPhone()) {
+          verifyOtp();
+        }
       });
 
       codeInput.addEventListener("keydown", function (event) {
@@ -8673,8 +9091,8 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
 
   const D = {
     fr: {
-      badge: "Étape 0 — Pré-inscription",
-      title: "Bienvenue dans votre parcours d’ouverture de compte à distance",
+      badge: "Étape 2 — Renseigner et vérifier vos contacts",
+      title: "Vos informations de contact",
       desc: "Ouvrez votre compte Afriland First Bank simplement, que vous soyez au Cameroun ou à l’étranger. Préparez vos informations personnelles, vos justificatifs et votre téléphone WhatsApp pour finaliser votre demande.",
 intro: "Renseignez ensuite votre email, votre numéro WhatsApp et votre pays de résidence/localisation. Ces informations nous permettent de sécuriser votre demande et d’identifier les pièces justificatives adaptées à votre situation.",
       email: "Email",
@@ -8688,17 +9106,17 @@ intro: "Renseignez ensuite votre email, votre numéro WhatsApp et votre pays de 
       countryFirst: "Sélectionner le pays",
       residenceNote: "Ce pays sert aux règles documentaires : CEMAC, hors CEMAC, CNI, passeport et titre de séjour.",
       otpTitle: "🔐 Validation du numéro WhatsApp",
-      otpHelp: "Un code de sécurité sera envoyé sur WhatsApp afin de confirmer votre numéro et protéger votre demande.",
+      otpHelp: "Un code de sécurité sera envoyé sur WhatsApp afin de confirmer votre numéro et protéger votre demande. Saisissez ou collez le code reçu : il est vérifié automatiquement.",
       sendOtp: "Recevoir le code WhatsApp",
       otpStatus: "Numéro WhatsApp en attente de validation.",
-      otpCodePh: "Saisir le code à 6 chiffres",
+      otpCodePh: "Saisir ou coller le code à 6 chiffres",
       verifyOtp: "Confirmer le code",
-      validate: "Valider la pré-inscription",
-      validateTitle: "Vérifiez le numéro WhatsApp par OTP avant de valider la pré-inscription."
+      validate: "Valider mes informations de contact",
+      validateTitle: "Vérifiez le numéro WhatsApp par OTP avant de valider vos informations de contact."
     },
     en: {
-      badge: "Step 0 — Pre-registration",
-      title: "Welcome to your remote account opening journey",
+      badge: "Step 2 — Provide and verify your contact details",
+      title: "Your contact information",
       desc: "Open your Afriland First Bank account easily, whether you are in Cameroon or abroad. Prepare your personal information, supporting documents and WhatsApp phone to complete your request.",
 intro: "Next, enter your email, WhatsApp number and country of residence/location. This information helps us secure your request and identify the supporting documents required for your situation.",
 
@@ -8713,13 +9131,13 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
       countryFirst: "Select country",
       residenceNote: "This country is used for document rules: CEMAC, non-CEMAC, national ID card, passport and residence permit.",
       otpTitle: "🔐 WhatsApp OTP verification",
-      otpHelp: "Your WhatsApp number will be used to verify your contact and track your file.",
+      otpHelp: "A security code will be sent on WhatsApp to confirm your number and protect your request. Type or paste the received code: it is verified automatically.",
       sendOtp: "Send WhatsApp code",
       otpStatus: "WhatsApp not verified.",
-      otpCodePh: "6-digit OTP code",
+      otpCodePh: "Type or paste the 6-digit code",
       verifyOtp: "Verify code",
-      validate: "Validate pre-registration",
-      validateTitle: "Verify your WhatsApp number by OTP before validating the pre-registration."
+      validate: "Validate my contact details",
+      validateTitle: "Verify your WhatsApp number by OTP before validating your contact details."
     }
   };
 
@@ -8761,13 +9179,16 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
 
     const frToEn = {
       "Numéro WhatsApp en attente de validation.": "WhatsApp not verified.",
-      "WhatsApp vérifié. Vous pouvez valider la pré-inscription.": "WhatsApp verified. You can validate the pre-registration.",
+      "WhatsApp vérifié. Vous pouvez valider vos informations de contact.": "WhatsApp verified. You can validate your contact details.",
+      "WhatsApp vérifié. Informations de contact prêtes à être validées.": "WhatsApp verified. Contact details ready to be validated.",
       "Envoi en cours.": "Sending.",
       "Envoi du code WhatsApp en cours.": "Sending WhatsApp code.",
       "Code WhatsApp envoyé. Renseignez le code reçu.": "WhatsApp code sent. Enter the code received.",
       "Renseignez un email valide avant l’envoi du code.": "Enter a valid email before sending the code.",
       "Sélectionnez le pays de résidence avant l’envoi du code.": "Select your country of residence before sending the code.",
       "Renseignez un numéro WhatsApp valide.": "Enter a valid WhatsApp number.",
+      "Vérification du code en cours...": "Verifying the code...",
+      "Saisissez un code OTP à 6 chiffres.": "Enter the 6-digit OTP code.",
       "Code OTP incorrect.": "Incorrect OTP code.",
       "WhatsApp vérifié.": "WhatsApp verified."
     };
@@ -8909,10 +9330,15 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
     }
 
     if (!phone) {
+      phone = getValue("step0-whatsapp") || "";
+    }
+
+    // Mémoire locale uniquement si le champ n'est pas présent sur la page :
+    // le numéro saisi dans le formulaire doit toujours avoir la priorité.
+    if (!phone && !document.getElementById("step0-whatsapp")) {
       phone =
         window.__AFB_STEP0_WHATSAPP__ ||
         localStorage.getItem("diaspora_step0_whatsapp_full") ||
-        getValue("step0-whatsapp") ||
         "";
     }
 
@@ -8963,18 +9389,79 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
     if (type) status.classList.add(type);
   }
 
-  function showDemoOtp(code) {
+  /* AFB_OTP_CLIPBOARD_V1 : copie le code dans le presse-papier */
+  function copyOtpToClipboard(code, feedbackEl) {
+    function done(ok) {
+      if (feedbackEl) {
+        feedbackEl.textContent = ok
+          ? "Code copié dans le presse-papier ✓"
+          : "Appuyez sur « Copier » pour copier le code.";
+      }
+    }
+
+    function legacyCopy() {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = code;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        done(ok);
+      } catch (e) {
+        done(false);
+      }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(
+        function () { done(true); },
+        function () { legacyCopy(); }
+      );
+    } else {
+      legacyCopy();
+    }
+  }
+
+  function showDemoOtp(code, isFallback) {
     const demo = document.getElementById("step0-demo-otp");
     if (!demo) return;
 
     if (code) {
-      demo.textContent = "Code démo : " + code;
+      demo.innerHTML = "";
+
+      var label = document.createElement("span");
+      label.textContent = (isFallback
+        ? "Envoi WhatsApp indisponible — votre code OTP : "
+        : "Code démo : ") + code;
+      demo.appendChild(label);
+
+      var copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.textContent = "Copier";
+      copyBtn.style.cssText = "margin-left:8px;padding:4px 12px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;font-weight:700;cursor:pointer;font-size:12px;";
+      var feedback = document.createElement("span");
+      feedback.style.cssText = "display:block;margin-top:4px;font-size:11px;font-weight:600;";
+      copyBtn.addEventListener("click", function () { copyOtpToClipboard(code, feedback); });
+
+      demo.appendChild(copyBtn);
+      demo.appendChild(feedback);
       demo.classList.add("show");
+      demo.classList.toggle("fallback", Boolean(isFallback));
+
+      // Tentative de copie automatique (peut être refusée sans geste utilisateur :
+      // le bouton « Copier » reste le chemin garanti).
+      copyOtpToClipboard(code, feedback);
     } else {
-      demo.textContent = "";
-      demo.classList.remove("show");
+      demo.innerHTML = "";
+      demo.classList.remove("show", "fallback");
     }
   }
+
+  window.__afbShowOtpCode = showDemoOtp;
 
   function enableOtpInput() {
     const input = document.getElementById("step0-otp-code");
@@ -9034,17 +9521,26 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
       localStorage.setItem("diaspora_step0_whatsapp_otp_phone_pending", payload.whatsapp_phone);
 
       enableOtpInput();
-      showDemoOtp(data.demo_otp);
+
+      if (data.fallback_otp) {
+        showDemoOtp(data.fallback_otp, true);
+      } else {
+        showDemoOtp(data.demo_otp);
+      }
 
       if (data.whatsapp_sent === false) {
-        if (data.demo_mode) {
+        if (data.fallback_otp) {
+          setOtpStatus("L’envoi WhatsApp est indisponible. Utilisez le code affiché ci-dessous pour continuer.", "warning");
+        } else if (data.demo_mode) {
           setOtpStatus("L’envoi WhatsApp n’a pas pu être confirmé (mode démo). Utilisez le code affiché ci-dessous.", "warning");
         } else {
           setOtpStatus("L’envoi du code WhatsApp a échoué. Vérifiez le numéro puis réessayez.", "error");
           return;
         }
       } else {
-        setOtpStatus("Code de sécurité transmis. Vérifiez votre WhatsApp.", "ok");
+        // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : ne pas annoncer « envoyé » tant
+        // que la livraison n'est pas confirmée (trop de faux positifs sinon).
+        setOtpStatus("Envoi du code en cours... Vérification de la livraison WhatsApp.", "warning");
         watchOtpDelivery(payload.session_id);
       }
 
@@ -9059,8 +9555,13 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
     if (!sessionId) return;
     if (otpDeliveryWatchTimer) clearTimeout(otpDeliveryWatchTimer);
 
+    // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 :
+    // - « envoyé » affiché uniquement sur livraison confirmée (DELIVERED/READ) ;
+    // - « SENT » ne suffit pas : on a observé enqueued -> sent -> failed chez Meta.
     var attempts = 0;
+    var maxAttempts = 8;
     var failedStatuses = ["FAILED", "ERROR", "REJECTED", "UNDELIVERED", "CALLBELL_HTTP_ERROR", "CALLBELL_ERROR"];
+    var confirmedStatuses = ["DELIVERED", "READ"];
 
     function poll() {
       attempts += 1;
@@ -9068,18 +9569,37 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
         .then(function (response) { return response.json(); })
         .then(function (data) {
           var status = String(data.whatsapp_delivery_status || "").toUpperCase();
+
           if (failedStatuses.indexOf(status) !== -1) {
-            setOtpStatus("La livraison du code WhatsApp a échoué (statut : " + status + "). Vérifiez le numéro puis renvoyez le code.", "error");
+            if (data.fallback_otp) {
+              showDemoOtp(data.fallback_otp, true);
+              setOtpStatus("La livraison WhatsApp a échoué. Utilisez le code affiché ci-dessous pour continuer.", "warning");
+            } else {
+              setOtpStatus("La livraison du code WhatsApp a échoué (statut : " + status + "). Vérifiez le numéro puis renvoyez le code.", "error");
+            }
             return;
           }
-          if (attempts < 4) {
+
+          if (confirmedStatuses.indexOf(status) !== -1) {
+            setOtpStatus("Code livré sur WhatsApp ✓ Saisissez le code reçu.", "ok");
+            return;
+          }
+
+          if (attempts < maxAttempts) {
             otpDeliveryWatchTimer = setTimeout(poll, 5000);
+          } else {
+            setOtpStatus("Livraison WhatsApp non confirmée pour l’instant. Si vous ne recevez pas le code, cliquez sur « Renvoyer le code ».", "warning");
           }
         })
-        .catch(function () { /* suivi best-effort : ne pas perturber l'utilisateur */ });
+        .catch(function () {
+          // suivi best-effort : re-tenter sans perturber l'utilisateur
+          if (attempts < maxAttempts) {
+            otpDeliveryWatchTimer = setTimeout(poll, 5000);
+          }
+        });
     }
 
-    otpDeliveryWatchTimer = setTimeout(poll, 5000);
+    otpDeliveryWatchTimer = setTimeout(poll, 4000);
   }
 
   async function verifyOtp(event) {
@@ -9189,6 +9709,14 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
       const firstError = errors.length ? errors[0] : null;
 
       if (liveStatus === "FAILED" || liveStatus === "ERROR") {
+        // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : si un code de secours est
+        // disponible, l'afficher au lieu d'un message d'indisponibilité.
+        if (data.fallback_otp && typeof window.__afbShowOtpCode === "function") {
+          window.__afbShowOtpCode(data.fallback_otp, true);
+          setOtpStatus("La livraison WhatsApp a échoué. Utilisez le code affiché ci-dessous pour continuer.", "warning");
+          return;
+        }
+
         let message = "Le service de vérification WhatsApp est momentanément indisponible. Veuillez réessayer plus tard.";
 
         if (firstError && firstError.code === 131042) {
@@ -9201,12 +9729,15 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
         return;
       }
 
-      if (liveStatus === "SENT" || liveStatus === "DELIVERED" || liveStatus === "READ") {
-        setOtpStatus("Code OTP transmis sur WhatsApp.", "ok");
+      // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : « SENT » ne prouve pas la
+      // réception (séquence enqueued -> sent -> failed observée). Seuls
+      // DELIVERED / READ valent confirmation.
+      if (liveStatus === "DELIVERED" || liveStatus === "READ") {
+        setOtpStatus("Code livré sur WhatsApp ✓ Saisissez le code reçu.", "ok");
         return;
       }
 
-      if (liveStatus === "ENQUEUED" || liveStatus === "QUEUED" || liveStatus === "PENDING") {
+      if (liveStatus === "SENT" || liveStatus === "ENQUEUED" || liveStatus === "QUEUED" || liveStatus === "PENDING") {
         setOtpStatus("Envoi du code de sécurité en cours...", "warning");
       }
 
@@ -9237,6 +9768,61 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
 
     setTimeout(startOtpDeliveryPolling, 2500);
   }, true);
+})();
+</script>
+
+<!-- AFB_OTP_AUTO_VERIFY_V1 : vérification automatique dès 6 chiffres (saisie ou collage) -->
+<script>
+(function () {
+  if (window.__afbOtpAutoVerifyV1) return;
+  window.__afbOtpAutoVerifyV1 = true;
+
+  var lastTried = "";
+
+  function digitsOf(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function tryAutoVerify() {
+    var input = document.getElementById("step0-otp-code");
+    if (!input || input.disabled) return;
+
+    var code = digitsOf(input.value).slice(0, 6);
+    if (code.length !== 6 || code === lastTried) return;
+
+    // Nettoie un collage du type "Votre code : 123 456"
+    if (input.value !== code) input.value = code;
+
+    lastTried = code;
+
+    var btn = document.getElementById("step0-verify-otp-btn");
+    if (btn && !btn.disabled) btn.click();
+  }
+
+  function bind() {
+    var input = document.getElementById("step0-otp-code");
+    if (!input || input.dataset.afbAutoVerifyBound === "1") return;
+
+    input.dataset.afbAutoVerifyBound = "1";
+    input.addEventListener("input", function () { setTimeout(tryAutoVerify, 30); });
+    input.addEventListener("paste", function () { setTimeout(tryAutoVerify, 60); });
+  }
+
+  // Un renvoi de code doit permettre une nouvelle tentative automatique,
+  // même si le client colle à nouveau le même code.
+  document.addEventListener("click", function (event) {
+    if (event.target && event.target.closest && event.target.closest("#step0-send-otp-btn")) {
+      lastTried = "";
+    }
+  }, true);
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bind);
+  } else {
+    bind();
+  }
+
+  setTimeout(bind, 800);
 })();
 </script>
 

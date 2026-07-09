@@ -69,7 +69,7 @@ def whatsapp_is_enabled() -> bool:
     if "enabled" in config:
         return bool_value(config.get("enabled"))
 
-    env_value = os.getenv("WHATSAPP_ENABLED")
+    env_value = os.getenv("CALLBELL_ENABLED") or os.getenv("WHATSAPP_ENABLED")
 
     if env_value is not None:
         return bool_value(env_value)
@@ -82,12 +82,14 @@ def get_callbell_config() -> dict[str, str | None]:
 
     base_url = (
         os.getenv("CALLBELL_API_BASE_URL")
+        or os.getenv("CALLBELL_BASE_URL")
         or item.get("base_url")
         or "https://api.callbell.eu"
     )
 
     bearer_token = (
-        os.getenv("CALLBELL_BEARER_TOKEN")
+        os.getenv("CALLBELL_API_TOKEN")
+        or os.getenv("CALLBELL_BEARER_TOKEN")
         or item.get("api_key")
         or item.get("bearer_token")
         or item.get("access_token")
@@ -154,7 +156,11 @@ def validate_callbell_config() -> list[str]:
     return missing
 
 
-def send_whatsapp_message(to_phone: str, message: str) -> dict[str, Any]:
+def send_whatsapp_message(
+    to_phone: str,
+    message: str,
+    template_values: list[str] | None = None,
+) -> dict[str, Any]:
     missing = validate_callbell_config()
 
     if missing:
@@ -174,7 +180,7 @@ def send_whatsapp_message(to_phone: str, message: str) -> dict[str, Any]:
         "type": "text",
         "channel_uuid": config["channel_uuid"],
         "template_uuid": config["template_uuid"],
-        "template_values": [message],
+        "template_values": template_values if template_values is not None else [message],
         "content": {
             "text": message
         },
