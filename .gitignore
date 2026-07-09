@@ -65,3 +65,13 @@ build/
 *.tar
 *.tar.gz
 *.rar
+
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+data/api_integrations.json
+data/pre_onboarding_otps.json
+data/*.key
+data/*.token

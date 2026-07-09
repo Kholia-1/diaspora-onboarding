@@ -1,0 +1,103 @@
+{
+  "items": [
+    {
+      "key": "merchant_id",
+      "category": "Identifiants",
+      "label": "Merchant ID Mastercard Gateway",
+      "description": "Identifiant marchand fourni par la monétique ou l’acquéreur.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": ""
+    },
+    {
+      "key": "api_password",
+      "category": "Identifiants",
+      "label": "API Password Mastercard Gateway",
+      "description": "Mot de passe API sensible. À stocker dans .env ou coffre-fort, jamais dans Git.",
+      "status": "MISSING",
+      "sensitive": true,
+      "notes": "Ne pas saisir le vrai secret dans le dépôt Git."
+    },
+    {
+      "key": "sandbox_base_url",
+      "category": "Environnement",
+      "label": "Base URL Sandbox",
+      "description": "URL de test Mastercard Gateway, par exemple https://test-gateway.mastercard.com.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": ""
+    },
+    {
+      "key": "production_base_url",
+      "category": "Environnement",
+      "label": "Base URL Production",
+      "description": "URL de production fournie par Mastercard / acquéreur.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": ""
+    },
+    {
+      "key": "api_version",
+      "category": "Technique",
+      "label": "Version API",
+      "description": "Version API à utiliser, par exemple 100, à confirmer par la monétique.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": ""
+    },
+    {
+      "key": "currency",
+      "category": "Paiement",
+      "label": "Devise autorisée",
+      "description": "Confirmer si XAF est accepté. Sinon préciser EUR, USD ou autre devise.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": ""
+    },
+    {
+      "key": "operation",
+      "category": "Paiement",
+      "label": "Type d’opération",
+      "description": "PURCHASE pour débit immédiat, ou AUTHORIZE/CAPTURE selon la procédure banque.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": ""
+    },
+    {
+      "key": "return_url",
+      "category": "URLs",
+      "label": "Return URL à déclarer",
+      "description": "URL navigateur où Mastercard renvoie le client après paiement.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": "https://80-65-211-49.sslip.io/api/payments/mastercard/return"
+    },
+    {
+      "key": "webhook_url",
+      "category": "URLs",
+      "label": "Webhook / Notification URL",
+      "description": "URL serveur pour recevoir les notifications Mastercard.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": "https://80-65-211-49.sslip.io/api/payments/mastercard/webhook"
+    },
+    {
+      "key": "test_cards",
+      "category": "Tests",
+      "label": "Cartes de test Sandbox",
+      "description": "Cartes de test, scénarios succès/échec, 3DS, paiement refusé.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": ""
+    },
+    {
+      "key": "go_live_process",
+      "category": "Production",
+      "label": "Procédure de passage en production",
+      "description": "Étapes de validation, habilitations, restrictions IP, sécurité et support.",
+      "status": "MISSING",
+      "sensitive": false,
+      "notes": ""
+    }
+  ]
+}

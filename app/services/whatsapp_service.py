@@ -114,6 +114,7 @@ def get_callbell_config() -> dict[str, str | None]:
         "bearer_token": bearer_token,
         "channel_uuid": channel_uuid,
         "template_uuid": template_uuid,
+	"use_template": bool(item.get("use_template", False)),
     }
 
 
@@ -148,8 +149,8 @@ def validate_callbell_config() -> list[str]:
     if not config["channel_uuid"]:
         missing.append("Channel UUID Callbell manquant.")
 
-    if not config["template_uuid"]:
-        missing.append("Template UUID Callbell manquant.")
+    if config.get("use_template") and not config.get("template_uuid"):
+    	missing.append("Template UUID Callbell manquant.")
 
     return missing
 
@@ -168,18 +169,29 @@ def send_whatsapp_message(to_phone: str, message: str) -> dict[str, Any]:
     config = get_callbell_config()
     normalized_phone = normalize_phone_number(to_phone)
 
-    payload = {
-        "to": normalized_phone,
-        "from": "whatsapp",
-        "type": "text",
-        "channel_uuid": config["channel_uuid"],
-        "template_uuid": config["template_uuid"],
-        "template_values": [message],
-        "content": {
-            "text": message
-        },
-        "optin_contact": True
-    }
+
+    if config.get("use_template"):
+        payload = {
+            "to": normalized_phone,
+            "from": "whatsapp",
+            "type": "template",
+            "channel_uuid": config["channel_uuid"],
+            "template_uuid": config["template_uuid"],
+            "template_values": [message],
+            "optin_contact": True
+        }
+
+    else:
+        payload = {
+            "to": normalized_phone,
+            "from": "whatsapp",
+            "type": "text",
+            "channel_uuid": config["channel_uuid"],
+            "content": {
+                "text": message
+            },
+            "optin_contact": True
+        }
 
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
 

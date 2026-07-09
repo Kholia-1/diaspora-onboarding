@@ -5,11 +5,9 @@ from uuid import uuid4
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
-from app.services.whatsapp_service import send_whatsapp_message
 from app.database import get_db
 from app.models import AccountApplication, ApplicationDocument
 from app.schemas import ApplicationCreate, ApplicationResponse
@@ -286,24 +284,6 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
     db.add(application)
     db.commit()
     db.refresh(application)
-
-    # WHATSAPP_NOTIFY_APPLICATION_SUBMITTED_V1
-    whatsapp_submit_result = None
-    try:
-        if application.phone:
-            whatsapp_submit_result = send_whatsapp_message(
-                application.phone,
-                f"Bonjour {application.first_name}, votre demande d'ouverture de compte Diaspora a bien ete recue. Reference dossier : {application.reference}. Afriland First Bank vous notifiera apres analyse de votre dossier."
-            )
-            print("[WHATSAPP][APPLICATION_SUBMITTED]", application.reference, whatsapp_submit_result)
-    except Exception as exc:
-        whatsapp_submit_result = {
-            "success": False,
-            "status": "WHATSAPP_EXCEPTION",
-            "error": str(exc)
-        }
-        print("[WHATSAPP][APPLICATION_SUBMITTED][ERROR]", application.reference, str(exc))
-
     # APPLICATION_CREATE_ATTACH_PRE_ONBOARDING_CALL_V1
     pre_session_id = getattr(payload, "pre_onboarding_session_id", None)
     if pre_session_id:
