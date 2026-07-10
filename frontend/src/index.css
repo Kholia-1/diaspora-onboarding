@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-afriland: #c90000;
+  --color-afriland-dark: #9e0000;
+  --color-surface: #f3f5f9;
+  --color-topbar-from: #16181d;
+  --color-topbar-to: #0c0d10;
+
+  --shadow-soft: 0 4px 20px rgba(22, 24, 29, 0.07);
+  --shadow-card: 0 2px 12px rgba(22, 24, 29, 0.06), 0 12px 32px rgba(22, 24, 29, 0.05);
+}
+
+body {
+  background-color: var(--color-surface);
+  color: #1c1e24;
+  font-family: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

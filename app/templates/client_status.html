@@ -318,13 +318,12 @@
                 height: 60px;
             }
 
-            /* CLIENT_STATUS_MOBILE_NO_CARD_V1 : formulaire sans carte sur mobile */
+            /* CLIENT_STATUS_MOBILE_CARD_PADDING_V2 : on garde la carte sur
+               mobile avec un padding réduit — la version « sans carte »
+               (padding: 0) collait le contenu aux bords de l'écran. */
             .container > .card {
-                background: transparent;
-                border: none;
-                box-shadow: none;
-                border-radius: 0;
-                padding: 0;
+                padding: 20px 16px;
+                border-radius: 14px;
             }
         }
     </style>
