@@ -1007,11 +1007,54 @@ def extract_prefill_fields(account_type: str, document_type: str, ocr_text: str)
 
     return fields
 
+# AFB_OCR_FIELDS_SERVER_PERSIST_V1 : les champs extraits par OCR sont aussi
+# conservés côté serveur (par session) pour que le préremplissage du formulaire
+# fonctionne même quand le localStorage est absent (autre appareil, navigation
+# privée, cache vidé).
+def persist_session_ocr_fields(session_id: str, document_type: str, fields: dict) -> None:
+    from pathlib import Path
+    from datetime import datetime
+    import os
+    import re
+    import json
+
+    safe = re.sub(r"[^A-Za-z0-9_-]", "_", str(session_id or "").strip())[:80]
+    if not safe:
+        return
+
+    upload_root = Path(os.getenv("PRE_ONBOARDING_UPLOAD_DIR", "uploads/pre_onboarding"))
+    target_dir = upload_root / safe
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    path = target_dir / "ocr_fields.json"
+
+    data = {}
+    if path.exists():
+        try:
+            data = json.loads(path.read_text(encoding="utf-8")) or {}
+        except Exception:
+            data = {}
+
+    merged = data.get("fields") or {}
+    for key, value in (fields or {}).items():
+        if value not in (None, "", []):
+            merged[key] = value
+
+    data["fields"] = merged
+    by_document = data.get("by_document") or {}
+    by_document[str(document_type or "UNKNOWN")] = fields
+    data["by_document"] = by_document
+    data["updated_at"] = datetime.utcnow().isoformat() + "Z"
+
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 @router.post("/ocr")
 async def pre_onboarding_ocr(
     account_type: str = Form(...),
     document_type: str = Form(...),
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    session_id: str = Form(None)
 ):
     content = await file.read()
 
@@ -1070,6 +1113,13 @@ async def pre_onboarding_ocr(
             }
 
     extracted_fields = extract_prefill_fields(account_type, document_type, ocr_text)
+
+    # AFB_OCR_FIELDS_SERVER_PERSIST_V1
+    if session_id and extracted_fields:
+        try:
+            persist_session_ocr_fields(session_id, document_type, extracted_fields)
+        except Exception:
+            pass
 
     return {
         "status": "OK",
@@ -1195,17 +1245,34 @@ async def get_pre_onboarding_session(session_id: str):
     documents = []
 
     for metadata_file in sorted(target_dir.glob("*.json")):
+        # AFB_OCR_FIELDS_SERVER_PERSIST_V1 : ce fichier porte les champs OCR
+        # de la session, ce n'est pas un document client.
+        if metadata_file.name == "ocr_fields.json":
+            continue
+
         try:
             metadata = json.loads(metadata_file.read_text(encoding="utf-8"))
             documents.append(metadata)
         except Exception:
             continue
 
+    # AFB_OCR_FIELDS_SERVER_PERSIST_V1 : champs extraits exposés au formulaire.
+    extracted_fields = {}
+    ocr_fields_path = target_dir / "ocr_fields.json"
+    if ocr_fields_path.exists():
+        try:
+            extracted_fields = (
+                json.loads(ocr_fields_path.read_text(encoding="utf-8")) or {}
+            ).get("fields") or {}
+        except Exception:
+            extracted_fields = {}
+
     return {
         "session_id": session_safe,
         "exists": True,
         "documents_count": len(documents),
-        "documents": documents
+        "documents": documents,
+        "extracted_fields": extracted_fields
     }
 
 

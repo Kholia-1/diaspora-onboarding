@@ -14060,10 +14060,63 @@ document.addEventListener("DOMContentLoaded", function () {
         form.parentElement.insertBefore(notice, form);
     }
 
-    function run() {
+    function resolveSessionId() {
+        try {
+            const fromUrl = new URLSearchParams(window.location.search).get("pre_session");
+            if (fromUrl) return fromUrl;
+        } catch (e) {}
+
+        const hidden = document.getElementById("pre_onboarding_session_id");
+        if (hidden && hidden.value) return hidden.value;
+
+        return localStorage.getItem("diaspora_pre_onboarding_session_id") || "";
+    }
+
+    // AFB_OCR_FIELDS_SERVER_PERSIST_V1 : si le localStorage ne contient rien
+    // (autre appareil, cache vidé), on récupère les champs OCR conservés côté
+    // serveur pour la session de pré-onboarding.
+    async function fetchServerFields() {
+        const sessionId = resolveSessionId();
+        if (!sessionId) return {};
+
+        try {
+            const response = await fetch(
+                "/api/pre-onboarding/session/" + encodeURIComponent(sessionId)
+            );
+            if (!response.ok) return {};
+            const data = await response.json();
+            return (data && data.extracted_fields) || {};
+        } catch (e) {
+            return {};
+        }
+    }
+
+    async function run() {
         const store = readJson(OCR_KEY) || {};
-        const prefill = store.prefill || store.extracted_fields || {};
+        let prefill = store.prefill || store.extracted_fields || {};
+
+        if (!prefill || Object.keys(prefill).length === 0) {
+            prefill = await fetchServerFields();
+
+            if (prefill && Object.keys(prefill).length > 0) {
+                // Rendre ces champs visibles aux modules V1/V2 des prochains
+                // chargements de page.
+                try {
+                    store.extracted_fields = prefill;
+                    store.prefill = prefill;
+                    localStorage.setItem(OCR_KEY, JSON.stringify(store));
+                } catch (e) {}
+            }
+        }
+
         if (!prefill || Object.keys(prefill).length === 0) return;
+
+        const sexValue = (function () {
+            const v = String(prefill.sex || "").trim().toUpperCase();
+            if (v === "M" || v.includes("MASCULIN") || v.includes("MALE")) return "Masculin";
+            if (v === "F" || v.includes("FEMININ") || v.includes("FÉMININ") || v.includes("FEMALE")) return "Féminin";
+            return "";
+        })();
 
         const mapping = [
             ["last_name", prefill.last_name || prefill.surname, false],
@@ -14074,7 +14127,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 "identity_document_number",
                 prefill.identity_document_number || prefill.cni_number || prefill.passport_number,
                 false
-            ]
+            ],
+            ["identity_document_issue_date", prefill.identity_issue_date, true],
+            ["sex", sexValue, false]
         ];
 
         const conflicts = [];

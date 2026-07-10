@@ -3767,6 +3767,9 @@
         formData.append("account_type", selectedType || "UNKNOWN");
         formData.append("document_type", documentType);
         formData.append("file", file);
+        // AFB_OCR_FIELDS_SERVER_PERSIST_V1 : le serveur conserve les champs
+        // extraits par session pour le préremplissage multi-appareils.
+        formData.append("session_id", getOrCreatePreSessionId());
 
         const response = await postFile("/api/pre-onboarding/ocr", formData, 45000);
         if (!response.ok) throw new Error("ocr " + response.status);
@@ -4518,6 +4521,113 @@
     };
   }
 
+  // AFB_CNI_AUTO_DETECT_CAPTURE_V1 : détection du document dans le cadre.
+  // La zone analysée reproduit le cadre-guide (86% de largeur, ratio 1.58) :
+  // on cherche des contours marqués sur les 4 bords de cette zone (les bords
+  // de la carte) et de la texture à l'intérieur (le texte imprimé). La photo
+  // part dès que la pièce est réellement détectée — plus de long décompte.
+  function detectDocumentInFrame(video) {
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      return { present: false, message: text("Caméra en préparation...", "Camera is getting ready...") };
+    }
+
+    const maxWidth = 240;
+    const scale = Math.min(1, maxWidth / video.videoWidth);
+    const width = Math.max(8, Math.round(video.videoWidth * scale));
+    const height = Math.max(8, Math.round(video.videoHeight * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(video, 0, 0, width, height);
+
+    const data = ctx.getImageData(0, 0, width, height).data;
+    const gray = new Float32Array(width * height);
+
+    for (let i = 0, p = 0; p < gray.length; i += 4, p += 1) {
+      gray[p] = (data[i] * 0.299) + (data[i + 1] * 0.587) + (data[i + 2] * 0.114);
+    }
+
+    // Zone attendue de la pièce : mêmes proportions que le cadre-guide.
+    const rw = Math.round(width * 0.86);
+    let rh = Math.round(rw / 1.58);
+    if (rh > height * 0.86) rh = Math.round(height * 0.86);
+    const rx = Math.round((width - rw) / 2);
+    const ry = Math.round((height - rh) / 2);
+
+    const band = Math.max(3, Math.round(rh * 0.10));
+    const strongEdge = 20;
+
+    // Couverture d'un bord : fraction des colonnes (ou lignes) de la zone
+    // traversées par un contour net à l'intérieur de la bande. Un bord de
+    // carte droit donne une couverture proche de 1, un fond uni proche de 0.
+    function horizontalBandCoverage(y0, y1) {
+      let cols = 0;
+      let hits = 0;
+      for (let x = rx + 2; x < rx + rw - 2; x += 2) {
+        cols += 1;
+        for (let y = Math.max(1, y0); y < Math.min(height - 1, y1); y += 1) {
+          const g = Math.abs(gray[y * width + x] - gray[(y - 1) * width + x]);
+          if (g > strongEdge) { hits += 1; break; }
+        }
+      }
+      return cols ? hits / cols : 0;
+    }
+
+    function verticalBandCoverage(x0, x1) {
+      let rows = 0;
+      let hits = 0;
+      for (let y = ry + 2; y < ry + rh - 2; y += 2) {
+        rows += 1;
+        for (let x = Math.max(1, x0); x < Math.min(width - 1, x1); x += 1) {
+          const g = Math.abs(gray[y * width + x] - gray[y * width + x - 1]);
+          if (g > strongEdge) { hits += 1; break; }
+        }
+      }
+      return rows ? hits / rows : 0;
+    }
+
+    const topDensity = horizontalBandCoverage(ry - band, ry + band);
+    const bottomDensity = horizontalBandCoverage(ry + rh - band, ry + rh + band);
+    const leftDensity = verticalBandCoverage(rx - band, rx + band);
+    const rightDensity = verticalBandCoverage(rx + rw - band, rx + rw + band);
+
+    // Texture intérieure : le texte imprimé de la pièce.
+    let interiorSum = 0;
+    let interiorCount = 0;
+    for (let y = ry + band * 2; y < ry + rh - band * 2; y += 3) {
+      for (let x = rx + band * 2; x < rx + rw - band * 2; x += 3) {
+        const gh = Math.abs(gray[y * width + x] - gray[y * width + x - 1]);
+        const gv = Math.abs(gray[y * width + x] - gray[(y - 1) * width + x]);
+        interiorSum += gh + gv;
+        interiorCount += 1;
+      }
+    }
+    const interiorTexture = interiorSum / Math.max(1, interiorCount);
+
+    const bandThreshold = 0.5;
+    const densities = [topDensity, bottomDensity, leftDensity, rightDensity];
+    const strongBands = densities.filter(function (d) { return d >= bandThreshold; }).length;
+
+    const present = strongBands >= 3 && interiorTexture >= 4;
+
+    let message;
+    if (present) {
+      message = text("Pièce détectée.", "Document detected.");
+    } else if (interiorTexture < 4) {
+      message = text("Rapprochez la pièce et améliorez la lumière.", "Move the document closer and improve lighting.");
+    } else {
+      message = text("Alignez les bords de la pièce sur le cadre.", "Align the document edges with the frame.");
+    }
+
+    return { present: present, message: message, strongBands: strongBands, interiorTexture: interiorTexture };
+  }
+
+  // Exposé pour diagnostic et tests automatisés.
+  window.__afbDetectDocumentInFrame = detectDocumentInFrame;
+
   function startAutoCaptureMonitor(profile) {
     stopAutoCaptureMonitor();
     updateAutoPanel(profile);
@@ -4525,26 +4635,45 @@
     const video = document.getElementById("advanced-camera-video");
     const guidance = document.getElementById("advanced-camera-guidance");
 
-    autoCaptureReadyAt = Date.now() + 2800;
+    const documentMode = profile && (profile.frame === "identity" || profile.frame === "document");
+
+    // AFB_CNI_AUTO_DETECT_CAPTURE_V1 : cadence rapide pour les pièces —
+    // la capture part dès 2 détections consécutives (~1 s une fois cadrée).
+    const warmupMs = documentMode ? 1100 : 2200;
+    const intervalMs = documentMode ? 450 : 700;
+    const requiredStable = documentMode ? 2 : 4;
+
+    autoCaptureReadyAt = Date.now() + warmupMs;
 
     autoCaptureTimer = setInterval(function () {
       if (!autoCaptureEnabled || autoCaptureLocked) return;
       if (Date.now() < autoCaptureReadyAt) return;
       if (!video || !video.videoWidth || !video.videoHeight) return;
 
-      const result = scoreCurrentVideoFrame(video, profile);
+      const quality = scoreCurrentVideoFrame(video, profile);
+      let ok = quality.ok;
+      let failMessage = quality.message + " Score : " + quality.score + "/100.";
 
-      if (result.ok) {
+      if (documentMode) {
+        const detection = detectDocumentInFrame(video);
+        ok = detection.present && quality.ok;
+        failMessage = detection.present
+          ? failMessage
+          : detection.message;
+      }
+
+      if (ok) {
         autoStableCounter += 1;
-        const remaining = Math.max(0, 5 - autoStableCounter);
 
         if (guidance) {
-          guidance.textContent = remaining > 0
-            ? text("Image correcte. Capture dans ", "Good image. Capture in ") + remaining + "..."
-            : text("Capture...", "Capturing...");
+          guidance.textContent = autoStableCounter >= requiredStable
+            ? text("Capture...", "Capturing...")
+            : (documentMode
+              ? text("Pièce détectée — ne bougez plus...", "Document detected — hold still...")
+              : text("Image correcte — ne bougez plus...", "Good image — hold still..."));
         }
 
-        if (autoStableCounter >= 5) {
+        if (autoStableCounter >= requiredStable) {
           autoCaptureLocked = true;
           stopAutoCaptureMonitor();
           captureAdvancedPhoto();
@@ -4552,10 +4681,10 @@
       } else {
         autoStableCounter = 0;
         if (guidance) {
-          guidance.textContent = result.message + " Score : " + result.score + "/100.";
+          guidance.textContent = failMessage;
         }
       }
-    }, 850);
+    }, intervalMs);
   }
 
   let cameraBlockHintShown = false;
