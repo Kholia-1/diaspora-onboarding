@@ -3,7 +3,11 @@ from fastapi.concurrency import run_in_threadpool
 import re
 from typing import Any
 
-from app.services.document_auth_service import extract_text_with_best_engine, validate_document_type_against_ocr
+from app.services.document_auth_service import (
+    extract_text_with_best_engine,
+    validate_document_type_against_ocr,
+    parse_mrz_icao9303,
+)
 from app.services.whatsapp_service import send_whatsapp_message
 from app.services.callbell_delivery_status_service import get_callbell_message_status
 
@@ -811,6 +815,17 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
     normalized_doc = normalize_text(document_type)
     normalized_text = normalize_text(ocr_text)
 
+    # AFB_MRZ_ICAO9303_PRIORITY_V1
+    # La MRZ validée par clé de contrôle est bien plus fiable qu'une lecture par
+    # mots-clés sur un OCR bruité : quand un champ est validé, il prime sur
+    # l'extraction heuristique faite plus bas dans cette fonction.
+    mrz = parse_mrz_icao9303(ocr_text)
+    mrz_fields = mrz.get("fields", {}) if mrz.get("mrz_detected") else {}
+
+    if mrz.get("mrz_detected"):
+        fields["mrz_checksum_validated_fields"] = mrz.get("mrz_checksum_validated_fields", [])
+        fields["mrz_format"] = mrz.get("mrz_format")
+
     dates = v2_extract_dates(ocr_text)
 
     if dates:
@@ -908,6 +923,34 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
     if cni_number:
         fields["cni_number"] = cni_number
         fields["identity_document_number"] = cni_number
+
+    # AFB_MRZ_ICAO9303_OVERLAY_V1
+    # On ne fait confiance au nom/sexe/nationalité lus dans la MRZ que si au
+    # moins un champ numérique (date, numéro de document) a passé sa clé de
+    # contrôle : ça confirme que l'OCR a bien lu ce bloc MRZ, pas seulement
+    # qu'il ressemble à de la MRZ.
+    if mrz_fields and mrz.get("mrz_checksum_validated_fields"):
+        if mrz_fields.get("last_name"):
+            fields["last_name"] = mrz_fields["last_name"]
+            fields["surname"] = mrz_fields["last_name"]
+        if mrz_fields.get("first_name"):
+            fields["first_name"] = mrz_fields["first_name"]
+            fields["given_names"] = mrz_fields["first_name"]
+        if mrz_fields.get("sex"):
+            fields["sex"] = mrz_fields["sex"]
+        if mrz_fields.get("nationality"):
+            fields["nationality"] = mrz_fields["nationality"]
+        if fields.get("last_name") and fields.get("first_name"):
+            fields["full_name"] = clean_text(f"{fields['last_name']} {fields['first_name']}")
+
+    if mrz_fields.get("birth_date"):
+        fields["birth_date"] = mrz_fields["birth_date"]
+
+    if mrz_fields.get("document_number"):
+        fields["identity_document_number"] = mrz_fields["document_number"]
+
+    if mrz_fields.get("expiry_date"):
+        fields["identity_expiry_date"] = mrz_fields["expiry_date"]
 
     return fields
 # CAMEROON_DOC_EXTRACTION_V2_END
