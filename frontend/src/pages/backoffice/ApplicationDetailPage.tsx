@@ -1,10 +1,16 @@
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-import { fetchApplication } from '../../api/applications'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { fetchApplication, screenBlackmodule } from '../../api/applications'
+import { ApiError } from '../../api/client'
+import { useSession } from '../../app/guards'
+import { AccountOpeningPanel } from '../../components/backoffice/AccountOpeningPanel'
+import { DecisionPanel, DECISION_ROLES } from '../../components/backoffice/DecisionPanel'
 import { Badge, StatusBadge } from '../../components/ui/Badge'
+import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import type { ApplicationDetail, ApplicationDocument } from '../../types'
+import type { ApplicationDetail, ApplicationDocument, ScreeningResponse } from '../../types'
 
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—'
@@ -102,11 +108,28 @@ function DocumentCard({ doc }: { doc: ApplicationDocument }) {
 
 export function ApplicationDetailPage() {
   const { idOrReference = '' } = useParams()
+  const { user } = useSession()
+  const queryClient = useQueryClient()
+  const [screeningResult, setScreeningResult] = useState<ScreeningResponse | null>(null)
+  const [screeningError, setScreeningError] = useState<string | null>(null)
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['applications', idOrReference],
     queryFn: () => fetchApplication(idOrReference),
     enabled: Boolean(idOrReference),
+  })
+
+  const screeningMutation = useMutation({
+    mutationFn: (applicationId: number) => screenBlackmodule(applicationId),
+    onSuccess: (result) => {
+      setScreeningError(null)
+      setScreeningResult(result)
+      queryClient.invalidateQueries({ queryKey: ['applications'] })
+    },
+    onError: (err) => {
+      setScreeningResult(null)
+      setScreeningError(err instanceof ApiError ? err.message : 'Screening impossible.')
+    },
   })
 
   if (isLoading) {
@@ -132,6 +155,8 @@ export function ApplicationDetailPage() {
 
   const app: ApplicationDetail = data.application
   const documents = data.documents ?? []
+  const status = String(app.status)
+  const canDecide = DECISION_ROLES.includes(user?.role ?? '')
 
   return (
     <div className="space-y-6">
@@ -211,28 +236,67 @@ export function ApplicationDetailPage() {
         </FieldGrid>
       </Card>
 
-      <Card title="Scores & conformité">
-        <FieldGrid>
-          <Field label="Score KYC" value={app.kyc_score} />
-          <Field label="Score documents" value={app.document_score} />
-          <Field label="Niveau de risque">
-            <Badge
-              tone={
-                ['HIGH', 'ELEVE', 'ÉLEVÉ'].includes((app.risk_level ?? '').toUpperCase())
-                  ? 'red'
-                  : ['MEDIUM', 'MOYEN'].includes((app.risk_level ?? '').toUpperCase())
-                    ? 'orange'
-                    : app.risk_level
-                      ? 'green'
-                      : 'gray'
-              }
-            >
-              {app.risk_level ?? '—'}
-            </Badge>
-          </Field>
-          <Field label="Statut BlackModule" value={app.blackmodule_status} />
-        </FieldGrid>
+      <Card
+        title="Scores & conformité"
+        actions={
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => screeningMutation.mutate(app.id)}
+            disabled={screeningMutation.isPending}
+          >
+            {screeningMutation.isPending ? 'Screening en cours…' : 'Lancer le screening'}
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          {screeningResult && (
+            <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 ring-1 ring-inset ring-emerald-100">
+              {screeningResult.message ?? 'Screening terminé.'}
+              {screeningResult.blackmodule_status
+                ? ` Statut : ${screeningResult.blackmodule_status}`
+                : ''}
+              {screeningResult.blackmodule_score !== null &&
+              screeningResult.blackmodule_score !== undefined
+                ? ` — Score : ${screeningResult.blackmodule_score}`
+                : ''}
+            </p>
+          )}
+          {screeningError && (
+            <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-100">
+              {screeningError}
+            </p>
+          )}
+          <FieldGrid>
+            <Field label="Score KYC" value={app.kyc_score} />
+            <Field label="Score documents" value={app.document_score} />
+            <Field label="Niveau de risque">
+              <Badge
+                tone={
+                  ['HIGH', 'ELEVE', 'ÉLEVÉ'].includes((app.risk_level ?? '').toUpperCase())
+                    ? 'red'
+                    : ['MEDIUM', 'MOYEN'].includes((app.risk_level ?? '').toUpperCase())
+                      ? 'orange'
+                      : app.risk_level
+                        ? 'green'
+                        : 'gray'
+                }
+              >
+                {app.risk_level ?? '—'}
+              </Badge>
+            </Field>
+            <Field label="Statut BlackModule" value={app.blackmodule_status} />
+            <Field label="Score BlackModule" value={app['blackmodule_score']} />
+            <Field label="Alerte BlackModule" value={app['blackmodule_alert']} />
+          </FieldGrid>
+        </div>
       </Card>
+
+      {(status === 'APPROVED' || status === 'ACCOUNT_OPENED') && (
+        <AccountOpeningPanel reference={app.reference} status={status} canAct={canDecide} />
+      )}
+
+      {canDecide && <DecisionPanel applicationId={app.id} />}
 
       <Card title={`Documents (${documents.length})`}>
         {documents.length === 0 ? (

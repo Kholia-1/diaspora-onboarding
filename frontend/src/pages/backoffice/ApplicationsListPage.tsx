@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { fetchApplications } from '../../api/applications'
+import { fetchApplications, fetchDashboardSummary } from '../../api/applications'
 import { StatusBadge, statusLabel, Badge } from '../../components/ui/Badge'
 import type { BadgeTone } from '../../components/ui/Badge'
 import { StatCard } from '../../components/ui/Card'
@@ -45,7 +45,23 @@ export function ApplicationsListPage() {
     queryFn: fetchApplications,
   })
 
+  // Stats serveur (GET /api/backoffice/dashboard/summary), avec repli sur un
+  // calcul local à partir de la liste si l'endpoint est indisponible.
+  const { data: summary } = useQuery({
+    queryKey: ['dashboard', 'summary'],
+    queryFn: fetchDashboardSummary,
+    retry: false,
+  })
+
   const stats = useMemo(() => {
+    if (summary) {
+      return {
+        total: summary.total_demandes,
+        submitted: summary.demandes_soumises,
+        alerts: summary.alertes_blackmodule + summary.revue_conformite,
+        approved: summary.dossiers_approuves + summary.comptes_ouverts,
+      }
+    }
     const submitted = applications.filter((a) => a.status === 'SUBMITTED').length
     const alerts = applications.filter((a) =>
       ['BLACKMODULE_ALERT', 'COMPLIANCE_REVIEW'].includes(String(a.status)),
@@ -54,7 +70,7 @@ export function ApplicationsListPage() {
       ['APPROVED', 'ACCOUNT_OPENED'].includes(String(a.status)),
     ).length
     return { total: applications.length, submitted, alerts, approved }
-  }, [applications])
+  }, [applications, summary])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()

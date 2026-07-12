@@ -24,6 +24,13 @@ async function extractErrorMessage(response: Response): Promise<string> {
   try {
     const data = (await response.json()) as { detail?: unknown; message?: unknown }
     if (typeof data.detail === 'string' && data.detail) return data.detail
+    // detail peut être un objet structuré (ex. garde de paiement avant ouverture
+    // de compte : {status: "PAYMENT_REQUIRED_NOT_CONFIRMED", message: "..."}).
+    if (data.detail && typeof data.detail === 'object') {
+      const detail = data.detail as { message?: unknown; status?: unknown }
+      if (typeof detail.message === 'string' && detail.message) return detail.message
+      if (typeof detail.status === 'string' && detail.status) return detail.status
+    }
     if (typeof data.message === 'string' && data.message) return data.message
   } catch {
     // corps non JSON : on retombe sur un message générique

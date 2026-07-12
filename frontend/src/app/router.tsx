@@ -1,6 +1,9 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { RequireAuth, RequireRole } from './guards'
 import { BackofficeShell } from '../components/layout/BackofficeShell'
+import { ClientPortalLayout } from '../components/layout/ClientPortalLayout'
+import { PortalHome } from '../pages/client/PortalHome'
+import { StatusTrackingPage } from '../pages/client/StatusTrackingPage'
 import { LoginPage } from '../pages/backoffice/LoginPage'
 import { ApplicationsListPage } from '../pages/backoffice/ApplicationsListPage'
 import { ApplicationDetailPage } from '../pages/backoffice/ApplicationDetailPage'
@@ -11,6 +14,16 @@ import { CountriesPage } from '../pages/backoffice/CountriesPage'
 import { AuditLogsPage } from '../pages/backoffice/AuditLogsPage'
 
 const router = createBrowserRouter([
+  // ---- Espace client public (hors shell back-office, sans authentification)
+  {
+    element: <ClientPortalLayout />,
+    children: [
+      { path: '/', element: <PortalHome /> },
+      { path: '/suivi', element: <StatusTrackingPage /> },
+    ],
+  },
+
+  // ---- Back-office
   { path: '/login', element: <LoginPage /> },
   {
     element: <RequireAuth />,
@@ -18,7 +31,6 @@ const router = createBrowserRouter([
       {
         element: <BackofficeShell />,
         children: [
-          { path: '/', element: <Navigate to="/backoffice/applications" replace /> },
           { path: '/backoffice', element: <Navigate to="/backoffice/applications" replace /> },
           { path: '/backoffice/applications', element: <ApplicationsListPage /> },
           { path: '/backoffice/applications/:idOrReference', element: <ApplicationDetailPage /> },
@@ -34,11 +46,15 @@ const router = createBrowserRouter([
             ),
           },
           { path: '/backoffice/audit-logs', element: <AuditLogsPage /> },
+          // Route back-office inconnue → liste des dossiers
+          { path: '/backoffice/*', element: <Navigate to="/backoffice/applications" replace /> },
         ],
       },
     ],
   },
-  { path: '*', element: <Navigate to="/backoffice/applications" replace /> },
+
+  // ---- Toute autre route inconnue → portail client
+  { path: '*', element: <Navigate to="/" replace /> },
 ])
 
 export function AppRouter() {

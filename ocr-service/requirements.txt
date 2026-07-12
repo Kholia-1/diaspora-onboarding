@@ -1,5 +1,13 @@
-# Phase 0 : socle du service. Les dépendances OCR lourdes arrivent en Phase 3 :
-# rapidocr-onnxruntime, pytesseract, opencv-python-headless, rapidfuzz, cryptography
+# Phase 3 : moteur OCR réel branché.
+# Socle web
 fastapi>=0.115
 uvicorn>=0.30
 python-multipart>=0.0.9
+
+# Moteur OCR
+rapidocr-onnxruntime>=1.4      # RapidOCR + onnxruntime (modèle latin ONNX)
+pytesseract>=0.3.10            # fallback Tesseract (binaire système requis)
+opencv-python-headless>=4.9    # scoring qualité + prétraitement (deskew/CLAHE)
+pillow>=10                     # décodage image, EXIF, prétraitement
+numpy>=1.26                    # tableaux image
+rapidfuzz>=3.6                 # matching flou (dispo pour évolutions ; le port utilise difflib)

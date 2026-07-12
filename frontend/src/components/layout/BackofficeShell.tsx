@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { logout } from '../../api/auth'
 import { useSession } from '../../app/guards'
+import { BurgerButton } from './ClientPortalLayout'
 import logo from '../../assets/afriland-logo.png'
 
 const NAV_ITEMS = [
@@ -29,6 +31,7 @@ export function BackofficeShell() {
   const { user } = useSession()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const handleLogout = async () => {
     try {
@@ -39,13 +42,21 @@ export function BackofficeShell() {
     }
   }
 
+  const closeMenu = () => setMenuOpen(false)
+  const visibleItems = NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === 'ADMIN')
+
+  const navLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+      isActive ? 'bg-afriland text-white' : 'text-gray-300 hover:bg-white/10 hover:text-white'
+    }`
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b-[3px] border-afriland bg-gradient-to-r from-topbar-from to-topbar-to shadow-lg">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 sm:px-6">
+        <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:gap-6">
           {/* Logo dans une pastille blanche */}
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white p-1.5 shadow">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white p-1.5 shadow">
               <img src={logo} alt="Afriland First Bank" className="h-full w-full object-contain" />
             </span>
             <div className="hidden leading-tight sm:block">
@@ -56,27 +67,17 @@ export function BackofficeShell() {
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
-            {NAV_ITEMS.filter((item) => !item.adminOnly || user?.role === 'ADMIN').map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-                    isActive
-                      ? 'bg-afriland text-white'
-                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                  }`
-                }
-              >
+          {/* Navigation desktop */}
+          <nav className="hidden flex-1 items-center gap-1 lg:flex">
+            {visibleItems.map((item) => (
+              <NavLink key={item.to} to={item.to} className={navLinkClass}>
                 {item.label}
               </NavLink>
             ))}
           </nav>
 
-          {/* Profil connecté + déconnexion */}
-          <div className="flex items-center gap-3">
+          {/* Profil connecté + déconnexion + hamburger */}
+          <div className="ml-auto flex items-center gap-3">
             <div className="hidden text-right leading-tight md:block">
               <p className="text-sm font-semibold text-white">{user?.full_name ?? user?.username}</p>
               <p className="text-[11px] uppercase tracking-wide text-gray-400">{user?.role}</p>
@@ -93,9 +94,45 @@ export function BackofficeShell() {
             >
               <LogoutIcon />
             </button>
+            <div className="lg:hidden">
+              <BurgerButton
+                open={menuOpen}
+                onClick={() => setMenuOpen((v) => !v)}
+                controls="backoffice-mobile-nav"
+                dark
+              />
+            </div>
           </div>
+
+          {/* Panneau mobile déroulant sous le bandeau */}
+          {menuOpen && (
+            <nav
+              id="backoffice-mobile-nav"
+              className="absolute inset-x-0 top-full z-40 flex flex-col gap-1.5 border-b-[3px] border-afriland bg-gradient-to-b from-topbar-from to-topbar-to px-4 pb-5 pt-3 shadow-2xl lg:hidden"
+            >
+              {visibleItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={closeMenu}
+                  className={({ isActive }) =>
+                    `rounded-lg px-3 py-3 text-center text-[15px] font-semibold transition-colors ${
+                      isActive ? 'bg-afriland text-white' : 'text-gray-200 hover:bg-white/10'
+                    }`
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          )}
         </div>
       </header>
+
+      {/* Clic hors du panneau mobile : fermeture */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={closeMenu} />
+      )}
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">
         <Outlet />

@@ -219,6 +219,12 @@ public class AccountApplicationEntity {
     @Column(name = "review_comment")
     private String reviewComment;
 
+    @Column(name = "reviewed_by")
+    private String reviewedBy;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+
     @Column(name = "package_payment_reference")
     private String packagePaymentReference;
 
@@ -533,5 +539,67 @@ public class AccountApplicationEntity {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public String getReviewedBy() {
+        return reviewedBy;
+    }
+
+    public LocalDateTime getReviewedAt() {
+        return reviewedAt;
+    }
+
+    // --- Mutations Phase 2 (décision, screening, ouverture de compte) ---
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setRiskLevel(String riskLevel) {
+        this.riskLevel = riskLevel;
+    }
+
+    public void setBlackmoduleStatus(String blackmoduleStatus) {
+        this.blackmoduleStatus = blackmoduleStatus;
+    }
+
+    public void setBlackmoduleScore(Double blackmoduleScore) {
+        this.blackmoduleScore = blackmoduleScore;
+    }
+
+    public void setBlackmoduleAlert(String blackmoduleAlert) {
+        this.blackmoduleAlert = blackmoduleAlert;
+    }
+
+    public void setReviewDecision(String reviewDecision) {
+        this.reviewDecision = reviewDecision;
+    }
+
+    public void setReviewComment(String reviewComment) {
+        this.reviewComment = reviewComment;
+    }
+
+    public void setReviewedBy(String reviewedBy) {
+        this.reviewedBy = reviewedBy;
+    }
+
+    public void setReviewedAt(LocalDateTime reviewedAt) {
+        this.reviewedAt = reviewedAt;
+    }
+
+    public void setClientMessage(String clientMessage) {
+        this.clientMessage = clientMessage;
+    }
+
+    public void setFinalRib(String finalRib) {
+        this.finalRib = finalRib;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    public void setPackagePaymentStatus(String packagePaymentStatus) {
+        this.packagePaymentStatus = packagePaymentStatus;
     }
 }

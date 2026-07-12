@@ -127,6 +127,113 @@ export interface ApplicationDetailResponse {
 // Référentiels
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Actions back-office sur un dossier
+// ---------------------------------------------------------------------------
+
+export type BackofficeDecision = 'APPROVED' | 'REJECTED' | 'NEED_MORE_DOCUMENTS'
+
+export interface DecisionPayload {
+  decision: BackofficeDecision
+  comment?: string
+  client_message?: string
+}
+
+export interface DecisionResponse {
+  message?: string
+  reference?: string
+  decision?: string
+  status?: string
+  [key: string]: unknown
+}
+
+export interface ScreeningResponse {
+  message?: string
+  application_reference?: string
+  blackmodule_status?: string | null
+  blackmodule_score?: number | null
+  blackmodule_alert?: string | boolean | null
+  risk_level?: string | null
+  application_status?: string | null
+  [key: string]: unknown
+}
+
+export interface OpenedAccount {
+  application_reference: string
+  client_email: string | null
+  account_number: string | null
+  rib: string | null
+  status: string | null
+  created_at: string | null
+}
+
+export interface OpenAccountPayload {
+  account_number: string
+  rib: string
+  comment?: string
+}
+
+export interface OpenAccountResponse {
+  message?: string
+  application_status?: string
+  account?: OpenedAccount
+  [key: string]: unknown
+}
+
+export interface DashboardSummary {
+  total_demandes: number
+  demandes_soumises: number
+  alertes_blackmodule: number
+  revue_conformite: number
+  dossiers_approuves: number
+  dossiers_rejetes: number
+  comptes_ouverts: number
+}
+
+// ---------------------------------------------------------------------------
+// Suivi client public
+// ---------------------------------------------------------------------------
+
+export interface ClientApplicationStatus {
+  reference: string
+  full_name: string | null
+  email: string | null
+  phone: string | null
+  preferred_branch: string | null
+  nationality: string | null
+  residency_status: string | null
+  status: ApplicationStatus | string
+  risk_level: string | null
+  kyc_score: number | null
+  document_score: number | null
+  blackmodule_status: string | null
+  created_at: string | null
+  review_decision: string | null
+  review_comment: string | null
+  client_message: string | null
+  final_rib: string | null
+  account_number: string | null
+  [key: string]: unknown
+}
+
+export interface StatusByContactResponse {
+  identifier: string
+  count: number
+  applications: ClientApplicationStatus[]
+}
+
+export interface OpenedAccountPublic {
+  application_reference: string
+  status: string | null
+  client_email: string | null
+  account_opened: boolean
+  account_number: string | null
+  rib: string | null
+  message_to_client: string | null
+  payment_status: string | null
+  opened_at: string | null
+}
+
 export interface Agency {
   id: number
   code: string

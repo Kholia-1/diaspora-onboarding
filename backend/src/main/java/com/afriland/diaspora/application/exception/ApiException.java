@@ -8,13 +8,28 @@ public class ApiException extends RuntimeException {
 
     private final int status;
 
+    /** Detail structuré (Map/List) pour les erreurs FastAPI dont le detail est un objet JSON. */
+    private final transient Object detailPayload;
+
     public ApiException(int status, String detail) {
         super(detail);
         this.status = status;
+        this.detailPayload = null;
+    }
+
+    public ApiException(int status, Object detailPayload) {
+        super(String.valueOf(detailPayload));
+        this.status = status;
+        this.detailPayload = detailPayload;
     }
 
     public int status() {
         return status;
+    }
+
+    /** Contenu du champ "detail" de la réponse JSON : objet structuré si fourni, sinon le message. */
+    public Object detail() {
+        return detailPayload != null ? detailPayload : getMessage();
     }
 
     public static ApiException badRequest(String detail) {

@@ -10,4 +10,10 @@ public interface AccountApplicationJpaRepository extends JpaRepository<AccountAp
     List<AccountApplicationEntity> findAllByOrderByCreatedAtDesc();
 
     Optional<AccountApplicationEntity> findByReference(String reference);
+
+    List<AccountApplicationEntity> findByEmailIgnoreCaseOrderByCreatedAtDesc(String email);
+
+    List<AccountApplicationEntity> findByPhoneIsNotNullOrderByCreatedAtDesc();
+
+    long countByStatus(String status);
 }

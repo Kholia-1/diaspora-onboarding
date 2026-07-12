@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, SelectHTMLAttributes, ReactNode } from 'react'
+import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, ReactNode } from 'react'
 import { useId } from 'react'
 
 const fieldClasses =
@@ -19,6 +19,27 @@ export function Input({ label, id, className = '', ...props }: InputProps) {
         {label}
       </label>
       {input}
+    </div>
+  )
+}
+
+interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: string
+}
+
+export function Textarea({ label, id, className = '', rows = 3, ...props }: TextareaProps) {
+  const autoId = useId()
+  const textareaId = id ?? autoId
+  const textarea = (
+    <textarea id={textareaId} rows={rows} className={`${fieldClasses} ${className}`} {...props} />
+  )
+  if (!label) return textarea
+  return (
+    <div className="space-y-1.5">
+      <label htmlFor={textareaId} className="block text-xs font-semibold text-gray-600">
+        {label}
+      </label>
+      {textarea}
     </div>
   )
 }

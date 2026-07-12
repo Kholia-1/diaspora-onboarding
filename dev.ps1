@@ -29,6 +29,9 @@ switch ($Service) {
         .\mvnw.cmd spring-boot:run
     }
     "frontend" {
+        # Node est une installation portable absente du PATH des sous-shells.
+        $Node = "C:\Users\daniel_dzangue\Documents\node-v24.17.0-win-x64"
+        if (Test-Path $Node) { $env:PATH = "$Node;$env:PATH" }
         Set-Location "$Root\frontend"
         npm run dev
     }
