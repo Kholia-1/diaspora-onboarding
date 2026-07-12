@@ -733,7 +733,7 @@ document.addEventListener("DOMContentLoaded", loadIntegrations);
 
     <label>
       <strong>API Password</strong><br>
-      <input id="mc_api_password" type="password" placeholder="API Password" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+      <input id="mc_api_password" type="password" placeholder="Laisser vide pour conserver le mot de passe existant" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
     </label>
 
     <label>
@@ -823,7 +823,6 @@ document.addEventListener("DOMContentLoaded", loadIntegrations);
       provider: val("mc_provider") || "MASTERCARD_GATEWAY",
       base_url: val("mc_base_url"),
       merchant_id: val("mc_merchant_id"),
-      api_password: val("mc_api_password"),
       api_version: val("mc_api_version") || "100",
       currency: val("mc_currency") || "XAF",
       operation: val("mc_operation") || "PURCHASE",
@@ -831,6 +830,11 @@ document.addEventListener("DOMContentLoaded", loadIntegrations);
       webhook_url: val("mc_webhook_url"),
       ready_for_real_call: chk("mc_ready")
     };
+
+    const apiPassword = val("mc_api_password");
+    if (apiPassword) {
+      payload.api_password = apiPassword;
+    }
 
     showMessage("Enregistrement Mastercard...", "#92400e");
 
