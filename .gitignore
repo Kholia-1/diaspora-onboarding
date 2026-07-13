@@ -28,6 +28,10 @@ tmp/
 *.db-shm
 *.db-wal
 
+# Base SQLite locale : contient des données clients réelles (KYC), ne doit
+# pas être versionnée ni poussée sur le dépôt distant.
+/diaspora_onboarding.db
+
 # Sensitive runtime data
 # data/api_integrations.json est volontairement versionné (dépôt privé) pour
 # retrouver la config Callbell en changeant de poste.
@@ -75,3 +79,7 @@ build/
 *.tar
 *.tar.gz
 *.rar
+# Journaux de paiement Mastercard : contiennent des données carte/client réelles
+# (nom, carte masquée, téléphone) — ne doivent pas être versionnés.
+data/mastercard_payment_records.jsonl
+data/mastercard_payment_events.jsonl

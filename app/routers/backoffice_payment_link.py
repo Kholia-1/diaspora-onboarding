@@ -228,22 +228,22 @@ def generate_backoffice_payment_link(
 
         full_payment_url = absolute_url(payment.payment_url)
 
-        whatsapp_result = None
-
-        if payload.send_whatsapp:
-            whatsapp_result = send_whatsapp_notification(
-                phone=app.phone,
-                event_type="LIEN_PAIEMENT",
-                context={
-                    "full_name": f"{app.first_name or ''} {app.last_name or ''}".strip(),
-                    "reference": app.reference,
-                    "package_name": payment.package_name or app.selected_package_name,
-                    "amount": payment.amount,
-                    "currency": payment.currency,
-                    "payment_url": full_payment_url,
-                },
-                dry_run=False,
-            )
+        # NOTIFY_CLIENT_ON_EVERY_LINK_GENERATION_V1 — un lien régénéré (ex: session
+        # Mastercard expirée) doit toujours notifier le client, sinon il reste bloqué
+        # sur un ancien lien mort sans le savoir.
+        whatsapp_result = send_whatsapp_notification(
+            phone=app.phone,
+            event_type="LIEN_PAIEMENT",
+            context={
+                "full_name": f"{app.first_name or ''} {app.last_name or ''}".strip(),
+                "reference": app.reference,
+                "package_name": payment.package_name or app.selected_package_name,
+                "amount": payment.amount,
+                "currency": payment.currency,
+                "payment_url": full_payment_url,
+            },
+            dry_run=False,
+        )
 
         return {
             "success": True,

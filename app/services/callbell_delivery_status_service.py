@@ -76,7 +76,12 @@ def get_callbell_message_status(uuid: str) -> Dict[str, Any]:
             "error": "Token Callbell introuvable.",
         }
 
-    url = f"{cfg['base_url']}/v1/messages/status/{uuid}"
+    base_url = cfg["base_url"]
+    url = (
+        f"{base_url}/messages/status/{uuid}"
+        if base_url.endswith("/v1")
+        else f"{base_url}/v1/messages/status/{uuid}"
+    )
 
     req = urllib.request.Request(
         url,

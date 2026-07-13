@@ -695,9 +695,9 @@ document.addEventListener("DOMContentLoaded", loadIntegrations);
 
 <!-- MASTERCARD_OPERATIONAL_CONFIG_ADMIN_UI_V2 -->
 <section id="mastercard-operational-config" style="max-width:1180px;margin:24px auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;box-shadow:0 12px 30px rgba(15,23,42,.08);">
-  <h2 style="margin:0 0 8px;color:#111827;">Mastercard Gateway ? Configuration op?rationnelle</h2>
+  <h2 style="margin:0 0 8px;color:#111827;">Mastercard Gateway — Configuration opérationnelle</h2>
   <p style="margin:0 0 16px;color:#6b7280;line-height:1.5;">
-    Configurez ici les param?tres Mastercard Gateway utilis?s pour les paiements r?els ou sandbox.
+    Configurez ici les paramètres Mastercard Gateway utilisés pour les paiements réels ou sandbox.
   </p>
 
   <div style="padding:12px 14px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-weight:700;margin-bottom:16px;">
@@ -807,9 +807,9 @@ document.addEventListener("DOMContentLoaded", loadIntegrations);
 
       const missing = data.missing || [];
       if (missing.length > 0) {
-        showMessage("Configuration incompl?te : " + missing.join(" | "), "#92400e");
+        showMessage("Configuration incomplète : " + missing.join(" | "), "#92400e");
       } else {
-        showMessage("Configuration Mastercard charg?e.", "#047857");
+        showMessage("Configuration Mastercard chargée.", "#047857");
       }
     } catch (err) {
       showMessage("Erreur chargement Mastercard : " + err.message, "#b91c1c");
@@ -852,7 +852,7 @@ document.addEventListener("DOMContentLoaded", loadIntegrations);
         return;
       }
 
-      showMessage("Configuration Mastercard enregistr?e.", "#047857");
+      showMessage("Configuration Mastercard enregistrée.", "#047857");
       await loadMastercardConfig();
     } catch (err) {
       showMessage("Erreur enregistrement Mastercard : " + err.message, "#b91c1c");

@@ -34,7 +34,7 @@ def application_phone(application):
     )
 
 
-def can_open_account(application):
+def _basic_payment_gate_check(application):
     status = str(getattr(application, "status", "") or "").upper()
     payment_status = str(getattr(application, "package_payment_status", "") or "").upper()
 
@@ -84,7 +84,7 @@ def open_account_after_payment(
     if not application:
         raise HTTPException(status_code=404, detail="Dossier introuvable.")
 
-    if not can_open_account(application):
+    if not _basic_payment_gate_check(application):
         raise HTTPException(
             status_code=403,
             detail="Le compte ne peut être ouvert qu'après confirmation du paiement ou si aucun paiement n'est requis."

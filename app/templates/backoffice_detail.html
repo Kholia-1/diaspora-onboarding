@@ -1037,7 +1037,15 @@ body > .afb-otp-card {
             </div>
 
             <div class="panel">
+                <h3>Paiement</h3>
+                <div id="paymentDiagnosticContent"></div>
+                <div id="paymentLinkActionContent"></div>
+            </div>
+
+            <div class="panel">
                 <h3>Décision back-office</h3>
+
+                <div id="decisionPaymentStatus"></div>
 
                 <label>Décision</label>
                 <select id="decision">
@@ -2494,67 +2502,66 @@ async function renderComplianceSummaryV30(data) {
         }).join("");
 
         const html = `
-            <div id="paymentWhatsappDiagnosticPanel" style="margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);">
-                <h3 style="margin:0 0 12px 0;color:#b00020;">Paiement & WhatsApp</h3>
-
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
-                    <div>
-                        <strong>Référence paiement</strong><br>
-                        <span>${payment.payment_reference || "N/A"}</span>
-                    </div>
-
-                    <div>
-                        <strong>Statut transaction</strong><br>
-                        ${statusBadge(payment.status)}
-                    </div>
-
-                    <div>
-                        <strong>Session Mastercard</strong><br>
-                        <small>${payment.provider_transaction_id || "N/A"}</small>
-                    </div>
-
-                    <div>
-                        <strong>WhatsApp dernier statut</strong><br>
-                        ${statusBadge(whatsapp.delivery_status || whatsapp.initial_status)}
-                    </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+                <div>
+                    <strong>Référence paiement</strong><br>
+                    <span>${payment.payment_reference || "N/A"}</span>
                 </div>
 
-                ${mastercard.decision ? `
-                    <div style="margin-top:14px;padding:10px;border-radius:8px;background:#f8f9fa;">
-                        <strong>Diagnostic Mastercard :</strong>
-                        ${statusBadge(mastercard.decision)}
-                        <br>
-                        <small>${mastercard.message || ""}</small>
-                    </div>
-                ` : ""}
+                <div>
+                    <strong>Statut transaction</strong><br>
+                    ${statusBadge(payment.status)}
+                </div>
 
-                ${link ? `
-                    <div style="margin-top:14px;">
-                        <strong>Lien de paiement</strong><br>
-                        <input id="paymentLinkInput" value="${link}" readonly style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px;">
-                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('paymentLinkInput').value).then(()=>alert('Lien copié'))" style="margin-top:8px;padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
-                            Copier le lien de paiement
-                        </button>
-                    </div>
-                ` : `
-                    <div style="margin-top:14px;color:#dc3545;">
-                        Aucun lien de paiement disponible.
-                    </div>
-                `}
+                <div>
+                    <strong>Session Mastercard</strong><br>
+                    <small>${payment.provider_transaction_id || "N/A"}</small>
+                </div>
 
-                ${errors ? `
-                    <div style="margin-top:14px;padding:10px;border-radius:8px;background:#fff3cd;">
-                        <strong>Erreur WhatsApp détectée :</strong>
-                        <ul style="margin-top:8px;">${errors}</ul>
-                    </div>
-                ` : ""}
+                <div>
+                    <strong>WhatsApp dernier statut</strong><br>
+                    ${statusBadge(whatsapp.delivery_status || whatsapp.initial_status)}
+                </div>
             </div>
+
+            ${mastercard.decision ? `
+                <div style="margin-top:14px;padding:10px;border-radius:8px;background:#f8f9fa;">
+                    <strong>Diagnostic Mastercard :</strong>
+                    ${statusBadge(mastercard.decision)}
+                    <br>
+                    <small>${mastercard.message || ""}</small>
+                </div>
+            ` : ""}
+
+            ${link ? `
+                <div style="margin-top:14px;">
+                    <strong>Lien de paiement</strong><br>
+                    <input id="paymentLinkInput" value="${link}" readonly style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px;">
+                    <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('paymentLinkInput').value).then(()=>alert('Lien copié'))" style="margin-top:8px;padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
+                        Copier le lien de paiement
+                    </button>
+                </div>
+            ` : `
+                <div style="margin-top:14px;color:#dc3545;">
+                    Aucun lien de paiement disponible.
+                </div>
+            `}
+
+            ${errors ? `
+                <div style="margin-top:14px;padding:10px;border-radius:8px;background:#fff3cd;">
+                    <strong>Erreur WhatsApp détectée :</strong>
+                    <ul style="margin-top:8px;">${errors}</ul>
+                </div>
+            ` : ""}
         `;
 
         return html;
     }
 
     async function loadDiagnostic() {
+        const target = document.getElementById("paymentDiagnosticContent");
+        if (!target) return;
+
         const reference = findReference();
         if (!reference) return;
 
@@ -2565,15 +2572,7 @@ async function renderComplianceSummaryV30(data) {
 
             if (!data || !data.found) return;
 
-            const panel = document.createElement("div");
-            panel.innerHTML = createPanel(data);
-
-            const target =
-                document.querySelector(".card") ||
-                document.querySelector("main") ||
-                document.body;
-
-            target.prepend(panel.firstElementChild);
+            target.innerHTML = createPanel(data);
         } catch (e) {
             console.warn("Diagnostic paiement/WhatsApp indisponible", e);
         }
@@ -2588,196 +2587,9 @@ async function renderComplianceSummaryV30(data) {
 </script>
 
 
-<script>
-/* BACKOFFICE_GENERATE_PAYMENT_LINK_PANEL_V1 */
-(function () {
-    function findReference() {
-        if (window.currentApplication && window.currentApplication.reference) {
-            return window.currentApplication.reference;
-        }
-
-        const bodyText = document.body.innerText || "";
-        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
-        return match ? match[0] : null;
-    }
-
-    function createPanel(reference) {
-        const panel = document.createElement("div");
-        panel.id = "backofficeGeneratePaymentLinkPanel";
-        panel.style.cssText = "margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-left:5px solid #D22630;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);";
-
-        panel.innerHTML = `
-            <h3 style="margin:0 0 10px 0;color:#b00020;">Lien de paiement Mastercard</h3>
-
-            <p style="margin:0 0 12px 0;color:#555;">
-                Après approbation du dossier, le back-office peut générer ou récupérer ici le lien de paiement du client.
-            </p>
-
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px;">
-                <div>
-                    <label style="font-weight:700;">Référence dossier</label>
-                    <input id="boPaymentApplicationRef" value="${reference || ""}" readonly
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
-                </div>
-
-                <div>
-                    <label style="font-weight:700;">Montant test facultatif</label>
-                    <input id="boPaymentAmountOverride" type="number" min="1" step="1" placeholder="Ex: 100"
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
-                </div>
-            </div>
-
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button id="boGeneratePaymentLinkBtn" type="button"
-                    style="padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
-                    Générer / récupérer le lien
-                </button>
-
-                <button id="boGeneratePaymentLinkWhatsappBtn" type="button"
-                    style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
-                    Générer + tenter WhatsApp
-                </button>
-            </div>
-
-            <div id="boPaymentLinkResult" style="margin-top:14px;"></div>
-        `;
-
-        return panel;
-    }
-
-    async function generateLink(sendWhatsapp) {
-        const reference = document.getElementById("boPaymentApplicationRef").value.trim();
-        const amountRaw = document.getElementById("boPaymentAmountOverride").value.trim();
-        const resultBox = document.getElementById("boPaymentLinkResult");
-
-        if (!reference) {
-            resultBox.innerHTML = `<div style="color:#dc3545;">Référence dossier introuvable.</div>`;
-            return;
-        }
-
-        const payload = {
-            send_whatsapp: !!sendWhatsapp
-        };
-
-        if (amountRaw) {
-            payload.amount_override = Number(amountRaw);
-        }
-
-        resultBox.innerHTML = `<div style="color:#555;">Génération du lien en cours...</div>`;
-
-        try {
-            const response = await fetch(`/api/backoffice/payment-link/${encodeURIComponent(reference)}/generate`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                resultBox.innerHTML = `
-                    <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
-                        ${typeof data.detail === "object" ? (data.detail.message || JSON.stringify(data.detail)) : (data.detail || data.message || "Lien non généré.")}
-                    </div>
-                `;
-                return;
-            }
-
-            if (data.status === "PAYMENT_ALREADY_CONFIRMED") {
-                resultBox.innerHTML = `
-                    <div style="padding:10px;border-radius:8px;background:#d1e7dd;color:#0f5132;">
-                        ${data.message}
-                    </div>
-                `;
-                return;
-            }
-
-            const payment = data.payment || {};
-            const link = payment.full_payment_url || "";
-
-            const whatsappStatus = data.whatsapp
-                ? `<div style="margin-top:8px;font-size:13px;color:#555;">WhatsApp : ${data.whatsapp.status || "N/A"}</div>`
-                : "";
-
-            resultBox.innerHTML = `
-                <div style="padding:12px;border-radius:8px;background:#f8f9fa;border:1px solid #e5e7eb;">
-                    <strong>Lien Mastercard disponible</strong><br>
-
-                    <input id="boGeneratedPaymentLink" value="${link}" readonly
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:8px;">
-
-                    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                        <a href="${link}" target="_blank"
-                            style="padding:10px 14px;border-radius:8px;background:#D22630;color:#fff;text-decoration:none;font-weight:700;">
-                            Ouvrir le paiement
-                        </a>
-
-                        <button type="button"
-                            onclick="navigator.clipboard.writeText(document.getElementById('boGeneratedPaymentLink').value).then(()=>alert('Lien copié'))"
-                            style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
-                            Copier le lien
-                        </button>
-                    </div>
-
-                    <div style="margin-top:8px;color:#555;font-size:13px;">
-                        Référence paiement : ${payment.payment_reference || "N/A"}<br>
-                        Montant : ${payment.amount || "N/A"} ${payment.currency || ""}<br>
-                        Statut : ${payment.status || "N/A"}<br>
-                        Session Mastercard : ${payment.session_mastercard || "N/A"}
-                    </div>
-
-                    ${whatsappStatus}
-                </div>
-            `;
-        } catch (e) {
-            resultBox.innerHTML = `
-                <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
-                    Erreur technique pendant la génération du lien.
-                </div>
-            `;
-        }
-    }
-
-    function init() {
-        const reference = findReference();
-        if (!reference) return;
-
-        if (document.getElementById("backofficeGeneratePaymentLinkPanel")) return;
-
-        const panel = createPanel(reference);
-
-        const target =
-            document.querySelector("#paymentWhatsappDiagnosticPanel") ||
-            document.querySelector(".card") ||
-            document.querySelector("main") ||
-            document.body;
-
-        if (target.id === "paymentWhatsappDiagnosticPanel") {
-            target.parentNode.insertBefore(panel, target.nextSibling);
-        } else {
-            target.prepend(panel);
-        }
-
-        document.getElementById("boGeneratePaymentLinkBtn").addEventListener("click", function () {
-            generateLink(false);
-        });
-
-        document.getElementById("boGeneratePaymentLinkWhatsappBtn").addEventListener("click", function () {
-            generateLink(true);
-        });
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
-    } else {
-        init();
-    }
-})();
-</script>
-
 
 <script>
-/* BACKOFFICE_PAYMENT_PANEL_VISIBLE_FIX_V3 */
+/* BACKOFFICE_PAYMENT_LINK_ACTION_PANEL_V1 */
 (function () {
     function isApplicationDetail() {
         return /^\/backoffice\/applications\/[^\/]+/.test(window.location.pathname);
@@ -2792,35 +2604,10 @@ async function renderComplianceSummaryV30(data) {
         return parts[parts.length - 1] || "";
     }
 
-    function removeOldHiddenPanels() {
-        document.querySelectorAll("#backofficeGeneratePaymentLinkPanel").forEach(function (el) {
-            el.remove();
-        });
-    }
-
     function buildPanel(appKey) {
         const div = document.createElement("div");
-        div.id = "backofficePaymentPanelVisibleV3";
-        div.style.cssText = `
-            display:block !important;
-            visibility:visible !important;
-            opacity:1 !important;
-            position:relative !important;
-            z-index:1 !important; /* sous le bandeau sticky (z-index 1000) */
-            margin:20px 0 !important;
-            padding:18px !important;
-            border:2px solid #D22630 !important;
-            border-radius:12px !important;
-            background:#fff !important;
-            color:#222 !important;
-            box-shadow:0 4px 14px rgba(0,0,0,.12) !important;
-        `;
 
         div.innerHTML = `
-            <h3 style="margin:0 0 10px 0;color:#b00020;font-size:20px;">
-                Lien de paiement Mastercard
-            </h3>
-
             <p style="margin:0 0 12px 0;color:#555;">
                 Générer ou récupérer le lien de paiement Mastercard pour ce dossier.
             </p>
@@ -2956,22 +2743,16 @@ async function renderComplianceSummaryV30(data) {
         }
     }
 
-    function insertVisiblePanel() {
+    function insertPanel() {
         if (!isApplicationDetail()) return;
-        if (document.getElementById("backofficePaymentPanelVisibleV3")) return;
 
-        removeOldHiddenPanels();
+        const target = document.getElementById("paymentLinkActionContent");
+        if (!target || target.dataset.rendered === "1") return;
+
+        target.dataset.rendered = "1";
 
         const appKey = getApplicationKey();
-        const panel = buildPanel(appKey);
-
-        const target =
-            document.querySelector("main") ||
-            document.querySelector(".container") ||
-            document.querySelector(".content") ||
-            document.body;
-
-        target.insertBefore(panel, target.firstChild);
+        target.appendChild(buildPanel(appKey));
 
         document.getElementById("boGeneratePaymentLinkBtnV3").addEventListener("click", function () {
             generateLink(false);
@@ -2983,14 +2764,10 @@ async function renderComplianceSummaryV30(data) {
     }
 
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", insertVisiblePanel);
+        document.addEventListener("DOMContentLoaded", insertPanel);
     } else {
-        insertVisiblePanel();
+        insertPanel();
     }
-
-    setTimeout(insertVisiblePanel, 500);
-    setTimeout(insertVisiblePanel, 1500);
-    setTimeout(insertVisiblePanel, 3000);
 })();
 </script>
 
@@ -3009,7 +2786,6 @@ async function renderComplianceSummaryV30(data) {
         if (!dia) return;
 
         const inputs = [
-            document.getElementById("boPaymentApplicationRef"),
             document.getElementById("boPaymentApplicationRefV3")
         ].filter(Boolean);
 
@@ -3031,278 +2807,6 @@ async function renderComplianceSummaryV30(data) {
     setTimeout(updatePaymentPanelReference, 3000);
 })();
 </script>
-
-
-<script>
-/* BACKOFFICE_DECISION_SIMPLIFIED_UI_V1 */
-(function () {
-    function isBackofficeDetailPage() {
-        return /^\/backoffice\/applications\/[^\/]+/.test(window.location.pathname);
-    }
-
-    function findApplicationRefOrId() {
-        const bodyText = document.body.innerText || "";
-        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
-        if (match) return match[0];
-
-        const parts = window.location.pathname.split("/").filter(Boolean);
-        return parts[parts.length - 1] || "";
-    }
-
-    function badge(text, type) {
-        let bg = "#6c757d";
-        let color = "#fff";
-
-        if (type === "success") bg = "#198754";
-        if (type === "warning") {
-            bg = "#ffc107";
-            color = "#111";
-        }
-        if (type === "danger") bg = "#dc3545";
-        if (type === "info") bg = "#0d6efd";
-
-        return `<span style="display:inline-block;padding:5px 10px;border-radius:999px;background:${bg};color:${color};font-weight:800;font-size:12px;">${text}</span>`;
-    }
-
-    function normalize(value) {
-        return (value || "").toString().trim().toUpperCase();
-    }
-
-    function isPaymentConfirmed(data) {
-        const app = data.application || {};
-        const payment = data.payment || {};
-
-        const appPaymentStatus = normalize(app.package_payment_status);
-        const appStatus = normalize(app.status);
-        const paymentStatus = normalize(payment.status);
-
-        return (
-            ["PAID", "PAYMENT_CONFIRMED", "CONFIRMED", "CAPTURED", "SUCCESS"].includes(appPaymentStatus) ||
-            ["PAYMENT_CONFIRMED"].includes(appStatus) ||
-            ["PAID", "PAYMENT_CONFIRMED", "CONFIRMED", "CAPTURED", "SUCCESS"].includes(paymentStatus)
-        );
-    }
-
-    function isPaymentRequired(data) {
-        const app = data.application || {};
-        const payment = data.payment || {};
-
-        if (normalize(app.package_payment_status) === "NOT_REQUIRED") return false;
-        if (payment && payment.payment_reference) return true;
-        if (app.package_payment_reference) return true;
-
-        return false;
-    }
-
-    function buildDecisionPanel(data) {
-        const app = data.application || {};
-        const payment = data.payment || {};
-        const actions = data.actions || {};
-
-        const required = isPaymentRequired(data);
-        const confirmed = isPaymentConfirmed(data);
-
-        let stateHtml = "";
-        let actionHtml = "";
-
-        if (!required) {
-            stateHtml = `
-                ${badge("Paiement non requis", "success")}
-                <p style="margin:8px 0 0 0;color:#444;">
-                    Ce dossier peut être ouvert directement après validation back-office.
-                </p>
-            `;
-            actionHtml = `
-                <strong>Action autorisée :</strong> saisir le numéro de compte et le RIB, puis ouvrir le compte.
-            `;
-        } else if (required && !confirmed) {
-            stateHtml = `
-                ${badge("Paiement en attente", "warning")}
-                <p style="margin:8px 0 0 0;color:#664d03;">
-                    Le paiement est requis mais non confirmé. Le compte ne doit pas être ouvert.
-                </p>
-            `;
-
-            const link = actions.copy_payment_link || payment.payment_link || payment.payment_url || "";
-
-            actionHtml = `
-                <strong>Action à faire :</strong> générer ou copier le lien Mastercard et attendre la confirmation du paiement.
-                ${link ? `
-                    <div style="margin-top:10px;">
-                        <input id="decisionPaymentLinkCopyInput" value="${link}" readonly
-                            style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
-                        <button type="button" id="decisionPaymentLinkCopyBtn"
-                            style="margin-top:8px;padding:9px 12px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:800;cursor:pointer;">
-                            Copier le lien de paiement
-                        </button>
-                    </div>
-                ` : ""}
-            `;
-        } else {
-            stateHtml = `
-                ${badge("Paiement confirmé", "success")}
-                <p style="margin:8px 0 0 0;color:#0f5132;">
-                    Le paiement est confirmé. Le back-office peut ouvrir le compte.
-                </p>
-            `;
-            actionHtml = `
-                <strong>Action autorisée :</strong> saisir le numéro de compte et le RIB final, puis enregistrer l’ouverture.
-            `;
-        }
-
-        return `
-            <div id="backofficeDecisionSimplifiedPanel" style="margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-left:5px solid #0d6efd;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);">
-                <h3 style="margin:0 0 10px 0;color:#0d3b66;">Décision back-office simplifiée</h3>
-
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;">
-                    <div style="padding:12px;border-radius:10px;background:#f8f9fa;">
-                        <strong>Dossier</strong><br>
-                        <span>${app.reference || findApplicationRefOrId()}</span><br>
-                        <small>Statut : ${app.status || "N/A"}</small>
-                    </div>
-
-                    <div style="padding:12px;border-radius:10px;background:#f8f9fa;">
-                        <strong>Paiement</strong><br>
-                        ${stateHtml}
-                    </div>
-
-                    <div style="padding:12px;border-radius:10px;background:#f8f9fa;">
-                        <strong>Référence paiement</strong><br>
-                        <span>${payment.payment_reference || app.package_payment_reference || "Aucune"}</span><br>
-                        <small>${payment.amount || app.package_payment_amount || ""} ${payment.currency || app.package_payment_currency || ""}</small>
-                    </div>
-                </div>
-
-                <div style="margin-top:14px;padding:12px;border-radius:10px;background:#eef5ff;color:#0d3b66;">
-                    ${actionHtml}
-                </div>
-
-                ${required && !confirmed ? `
-                    <div style="margin-top:14px;padding:12px;border-radius:10px;background:#fff3cd;color:#664d03;font-weight:700;">
-                        Sécurité : l’option “Compte ouvert / RIB attribué” est bloquée tant que le paiement reste en attente.
-                    </div>
-                ` : ""}
-            </div>
-        `;
-    }
-
-    function disableAccountOpenedOption(data) {
-        const required = isPaymentRequired(data);
-        const confirmed = isPaymentConfirmed(data);
-
-        const shouldBlock = required && !confirmed;
-
-        const selects = Array.from(document.querySelectorAll("select"));
-        const decisionSelects = selects.filter(function (select) {
-            return Array.from(select.options || []).some(function (opt) {
-                return normalize(opt.value) === "ACCOUNT_OPENED" ||
-                       normalize(opt.textContent).includes("COMPTE OUVERT");
-            });
-        });
-
-        decisionSelects.forEach(function (select) {
-            Array.from(select.options || []).forEach(function (opt) {
-                const isOpenOption =
-                    normalize(opt.value) === "ACCOUNT_OPENED" ||
-                    normalize(opt.textContent).includes("COMPTE OUVERT");
-
-                if (isOpenOption) {
-                    opt.disabled = shouldBlock;
-                    if (shouldBlock) {
-                        opt.textContent = "Compte ouvert / RIB attribué — bloqué : paiement non confirmé";
-                    }
-                }
-            });
-
-            if (shouldBlock && normalize(select.value) === "ACCOUNT_OPENED") {
-                select.value = "";
-            }
-        });
-
-        const forms = Array.from(document.querySelectorAll("form"));
-
-        forms.forEach(function (form) {
-            if (form.dataset.paymentGuardAttached === "1") return;
-            form.dataset.paymentGuardAttached = "1";
-
-            form.addEventListener("submit", function (event) {
-                if (!shouldBlock) return;
-
-                const selectedOpen = decisionSelects.some(function (select) {
-                    return normalize(select.value) === "ACCOUNT_OPENED";
-                });
-
-                if (selectedOpen) {
-                    event.preventDefault();
-                    alert("Ouverture bloquée : le paiement package est requis mais non confirmé.");
-                }
-            });
-        });
-    }
-
-    async function loadDecisionState() {
-        if (!isBackofficeDetailPage()) return;
-
-        const key = findApplicationRefOrId();
-        if (!key) return;
-
-        try {
-            const response = await fetch(`/api/backoffice/diagnostics/payment/${encodeURIComponent(key)}?refresh_callbell=false&refresh_mastercard=false`);
-            const data = await response.json();
-
-            if (!data || !data.found) return;
-
-            const old = document.getElementById("backofficeDecisionSimplifiedPanel");
-            if (old) old.remove();
-
-            const html = buildDecisionPanel(data);
-
-            const paymentPanel =
-                document.getElementById("backofficePaymentPanelVisibleV3") ||
-                document.getElementById("backofficeGeneratePaymentLinkPanel");
-
-            if (paymentPanel) {
-                paymentPanel.insertAdjacentHTML("afterend", html);
-            } else {
-                const target =
-                    document.querySelector("main") ||
-                    document.querySelector(".container") ||
-                    document.querySelector(".content") ||
-                    document.body;
-
-                target.insertAdjacentHTML("afterbegin", html);
-            }
-
-            disableAccountOpenedOption(data);
-
-            const copyBtn = document.getElementById("decisionPaymentLinkCopyBtn");
-            if (copyBtn) {
-                copyBtn.addEventListener("click", function () {
-                    const input = document.getElementById("decisionPaymentLinkCopyInput");
-                    if (!input) return;
-
-                    navigator.clipboard.writeText(input.value).then(function () {
-                        alert("Lien copié");
-                    });
-                });
-            }
-
-        } catch (e) {
-            console.warn("Impossible de charger le panneau de décision simplifiée", e);
-        }
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", loadDecisionState);
-    } else {
-        loadDecisionState();
-    }
-
-    setTimeout(loadDecisionState, 800);
-    setTimeout(loadDecisionState, 2000);
-})();
-</script>
-
 
 
 <script>
@@ -3390,46 +2894,79 @@ async function renderComplianceSummaryV30(data) {
         return false;
     }
 
-    function addWarning(form, data) {
-        if (document.getElementById("targetedPaymentDecisionWarning")) return;
+    function badge(text, type) {
+        let bg = "#6c757d";
+        let color = "#fff";
+
+        if (type === "success") bg = "#198754";
+        if (type === "warning") {
+            bg = "#ffc107";
+            color = "#111";
+        }
+        if (type === "danger") bg = "#dc3545";
+
+        return `<span style="display:inline-block;padding:5px 10px;border-radius:999px;background:${bg};color:${color};font-weight:800;font-size:12px;">${text}</span>`;
+    }
+
+    function renderPaymentStatus(data, required, confirmed) {
+        const container = document.getElementById("decisionPaymentStatus");
+        if (!container) return;
 
         const app = data.application || {};
         const payment = data.payment || {};
 
-        const warning = document.createElement("div");
-        warning.id = "targetedPaymentDecisionWarning";
-        warning.style.cssText = `
-            margin:12px 0;
-            padding:12px;
-            border-radius:10px;
-            background:#fff3cd;
-            border:1px solid #ffecb5;
-            color:#664d03;
-            font-weight:700;
-            line-height:1.4;
-        `;
+        let stateHtml;
 
-        warning.innerHTML = `
-            Paiement requis mais non confirmé.<br>
-            L’ouverture du compte est bloquée tant que le paiement Mastercard reste en attente.<br>
-            <small>
-                Référence paiement : ${payment.payment_reference || app.package_payment_reference || "N/A"} —
-                Statut paiement : ${payment.status || app.package_payment_status || "N/A"}
-            </small>
-        `;
+        if (!required) {
+            stateHtml = `
+                ${badge("Paiement non requis", "success")}
+                <p style="margin:8px 0 0 0;color:#444;">Ce dossier peut être ouvert directement après validation back-office.</p>
+            `;
+        } else if (!confirmed) {
+            const link = payment.payment_link || payment.payment_url || "";
 
-        const select = form.querySelector("select");
-
-        if (select && select.parentNode) {
-            select.parentNode.insertBefore(warning, select);
+            stateHtml = `
+                ${badge("Paiement en attente", "warning")}
+                <p style="margin:8px 0 0 0;color:#664d03;">Le paiement est requis mais non confirmé. L'ouverture du compte est bloquée.</p>
+                ${link ? `
+                    <div style="margin-top:10px;">
+                        <input id="decisionPaymentLinkCopyInput" value="${link}" readonly
+                            style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;">
+                        <button type="button" id="decisionPaymentLinkCopyBtn"
+                            style="margin-top:6px;padding:8px 12px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:800;cursor:pointer;">
+                            Copier le lien de paiement
+                        </button>
+                    </div>
+                ` : ""}
+            `;
         } else {
-            form.insertBefore(warning, form.firstChild);
+            stateHtml = `
+                ${badge("Paiement confirmé", "success")}
+                <p style="margin:8px 0 0 0;color:#0f5132;">Le paiement est confirmé. Le back-office peut ouvrir le compte.</p>
+            `;
         }
-    }
 
-    function removeWarning() {
-        const warning = document.getElementById("targetedPaymentDecisionWarning");
-        if (warning) warning.remove();
+        container.innerHTML = `
+            <div style="padding:12px;border-radius:10px;background:#f8f9fa;margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:13px;color:#444;">
+                    <span><strong>Référence paiement :</strong> ${payment.payment_reference || app.package_payment_reference || "Aucune"}</span>
+                    <span>${payment.amount || app.package_payment_amount || ""} ${payment.currency || app.package_payment_currency || ""}</span>
+                </div>
+                <div style="margin-top:8px;">${stateHtml}</div>
+            </div>
+        `;
+
+        const copyBtn = document.getElementById("decisionPaymentLinkCopyBtn");
+        if (copyBtn) {
+            copyBtn.addEventListener("click", function () {
+                const input = document.getElementById("decisionPaymentLinkCopyInput");
+                if (!input) return;
+
+                navigator.clipboard.writeText(input.value).then(function () {
+                    alert("Lien copié");
+                });
+            });
+        }
     }
 
     function blockAccountOpenedOption(form, shouldBlock) {
@@ -3509,12 +3046,7 @@ async function renderComplianceSummaryV30(data) {
 
             blockAccountOpenedOption(form, shouldBlock);
             attachSubmitGuard(form, shouldBlock);
-
-            if (shouldBlock) {
-                addWarning(form, data);
-            } else {
-                removeWarning();
-            }
+            renderPaymentStatus(data, required, confirmed);
 
         } catch (e) {
             console.warn("Verrou décision paiement indisponible", e);
