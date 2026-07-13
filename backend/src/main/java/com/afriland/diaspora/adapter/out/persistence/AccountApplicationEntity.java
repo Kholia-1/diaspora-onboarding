@@ -628,4 +628,226 @@ public class AccountApplicationEntity {
     public void setSelectedPackagePaymentRequired(Boolean selectedPackagePaymentRequired) {
         this.selectedPackagePaymentRequired = selectedPackagePaymentRequired;
     }
+
+    // --- Mutations Phase 5 (soumission client) ---
+
+    public void setReference(String reference) {
+        this.reference = reference;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
+    }
+
+    public void setBirthPlace(String birthPlace) {
+        this.birthPlace = birthPlace;
+    }
+
+    public void setBirthDepartment(String birthDepartment) {
+        this.birthDepartment = birthDepartment;
+    }
+
+    public void setBirthName(String birthName) {
+        this.birthName = birthName;
+    }
+
+    public void setResidencyStatus(String residencyStatus) {
+        this.residencyStatus = residencyStatus;
+    }
+
+    public void setAddressLocation(String addressLocation) {
+        this.addressLocation = addressLocation;
+    }
+
+    public void setPostalBox(String postalBox) {
+        this.postalBox = postalBox;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setWhatsappPhoneFull(String whatsappPhoneFull) {
+        this.whatsappPhoneFull = whatsappPhoneFull;
+    }
+
+    public void setWhatsappOtpVerified(Boolean whatsappOtpVerified) {
+        this.whatsappOtpVerified = whatsappOtpVerified;
+    }
+
+    public void setWhatsappOtpVerifiedAt(LocalDateTime whatsappOtpVerifiedAt) {
+        this.whatsappOtpVerifiedAt = whatsappOtpVerifiedAt;
+    }
+
+    public void setPreOnboardingSessionId(String preOnboardingSessionId) {
+        this.preOnboardingSessionId = preOnboardingSessionId;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setContactPerson1Name(String contactPerson1Name) {
+        this.contactPerson1Name = contactPerson1Name;
+    }
+
+    public void setContactPerson1Phone(String contactPerson1Phone) {
+        this.contactPerson1Phone = contactPerson1Phone;
+    }
+
+    public void setContactPerson2Name(String contactPerson2Name) {
+        this.contactPerson2Name = contactPerson2Name;
+    }
+
+    public void setContactPerson2Phone(String contactPerson2Phone) {
+        this.contactPerson2Phone = contactPerson2Phone;
+    }
+
+    public void setFatherName(String fatherName) {
+        this.fatherName = fatherName;
+    }
+
+    public void setMotherName(String motherName) {
+        this.motherName = motherName;
+    }
+
+    public void setNationality(String nationality) {
+        this.nationality = nationality;
+    }
+
+    public void setResidence(String residence) {
+        this.residence = residence;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public void setMaritalStatus(String maritalStatus) {
+        this.maritalStatus = maritalStatus;
+    }
+
+    public void setMatrimonialRegime(String matrimonialRegime) {
+        this.matrimonialRegime = matrimonialRegime;
+    }
+
+    public void setIdentityDocumentNumber(String identityDocumentNumber) {
+        this.identityDocumentNumber = identityDocumentNumber;
+    }
+
+    public void setIdentityDocumentIssueDate(LocalDate identityDocumentIssueDate) {
+        this.identityDocumentIssueDate = identityDocumentIssueDate;
+    }
+
+    public void setIdentityDocumentIssuePlace(String identityDocumentIssuePlace) {
+        this.identityDocumentIssuePlace = identityDocumentIssuePlace;
+    }
+
+    public void setRib(String rib) {
+        this.rib = rib;
+    }
+
+    public void setIncomeRange(String incomeRange) {
+        this.incomeRange = incomeRange;
+    }
+
+    public void setIncomeCurrency(String incomeCurrency) {
+        this.incomeCurrency = incomeCurrency;
+    }
+
+    public void setActivitySector(String activitySector) {
+        this.activitySector = activitySector;
+    }
+
+    public void setActivitySectorCode(String activitySectorCode) {
+        this.activitySectorCode = activitySectorCode;
+    }
+
+    public void setActivitySubsector(String activitySubsector) {
+        this.activitySubsector = activitySubsector;
+    }
+
+    public void setActivitySubsectorCode(String activitySubsectorCode) {
+        this.activitySubsectorCode = activitySubsectorCode;
+    }
+
+    public void setAccountObject(String accountObject) {
+        this.accountObject = accountObject;
+    }
+
+    public void setAccountObjectOther(String accountObjectOther) {
+        this.accountObjectOther = accountObjectOther;
+    }
+
+    public void setFundsOrigin(String fundsOrigin) {
+        this.fundsOrigin = fundsOrigin;
+    }
+
+    public void setFundsOriginOther(String fundsOriginOther) {
+        this.fundsOriginOther = fundsOriginOther;
+    }
+
+    public void setAccountType(String accountType) {
+        this.accountType = accountType;
+    }
+
+    public void setPreferredBranch(String preferredBranch) {
+        this.preferredBranch = preferredBranch;
+    }
+
+    public void setSelectedPackageCode(String selectedPackageCode) {
+        this.selectedPackageCode = selectedPackageCode;
+    }
+
+    public void setSelectedPackageName(String selectedPackageName) {
+        this.selectedPackageName = selectedPackageName;
+    }
+
+    public void setSelectedPackageCurrency(String selectedPackageCurrency) {
+        this.selectedPackageCurrency = selectedPackageCurrency;
+    }
+
+    public void setSelectedPackageOpeningFee(java.math.BigDecimal selectedPackageOpeningFee) {
+        this.selectedPackageOpeningFee = selectedPackageOpeningFee;
+    }
+
+    public void setSelectedPackageSubscriptionFee(java.math.BigDecimal selectedPackageSubscriptionFee) {
+        this.selectedPackageSubscriptionFee = selectedPackageSubscriptionFee;
+    }
+
+    public void setSelectedPackageMonthlyFee(java.math.BigDecimal selectedPackageMonthlyFee) {
+        this.selectedPackageMonthlyFee = selectedPackageMonthlyFee;
+    }
+
+    public void setAccountPurpose(String accountPurpose) {
+        this.accountPurpose = accountPurpose;
+    }
+
+    public void setIsPep(Boolean isPep) {
+        this.isPep = isPep;
+    }
+
+    public void setPepDetails(String pepDetails) {
+        this.pepDetails = pepDetails;
+    }
+
+    public void setKycScore(Double kycScore) {
+        this.kycScore = kycScore;
+    }
+
+    public void setDocumentScore(Double documentScore) {
+        this.documentScore = documentScore;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

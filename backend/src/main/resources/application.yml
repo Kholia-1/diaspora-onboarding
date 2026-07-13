@@ -70,6 +70,9 @@ app:
       fallback-display: "${PRE_ONBOARDING_OTP_FALLBACK_DISPLAY:true}"
   # Base publique (liens de paiement, callbacks). Parité PUBLIC_BASE_URL du monolithe.
   public-base-url: "${PUBLIC_BASE_URL:https://onboarding.afb-firstagent.com}"
+  # Dossier de stockage des documents chiffrés (.enc) de dossier (résolu contre storage.base-dir
+  # s'il est relatif). Parité UPLOAD_DIR="uploads" du monolithe.
+  application-upload-dir: "${APPLICATION_UPLOAD_DIR:uploads}"
   callbell:
     # Notifications WhatsApp via Callbell. Désactivé par défaut en dev → l'adapter NoOp
     # reste actif (aucun message envoyé). Passer CALLBELL_ENABLED=true pour le canal réel.

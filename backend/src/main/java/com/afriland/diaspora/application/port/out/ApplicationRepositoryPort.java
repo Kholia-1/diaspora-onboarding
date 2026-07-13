@@ -3,6 +3,7 @@ package com.afriland.diaspora.application.port.out;
 import com.afriland.diaspora.domain.model.ApplicationDetail;
 import com.afriland.diaspora.domain.model.ApplicationStatusView;
 import com.afriland.diaspora.domain.model.ApplicationSummary;
+import com.afriland.diaspora.domain.model.NewApplication;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +17,14 @@ public interface ApplicationRepositoryPort {
     Optional<ApplicationDetail> findById(long id);
 
     Optional<ApplicationDetail> findByReference(String reference);
+
+    Optional<ApplicationSummary> findSummaryById(long id);
+
+    /** Crée un dossier (soumission client) et retourne sa vue liste (schéma ApplicationResponse). */
+    ApplicationSummary create(NewApplication newApplication);
+
+    /** Recalcule le score documentaire et met à jour le statut du dossier (upload de document). */
+    void updateDocumentScoreAndStatus(long applicationId, int documentScore, String status);
 
     // --- Suivi client public ---
 

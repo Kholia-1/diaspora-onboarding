@@ -1,0 +1,68 @@
+package com.afriland.diaspora.domain.model;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+/**
+ * Dossier à créer (soumission client) — porte les valeurs finales à persister,
+ * déjà normalisées par la couche application (noms en majuscules, défauts, kyc, status).
+ */
+public record NewApplication(
+        String reference,
+        String lastName,
+        String firstName,
+        LocalDate birthDate,
+        String birthPlace,
+        String birthDepartment,
+        String birthName,
+        String residencyStatus,
+        String addressLocation,
+        String postalBox,
+        String phone,
+        String email,
+        String preOnboardingSessionId,
+        String whatsappPhoneFull,
+        Boolean whatsappOtpVerified,
+        LocalDateTime whatsappOtpVerifiedAt,
+        String contactPerson1Name,
+        String contactPerson1Phone,
+        String contactPerson2Name,
+        String contactPerson2Phone,
+        String fatherName,
+        String motherName,
+        String nationality,
+        String residence,
+        String sex,
+        String maritalStatus,
+        String matrimonialRegime,
+        String identityDocumentNumber,
+        LocalDate identityDocumentIssueDate,
+        String identityDocumentIssuePlace,
+        String rib,
+        String incomeRange,
+        String incomeCurrency,
+        String activitySector,
+        String activitySectorCode,
+        String activitySubsector,
+        String activitySubsectorCode,
+        String accountObject,
+        String accountObjectOther,
+        String fundsOrigin,
+        String fundsOriginOther,
+        String accountType,
+        String preferredBranch,
+        String selectedPackageCode,
+        String selectedPackageName,
+        String selectedPackageCurrency,
+        BigDecimal selectedPackageOpeningFee,
+        BigDecimal selectedPackageSubscriptionFee,
+        BigDecimal selectedPackageMonthlyFee,
+        Boolean selectedPackagePaymentRequired,
+        String accountPurpose,
+        Boolean isPep,
+        String pepDetails,
+        String status,
+        Double kycScore,
+        LocalDateTime createdAt) {
+}

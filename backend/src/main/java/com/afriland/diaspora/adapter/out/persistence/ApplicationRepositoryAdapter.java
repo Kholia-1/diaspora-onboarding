@@ -38,6 +38,82 @@ public class ApplicationRepositoryAdapter implements ApplicationRepositoryPort {
     }
 
     @Override
+    public Optional<ApplicationSummary> findSummaryById(long id) {
+        return repository.findById(id).map(ApplicationRepositoryAdapter::toSummary);
+    }
+
+    @Override
+    public ApplicationSummary create(com.afriland.diaspora.domain.model.NewApplication n) {
+        AccountApplicationEntity e = new AccountApplicationEntity();
+        e.setReference(n.reference());
+        e.setLastName(n.lastName());
+        e.setFirstName(n.firstName());
+        e.setBirthDate(n.birthDate());
+        e.setBirthPlace(n.birthPlace());
+        e.setBirthDepartment(n.birthDepartment());
+        e.setBirthName(n.birthName());
+        e.setResidencyStatus(n.residencyStatus());
+        e.setAddressLocation(n.addressLocation());
+        e.setPostalBox(n.postalBox());
+        e.setPhone(n.phone());
+        e.setEmail(n.email());
+        e.setPreOnboardingSessionId(n.preOnboardingSessionId());
+        e.setWhatsappPhoneFull(n.whatsappPhoneFull());
+        e.setWhatsappOtpVerified(n.whatsappOtpVerified());
+        e.setWhatsappOtpVerifiedAt(n.whatsappOtpVerifiedAt());
+        e.setContactPerson1Name(n.contactPerson1Name());
+        e.setContactPerson1Phone(n.contactPerson1Phone());
+        e.setContactPerson2Name(n.contactPerson2Name());
+        e.setContactPerson2Phone(n.contactPerson2Phone());
+        e.setFatherName(n.fatherName());
+        e.setMotherName(n.motherName());
+        e.setNationality(n.nationality());
+        e.setResidence(n.residence());
+        e.setSex(n.sex());
+        e.setMaritalStatus(n.maritalStatus());
+        e.setMatrimonialRegime(n.matrimonialRegime());
+        e.setIdentityDocumentNumber(n.identityDocumentNumber());
+        e.setIdentityDocumentIssueDate(n.identityDocumentIssueDate());
+        e.setIdentityDocumentIssuePlace(n.identityDocumentIssuePlace());
+        e.setRib(n.rib());
+        e.setIncomeRange(n.incomeRange());
+        e.setIncomeCurrency(n.incomeCurrency());
+        e.setActivitySector(n.activitySector());
+        e.setActivitySectorCode(n.activitySectorCode());
+        e.setActivitySubsector(n.activitySubsector());
+        e.setActivitySubsectorCode(n.activitySubsectorCode());
+        e.setAccountObject(n.accountObject());
+        e.setAccountObjectOther(n.accountObjectOther());
+        e.setFundsOrigin(n.fundsOrigin());
+        e.setFundsOriginOther(n.fundsOriginOther());
+        e.setAccountType(n.accountType());
+        e.setPreferredBranch(n.preferredBranch());
+        e.setSelectedPackageCode(n.selectedPackageCode());
+        e.setSelectedPackageName(n.selectedPackageName());
+        e.setSelectedPackageCurrency(n.selectedPackageCurrency());
+        e.setSelectedPackageOpeningFee(n.selectedPackageOpeningFee());
+        e.setSelectedPackageSubscriptionFee(n.selectedPackageSubscriptionFee());
+        e.setSelectedPackageMonthlyFee(n.selectedPackageMonthlyFee());
+        e.setSelectedPackagePaymentRequired(n.selectedPackagePaymentRequired());
+        e.setAccountPurpose(n.accountPurpose());
+        e.setIsPep(n.isPep());
+        e.setPepDetails(n.pepDetails());
+        e.setStatus(n.status());
+        e.setKycScore(n.kycScore());
+        e.setCreatedAt(n.createdAt());
+
+        return toSummary(repository.save(e));
+    }
+
+    @Override
+    public void updateDocumentScoreAndStatus(long applicationId, int documentScore, String status) {
+        AccountApplicationEntity entity = requireEntity(applicationId);
+        entity.setDocumentScore((double) documentScore);
+        entity.setStatus(status);
+        repository.save(entity);
+    }
+
+    @Override
     public List<ApplicationStatusView> findStatusViewsByEmail(String email) {
         return repository.findByEmailIgnoreCaseOrderByCreatedAtDesc(email).stream()
                 .map(ApplicationRepositoryAdapter::toStatusView)

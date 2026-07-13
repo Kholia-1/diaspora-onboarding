@@ -8,10 +8,13 @@ import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 
@@ -27,12 +30,48 @@ public class FernetCryptoAdapter implements DocumentCryptoPort {
     private static final byte[] FERNET_PREFIX = "gAAAA".getBytes(StandardCharsets.US_ASCII);
 
     private final AppProperties properties;
+    private final SecureRandom random = new SecureRandom();
 
     private volatile byte[] signingKey;
     private volatile byte[] encryptionKey;
 
     public FernetCryptoAdapter(AppProperties properties) {
         this.properties = properties;
+    }
+
+    @Override
+    public byte[] encrypt(byte[] plaintext) {
+        loadKeyIfNeeded();
+
+        byte[] data = plaintext == null ? new byte[0] : plaintext;
+
+        try {
+            byte[] iv = new byte[16];
+            random.nextBytes(iv);
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(encryptionKey, "AES"), new IvParameterSpec(iv));
+            byte[] ciphertext = cipher.doFinal(data);
+
+            long timestamp = Instant.now().getEpochSecond();
+            ByteBuffer message = ByteBuffer.allocate(1 + 8 + iv.length + ciphertext.length);
+            message.put((byte) 0x80);
+            message.putLong(timestamp);
+            message.put(iv);
+            message.put(ciphertext);
+            byte[] messageBytes = message.array();
+
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(signingKey, "HmacSHA256"));
+            byte[] hmac = mac.doFinal(messageBytes);
+
+            byte[] token = Arrays.copyOf(messageBytes, messageBytes.length + hmac.length);
+            System.arraycopy(hmac, 0, token, messageBytes.length, hmac.length);
+
+            return Base64.getUrlEncoder().encode(token);
+        } catch (Exception e) {
+            throw new IllegalStateException("Échec du chiffrement Fernet", e);
+        }
     }
 
     @Override

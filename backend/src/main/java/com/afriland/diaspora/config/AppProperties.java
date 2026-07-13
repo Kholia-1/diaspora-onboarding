@@ -22,7 +22,8 @@ public record AppProperties(
         PreOnboarding preOnboarding,
         Callbell callbell,
         Mastercard mastercard,
-        String publicBaseUrl) {
+        String publicBaseUrl,
+        String applicationUploadDir) {
 
     public record Storage(String baseDir) {
     }

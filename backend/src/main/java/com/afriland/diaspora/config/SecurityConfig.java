@@ -50,6 +50,9 @@ public class SecurityConfig {
                                 "/api/applications/status-by-contact",
                                 "/api/applications/status/**",
                                 "/api/applications/*/opened-account-public").permitAll()
+                        // Soumission de dossier client : publique (le client soumet avant toute auth).
+                        .requestMatchers(HttpMethod.POST, "/api/applications").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/applications/*/documents").permitAll()
                         // Pré-onboarding client : pré-authentification, endpoints publics.
                         .requestMatchers("/api/pre-onboarding/**").permitAll()
                         // Paiements Mastercard : checkout, webhook, retour, résumé — publics
