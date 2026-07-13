@@ -52,6 +52,11 @@ public class SecurityConfig {
                                 "/api/applications/*/opened-account-public").permitAll()
                         // Pré-onboarding client : pré-authentification, endpoints publics.
                         .requestMatchers("/api/pre-onboarding/**").permitAll()
+                        // Paiements Mastercard : checkout, webhook, retour, résumé — publics
+                        // (le webhook et le retour Mastercard n'ont pas de session).
+                        .requestMatchers("/api/payments/**").permitAll()
+                        // Lien de paiement client : public, protégé par email/téléphone.
+                        .requestMatchers("/api/client/payment-link/**").permitAll()
                         .requestMatchers("/api/backoffice/users/**").hasRole("ADMIN")
                         // Décision réservée aux rôles back-office métier (durcissement : le
                         // monolithe FastAPI acceptait toute session back-office).

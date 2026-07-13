@@ -108,6 +108,42 @@ public class ApplicationRepositoryAdapter implements ApplicationRepositoryPort {
         repository.save(entity);
     }
 
+    @Override
+    public void syncPackagePayment(long applicationId, String paymentReference, String packagePaymentStatus,
+                                   String provider, java.math.BigDecimal amount, String currency,
+                                   String paymentUrl, String newApplicationStatus) {
+        AccountApplicationEntity entity = requireEntity(applicationId);
+        if (paymentReference != null) {
+            entity.setPackagePaymentReference(paymentReference);
+        }
+        if (packagePaymentStatus != null) {
+            entity.setPackagePaymentStatus(packagePaymentStatus);
+        }
+        if (provider != null) {
+            entity.setPackagePaymentProvider(provider);
+        }
+        if (amount != null) {
+            entity.setPackagePaymentAmount(amount);
+        }
+        if (currency != null) {
+            entity.setPackagePaymentCurrency(currency);
+        }
+        if (paymentUrl != null) {
+            entity.setPackagePaymentUrl(paymentUrl);
+        }
+        if (newApplicationStatus != null) {
+            entity.setStatus(newApplicationStatus);
+        }
+        repository.save(entity);
+    }
+
+    @Override
+    public void markPackagePaymentRequired(long applicationId) {
+        AccountApplicationEntity entity = requireEntity(applicationId);
+        entity.setSelectedPackagePaymentRequired(Boolean.TRUE);
+        repository.save(entity);
+    }
+
     private AccountApplicationEntity requireEntity(long applicationId) {
         return repository.findById(applicationId)
                 .orElseThrow(() -> ApiException.notFound("Demande introuvable"));

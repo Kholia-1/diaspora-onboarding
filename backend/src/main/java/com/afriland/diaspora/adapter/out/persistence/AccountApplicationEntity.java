@@ -602,4 +602,30 @@ public class AccountApplicationEntity {
     public void setPackagePaymentStatus(String packagePaymentStatus) {
         this.packagePaymentStatus = packagePaymentStatus;
     }
+
+    // --- Mutations Phase 4 (paiement package) ---
+
+    public void setPackagePaymentReference(String packagePaymentReference) {
+        this.packagePaymentReference = packagePaymentReference;
+    }
+
+    public void setPackagePaymentProvider(String packagePaymentProvider) {
+        this.packagePaymentProvider = packagePaymentProvider;
+    }
+
+    public void setPackagePaymentAmount(java.math.BigDecimal packagePaymentAmount) {
+        this.packagePaymentAmount = packagePaymentAmount;
+    }
+
+    public void setPackagePaymentCurrency(String packagePaymentCurrency) {
+        this.packagePaymentCurrency = packagePaymentCurrency;
+    }
+
+    public void setPackagePaymentUrl(String packagePaymentUrl) {
+        this.packagePaymentUrl = packagePaymentUrl;
+    }
+
+    public void setSelectedPackagePaymentRequired(Boolean selectedPackagePaymentRequired) {
+        this.selectedPackagePaymentRequired = selectedPackagePaymentRequired;
+    }
 }

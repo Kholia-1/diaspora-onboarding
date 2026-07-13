@@ -46,4 +46,17 @@ public interface ApplicationRepositoryPort {
     void updateStatus(long applicationId, String status);
 
     void updatePackagePaymentStatus(long applicationId, String packagePaymentStatus);
+
+    // --- Mises à jour Phase 4 (paiement package) ---
+
+    /**
+     * Synchronise les champs de paiement package sur le dossier (parité sync_payment_to_application).
+     * Met aussi à jour le statut du dossier si newApplicationStatus est fourni.
+     */
+    void syncPackagePayment(long applicationId, String paymentReference, String packagePaymentStatus,
+                            String provider, java.math.BigDecimal amount, String currency, String paymentUrl,
+                            String newApplicationStatus);
+
+    /** Force le flag selected_package_payment_required (génération de lien back-office). */
+    void markPackagePaymentRequired(long applicationId);
 }
