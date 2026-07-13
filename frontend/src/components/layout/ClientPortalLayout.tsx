@@ -13,6 +13,10 @@ export function useClientToast() {
   return useContext(ToastContext)
 }
 
+// Parcours d'ouverture de compte legacy (FastAPI :8010) — conservé sur choix
+// utilisateur : capture caméra intelligente OpenCV.js/MediaPipe non encore portée.
+export const LEGACY_OPEN_ACCOUNT_URL = 'http://localhost:8010/open-account-flow-test'
+
 const pillBase =
   'whitespace-nowrap rounded-full px-4 py-2 text-sm font-bold transition-colors'
 const pillIdle = 'text-gray-800 hover:bg-red-50 hover:text-afriland'
@@ -85,13 +89,9 @@ function ClientPortalLayoutInner() {
       >
         {t('nav.home')}
       </NavLink>
-      <NavLink
-        to="/ouvrir-un-compte"
-        onClick={closeMenu}
-        className={({ isActive }) => `${pillBase} ${isActive ? pillActive : pillIdle}`}
-      >
+      <a href={LEGACY_OPEN_ACCOUNT_URL} onClick={closeMenu} className={`${pillBase} ${pillIdle}`}>
         {t('nav.open_account')}
-      </NavLink>
+      </a>
       <button
         type="button"
         onClick={() => {
