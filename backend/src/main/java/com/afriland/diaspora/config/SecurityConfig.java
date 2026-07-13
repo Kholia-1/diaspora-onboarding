@@ -53,6 +53,16 @@ public class SecurityConfig {
                         // Soumission de dossier client : publique (le client soumet avant toute auth).
                         .requestMatchers(HttpMethod.POST, "/api/applications").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/applications/*/documents").permitAll()
+                        // Référentiels du formulaire client : lecture publique uniquement
+                        // (les écritures CRUD restent réservées au back-office, voir /api/** plus bas).
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/sectors/active",
+                                "/api/subsectors/active",
+                                "/api/subsectors/by-sector/**",
+                                "/api/packages/active",
+                                "/api/agencies/active",
+                                "/api/nationalities/active",
+                                "/api/countries/active").permitAll()
                         // Pré-onboarding client : pré-authentification, endpoints publics.
                         .requestMatchers("/api/pre-onboarding/**").permitAll()
                         // Paiements Mastercard : checkout, webhook, retour, résumé — publics
