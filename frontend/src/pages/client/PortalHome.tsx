@@ -1,8 +1,5 @@
 import { Link } from 'react-router-dom'
-import {
-  LEGACY_OPEN_ACCOUNT_URL,
-  useClientToast,
-} from '../../components/layout/ClientPortalLayout'
+import { useClientToast } from '../../components/layout/ClientPortalLayout'
 import { useLang } from '../../app/i18n'
 
 function ServiceCard({
@@ -72,9 +69,9 @@ export function PortalHome() {
             </h1>
             <p className="mt-3 max-w-lg text-sm leading-relaxed text-gray-300">{t('hero.desc')}</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <a href={LEGACY_OPEN_ACCOUNT_URL} className={primaryBtn}>
+              <Link to="/ouvrir-un-compte" className={primaryBtn}>
                 {t('hero.open')}
-              </a>
+              </Link>
               <Link
                 to="/suivi"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-inset ring-white/25 transition-colors hover:bg-white/20"
@@ -116,9 +113,9 @@ export function PortalHome() {
             availableLabel={t('card.available')}
             soonLabel={t('card.soon')}
             action={
-              <a href={LEGACY_OPEN_ACCOUNT_URL} className={primaryBtn}>
+              <Link to="/ouvrir-un-compte" className={primaryBtn}>
                 {t('card.account.action')}
-              </a>
+              </Link>
             }
           />
           <ServiceCard

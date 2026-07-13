@@ -3,8 +3,6 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { LangProvider, LangSwitcher, useLang } from '../../app/i18n'
 import logo from '../../assets/afriland-logo.png'
 
-export const LEGACY_OPEN_ACCOUNT_URL = 'http://localhost:8010/open-account-flow-test'
-
 // ---------------------------------------------------------------------------
 // Toast « bientôt disponible » partagé par le layout et les pages publiques.
 // ---------------------------------------------------------------------------
@@ -87,9 +85,13 @@ function ClientPortalLayoutInner() {
       >
         {t('nav.home')}
       </NavLink>
-      <a href={LEGACY_OPEN_ACCOUNT_URL} className={`${pillBase} ${pillIdle}`}>
+      <NavLink
+        to="/ouvrir-un-compte"
+        onClick={closeMenu}
+        className={({ isActive }) => `${pillBase} ${isActive ? pillActive : pillIdle}`}
+      >
         {t('nav.open_account')}
-      </a>
+      </NavLink>
       <button
         type="button"
         onClick={() => {

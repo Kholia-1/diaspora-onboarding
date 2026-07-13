@@ -72,6 +72,44 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return (text ? JSON.parse(text) : undefined) as T
 }
 
+/**
+ * POST multipart/form-data : ne pose pas de Content-Type (le navigateur ajoute
+ * la boundary), conserve les cookies de session et la gestion d'erreur {detail}.
+ * Utilisé pour l'OCR pré-onboarding et l'upload des pièces justificatives.
+ */
+export async function postForm<T>(
+  path: string,
+  formData: FormData,
+  options: { skipAuthRedirect?: boolean } = {},
+): Promise<T> {
+  const { skipAuthRedirect = true } = options
+
+  let response: Response
+  try {
+    response = await fetch(path, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    })
+  } catch {
+    throw new ApiError(0, 'Serveur injoignable. Vérifiez votre connexion.')
+  }
+
+  if (response.status === 401 && !skipAuthRedirect) {
+    if (!window.location.pathname.startsWith('/login')) {
+      window.location.assign('/login')
+    }
+    throw new ApiError(401, 'Session expirée, veuillez vous reconnecter.')
+  }
+
+  if (!response.ok) {
+    throw new ApiError(response.status, await extractErrorMessage(response))
+  }
+
+  const text = await response.text()
+  return (text ? JSON.parse(text) : undefined) as T
+}
+
 export const api = {
   get: <T>(path: string, options?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...options, method: 'GET' }),
@@ -80,4 +118,5 @@ export const api = {
   put: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body }),
   patch: <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  postForm,
 }

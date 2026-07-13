@@ -4,6 +4,7 @@ import { BackofficeShell } from '../components/layout/BackofficeShell'
 import { ClientPortalLayout } from '../components/layout/ClientPortalLayout'
 import { PortalHome } from '../pages/client/PortalHome'
 import { StatusTrackingPage } from '../pages/client/StatusTrackingPage'
+import { AccountOpeningPage } from '../pages/client/open-account/AccountOpeningPage'
 import { LoginPage } from '../pages/backoffice/LoginPage'
 import { ApplicationsListPage } from '../pages/backoffice/ApplicationsListPage'
 import { ApplicationDetailPage } from '../pages/backoffice/ApplicationDetailPage'
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
     element: <ClientPortalLayout />,
     children: [
       { path: '/', element: <PortalHome /> },
+      { path: '/ouvrir-un-compte', element: <AccountOpeningPage /> },
       { path: '/suivi', element: <StatusTrackingPage /> },
     ],
   },

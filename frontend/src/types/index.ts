@@ -261,6 +261,149 @@ export interface Country {
 }
 
 // ---------------------------------------------------------------------------
+// Ouverture de compte client (parcours public multi-étapes)
+// ---------------------------------------------------------------------------
+
+export interface Sector {
+  code: string
+  name: string
+}
+
+export interface Subsector {
+  code: string
+  label: string
+  sector_code: string
+  sector: string
+}
+
+export interface Package {
+  code: string
+  name: string
+  description: string | null
+  services: string[]
+  currency: string | null
+  opening_fee: number
+  subscription_fee: number
+  monthly_fee: number
+  payment_required: boolean
+  active?: boolean
+  display_order?: number | null
+  [key: string]: unknown
+}
+
+export interface PackagesResponse {
+  packages: Package[]
+}
+
+export interface OtpSendResponse {
+  ok: boolean
+  message?: string
+  phone?: string
+  demo_mode?: boolean
+  demo_otp?: string
+  fallback_otp?: string
+  fallback_display?: boolean
+  expires_at?: string
+  [key: string]: unknown
+}
+
+export interface OtpVerifyResponse {
+  ok: boolean
+  verified: boolean
+  message?: string
+  session_id?: string
+  phone?: string
+  whatsapp_phone_full?: string
+  verified_at?: string
+  whatsapp_otp_verified?: boolean
+  whatsapp_otp_verified_at?: string
+  [key: string]: unknown
+}
+
+/** Champs pré-remplis renvoyés par l'OCR (clés variables selon le document). */
+export interface OcrExtractedFields {
+  last_name?: string
+  first_name?: string
+  birth_date?: string
+  place_of_birth?: string
+  birth_place?: string
+  profession?: string
+  cni_number?: string
+  identity_document_number?: string
+  passport_number?: string
+  nationality?: string
+  sex?: string
+  possible_dates?: string[]
+  [key: string]: unknown
+}
+
+export interface OcrResponse {
+  status: string
+  account_type?: string
+  document_type?: string
+  filename?: string
+  mime_type?: string
+  ocr_status?: string
+  document_type_validation_status?: string
+  extracted_fields: OcrExtractedFields
+  [key: string]: unknown
+}
+
+/** Payload de création de dossier (POST /api/applications), snake_case. */
+export interface ApplicationCreatePayload {
+  last_name: string
+  first_name: string
+  email: string
+  phone?: string | null
+  birth_date?: string | null
+  birth_place?: string | null
+  birth_department?: string | null
+  birth_name?: string | null
+  residency_status?: string
+  address_location?: string | null
+  postal_box?: string | null
+  nationality?: string | null
+  residence?: string | null
+  sex?: string | null
+  marital_status?: string | null
+  matrimonial_regime?: string | null
+  identity_document_number?: string | null
+  identity_document_issue_date?: string | null
+  identity_document_issue_place?: string | null
+  rib?: string | null
+  income_range?: string | null
+  activity_sector?: string | null
+  activity_sector_code?: string | null
+  activity_subsector?: string | null
+  activity_subsector_code?: string | null
+  account_type?: string | null
+  preferred_branch?: string | null
+  account_purpose?: string | null
+  selected_package_code?: string | null
+  selected_package_name?: string | null
+  selected_package_currency?: string | null
+  selected_package_opening_fee?: number | null
+  selected_package_subscription_fee?: number | null
+  selected_package_monthly_fee?: number | null
+  selected_package_payment_required?: boolean | null
+  pre_onboarding_session_id?: string | null
+  whatsapp_phone_full?: string | null
+  whatsapp_otp_verified?: boolean
+  whatsapp_otp_verified_at?: string | null
+  is_pep?: boolean
+  pep_details?: string | null
+  [key: string]: unknown
+}
+
+export interface ApplicationCreateResponse {
+  id: number
+  reference: string
+  status: string
+  kyc_score?: number | null
+  [key: string]: unknown
+}
+
+// ---------------------------------------------------------------------------
 // Journal d'audit
 // ---------------------------------------------------------------------------
 
