@@ -68,3 +68,31 @@ app:
       secret: "${PRE_ONBOARDING_OTP_SECRET:diaspora-onboarding-demo-secret-change-me}"
       # Affichage du code à l'écran si l'envoi WhatsApp échoue (contournement legacy).
       fallback-display: "${PRE_ONBOARDING_OTP_FALLBACK_DISPLAY:true}"
+  # Base publique (liens de paiement, callbacks). Parité PUBLIC_BASE_URL du monolithe.
+  public-base-url: "${PUBLIC_BASE_URL:https://onboarding.afb-firstagent.com}"
+  callbell:
+    # Notifications WhatsApp via Callbell. Désactivé par défaut en dev → l'adapter NoOp
+    # reste actif (aucun message envoyé). Passer CALLBELL_ENABLED=true pour le canal réel.
+    # Mémoire projet : texte libre (use-template=false) car blocage Meta 131042 sur templates.
+    enabled: "${CALLBELL_ENABLED:false}"
+    base-url: "${CALLBELL_BASE_URL:https://api.callbell.eu}"
+    api-token: "${CALLBELL_API_TOKEN:}"
+    channel-uuid: "${CALLBELL_CHANNEL_UUID:}"
+    template-uuid: "${CALLBELL_TEMPLATE_UUID:}"
+    use-template: "${CALLBELL_USE_TEMPLATE:false}"
+    default-country-code: "${CALLBELL_DEFAULT_COUNTRY_CODE:+237}"
+  mastercard:
+    # Passerelle Hosted Checkout. Désactivé par défaut : les endpoints répondent en mode
+    # dégradé tant que MASTERCARD_ENABLED n'est pas true et les secrets non fournis.
+    enabled: "${MASTERCARD_ENABLED:false}"
+    environment: "${MASTERCARD_ENVIRONMENT:TEST}"
+    base-url: "${MASTERCARD_GATEWAY_BASE_URL:}"
+    merchant-id: "${MASTERCARD_MERCHANT_ID:}"
+    api-password: "${MASTERCARD_API_PASSWORD:}"
+    api-version: "${MASTERCARD_API_VERSION:100}"
+    currency: "${MASTERCARD_CURRENCY:XAF}"
+    operation: "${MASTERCARD_OPERATION:PURCHASE}"
+    merchant-name: "${MASTERCARD_MERCHANT_NAME:Afriland First Bank}"
+    merchant-url: "${MASTERCARD_MERCHANT_URL:}"
+    return-url: "${MASTERCARD_RETURN_URL:}"
+    webhook-url: "${MASTERCARD_WEBHOOK_URL:}"

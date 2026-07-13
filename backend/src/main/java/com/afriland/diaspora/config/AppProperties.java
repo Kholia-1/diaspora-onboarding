@@ -10,6 +10,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * BLACKMODULE_SCREENING_URL reste prioritaire, parité avec le monolithe Python).
  * app.ocr.* : microservice OCR interne.
  * app.pre-onboarding.* : upload et politique OTP du pré-onboarding.
+ * app.callbell.* : notifications WhatsApp via Callbell (Phase 4).
+ * app.mastercard.* : passerelle de paiement Mastercard Hosted Checkout (Phase 4).
  */
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(
@@ -17,7 +19,10 @@ public record AppProperties(
         Fernet fernet,
         Blackmodule blackmodule,
         Ocr ocr,
-        PreOnboarding preOnboarding) {
+        PreOnboarding preOnboarding,
+        Callbell callbell,
+        Mastercard mastercard,
+        String publicBaseUrl) {
 
     public record Storage(String baseDir) {
     }
@@ -36,5 +41,30 @@ public record AppProperties(
         public record Otp(int ttlMinutes, int maxAttempts, boolean demoMode, String secret,
                           boolean fallbackDisplay) {
         }
+    }
+
+    public record Callbell(
+            boolean enabled,
+            String baseUrl,
+            String apiToken,
+            String channelUuid,
+            String templateUuid,
+            boolean useTemplate,
+            String defaultCountryCode) {
+    }
+
+    public record Mastercard(
+            boolean enabled,
+            String environment,
+            String baseUrl,
+            String merchantId,
+            String apiPassword,
+            String apiVersion,
+            String currency,
+            String operation,
+            String merchantName,
+            String merchantUrl,
+            String returnUrl,
+            String webhookUrl) {
     }
 }
