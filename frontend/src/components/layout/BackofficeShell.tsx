@@ -11,8 +11,10 @@ const NAV_ITEMS = [
   { to: '/backoffice/agencies', label: 'Agences' },
   { to: '/backoffice/nationalities', label: 'Nationalités' },
   { to: '/backoffice/countries', label: 'Pays' },
-  { to: '/backoffice/users', label: 'Utilisateurs', adminOnly: true },
+  { to: '/backoffice/packages', label: 'Packages' },
+  { to: '/backoffice/api-integrations', label: 'API à intégrer' },
   { to: '/backoffice/audit-logs', label: "Journal d'audit" },
+  { to: '/backoffice/users', label: 'Utilisateurs', adminOnly: true },
 ]
 
 function LogoutIcon() {

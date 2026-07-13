@@ -404,6 +404,80 @@ export interface ApplicationCreateResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Configuration back-office : packages & intégrations API
+// ---------------------------------------------------------------------------
+
+/** Package éditable dans la configuration back-office (parité legacy). */
+export interface BackofficePackage {
+  code: string
+  name: string
+  description: string
+  services: string[]
+  currency: string
+  opening_fee: number
+  subscription_fee: number
+  monthly_fee: number
+  payment_required: boolean
+  active: boolean
+  display_order: number
+  customer_type: string
+  mastercard_item_code: string
+  whatsapp_template: string
+  [key: string]: unknown
+}
+
+export interface BackofficePackagesResponse {
+  packages: BackofficePackage[]
+  message?: string
+}
+
+/** Intégration API éditable. Les secrets (api_key, client_secret) arrivent masqués. */
+export interface ApiIntegration {
+  code: string
+  name: string
+  description: string
+  enabled: boolean
+  environment: string
+  provider: string
+  base_url: string
+  auth_type: string
+  api_key: string
+  client_id: string
+  client_secret: string
+  phone_number_id?: string
+  merchant_id?: string
+  webhook_url: string
+  callback_url: string
+  notes: string
+  [key: string]: unknown
+}
+
+export interface ApiIntegrationsResponse {
+  integrations: ApiIntegration[]
+  message?: string
+}
+
+export interface IntegrationConnectivity {
+  attempted: boolean
+  success: boolean
+  http_status?: number
+  message: string
+}
+
+export interface IntegrationTestResult {
+  code: string
+  name?: string
+  /** DISABLED | CONFIG_INCOMPLETE | CONNECTION_OK | CONNECTION_FAILED */
+  status: string
+  success: boolean
+  message: string
+  missing_fields?: string[]
+  environment?: string
+  provider?: string
+  connectivity?: IntegrationConnectivity
+}
+
+// ---------------------------------------------------------------------------
 // Journal d'audit
 // ---------------------------------------------------------------------------
 

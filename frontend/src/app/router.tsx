@@ -12,6 +12,8 @@ import { UsersPage } from '../pages/backoffice/UsersPage'
 import { AgenciesPage } from '../pages/backoffice/AgenciesPage'
 import { NationalitiesPage } from '../pages/backoffice/NationalitiesPage'
 import { CountriesPage } from '../pages/backoffice/CountriesPage'
+import { PackagesPage } from '../pages/backoffice/PackagesPage'
+import { ApiIntegrationsPage } from '../pages/backoffice/ApiIntegrationsPage'
 import { AuditLogsPage } from '../pages/backoffice/AuditLogsPage'
 
 const router = createBrowserRouter([
@@ -39,6 +41,8 @@ const router = createBrowserRouter([
           { path: '/backoffice/agencies', element: <AgenciesPage /> },
           { path: '/backoffice/nationalities', element: <NationalitiesPage /> },
           { path: '/backoffice/countries', element: <CountriesPage /> },
+          { path: '/backoffice/packages', element: <PackagesPage /> },
+          { path: '/backoffice/api-integrations', element: <ApiIntegrationsPage /> },
           {
             path: '/backoffice/users',
             element: (
