@@ -2505,6 +2505,7 @@
    nouveau code est envoyé — l'affichage suit automatiquement. */
 (function () {
   var VERIFIED_KEY = "diaspora_step0_whatsapp_otp_verified";
+  var VALIDATED_KEY = "diaspora_step0_preinscription_validated";
   var page = document.querySelector(".page");
   if (!page) return;
 
@@ -2516,14 +2517,37 @@
     }
   }
 
-  function apply() {
-    page.classList.toggle("preinscription-ok", isVerified());
+  function isValidated() {
+    try {
+      return sessionStorage.getItem(VALIDATED_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
   }
 
+  function apply() {
+    // On n'affiche la suite (documents, etc.) qu'APRÈS le clic sur
+    // « Valider la pré-inscription » (bouton cliquable seulement une fois l'OTP vérifié).
+    page.classList.toggle("preinscription-ok", isValidated() && isVerified());
+  }
+
+  function bindValidate() {
+    var btn = document.getElementById("step0-validate-btn");
+    if (btn && btn.dataset.gateBound !== "1") {
+      btn.dataset.gateBound = "1";
+      btn.addEventListener("click", function () {
+        if (isVerified()) {
+          try { sessionStorage.setItem(VALIDATED_KEY, "1"); } catch (e) {}
+          apply();
+        }
+      });
+    }
+  }
+
+  bindValidate();
   apply();
-  /* La vérification peut aboutir dans plusieurs modules (saisie manuelle,
-     auto-vérification) : on observe l'état plutôt que chaque chemin de code. */
-  setInterval(apply, 700);
+  /* Le bouton peut être (re)rendu tardivement : on re-bind et on ré-applique. */
+  setInterval(function () { bindValidate(); apply(); }, 700);
   window.addEventListener("storage", apply);
 })();
 </script>
