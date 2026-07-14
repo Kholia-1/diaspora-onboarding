@@ -1905,7 +1905,42 @@
           </div>
         </div>
       </div>
+
+      <!-- AFB_FLOW_START_GATE_V1 : d'abord les étapes, puis « Commencer » -> pré-inscription -->
+      <div class="start-cta">
+        <button class="btn btn-primary" id="start-preinscription-btn" type="button">Commencer</button>
+      </div>
     </section>
+
+    <style>
+      /* Au chargement : on montre l'intro (Bienvenue + les 4 étapes) + « Commencer ».
+         Au clic sur « Commencer » : on masque l'intro et on affiche la pré-inscription.
+         En mobile, un seul bloc est visible à la fois (plus de cartes empilées superflues). */
+      .page:not(.flow-started) .panel.workspace { display: none; }
+      .page:not(.flow-started) .panel.intro { grid-column: 1 / -1; }
+      .page.flow-started .panel.intro { display: none; }
+      .page.flow-started .panel.workspace { grid-column: 1 / -1; }
+      .start-cta { margin-top: 22px; }
+      .start-cta .btn { min-width: 200px; }
+    </style>
+    <script>
+      (function () {
+        function initFlowGate() {
+          var page = document.querySelector('main.page');
+          var startBtn = document.getElementById('start-preinscription-btn');
+          if (!page || !startBtn) return;
+          startBtn.addEventListener('click', function () {
+            page.classList.add('flow-started');
+            try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+          });
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', initFlowGate);
+        } else {
+          initFlowGate();
+        }
+      })();
+    </script>
 
     <section class="panel workspace">
 
@@ -8249,8 +8284,10 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
       demo.classList.remove("show");
     }
 
+    // AFB_OTP_STATUS_SINGLE_V1 : un seul message à l'écran (zone OTP),
+    // le statut principal de l'étape est effacé pour éviter le doublon.
     setOtpStatus("Envoi du code WhatsApp en cours...", "warning");
-    setMainStatus("Envoi du code WhatsApp en cours...", true);
+    setMainStatus("", true);
 
     try {
       console.log("[AFB_STEP0_OTP_CLEAN_FORCE_V4] send", payload);
@@ -8265,7 +8302,7 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
       if (!response.ok || data.ok === false) {
         const msg = extractMessage(data, "Impossible d'envoyer le code OTP WhatsApp.");
         setOtpStatus(msg, "error");
-        setMainStatus(msg, false);
+        setMainStatus("", true);
         return false;
       }
 
@@ -8289,14 +8326,35 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
       }
 
       const delivery = data.whatsapp_delivery_status || (data.delivery && data.delivery.status) || "OK";
-      setOtpStatus("Code OTP envoyé. Vérifiez votre WhatsApp. Statut : " + delivery + ".", "ok");
-      setMainStatus("Code OTP envoyé. Vérifiez votre WhatsApp.", true);
+
+      // AFB_OTP_FALLBACK_DISPLAY_UI_V1 : l'envoi WhatsApp a échoué -> le backend
+      // renvoie le code en clair (fallback_otp) ; on l'affiche au lieu de laisser
+      // le client attendre un message qui n'arrivera pas.
+      const deliveryFailed = [
+        "FAILED", "ERROR", "REJECTED", "UNDELIVERED",
+        "CALLBELL_HTTP_ERROR", "CALLBELL_ERROR", "CALLBELL_NOT_ACCEPTED",
+        "CONFIGURATION_INCOMPLETE"
+      ].indexOf(String(delivery).toUpperCase()) >= 0;
+
+      // AFB_OTP_STATUS_SINGLE_V1 : un seul message (zone OTP), pas de statut technique.
+      if (data.fallback_otp) {
+        if (demo) {
+          demo.textContent = "Votre code de vérification : " + data.fallback_otp;
+          demo.classList.add("show");
+        }
+        setOtpStatus("L'envoi WhatsApp n'a pas abouti. Utilisez le code affiché ci-dessous.", "warning");
+      } else if (deliveryFailed) {
+        setOtpStatus("L'envoi WhatsApp n'a pas abouti. Vérifiez le numéro et réessayez.", "error");
+      } else {
+        setOtpStatus("Code OTP envoyé. Vérifiez votre WhatsApp.", "ok");
+      }
+      setMainStatus("", true);
       return false;
 
     } catch (err) {
       console.error("[AFB_STEP0_OTP_CLEAN_FORCE_V4] send error", err);
       setOtpStatus("Erreur technique pendant l'envoi du code OTP WhatsApp.", "error");
-      setMainStatus("Erreur technique pendant l'envoi du code OTP WhatsApp.", false);
+      setMainStatus("", true);
       return false;
 
     } finally {
@@ -8372,7 +8430,7 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
       }
 
       setOtpStatus("WhatsApp vérifié avec succès.", "ok");
-      setMainStatus("WhatsApp vérifié avec succès.", true);
+      setMainStatus("", true);
       return false;
 
     } catch (err) {
