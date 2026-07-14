@@ -690,4 +690,284 @@ async function testIntegration(index) {
 document.addEventListener("DOMContentLoaded", loadIntegrations);
 </script>
 
+<!-- MASTERCARD_MONETIQUE_ADMIN_UI_V1 -->
+<script>
+(function () {
+  const MARKER = "MASTERCARD_MONETIQUE_ADMIN_UI_V1";
+
+  if (window.__mastercardMonetiqueAdminV1Loaded) {
+    return;
+  }
+
+  window.__mastercardMonetiqueAdminV1Loaded = true;
+
+  let checklistItems = [];
+
+  function setResult(panel, type, content) {
+    const box = panel.querySelector("[data-mc-result]");
+    box.className = "mc-result-v1 show " + (type || "");
+    box.textContent = typeof content === "string" ? content : JSON.stringify(content, null, 2);
+  }
+
+  function statusLabel(status) {
+    const labels = {
+      MISSING: "Manquant",
+      REQUESTED: "Demandé",
+      RECEIVED: "Reçu",
+      VALIDATED: "Validé"
+    };
+
+    return labels[status] || status || "Manquant";
+  }
+
+  function buildPanel() {
+    const panel = document.createElement("section");
+    panel.className = "mc-admin-panel-v1";
+    panel.setAttribute("data-marker", MARKER);
+
+    panel.innerHTML = `
+      <div class="mc-admin-header-v1">
+        <div>
+          <h2>Mastercard Gateway — Checklist monétique</h2>
+          <p>
+            Cette interface permet de suivre les paramètres à demander à la monétique avant d’activer le vrai paiement Mastercard.
+            Les vrais secrets ne doivent pas être committés dans Git.
+          </p>
+        </div>
+        <span class="mc-status-badge-v1 warn" data-mc-ready>Chargement...</span>
+      </div>
+
+      <div class="mc-grid-v1">
+        <div class="mc-kpi-v1">
+          <strong>Environnement</strong>
+          <span data-mc-environment>...</span>
+        </div>
+        <div class="mc-kpi-v1">
+          <strong>Base URL</strong>
+          <span data-mc-base-url>...</span>
+        </div>
+        <div class="mc-kpi-v1">
+          <strong>Merchant ID</strong>
+          <span data-mc-merchant>...</span>
+        </div>
+        <div class="mc-kpi-v1">
+          <strong>Devise / opération</strong>
+          <span data-mc-operation>...</span>
+        </div>
+      </div>
+
+      <div class="mc-warning-v1">
+        <strong>Règle :</strong> en mode réel, Diaspora Onboarding crée seulement la session Hosted Checkout.
+        Les données de carte restent sur Mastercard Gateway. L’application ne doit jamais collecter CVV, numéro de carte ou PIN.
+      </div>
+
+      <div class="mc-table-wrap-v1">
+        <table class="mc-table-v1">
+          <thead>
+            <tr>
+              <th>Catégorie</th>
+              <th>Élément à demander</th>
+              <th>Statut</th>
+              <th>Notes / valeur non sensible</th>
+            </tr>
+          </thead>
+          <tbody data-mc-checklist-body>
+            <tr>
+              <td colspan="4">Chargement de la checklist...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mc-actions-v1">
+        <button class="mc-btn-v1" data-mc-save>Sauvegarder la checklist</button>
+        <button class="mc-btn-v1 dark" data-mc-test>Préparer paiement test</button>
+        <button class="mc-btn-v1 light" data-mc-request>Afficher demande monétique</button>
+        <button class="mc-btn-v1 light" data-mc-refresh>Actualiser</button>
+      </div>
+
+      <pre class="mc-result-v1" data-mc-result></pre>
+    `;
+
+    panel.querySelector("[data-mc-save]").addEventListener("click", function () {
+      saveChecklist(panel);
+    });
+
+    panel.querySelector("[data-mc-test]").addEventListener("click", function () {
+      runDryRunTest(panel);
+    });
+
+    panel.querySelector("[data-mc-request]").addEventListener("click", function () {
+      showRequestText(panel);
+    });
+
+    panel.querySelector("[data-mc-refresh]").addEventListener("click", function () {
+      loadAll(panel);
+    });
+
+    return panel;
+  }
+
+  function renderConfig(panel, config) {
+    const ready = Boolean(config.ready_for_real_call);
+
+    const badge = panel.querySelector("[data-mc-ready]");
+    badge.textContent = ready ? "Prêt pour appel réel" : "Configuration incomplète";
+    badge.className = "mc-status-badge-v1 " + (ready ? "ok" : "warn");
+
+    panel.querySelector("[data-mc-environment]").textContent = `${config.environment || "SANDBOX"} / ${config.enabled ? "Activé" : "Désactivé"}`;
+    panel.querySelector("[data-mc-base-url]").textContent = config.base_url || "Non renseigné";
+    panel.querySelector("[data-mc-merchant]").textContent = config.merchant_id || "Manquant";
+    panel.querySelector("[data-mc-operation]").textContent = `${config.currency || "XAF"} / ${config.operation || "PURCHASE"}`;
+
+    if (config.missing && config.missing.length) {
+      setResult(panel, "show", "Éléments manquants :\n- " + config.missing.join("\n- "));
+    }
+  }
+
+  function renderChecklist(panel, data) {
+    checklistItems = data.items || [];
+
+    const tbody = panel.querySelector("[data-mc-checklist-body]");
+
+    if (!checklistItems.length) {
+      tbody.innerHTML = `<tr><td colspan="4">Aucun élément de checklist.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = checklistItems.map(item => `
+      <tr data-mc-item="${escapeHtml(item.key)}">
+        <td>
+          <span class="mc-chip-v1">${escapeHtml(item.category)}</span>
+          ${item.sensitive ? `<br><span class="mc-chip-v1 secret">Secret sensible</span>` : ""}
+        </td>
+        <td>
+          <strong>${escapeHtml(item.label)}</strong><br>
+          <small>${escapeHtml(item.description)}</small>
+        </td>
+        <td>
+          <select data-mc-status>
+            ${["MISSING", "REQUESTED", "RECEIVED", "VALIDATED"].map(status => `
+              <option value="${status}" ${item.status === status ? "selected" : ""}>${statusLabel(status)}</option>
+            `).join("")}
+          </select>
+        </td>
+        <td>
+          <textarea data-mc-notes placeholder="Notes, confirmation reçue, référence ticket, valeur non sensible...">${escapeHtml(item.notes || "")}</textarea>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function collectChecklist(panel) {
+    const rows = Array.from(panel.querySelectorAll("[data-mc-item]"));
+
+    return rows.map(row => ({
+      key: row.getAttribute("data-mc-item"),
+      status: row.querySelector("[data-mc-status]").value,
+      notes: row.querySelector("[data-mc-notes]").value
+    }));
+  }
+
+  async function loadAll(panel) {
+    try {
+      const [configResponse, checklistResponse] = await Promise.all([
+        fetch("/api/backoffice/mastercard/config-status?v=" + Date.now()),
+        fetch("/api/backoffice/mastercard/monetique-checklist?v=" + Date.now())
+      ]);
+
+      const config = await configResponse.json();
+      const checklist = await checklistResponse.json();
+
+      renderConfig(panel, config);
+      renderChecklist(panel, checklist);
+    } catch (error) {
+      setResult(panel, "error", error.message);
+    }
+  }
+
+  async function saveChecklist(panel) {
+    try {
+      const response = await fetch("/api/backoffice/mastercard/monetique-checklist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          items: collectChecklist(panel)
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.detail || "Erreur sauvegarde checklist.");
+      }
+
+      setResult(panel, "ok", result.message || "Checklist sauvegardée.");
+      await loadAll(panel);
+    } catch (error) {
+      setResult(panel, "error", error.message);
+    }
+  }
+
+  async function runDryRunTest(panel) {
+    try {
+      const response = await fetch("/api/backoffice/mastercard/initiate-test-checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          order_id: "DIA-TEST-MC-ADMIN",
+          amount: 5000,
+          currency: "XAF",
+          description: "Paiement test Mastercard Gateway depuis interface admin",
+          dry_run: true
+        })
+      });
+
+      const result = await response.json();
+      setResult(panel, response.ok ? "ok" : "error", result);
+    } catch (error) {
+      setResult(panel, "error", error.message);
+    }
+  }
+
+  async function showRequestText(panel) {
+    try {
+      const response = await fetch("/api/backoffice/mastercard/monetique-request-text?v=" + Date.now());
+      const result = await response.json();
+
+      const text = `Objet : ${result.subject}\n\n${result.body}`;
+      setResult(panel, "show", text);
+    } catch (error) {
+      setResult(panel, "error", error.message);
+    }
+  }
+
+  function insertPanel() {
+    if (document.querySelector("[data-marker='" + MARKER + "']")) {
+      return;
+    }
+
+    const panel = buildPanel();
+
+    const target =
+      document.querySelector("main") ||
+      document.querySelector(".container") ||
+      document.body;
+
+    target.appendChild(panel);
+
+    loadAll(panel);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", insertPanel);
+  } else {
+    insertPanel();
+  }
+})();
+</script>
 {% endblock %}

@@ -36,6 +36,8 @@ data/*.db
 data/*.sqlite
 data/*.sqlite3
 data/*.sqlite*
+*.db-shm
+*.db-wal
 
 # Uploads
 uploads/
@@ -46,6 +48,10 @@ static/uploads/
 *.bak
 *.bak_*
 *.bak*
+*.backup
+*.backup_*
+*backup_*
+*.BAK*
 *STABLE_*
 *BROKEN_*
 *UNSTABLE_*
@@ -75,3 +81,13 @@ build/
 *.tar
 *.tar.gz
 *.rar
+
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+data/api_integrations.json
+data/pre_onboarding_otps.json
+data/*.key
+data/*.token

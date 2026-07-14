@@ -185,16 +185,28 @@ def send_whatsapp_message(
     config = get_callbell_config()
     normalized_phone = normalize_phone_number(to_phone)
 
-    payload = {
-        "to": normalized_phone,
-        "from": "whatsapp",
-        "type": "text",
-        "channel_uuid": config["channel_uuid"],
-        "content": {
-            "text": message
-        },
-        "optin_contact": True
-    }
+    if config.get("use_template"):
+        payload = {
+            "to": normalized_phone,
+            "from": "whatsapp",
+            "type": "template",
+            "channel_uuid": config["channel_uuid"],
+            "template_uuid": config["template_uuid"],
+            "template_values": [message],
+            "optin_contact": True
+        }
+
+    else:
+        payload = {
+            "to": normalized_phone,
+            "from": "whatsapp",
+            "type": "text",
+            "channel_uuid": config["channel_uuid"],
+            "content": {
+                "text": message
+            },
+            "optin_contact": True
+        }
 
     # AFB_CALLBELL_FREEFORM_OTP_V1 : sans template_uuid, Callbell envoie le
     # texte libre tel quel (pas d'habillage « Bonjour cher(e) client ... »).

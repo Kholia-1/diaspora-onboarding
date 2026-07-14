@@ -6,6 +6,7 @@ from app.routers import api_integration_tests
 from app.routers import payments
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 load_dotenv()
@@ -28,6 +29,11 @@ try:
     seed_nationalities(db)
     seed_countries(db)
     seed_backoffice_admin(db)
+except Exception:
+    # Avec plusieurs workers, deux process peuvent démarrer en même temps et
+    # entrer en collision sur les contraintes uniques : sans gravité, l'un des
+    # deux a déjà inséré les données.
+    db.rollback()
 finally:
     db.close()
 
@@ -92,7 +98,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+# Compresse les réponses (les templates HTML font plusieurs centaines de Ko)
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+class CachedStaticFiles(StaticFiles):
+    """Ajoute un Cache-Control long sur les assets statiques (logos, libs vendor)."""
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = "public, max-age=604800"
+        return response
+
+
+app.mount("/static", CachedStaticFiles(directory="app/static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.include_router(payments.router)

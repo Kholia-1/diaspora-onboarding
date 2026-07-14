@@ -1282,5 +1282,267 @@ def load_encrypted_json(meta_path: str) -> dict[str, Any]:
     return json.loads(decrypted.decode("utf-8"))
 
 
+# AFB_MRZ_ICAO9303_CHECKSUM_PARSER_V1
+#
+# Parseur MRZ (zone de lecture optique) conforme ICAO 9303, avec validation par
+# clé de contrôle (check digit). Complète l'extraction heuristique par labels
+# (v2_extract_identity_fields dans pre_onboarding.py) : quand une clé de contrôle
+# valide un champ, ce champ est nettement plus fiable qu'une lecture par mots-clés
+# sur un OCR bruité, donc on le fait remonter avec un indicateur de confiance.
+def _mrz_char_value(ch: str) -> int:
+    if ch == "<":
+        return 0
+    if ch.isdigit():
+        return int(ch)
+    if "A" <= ch <= "Z":
+        return ord(ch) - ord("A") + 10
+    return -1
+
+
+def _mrz_check_digit(data: str) -> int | None:
+    weights = (7, 3, 1)
+    total = 0
+    for i, ch in enumerate(data):
+        value = _mrz_char_value(ch)
+        if value < 0:
+            return None
+        total += value * weights[i % 3]
+    return total % 10
+
+
+def _mrz_verify(data: str, check_char: str) -> bool:
+    check_char = "0" if check_char == "<" else check_char
+    if not check_char.isdigit():
+        return False
+    computed = _mrz_check_digit(data)
+    return computed is not None and computed == int(check_char)
+
+
+def _parse_mrz_yymmdd(raw: str) -> str | None:
+    if not re.fullmatch(r"\d{6}", raw or ""):
+        return None
+
+    yy, mm, dd = int(raw[0:2]), int(raw[2:4]), int(raw[4:6])
+    if not (1 <= mm <= 12 and 1 <= dd <= 31):
+        return None
+
+    from datetime import date as _date
+
+    # Pivot standard MRZ : une année à 2 chiffres au-delà de (année courante + 10)
+    # est interprétée comme XIXe/XXe siècle, sinon comme XXIe siècle.
+    current_year = _date.today().year
+    pivot = (current_year + 10) % 100
+    century = 2000 if yy <= pivot else 1900
+
+    try:
+        return _date(century + yy, mm, dd).isoformat()
+    except ValueError:
+        return None
+
+
+def _mrz_name_from_field(field: str) -> tuple[str, str]:
+    field = field.rstrip("<")
+    parts = field.split("<<", 1)
+    surname_raw = parts[0]
+    given_raw = parts[1] if len(parts) > 1 else ""
+    surname = " ".join(w for w in surname_raw.split("<") if w)
+    given = " ".join(w for w in given_raw.split("<") if w)
+    return surname, given
+
+
+def find_mrz_candidate_lines(text: str) -> list[str]:
+    """
+    Repère les lignes qui ressemblent à de la MRZ dans le texte OCR brut :
+    beaucoup de '<', longueur proche d'un format standard (30/36/44).
+    """
+    candidates = []
+
+    for raw_line in (text or "").splitlines():
+        cleaned = unicodedata.normalize("NFD", raw_line.upper())
+        cleaned = "".join(ch for ch in cleaned if unicodedata.category(ch) != "Mn")
+        cleaned = cleaned.replace(" ", "")
+        cleaned = cleaned.replace("«", "<").replace("‹", "<").replace("＜", "<")
+        cleaned = re.sub(r"[^A-Z0-9<]", "", cleaned)
+
+        if len(cleaned) >= 28 and cleaned.count("<") >= 2:
+            candidates.append(cleaned)
+
+    return candidates
+
+
+def _pad_or_trim(line: str, target_len: int, tolerance: int = 4) -> str | None:
+    if abs(len(line) - target_len) > tolerance:
+        return None
+    if len(line) < target_len:
+        return line + ("<" * (target_len - len(line)))
+    return line[:target_len]
+
+
+def decode_mrz_td3(line1: str, line2: str) -> dict[str, Any] | None:
+    line1 = _pad_or_trim(line1, 44)
+    line2 = _pad_or_trim(line2, 44)
+    if not line1 or not line2:
+        return None
+
+    doc_number_field = line2[0:9]
+    doc_number_valid = _mrz_verify(doc_number_field, line2[9])
+
+    birth_raw = line2[13:19]
+    birth_valid = _mrz_verify(birth_raw, line2[19])
+
+    expiry_raw = line2[21:27]
+    expiry_valid = _mrz_verify(expiry_raw, line2[27])
+
+    surname, given = _mrz_name_from_field(line1[5:44])
+    sex_char = line2[20]
+
+    return {
+        "mrz_format": "TD3",
+        "document_number": doc_number_field.replace("<", "") or None,
+        "document_number_valid": doc_number_valid,
+        "nationality": line2[10:13].replace("<", "") or None,
+        "birth_date": _parse_mrz_yymmdd(birth_raw) if birth_valid else None,
+        "birth_date_valid": birth_valid,
+        "sex": sex_char if sex_char in ("M", "F") else None,
+        "expiry_date": _parse_mrz_yymmdd(expiry_raw) if expiry_valid else None,
+        "expiry_date_valid": expiry_valid,
+        "last_name": surname or None,
+        "first_name": given or None,
+    }
+
+
+def decode_mrz_td2(line1: str, line2: str) -> dict[str, Any] | None:
+    line1 = _pad_or_trim(line1, 36)
+    line2 = _pad_or_trim(line2, 36)
+    if not line1 or not line2:
+        return None
+
+    doc_number_field = line2[0:9]
+    doc_number_valid = _mrz_verify(doc_number_field, line2[9])
+
+    birth_raw = line2[13:19]
+    birth_valid = _mrz_verify(birth_raw, line2[19])
+
+    expiry_raw = line2[21:27]
+    expiry_valid = _mrz_verify(expiry_raw, line2[27])
+
+    surname, given = _mrz_name_from_field(line1[5:36])
+    sex_char = line2[20]
+
+    return {
+        "mrz_format": "TD2",
+        "document_number": doc_number_field.replace("<", "") or None,
+        "document_number_valid": doc_number_valid,
+        "nationality": line2[10:13].replace("<", "") or None,
+        "birth_date": _parse_mrz_yymmdd(birth_raw) if birth_valid else None,
+        "birth_date_valid": birth_valid,
+        "sex": sex_char if sex_char in ("M", "F") else None,
+        "expiry_date": _parse_mrz_yymmdd(expiry_raw) if expiry_valid else None,
+        "expiry_date_valid": expiry_valid,
+        "last_name": surname or None,
+        "first_name": given or None,
+    }
+
+
+def decode_mrz_td1(line1: str, line2: str, line3: str) -> dict[str, Any] | None:
+    line1 = _pad_or_trim(line1, 30)
+    line2 = _pad_or_trim(line2, 30)
+    line3 = _pad_or_trim(line3, 30)
+    if not line1 or not line2 or not line3:
+        return None
+
+    doc_number_field = line1[5:14]
+    doc_number_valid = _mrz_verify(doc_number_field, line1[14])
+
+    birth_raw = line2[0:6]
+    birth_valid = _mrz_verify(birth_raw, line2[6])
+
+    expiry_raw = line2[8:14]
+    expiry_valid = _mrz_verify(expiry_raw, line2[14])
+
+    surname, given = _mrz_name_from_field(line3)
+    sex_char = line2[7]
+
+    return {
+        "mrz_format": "TD1",
+        "document_number": doc_number_field.replace("<", "") or None,
+        "document_number_valid": doc_number_valid,
+        "nationality": line2[15:18].replace("<", "") or None,
+        "birth_date": _parse_mrz_yymmdd(birth_raw) if birth_valid else None,
+        "birth_date_valid": birth_valid,
+        "sex": sex_char if sex_char in ("M", "F") else None,
+        "expiry_date": _parse_mrz_yymmdd(expiry_raw) if expiry_valid else None,
+        "expiry_date_valid": expiry_valid,
+        "last_name": surname or None,
+        "first_name": given or None,
+    }
+
+
+def parse_mrz_icao9303(ocr_text: str) -> dict[str, Any]:
+    """
+    Tente de décoder la MRZ (TD1 carte d'identité 3 lignes, TD2/TD3 passeport
+    2 lignes) avec validation par clé de contrôle ICAO 9303. Renvoie un résultat
+    vide (mrz_detected: False) si aucune ligne exploitable n'est trouvée : les
+    appelants doivent alors se rabattre sur l'extraction heuristique par labels.
+    """
+    lines = find_mrz_candidate_lines(ocr_text)
+
+    if not lines:
+        return {"mrz_detected": False}
+
+    attempts = []
+
+    # TD3 (passeport, 2 lignes de 44) : on essaie toutes les paires consécutives.
+    for i in range(len(lines) - 1):
+        decoded = decode_mrz_td3(lines[i], lines[i + 1])
+        if decoded:
+            attempts.append(decoded)
+
+    # TD2 (2 lignes de 36).
+    for i in range(len(lines) - 1):
+        decoded = decode_mrz_td2(lines[i], lines[i + 1])
+        if decoded:
+            attempts.append(decoded)
+
+    # TD1 (carte d'identité, 3 lignes de 30).
+    for i in range(len(lines) - 2):
+        decoded = decode_mrz_td1(lines[i], lines[i + 1], lines[i + 2])
+        if decoded:
+            attempts.append(decoded)
+
+    if not attempts:
+        return {"mrz_detected": False, "mrz_lines_raw": lines}
+
+    def score(attempt: dict[str, Any]) -> int:
+        return sum(1 for k in ("document_number_valid", "birth_date_valid", "expiry_date_valid") if attempt.get(k))
+
+    best = max(attempts, key=score)
+
+    validated_fields = [
+        name for name, valid_key in (
+            ("document_number", "document_number_valid"),
+            ("birth_date", "birth_date_valid"),
+            ("expiry_date", "expiry_date_valid"),
+        )
+        if best.get(valid_key)
+    ]
+
+    return {
+        "mrz_detected": True,
+        "mrz_format": best.get("mrz_format"),
+        "mrz_checksum_validated_fields": validated_fields,
+        "fields": {
+            "last_name": best.get("last_name"),
+            "first_name": best.get("first_name"),
+            "birth_date": best.get("birth_date") if best.get("birth_date_valid") else None,
+            "sex": best.get("sex"),
+            "nationality": best.get("nationality"),
+            "document_number": best.get("document_number") if best.get("document_number_valid") else None,
+            "expiry_date": best.get("expiry_date") if best.get("expiry_date_valid") else None,
+        },
+        "mrz_lines_raw": lines,
+    }
+
+
 # Configure Tesseract au chargement du module si possible.
 configure_tesseract()

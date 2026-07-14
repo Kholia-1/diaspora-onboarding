@@ -1,8 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Body
+from fastapi.concurrency import run_in_threadpool
 import re
 from typing import Any
 
-from app.services.document_auth_service import extract_text_with_best_engine, validate_document_type_against_ocr
+from app.services.document_auth_service import (
+    extract_text_with_best_engine,
+    validate_document_type_against_ocr,
+    parse_mrz_icao9303,
+)
 from app.services.whatsapp_service import send_whatsapp_message
 from app.services.callbell_delivery_status_service import get_callbell_message_status
 
@@ -910,6 +915,17 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
     normalized_doc = normalize_text(document_type)
     normalized_text = normalize_text(ocr_text)
 
+    # AFB_MRZ_ICAO9303_PRIORITY_V1
+    # La MRZ validée par clé de contrôle est bien plus fiable qu'une lecture par
+    # mots-clés sur un OCR bruité : quand un champ est validé, il prime sur
+    # l'extraction heuristique faite plus bas dans cette fonction.
+    mrz = parse_mrz_icao9303(ocr_text)
+    mrz_fields = mrz.get("fields", {}) if mrz.get("mrz_detected") else {}
+
+    if mrz.get("mrz_detected"):
+        fields["mrz_checksum_validated_fields"] = mrz.get("mrz_checksum_validated_fields", [])
+        fields["mrz_format"] = mrz.get("mrz_format")
+
     dates = v2_extract_dates(ocr_text)
 
     if dates:
@@ -1067,6 +1083,34 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
         fields["cni_number"] = cni_number
         fields["identity_document_number"] = cni_number
 
+    # AFB_MRZ_ICAO9303_OVERLAY_V1
+    # On ne fait confiance au nom/sexe/nationalité lus dans la MRZ que si au
+    # moins un champ numérique (date, numéro de document) a passé sa clé de
+    # contrôle : ça confirme que l'OCR a bien lu ce bloc MRZ, pas seulement
+    # qu'il ressemble à de la MRZ.
+    if mrz_fields and mrz.get("mrz_checksum_validated_fields"):
+        if mrz_fields.get("last_name"):
+            fields["last_name"] = mrz_fields["last_name"]
+            fields["surname"] = mrz_fields["last_name"]
+        if mrz_fields.get("first_name"):
+            fields["first_name"] = mrz_fields["first_name"]
+            fields["given_names"] = mrz_fields["first_name"]
+        if mrz_fields.get("sex"):
+            fields["sex"] = mrz_fields["sex"]
+        if mrz_fields.get("nationality"):
+            fields["nationality"] = mrz_fields["nationality"]
+        if fields.get("last_name") and fields.get("first_name"):
+            fields["full_name"] = clean_text(f"{fields['last_name']} {fields['first_name']}")
+
+    if mrz_fields.get("birth_date"):
+        fields["birth_date"] = mrz_fields["birth_date"]
+
+    if mrz_fields.get("document_number"):
+        fields["identity_document_number"] = mrz_fields["document_number"]
+
+    if mrz_fields.get("expiry_date"):
+        fields["identity_expiry_date"] = mrz_fields["expiry_date"]
+
     return fields
 # CAMEROON_DOC_EXTRACTION_V2_END
 
@@ -1178,7 +1222,7 @@ async def pre_onboarding_ocr(
     mime_type = file.content_type or "application/octet-stream"
 
     try:
-        ocr_result = extract_text_with_best_engine(content, mime_type)
+        ocr_result = await run_in_threadpool(extract_text_with_best_engine, content, mime_type)
     except Exception as exc:
         raise HTTPException(
             status_code=500,
@@ -1400,8 +1444,13 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path as _Path
 from fastapi import Body
+from filelock import FileLock
 
 OTP_STORE_PATH = _Path("data/pre_onboarding_otps.json")
+# Verrou inter-process : le store est un fichier JSON entier réécrit à chaque
+# mise à jour, donc deux requêtes concurrentes (workers différents ou threads)
+# peuvent s'écraser mutuellement sans ce verrou.
+_otp_lock = FileLock(str(OTP_STORE_PATH) + ".lock")
 OTP_TTL_MINUTES = int(os.getenv("PRE_ONBOARDING_OTP_TTL_MINUTES", "10"))
 OTP_MAX_ATTEMPTS = int(os.getenv("PRE_ONBOARDING_OTP_MAX_ATTEMPTS", "5"))
 OTP_DEMO_MODE = os.getenv("PRE_ONBOARDING_OTP_DEMO_MODE", "true").lower() in ("1", "true", "yes", "on")
@@ -1501,9 +1550,10 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
     if OTP_FALLBACK_DISPLAY:
         record["fallback_otp"] = otp
 
-    store = _load_otps()
-    store[session_id] = record
-    _save_otps(store)
+    with _otp_lock:
+        store = _load_otps()
+        store[session_id] = record
+        _save_otps(store)
 
     otp_message = (
         f"Votre code de vérification Afriland First Bank est : {otp}. "
@@ -1511,10 +1561,12 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
         "Ne partagez pas ce code."
     )
 
-    # AFB_OTP_CALLBELL_UUID_STATUS_V1
+    # AFB_OTP_CALLBELL_UUID_STATUS_V1 — appel réseau bloquant, déporté hors de l'event loop.
     # Le template Callbell approuvé injecte template_values[0] dans {{1}} :
     # on passe uniquement le code OTP, le texte complet sert de fallback texte libre.
-    whatsapp_result = send_whatsapp_message(phone, otp_message, template_values=[otp])
+    whatsapp_result = await run_in_threadpool(
+        send_whatsapp_message, phone, otp_message, template_values=[otp]
+    )
 
     callbell_response = whatsapp_result.get("response") or {}
     callbell_message = callbell_response.get("message") if isinstance(callbell_response, dict) else {}
@@ -1532,8 +1584,11 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
     record["whatsapp_http_status"] = whatsapp_result.get("http_status")
     record["callbell_message_uuid"] = callbell_uuid
     record["callbell_message_status"] = callbell_status
-    store[session_id] = record
-    _save_otps(store)
+
+    with _otp_lock:
+        store = _load_otps()
+        store[session_id] = record
+        _save_otps(store)
 
     response = {
         "ok": whatsapp_sent or OTP_DEMO_MODE,
@@ -1605,52 +1660,53 @@ async def verify_pre_onboarding_otp(payload: dict = Body(...)):
     if len(otp) != 6:
         raise HTTPException(status_code=400, detail="Code OTP invalide.")
 
-    store = _load_otps()
-    record = store.get(session_id)
+    with _otp_lock:
+        store = _load_otps()
+        record = store.get(session_id)
 
-    if not record:
-        raise HTTPException(status_code=404, detail="Aucun code OTP trouvé pour cette session.")
+        if not record:
+            raise HTTPException(status_code=404, detail="Aucun code OTP trouvé pour cette session.")
 
-    if record.get("verified"):
-        return {
-            "ok": True,
-            "verified": True,
-            "message": "WhatsApp déjà vérifié.",
-            "phone": record.get("phone"),
-        }
+        if record.get("verified"):
+            return {
+                "ok": True,
+                "verified": True,
+                "message": "WhatsApp déjà vérifié.",
+                "phone": record.get("phone"),
+            }
 
-    if str(record.get("phone") or "") != phone:
-        raise HTTPException(status_code=400, detail="Le numéro WhatsApp ne correspond pas au code envoyé.")
+        if str(record.get("phone") or "") != phone:
+            raise HTTPException(status_code=400, detail="Le numéro WhatsApp ne correspond pas au code envoyé.")
 
-    try:
-        expires_at = datetime.fromisoformat(str(record.get("expires_at")))
-    except Exception:
-        expires_at = _utcnow() - timedelta(seconds=1)
+        try:
+            expires_at = datetime.fromisoformat(str(record.get("expires_at")))
+        except Exception:
+            expires_at = _utcnow() - timedelta(seconds=1)
 
-    if expires_at < _utcnow():
-        raise HTTPException(status_code=400, detail="Code OTP expiré. Veuillez demander un nouveau code.")
+        if expires_at < _utcnow():
+            raise HTTPException(status_code=400, detail="Code OTP expiré. Veuillez demander un nouveau code.")
 
-    attempts = int(record.get("attempts") or 0)
+        attempts = int(record.get("attempts") or 0)
 
-    if attempts >= OTP_MAX_ATTEMPTS:
-        raise HTTPException(status_code=429, detail="Nombre maximum de tentatives atteint. Demandez un nouveau code.")
+        if attempts >= OTP_MAX_ATTEMPTS:
+            raise HTTPException(status_code=429, detail="Nombre maximum de tentatives atteint. Demandez un nouveau code.")
 
-    expected = str(record.get("otp_hash") or "")
-    provided = _otp_hash(session_id, phone, otp)
+        expected = str(record.get("otp_hash") or "")
+        provided = _otp_hash(session_id, phone, otp)
 
-    if not secrets.compare_digest(expected, provided):
-        record["attempts"] = attempts + 1
+        if not secrets.compare_digest(expected, provided):
+            record["attempts"] = attempts + 1
+            store[session_id] = record
+            _save_otps(store)
+            raise HTTPException(status_code=400, detail=f"Code OTP incorrect. Tentatives restantes : {max(0, OTP_MAX_ATTEMPTS - record['attempts'])}.")
+
+        # AFB_OTP_VERIFY_RETURN_SESSION_AND_DATE_V1
+        verified_at = _utcnow().isoformat()
+
+        record["verified"] = True
+        record["verified_at"] = verified_at
         store[session_id] = record
         _save_otps(store)
-        raise HTTPException(status_code=400, detail=f"Code OTP incorrect. Tentatives restantes : {max(0, OTP_MAX_ATTEMPTS - record['attempts'])}.")
-
-    # AFB_OTP_VERIFY_RETURN_SESSION_AND_DATE_V1
-    verified_at = _utcnow().isoformat()
-
-    record["verified"] = True
-    record["verified_at"] = verified_at
-    store[session_id] = record
-    _save_otps(store)
 
     return {
         "ok": True,

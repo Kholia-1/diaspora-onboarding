@@ -1,16 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" type="image/png" href="/static/afriland-logo.png">
   <title>Ouverture de compte - Préparation du dossier</title>
   <!-- Capture review before processing PDF preview V5 -->
   <!-- CLIENT_OPEN_ACCOUNT_FLOW_CLEAN_ADVANCED_AUTO_REVIEW_PDF_V5 -->
 
   <style>
     :root {
-      --red: #C90000;
+      --red: #b5121b;
       --dark-red: #8f0e15;
       --gold: #f4b400;
       --green: #12805c;
@@ -41,9 +40,6 @@
       justify-content: space-between;
       gap: 18px;
       flex-wrap: wrap;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
     }
 
     .brand {
@@ -66,7 +62,8 @@
       width: 180px;
       height: 78px;
       object-fit: contain;
-      object-position: left center;
+      transform: scale(1.45);
+      transform-origin: center center;
     }
 
     .brand h1 {
@@ -86,65 +83,6 @@
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-    }
-
-    /* AFB_TOPNAV_PROCESS_ACTIVE_V1 — menu horizontal commun, élément actif = parcours en cours.
-       Organisation du header : logo à gauche, menu centré, langue à droite. */
-    .topnav {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      flex: 1 1 auto;
-      min-width: 0;
-      flex-wrap: wrap;
-    }
-
-    .topbar .topnav a {
-      text-decoration: none;
-      color: var(--text, #1f2937);
-      border: none;
-      font-weight: 800;
-      font-size: 14px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      white-space: nowrap;
-      transition: 0.15s ease;
-    }
-
-    .topbar .topnav a:hover {
-      background: rgba(201, 0, 0, 0.08);
-      color: var(--red);
-    }
-
-    .topbar .topnav a.active {
-      background: var(--red);
-      color: white;
-    }
-
-    @media (max-width: 1180px) {
-      /* Largeurs intermédiaires : le sous-titre laisse la place au menu */
-      .topbar .brand p {
-        display: none;
-      }
-    }
-
-    @media (max-width: 960px) {
-      /* Le menu passe sur sa propre ligne, défilable horizontalement */
-      .topbar .topnav {
-        order: 3;
-        flex-basis: 100%;
-        justify-content: flex-start;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 4px;
-      }
-
-      .topbar .topnav a {
-        font-size: 13px;
-        padding: 8px 12px;
-      }
     }
 
     .topbar a {
@@ -294,7 +232,7 @@
     .account-card.active {
       border-color: var(--red);
       background: #fffafa;
-      box-shadow: 0 14px 28px rgba(201, 0, 0, 0.14);
+      box-shadow: 0 14px 28px rgba(181, 18, 27, 0.14);
     }
 
     .account-icon {
@@ -324,17 +262,6 @@
       background: #fbfdff;
       padding: 20px;
       margin-top: 18px;
-    }
-
-    .step-tag {
-      display: inline-flex;
-      padding: 7px 12px;
-      border-radius: 999px;
-      background: #fff3cd;
-      color: #7a4b00;
-      font-weight: 800;
-      font-size: 13px;
-      margin: 18px 0 8px;
     }
 
     .section-box h4 { margin: 0 0 8px; font-size: 19px; }
@@ -405,7 +332,7 @@
     .btn-primary {
       background: var(--red);
       color: white;
-      box-shadow: 0 10px 22px rgba(201, 0, 0, 0.18);
+      box-shadow: 0 10px 22px rgba(181, 18, 27, 0.18);
     }
 
     .btn-light {
@@ -488,8 +415,8 @@
     #documents-section { scroll-margin-top: 20px; }
 
     #documents-section.documents-focus {
-      border-color: #C90000 !important;
-      box-shadow: 0 0 0 5px rgba(201, 0, 0, 0.12) !important;
+      border-color: #b5121b !important;
+      box-shadow: 0 0 0 5px rgba(181, 18, 27, 0.12) !important;
       transition: 0.25s ease;
     }
 
@@ -511,23 +438,13 @@
     }
 
     @media(max-width: 640px) {
-      .topbar { padding: 8px 4%; gap: 8px; }
-      .brand { gap: 10px; }
-      .brand h1 { font-size: 15px; }
-      .brand p { display: none; } /* sous-titre masqué : le header sticky doit rester compact */
-      .topbar-actions { gap: 6px; }
-      .topbar-actions a { font-size: 13px; padding: 6px 10px; }
-      .brand-logo, .brand-logo img { width: 110px; height: 44px; }
-      .brand-logo img { transform: scale(1.1); }
+      .topbar { flex-direction: column; align-items: flex-start; }
+      .brand-logo, .brand-logo img { width: 130px; height: 60px; }
       .doc-card { grid-template-columns: 1fr; }
       .doc-actions { justify-content: flex-start; }
       .media-grid { grid-template-columns: 1fr; }
-      .step0-preinscription { margin: 16px 4%; padding: 16px; }
-      input, select, textarea { font-size: 16px; } /* évite le zoom automatique iOS */
-      img, video, canvas { max-width: 100%; }
-      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
     }
-  
+
 /* AFB_FLOW_STEP0_PREINSCRIPTION_V1 */
 .step0-preinscription {
   margin: 24px 7%;
@@ -1769,7 +1686,7 @@
   align-items: center;
   justify-content: center;
   background: #fee2e2;
-  color: #C90000;
+  color: #b5121b;
   font-size: 22px;
   flex: 0 0 auto;
 }
@@ -1802,7 +1719,7 @@
 }
 .review-actions .btn-danger-light {
   background: #fff;
-  color: #C90000;
+  color: #b5121b;
   border: 1px solid #f0c3c6;
 }
 
@@ -1859,7 +1776,8 @@
     margin-top: 12px !important;
   }
 
-  #step0-send-otp-btn {
+  #step0-send-otp-btn,
+  #step0-verify-otp-btn {
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -1870,12 +1788,6 @@
     border-radius: 12px !important;
     font-weight: 800 !important;
     line-height: 1 !important;
-  }
-
-  /* AFB_OTP_AUTO_VERIFY_V1 : la vérification est automatique à la saisie,
-     le bouton « Confirmer le code » est retiré de la vue. */
-  #step0-verify-otp-btn {
-    display: none !important;
   }
 
   #step0-otp-code {
@@ -1911,108 +1823,6 @@
     visibility: hidden !important;
   }
 
-  /* AFB_OTP_FALLBACK_DISPLAY_V1 : code de secours affiché quand WhatsApp est KO */
-  #step0-demo-otp.show.fallback {
-    display: block !important;
-    visibility: visible !important;
-    background: #fffbeb;
-    color: #92400e;
-    border: 1px dashed #f59e0b;
-    user-select: all;
-  }
-
-  /* AFB_MOBILE_STEPS_FIRST_V1 : sur mobile, afficher d'abord les étapes,
-     puis révéler les formulaires après le bouton Commencer */
-  .mobile-start-wrap {
-    display: none;
-  }
-
-  @media (max-width: 760px) {
-    .mobile-start-wrap {
-      display: block;
-      margin-top: 18px;
-      text-align: center;
-    }
-
-    #mobile-start-btn {
-      width: 100%;
-      min-height: 48px;
-      font-weight: 800;
-      border-radius: 12px;
-    }
-
-    body:not(.flow-started) .panel.workspace {
-      display: none !important;
-    }
-
-    /* Vue formulaires : la vue des étapes est masquée (le bouton
-       « Retour aux étapes » permet d'y revenir, sans doublon d'affichage) */
-    body.flow-started #remote-account-welcome,
-    body.flow-started .panel.intro {
-      display: none !important;
-    }
-
-    body.flow-started .mobile-start-wrap {
-      display: none;
-    }
-
-    body.flow-started #mobile-back-steps-btn {
-      display: block;
-      width: 100%;
-      min-height: 44px;
-      margin-bottom: 14px;
-      border-radius: 12px;
-      font-weight: 700;
-    }
-
-    /* AFB_MOBILE_STEP3_AFTER_CONTACTS_V1 : les étapes 3+ n'apparaissent
-       qu'une fois les infos de contact (étape 2) validées */
-    body:not(.step2-validated) .mobile-step3-locked {
-      display: none !important;
-    }
-
-    /* AFB_MOBILE_FLAT_FORM_V1 : sur mobile, pas de cards imbriquées autour
-       du formulaire — contenu à plat, pleine largeur */
-    .panel.workspace {
-      background: transparent !important;
-      border: none !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      overflow: visible !important;
-    }
-
-    .workspace {
-      padding: 10px 2px !important;
-    }
-
-    .section-box {
-      border: none !important;
-      border-radius: 0 !important;
-      background: transparent !important;
-      padding: 14px 0 !important;
-      margin-top: 6px !important;
-      border-top: 1px solid var(--border) !important;
-    }
-
-    .step0-preinscription {
-      margin: 12px 0 !important;
-      border: none !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      background: transparent !important;
-      padding: 10px 0 !important;
-    }
-
-    .step0-preinscription::before {
-      display: none !important;
-    }
-  }
-
-  /* Caché partout sauf sur mobile une fois le parcours commencé */
-  #mobile-back-steps-btn {
-    display: none;
-  }
-
   @media (max-width: 680px) {
     #step0-send-otp-btn,
     #step0-verify-otp-btn,
@@ -2024,183 +1834,30 @@
   }
 </style>
 
-<style>
-/* AFB_MOBILE_BURGER_NAV_V1 — menu hamburger en vue mobile.
-   Placé en dernier dans <head> pour l'emporter sur la media query 960px
-   qui affichait le menu en ligne défilable sous le logo. */
-.nav-toggle {
-    display: none;
-    background: #fff;
-    border: 1px solid #f0c3c6;
-    border-radius: 12px;
-    padding: 8px 10px;
-    cursor: pointer;
-    flex: 0 0 auto;
-}
-
-.nav-toggle span {
-    display: block;
-    width: 22px;
-    height: 3px;
-    border-radius: 3px;
-    background: var(--red);
-    margin: 4px 0;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-.nav-toggle[aria-expanded="true"] span:nth-child(1) {
-    transform: translateY(7px) rotate(45deg);
-}
-
-.nav-toggle[aria-expanded="true"] span:nth-child(2) {
-    opacity: 0;
-}
-
-.nav-toggle[aria-expanded="true"] span:nth-child(3) {
-    transform: translateY(-7px) rotate(-45deg);
-}
-
-@media (max-width: 960px) {
-    .nav-toggle {
-        display: block;
-    }
-
-    /* Header sur une seule ligne : logo/titre à gauche, langue + burger
-       collés à droite (sans ça, .topbar { flex-wrap: wrap } faisait
-       passer les actions sous le logo, burger à gauche). */
-    .topbar {
-        flex-wrap: nowrap;
-        gap: 10px;
-    }
-
-    .topbar .brand {
-        flex: 1 1 auto;
-        min-width: 0;
-        gap: 10px;
-    }
-
-    .topbar .brand-logo,
-    .topbar .brand-logo img {
-        width: 132px;
-        height: 56px;
-    }
-
-    .topbar .brand > div {
-        min-width: 0;
-    }
-
-    .topbar .brand h1 {
-        font-size: 16px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .topbar-actions {
-        flex: 0 0 auto;
-        flex-wrap: nowrap;
-        margin-left: auto;
-    }
-
-    .topbar .topnav {
-        display: none;
-        order: initial;
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 100%;
-        background: #fff;
-        border-bottom: 1px solid var(--border);
-        box-shadow: 0 20px 32px rgba(15, 23, 42, 0.14);
-        padding: 14px 18px 18px;
-        flex-direction: column;
-        align-items: stretch;
-        justify-content: flex-start;
-        gap: 10px;
-        flex-basis: auto;
-        flex-wrap: nowrap;
-        overflow: visible;
-    }
-
-    .topbar .topnav.open {
-        display: flex;
-    }
-
-    .topbar .topnav a {
-        display: block;
-        text-align: center;
-        font-size: 15px;
-        padding: 12px 14px;
-        white-space: normal;
-    }
-}
-</style>
-
-<link rel="stylesheet" href="/static/css/premium.css?v=1">
 </head>
 
 <body>
   <header class="topbar">
     <div class="brand">
       <div class="brand-logo">
-        <img src="/static/afriland-logo.png" alt="Afriland First Bank">
+        <img src="/static/bank-logo.png" alt="Afriland First Bank">
+      </div>
+      <div>
+        <h1 data-i18n="title.account_opening">Ouverture de compte</h1>
+        <p data-i18n="title.customer_file_preparation">Préparez votre dossier</p>
       </div>
     </div>
-
-    <!-- AFB_TOPNAV_PROCESS_ACTIVE_V1 : parcours ouverture de compte en cours -->
-    <nav class="topnav" id="topnavMenu" aria-label="Menu des services">
-      <a href="/" data-i18n="nav.home">Accueil</a>
-      <a href="/open-account-flow-test" class="active" aria-current="page" data-i18n="nav.open_account">Ouverture de compte</a>
-      <a href="/souscrire-carte" data-i18n="nav.card">Carte bancaire</a>
-      <a href="/recharger-carte" data-i18n="nav.topup">Recharge de carte</a>
-      <a href="/client/status" data-i18n="nav.track">Suivre ma demande</a>
-    </nav>
 
     <div class="topbar-actions">
       <div class="lang-switcher" aria-label="Language selector">
         <button id="lang-fr" type="button">FR</button>
         <button id="lang-en" type="button">EN</button>
       </div>
-
-      <!-- AFB_MOBILE_BURGER_NAV_V1 : bouton hamburger (visible <= 960px) -->
-      <button type="button" class="nav-toggle" id="navToggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="topnavMenu">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      <a href="/" data-i18n="nav.back_home">Retour accueil</a>
     </div>
   </header>
-
-  <script>
-  /* AFB_MOBILE_BURGER_NAV_V1 : ouverture/fermeture du menu mobile */
-  (function () {
-    var btn = document.getElementById("navToggle");
-    var nav = document.getElementById("topnavMenu");
-    if (!btn || !nav) return;
-
-    function setOpen(open) {
-      nav.classList.toggle("open", open);
-      btn.setAttribute("aria-expanded", open ? "true" : "false");
-      btn.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
-    }
-
-    btn.addEventListener("click", function () {
-      setOpen(!nav.classList.contains("open"));
-    });
-
-    nav.addEventListener("click", function (event) {
-      if (event.target.closest("a")) setOpen(false);
-    });
-
-    document.addEventListener("click", function (event) {
-      if (!nav.classList.contains("open")) return;
-      if (event.target.closest(".topbar")) return;
-      setOpen(false);
-    });
-  })();
-  </script>
   <main class="page">
-  
+
   <!-- AFB_REMOTE_ACCOUNT_WELCOME_ABOVE_PREONBOARDING_V1 -->
 <section class="panel intro" id="remote-account-welcome" style="grid-column: 1 / -1;">
   <div class="badge" data-i18n="welcome.badge">Ouverture de compte à distance</div>
@@ -2225,166 +1882,34 @@
         <div class="step">
           <div class="step-number">2</div>
           <div>
-            <strong data-i18n="steps.verify_contact.title">Renseigner et vérifier vos contacts</strong>
-            <span data-i18n="steps.verify_contact.desc">Email, pays de résidence et numéro WhatsApp confirmé par code OTP.</span>
+            <strong data-i18n="steps.upload_docs.title">Importer vos pièces</strong>
+            <span data-i18n="steps.upload_docs.desc">Pièce d’identité, justificatifs, RIB
+            .</span>
           </div>
         </div>
 
         <div class="step">
           <div class="step-number">3</div>
           <div>
-            <strong data-i18n="steps.upload_docs.title">Importer vos pièces</strong>
-            <span data-i18n="steps.upload_docs.desc">Pièce d’identité, justificatifs, RIB ou documents entreprise.</span>
+            <strong data-i18n="steps.auto_check.title">Contrôle automatique</strong>
+            <span data-i18n="steps.auto_check.desc">Le système extrait les informations utiles sans afficher de texte technique.</span>
           </div>
         </div>
 
         <div class="step">
           <div class="step-number">4</div>
           <div>
-            <strong data-i18n="steps.auto_check.title">Contrôle automatique</strong>
-            <span data-i18n="steps.auto_check.desc">Le système vérifie vos documents et extrait les informations utiles.</span>
+<strong data-i18n="steps.continue.title">Continuer vers le formulaire</strong>
+<span data-i18n="steps.continue.desc">Les champs détectés seront préremplis dans votre formulaire.</span>
+          .</span>
           </div>
         </div>
-
-        <div class="step">
-          <div class="step-number">5</div>
-          <div>
-            <strong data-i18n="steps.continue.title">Poursuivre votre dossier (profil KYC)</strong>
-            <span data-i18n="steps.continue.desc">La suite du parcours : vos informations détectées y sont déjà préremplies.</span>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-number">6</div>
-          <div>
-            <strong data-i18n="steps.package.title">Choisir votre formule de compte</strong>
-            <span data-i18n="steps.package.desc">Sélectionnez la formule adaptée et complétez les derniers documents demandés.</span>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-number">7</div>
-          <div>
-            <strong data-i18n="steps.submit.title">Consentement et soumission</strong>
-            <span data-i18n="steps.submit.desc">Acceptez les conditions, soumettez votre demande et recevez votre référence de suivi.</span>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-number">8</div>
-          <div>
-            <strong data-i18n="steps.decision.title">Traitement et décision de la banque</strong>
-            <span data-i18n="steps.decision.desc">La banque examine votre dossier ; vous êtes notifié par WhatsApp et pouvez suivre l’avancement en ligne.</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- AFB_MOBILE_STEPS_FIRST_V1 : sur mobile, les formulaires ne s'affichent qu'après ce bouton -->
-      <div class="mobile-start-wrap">
-        <button class="btn btn-primary" id="mobile-start-btn" type="button" data-i18n="steps.start_button">Commencer</button>
       </div>
     </section>
 
-    <script>
-    /* AFB_MOBILE_STEPS_FIRST_V1 */
-    (function () {
-      var KEY = "afb_flow_started";
-
-      function start(scroll) {
-        document.body.classList.add("flow-started");
-        try { sessionStorage.setItem(KEY, "1"); } catch (e) {}
-        if (scroll) {
-          var workspace = document.querySelector(".panel.workspace");
-          if (workspace) workspace.scrollIntoView({behavior: "smooth", block: "start"});
-        }
-      }
-
-      function backToSteps() {
-        document.body.classList.remove("flow-started");
-        try { sessionStorage.setItem(KEY, "0"); } catch (e) {}
-        var intro = document.getElementById("remote-account-welcome");
-        if (intro) intro.scrollIntoView({behavior: "smooth", block: "start"});
-      }
-
-      var stored = null;
-      try { stored = sessionStorage.getItem(KEY); } catch (e) {}
-
-      // Un parcours déjà entamé (retour, rechargement) ne doit pas être re-masqué,
-      // sauf si l'utilisateur a explicitement choisi de revenir aux étapes ("0").
-      if (stored === "1" || (stored !== "0" && localStorage.getItem("diaspora_step0_whatsapp_otp_verified") === "true")) {
-        start(false);
-      }
-
-      // Délégation : le bouton « Retour aux étapes » est défini plus loin dans
-      // le HTML (zone formulaires) ; un getElementById exécuté ici le manquerait.
-      document.addEventListener("click", function (ev) {
-        if (!ev.target || !ev.target.closest) return;
-
-        if (ev.target.closest("#mobile-start-btn")) {
-          start(true);
-        } else if (ev.target.closest("#mobile-back-steps-btn")) {
-          backToSteps();
-        }
-      });
-
-      /* AFB_MOBILE_STEP3_AFTER_CONTACTS_V1 : sur mobile, les blocs situés après
-         l'étape 2 (contacts) restent masqués tant qu'elle n'est pas validée. */
-      var STEP2_KEY = "afb_step2_validated";
-
-      function unlockStep3() {
-        document.body.classList.add("step2-validated");
-        try { sessionStorage.setItem(STEP2_KEY, "1"); } catch (e) {}
-      }
-
-      function initStep3Gate() {
-        var workspace = document.querySelector(".panel.workspace");
-        if (!workspace) return;
-
-        var children = Array.prototype.slice.call(workspace.children);
-        var step0Index = -1;
-
-        children.forEach(function (child, i) {
-          if (step0Index === -1 && child.querySelector && child.querySelector("#step0-validate-btn")) {
-            step0Index = i;
-          }
-        });
-
-        if (step0Index === -1) return;
-
-        for (var i = step0Index + 1; i < children.length; i++) {
-          children[i].classList.add("mobile-step3-locked");
-        }
-
-        var restored = false;
-        try { restored = sessionStorage.getItem(STEP2_KEY) === "1"; } catch (e) {}
-        if (restored) unlockStep3();
-
-        document.addEventListener("click", function (ev) {
-          if (!ev.target || !ev.target.closest) return;
-          if (!ev.target.closest("#step0-validate-btn")) return;
-
-          // La validation existante pose window.__AFB_STEP0_OK__ après le clic ;
-          // on vérifie juste après (avant le scroll auto qui part à 180 ms).
-          setTimeout(function () {
-            if (window.__AFB_STEP0_OK__ === true) unlockStep3();
-          }, 150);
-        }, true);
-      }
-
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", initStep3Gate);
-      } else {
-        initStep3Gate();
-      }
-    })();
-    </script>
-
     <section class="panel workspace">
 
-      <!-- AFB_MOBILE_STEPS_FIRST_V1 : retour vers la vue des étapes sur mobile -->
-      <button class="btn btn-light" id="mobile-back-steps-btn" type="button" data-i18n="steps.back_button">← Retour aux étapes</button>
 
-      <div class="step-tag" data-i18n="steptag.step1">Étape 1 — Choisir le type de compte</div>
       <h3 data-i18n="account_type.title">Type de compte</h3>
       <p data-i18n="account_type.desc">Choisissez le type de compte que vous souhaitez ouvrir.</p>
 
@@ -2404,7 +1929,7 @@
 
       <!-- AFB_FLOW_STEP0_PREINSCRIPTION_V1 -->
   <section class="section-box step0-preinscription" id="step0-preinscription">
-    <div class="badge-step0">Étape 2 — Renseigner et vérifier vos contacts</div>
+    <div class="badge-step0">Pré-inscription</div>
 
 
 <h2>Vos informations de contact</h2>
@@ -2413,7 +1938,6 @@
   Renseignez ensuite votre email, votre numéro WhatsApp et votre pays de résidence/localisation.
   Ces informations nous permettent de sécuriser votre demande et d’identifier les pièces justificatives adaptées à votre situation.
 </p>
-
 
     <div class="step0-grid">
       <div class="step0-field">
@@ -2545,7 +2069,6 @@
       <div class="step0-otp-title">Validation du numéro WhatsApp</div>
       <div class="step0-otp-help">
         Un code de sécurité sera envoyé sur WhatsApp afin de confirmer votre numéro et protéger votre demande.
-        Saisissez ou collez le code reçu : il est vérifié automatiquement.
       </div>
 
       <div class="step0-otp-row">
@@ -2556,10 +2079,8 @@
       </div>
 
       <div class="step0-otp-row">
-        <input id="step0-otp-code" type="text" inputmode="numeric" maxlength="6" placeholder="Saisir ou coller le code à 6 chiffres" autocomplete="one-time-code" disabled>
-        <!-- AFB_OTP_AUTO_VERIFY_V1 : le bouton reste dans le DOM pour compatibilité
-             avec les scripts existants, mais la vérification est automatique. -->
-        <button class="btn btn-primary" id="step0-verify-otp-btn" type="button" disabled hidden>
+        <input id="step0-otp-code" type="text" inputmode="numeric" maxlength="6" placeholder="Saisir le code à 6 chiffres" autocomplete="one-time-code" disabled>
+        <button class="btn btn-primary" id="step0-verify-otp-btn" type="button" disabled>
           Confirmer le code
         </button>
       </div>
@@ -2569,13 +2090,11 @@
 
     <div class="step0-actions">
       <button class="btn btn-primary" id="step0-validate-btn" type="button">
-        Valider mes informations de contact
+        Valider la pré-inscription
       </button>
       <span id="step0-status"></span>
     </div>
   </section>
-
-<div class="step-tag" data-i18n="steptag.step3">Étape 3 — Importer vos pièces</div>
 
 <div class="section-box">
         <h4 data-i18n="identity.title">Type de document d’identité</h4>
@@ -2592,7 +2111,7 @@
 
       <div class="section-box" id="documents-section">
         <h4 data-i18n="docs.title">Documents à fournir</h4>
-        <p data-i18n="docs.desc">Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préremplies dans la suite de votre dossier.</p>
+        <p data-i18n="docs.desc">Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préchargées vers le formulaire.</p>
         <div class="doc-list" id="doc-list"></div>
       </div>
 
@@ -2619,14 +2138,13 @@
         </div>
       </div>
 
-      <div class="step-tag" data-i18n="steptag.step4">Étape 4 — Contrôle automatique</div>
       <div class="summary" id="ocr-summary"></div>
 
-      <div class="step-tag" data-i18n="steptag.step5">Étape 5 — Poursuivre votre dossier (profil KYC)</div>
       <div class="actions-bottom">
         <div class="selected-label" id="selected-label"></div>
         <div>
-          <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Compléter mon profil KYC</button>
+          <a class="btn btn-light" href="/" data-i18n="buttons.back">Retour</a>
+          <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Continuer vers le formulaire</button>
         </div>
       </div>
     </section>
@@ -2695,7 +2213,7 @@
     <h3 id="capture-review-title">Confirmer le code la capture</h3>
     <p id="capture-review-help">Vérifiez que le document est net, complet et lisible avant de l’envoyer.</p>
     <div id="capture-review-stage" class="review-preview-stage"></div>
-    <div id="capture-review-warning" class="review-warning">Aucune extraction de texte ni sauvegarde ne sera lancée avant votre validation.</div>
+    <div id="capture-review-warning" class="review-warning">Aucun traitement OCR ni sauvegarde ne sera lancé avant votre validation.</div>
     <div class="review-actions">
       <button class="btn btn-light" id="capture-review-cancel" type="button">Annuler</button>
       <button class="btn btn-danger-light" id="capture-review-retake" type="button">Reprendre</button>
@@ -2999,36 +2517,17 @@
           "title.account_opening": "Ouverture de compte",
           "title.customer_file_preparation": "Préparez votre dossier",
           "nav.back_home": "Retour accueil",
-          "nav.home": "Accueil",
-          "nav.open_account": "Ouverture de compte",
-          "nav.card": "Carte bancaire",
-          "nav.topup": "Recharge de carte",
-          "nav.track": "Suivre ma demande",
           "intro.badge": "Pré-onboarding",
           "intro.heading": "Préparer votre demande d’ouverture de compte",
           "steps.choose_account.title": "Choisir le type de compte",
           "steps.choose_account.desc": "Compte personnel ou compte entreprise.",
-          "steps.verify_contact.title": "Renseigner et vérifier vos contacts",
-          "steps.verify_contact.desc": "Email, pays de résidence et numéro WhatsApp confirmé par code OTP.",
           "steps.upload_docs.title": "Importer vos pièces",
           "steps.upload_docs.desc": "Pièce d’identité, justificatifs, RIB ou documents entreprise.",
           "steps.auto_check.title": "Contrôle automatique",
-          "steps.auto_check.desc": "Le système vérifie vos documents et extrait les informations utiles.",
-          "steps.continue.title": "Poursuivre votre dossier (profil KYC)",
-          "steps.continue.desc": "La suite du parcours : vos informations détectées y sont déjà préremplies.",
-          "steps.package.title": "Choisir votre formule de compte",
-          "steps.package.desc": "Sélectionnez la formule adaptée et complétez les derniers documents demandés.",
-          "steps.submit.title": "Consentement et soumission",
-          "steps.submit.desc": "Acceptez les conditions, soumettez votre demande et recevez votre référence de suivi.",
-          "steps.decision.title": "Traitement et décision de la banque",
-          "steps.decision.desc": "La banque examine votre dossier ; vous êtes notifié par WhatsApp et pouvez suivre l’avancement en ligne.",
-          "steps.start_button": "Commencer",
-          "steps.back_button": "← Retour aux étapes",
+          "steps.auto_check.desc": "Le système extrait les informations utiles sans afficher de texte technique.",
+          "steps.continue.title": "Continuer vers le formulaire",
+          "steps.continue.desc": "Les champs détectés seront préremplis dans votre formulaire.",
           "account_type.title": "Type de compte",
-          "steptag.step1": "Étape 1 — Choisir le type de compte",
-          "steptag.step3": "Étape 3 — Importer vos pièces",
-          "steptag.step4": "Étape 4 — Contrôle automatique",
-          "steptag.step5": "Étape 5 — Poursuivre votre dossier (profil KYC)",
           "welcome.title": "Bienvenue dans votre parcours d’ouverture de compte à distance.",
           "welcome.badge": "Ouverture de compte à distance",
           "welcome.desc": "Ouvrez votre compte Afriland First Bank simplement, que vous soyez au Cameroun ou à l’étranger. Préparez vos informations personnelles, vos justificatifs et votre téléphone WhatsApp pour finaliser votre demande.",
@@ -3045,7 +2544,7 @@
           "identity.residence_permit": "Titre de séjour",
           "identity.consular_card": "Carte consulaire",
           "docs.title": "Documents à fournir",
-          "docs.desc": "Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préremplies dans la suite de votre dossier.",
+          "docs.desc": "Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préchargées vers le formulaire.",
           "docs.no_account.title": "Type de compte non sélectionné",
           "docs.no_account.desc": "Choisissez compte personnel ou entreprise pour afficher les documents requis.",
           "media.title": "Photo / vidéo de vérification",
@@ -3060,13 +2559,13 @@
           "media.video.empty": "Aucune vidéo prise",
           "summary.title": "Vérification des informations",
           "summary.empty": "Aucun document analysé pour l’instant.",
-          "summary.ocr_title": "Extraction de texte",
+          "summary.ocr_title": "Préchargement OCR",
           "summary.detected": "Informations détectées",
           "summary.no_structured": "Aucune information structurée détectée pour l’instant.",
           "selected.label": "Type de compte sélectionné :",
           "selected.none": "Aucun",
           "buttons.back": "Retour",
-          "buttons.continue": "Compléter mon profil KYC",
+          "buttons.continue": "Continuer vers le formulaire",
           "buttons.upload": "Importer",
           "buttons.photo": "Photographier",
           "status.not_analyzed": "Non analysé",
@@ -3093,36 +2592,17 @@
           "title.account_opening": "Account opening",
           "title.customer_file_preparation": "Prepare your file",
           "nav.back_home": "Back to home",
-          "nav.home": "Home",
-          "nav.open_account": "Account opening",
-          "nav.card": "Bank card",
-          "nav.topup": "Card top-up",
-          "nav.track": "Track my request",
           "intro.badge": "Pre-onboarding",
           "intro.heading": "Prepare your account opening request",
           "steps.choose_account.title": "Choose the account type",
           "steps.choose_account.desc": "Personal or business account.",
-          "steps.verify_contact.title": "Provide and verify your contact details",
-          "steps.verify_contact.desc": "Email, country of residence and WhatsApp number confirmed with an OTP code.",
           "steps.upload_docs.title": "Upload your documents",
           "steps.upload_docs.desc": "Identity document, supporting documents, RIB or business documents.",
           "steps.auto_check.title": "Automatic check",
-          "steps.auto_check.desc": "The system checks your documents and extracts useful information.",
-          "steps.continue.title": "Continue your application (KYC profile)",
-          "steps.continue.desc": "The next part of the journey: your detected information is already pre-filled.",
-          "steps.package.title": "Choose your account package",
-          "steps.package.desc": "Select the package that suits you and complete the last required documents.",
-          "steps.submit.title": "Consent and submission",
-          "steps.submit.desc": "Accept the terms, submit your application and receive your tracking reference.",
-          "steps.decision.title": "Bank review and decision",
-          "steps.decision.desc": "The bank reviews your application; you are notified on WhatsApp and can track progress online.",
-          "steps.start_button": "Start",
-          "steps.back_button": "← Back to steps",
+          "steps.auto_check.desc": "The system extracts useful information without showing technical text.",
+          "steps.continue.title": "Continue to the form",
+          "steps.continue.desc": "Detected fields will be pre-filled in your form.",
           "account_type.title": "Account type",
-          "steptag.step1": "Step 1 — Choose the account type",
-          "steptag.step3": "Step 3 — Upload your documents",
-          "steptag.step4": "Step 4 — Automatic check",
-          "steptag.step5": "Step 5 — Continue your application (KYC profile)",
           "welcome.badge": "Remote account opening",
           "account_type.desc": "Choose the account type you want to open.",
           "account.personal.title": "Personal account",
@@ -3158,7 +2638,7 @@
           "selected.label": "Selected account type:",
           "selected.none": "None",
           "buttons.back": "Back",
-          "buttons.continue": "Complete my KYC profile",
+          "buttons.continue": "Continue to the form",
           "buttons.upload": "Upload",
           "buttons.photo": "Take photo",
           "status.not_analyzed": "Not analyzed",
@@ -3477,10 +2957,8 @@
         continueBtn.title = "";
 
         if (box) {
-          // Plus de message de confirmation quand tout est fourni : on masque la boîte.
-          box.className = "required-docs-message-afb";
-          box.textContent = "";
-          box.style.display = "none";
+          box.className = "required-docs-message-afb ok";
+          box.textContent = "Tous les documents obligatoires sont fournis. Vous pouvez continuer vers le formulaire.";
         }
 
         return true;
@@ -3685,9 +3163,6 @@
           pre_onboarding_session_id: getOrCreatePreSessionId(),
           results: ocrResults,
           extracted_fields: collectExtractedFields(),
-          // AFB_OCR_PREFILL_KEY_FIX_V1 : alias attendu par les modules de
-          // préremplissage du formulaire d'ouverture de compte.
-          prefill: collectExtractedFields(),
           saved_documents: savedDocuments,
           updated_at: new Date().toISOString()
         };
@@ -3767,9 +3242,6 @@
         formData.append("account_type", selectedType || "UNKNOWN");
         formData.append("document_type", documentType);
         formData.append("file", file);
-        // AFB_OCR_FIELDS_SERVER_PERSIST_V1 : le serveur conserve les champs
-        // extraits par session pour le préremplissage multi-appareils.
-        formData.append("session_id", getOrCreatePreSessionId());
 
         const response = await postFile("/api/pre-onboarding/ocr", formData, 45000);
         if (!response.ok) throw new Error("ocr " + response.status);
@@ -3984,7 +3456,7 @@
         }
 
         if (!updateContinueAvailability()) {
-          alert("Veuillez fournir toutes les pièces obligatoires avant de poursuivre votre dossier.");
+          alert("Veuillez fournir toutes les pièces obligatoires avant de continuer vers le formulaire.");
           return;
         }
 
@@ -4051,45 +3523,16 @@
 
         const url = "/open-account-test?" + params.toString();
 
-        /* AFB_STEP0_TRANSITION_OVERLAY_V1 — écran de transition avant le formulaire */
-        showFormTransitionOverlay();
-
         /* AFB_STEP0_FORCE_URL_PREFILL_V4_REDIRECT */
-        setTimeout(function () {
-          try {
-            if (typeof window.afbBuildFinalUrlWithStep0V4 === "function") {
-              window.location.href = window.afbBuildFinalUrlWithStep0V5(url);
-            } else {
-              window.location.href = url;
-            }
-          } catch (e) {
+        try {
+          if (typeof window.afbBuildFinalUrlWithStep0V4 === "function") {
+            window.location.href = window.afbBuildFinalUrlWithStep0V5(url);
+          } else {
             window.location.href = url;
           }
-        }, 1100);
-      }
-
-      function showFormTransitionOverlay() {
-        if (document.getElementById("afb-form-transition")) return;
-
-        const isEn = localStorage.getItem("diaspora_client_lang") === "en";
-
-        const overlay = document.createElement("div");
-        overlay.id = "afb-form-transition";
-        overlay.style.cssText = "position:fixed;inset:0;background:rgba(255,255,255,0.96);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;";
-
-        overlay.innerHTML =
-          '<div style="width:52px;height:52px;border:5px solid #e5e7eb;border-top-color:#C90000;border-radius:50%;animation:afbspin 0.9s linear infinite;"></div>' +
-          '<h2 style="margin:0;color:#C90000;font-size:22px;">' +
-          (isEn ? "Step 2 completed — contact details verified ✓" : "Étape 2 validée — contacts vérifiés ✓") +
-          "</h2>" +
-          '<p style="margin:0;color:#4b5563;max-width:420px;line-height:1.6;">' +
-          (isEn
-            ? "We are preparing the next part of your application (KYC profile). Your contact details and documents have been saved."
-            : "Nous préparons la suite de votre dossier (profil KYC). Vos informations de contact et vos documents ont bien été conservés.") +
-          "</p>" +
-          "<style>@keyframes afbspin{to{transform:rotate(360deg)}}</style>";
-
-        document.body.appendChild(overlay);
+        } catch (e) {
+          window.location.href = url;
+        }
       }
 
       function escapeHtml(value) {
@@ -4263,7 +3706,7 @@
         continueBtn.addEventListener("click", function (event) {
           if (!updateContinueAvailability()) {
             event.preventDefault();
-            alert("Veuillez fournir toutes les pièces obligatoires avant de poursuivre votre dossier.");
+            alert("Veuillez fournir toutes les pièces obligatoires avant de continuer vers le formulaire.");
             return;
           }
           goToFinalForm();
@@ -4521,113 +3964,6 @@
     };
   }
 
-  // AFB_CNI_AUTO_DETECT_CAPTURE_V1 : détection du document dans le cadre.
-  // La zone analysée reproduit le cadre-guide (86% de largeur, ratio 1.58) :
-  // on cherche des contours marqués sur les 4 bords de cette zone (les bords
-  // de la carte) et de la texture à l'intérieur (le texte imprimé). La photo
-  // part dès que la pièce est réellement détectée — plus de long décompte.
-  function detectDocumentInFrame(video) {
-    if (!video || !video.videoWidth || !video.videoHeight) {
-      return { present: false, message: text("Caméra en préparation...", "Camera is getting ready...") };
-    }
-
-    const maxWidth = 240;
-    const scale = Math.min(1, maxWidth / video.videoWidth);
-    const width = Math.max(8, Math.round(video.videoWidth * scale));
-    const height = Math.max(8, Math.round(video.videoHeight * scale));
-
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    ctx.drawImage(video, 0, 0, width, height);
-
-    const data = ctx.getImageData(0, 0, width, height).data;
-    const gray = new Float32Array(width * height);
-
-    for (let i = 0, p = 0; p < gray.length; i += 4, p += 1) {
-      gray[p] = (data[i] * 0.299) + (data[i + 1] * 0.587) + (data[i + 2] * 0.114);
-    }
-
-    // Zone attendue de la pièce : mêmes proportions que le cadre-guide.
-    const rw = Math.round(width * 0.86);
-    let rh = Math.round(rw / 1.58);
-    if (rh > height * 0.86) rh = Math.round(height * 0.86);
-    const rx = Math.round((width - rw) / 2);
-    const ry = Math.round((height - rh) / 2);
-
-    const band = Math.max(3, Math.round(rh * 0.10));
-    const strongEdge = 20;
-
-    // Couverture d'un bord : fraction des colonnes (ou lignes) de la zone
-    // traversées par un contour net à l'intérieur de la bande. Un bord de
-    // carte droit donne une couverture proche de 1, un fond uni proche de 0.
-    function horizontalBandCoverage(y0, y1) {
-      let cols = 0;
-      let hits = 0;
-      for (let x = rx + 2; x < rx + rw - 2; x += 2) {
-        cols += 1;
-        for (let y = Math.max(1, y0); y < Math.min(height - 1, y1); y += 1) {
-          const g = Math.abs(gray[y * width + x] - gray[(y - 1) * width + x]);
-          if (g > strongEdge) { hits += 1; break; }
-        }
-      }
-      return cols ? hits / cols : 0;
-    }
-
-    function verticalBandCoverage(x0, x1) {
-      let rows = 0;
-      let hits = 0;
-      for (let y = ry + 2; y < ry + rh - 2; y += 2) {
-        rows += 1;
-        for (let x = Math.max(1, x0); x < Math.min(width - 1, x1); x += 1) {
-          const g = Math.abs(gray[y * width + x] - gray[y * width + x - 1]);
-          if (g > strongEdge) { hits += 1; break; }
-        }
-      }
-      return rows ? hits / rows : 0;
-    }
-
-    const topDensity = horizontalBandCoverage(ry - band, ry + band);
-    const bottomDensity = horizontalBandCoverage(ry + rh - band, ry + rh + band);
-    const leftDensity = verticalBandCoverage(rx - band, rx + band);
-    const rightDensity = verticalBandCoverage(rx + rw - band, rx + rw + band);
-
-    // Texture intérieure : le texte imprimé de la pièce.
-    let interiorSum = 0;
-    let interiorCount = 0;
-    for (let y = ry + band * 2; y < ry + rh - band * 2; y += 3) {
-      for (let x = rx + band * 2; x < rx + rw - band * 2; x += 3) {
-        const gh = Math.abs(gray[y * width + x] - gray[y * width + x - 1]);
-        const gv = Math.abs(gray[y * width + x] - gray[(y - 1) * width + x]);
-        interiorSum += gh + gv;
-        interiorCount += 1;
-      }
-    }
-    const interiorTexture = interiorSum / Math.max(1, interiorCount);
-
-    const bandThreshold = 0.5;
-    const densities = [topDensity, bottomDensity, leftDensity, rightDensity];
-    const strongBands = densities.filter(function (d) { return d >= bandThreshold; }).length;
-
-    const present = strongBands >= 3 && interiorTexture >= 4;
-
-    let message;
-    if (present) {
-      message = text("Pièce détectée.", "Document detected.");
-    } else if (interiorTexture < 4) {
-      message = text("Rapprochez la pièce et améliorez la lumière.", "Move the document closer and improve lighting.");
-    } else {
-      message = text("Alignez les bords de la pièce sur le cadre.", "Align the document edges with the frame.");
-    }
-
-    return { present: present, message: message, strongBands: strongBands, interiorTexture: interiorTexture };
-  }
-
-  // Exposé pour diagnostic et tests automatisés.
-  window.__afbDetectDocumentInFrame = detectDocumentInFrame;
-
   function startAutoCaptureMonitor(profile) {
     stopAutoCaptureMonitor();
     updateAutoPanel(profile);
@@ -4635,45 +3971,26 @@
     const video = document.getElementById("advanced-camera-video");
     const guidance = document.getElementById("advanced-camera-guidance");
 
-    const documentMode = profile && (profile.frame === "identity" || profile.frame === "document");
-
-    // AFB_CNI_AUTO_DETECT_CAPTURE_V1 : cadence rapide pour les pièces —
-    // la capture part dès 2 détections consécutives (~1 s une fois cadrée).
-    const warmupMs = documentMode ? 1100 : 2200;
-    const intervalMs = documentMode ? 450 : 700;
-    const requiredStable = documentMode ? 2 : 4;
-
-    autoCaptureReadyAt = Date.now() + warmupMs;
+    autoCaptureReadyAt = Date.now() + 2800;
 
     autoCaptureTimer = setInterval(function () {
       if (!autoCaptureEnabled || autoCaptureLocked) return;
       if (Date.now() < autoCaptureReadyAt) return;
       if (!video || !video.videoWidth || !video.videoHeight) return;
 
-      const quality = scoreCurrentVideoFrame(video, profile);
-      let ok = quality.ok;
-      let failMessage = quality.message + " Score : " + quality.score + "/100.";
+      const result = scoreCurrentVideoFrame(video, profile);
 
-      if (documentMode) {
-        const detection = detectDocumentInFrame(video);
-        ok = detection.present && quality.ok;
-        failMessage = detection.present
-          ? failMessage
-          : detection.message;
-      }
-
-      if (ok) {
+      if (result.ok) {
         autoStableCounter += 1;
+        const remaining = Math.max(0, 5 - autoStableCounter);
 
         if (guidance) {
-          guidance.textContent = autoStableCounter >= requiredStable
-            ? text("Capture...", "Capturing...")
-            : (documentMode
-              ? text("Pièce détectée — ne bougez plus...", "Document detected — hold still...")
-              : text("Image correcte — ne bougez plus...", "Good image — hold still..."));
+          guidance.textContent = remaining > 0
+            ? text("Image correcte. Capture dans ", "Good image. Capture in ") + remaining + "..."
+            : text("Capture...", "Capturing...");
         }
 
-        if (autoStableCounter >= requiredStable) {
+        if (autoStableCounter >= 5) {
           autoCaptureLocked = true;
           stopAutoCaptureMonitor();
           captureAdvancedPhoto();
@@ -4681,45 +3998,10 @@
       } else {
         autoStableCounter = 0;
         if (guidance) {
-          guidance.textContent = failMessage;
+          guidance.textContent = result.message + " Score : " + result.score + "/100.";
         }
       }
-    }, intervalMs);
-  }
-
-  let cameraBlockHintShown = false;
-
-  function explainCameraBlock(error) {
-    // N'affiche l'explication qu'une fois, uniquement pour un vrai blocage
-    // d'autorisation ou un contexte non sécurisé (http). Les autres échecs
-    // basculent silencieusement vers la caméra native comme avant.
-    if (cameraBlockHintShown) return;
-
-    const insecure = window.isSecureContext === false;
-    const denied = error && (error.name === "NotAllowedError" || error.name === "SecurityError");
-
-    if (!insecure && !denied) return;
-
-    cameraBlockHintShown = true;
-
-    if (insecure) {
-      alert(text(
-        "L’accès à la caméra nécessite une connexion sécurisée. Ouvrez le site avec une adresse commençant par https:// puis réessayez.",
-        "Camera access requires a secure connection. Open the site with an address starting with https:// and try again."
-      ));
-      return;
-    }
-
-    alert(text(
-      "L’accès à la caméra est bloqué par le navigateur.\n\n" +
-      "1) Si vous avez ouvert ce lien depuis WhatsApp, Facebook ou un email, ouvrez-le plutôt directement dans Chrome ou Safari (menu ⋮ → « Ouvrir dans le navigateur »).\n" +
-      "2) Sinon, touchez le cadenas à gauche de l’adresse → Autorisations → Appareil photo → Autoriser, puis rechargez la page.\n\n" +
-      "En attendant, l’appareil photo natif du téléphone va s’ouvrir pour prendre la photo.",
-      "Camera access is blocked by the browser.\n\n" +
-      "1) If you opened this link from WhatsApp, Facebook or an email, open it directly in Chrome or Safari instead (menu ⋮ → “Open in browser”).\n" +
-      "2) Otherwise, tap the padlock next to the address → Permissions → Camera → Allow, then reload the page.\n\n" +
-      "Meanwhile, the phone’s native camera will open to take the photo."
-    ));
+    }, 850);
   }
 
   async function openAdvancedCamera(mode, target) {
@@ -4764,7 +4046,6 @@
       return true;
     } catch (error) {
       console.warn("Caméra directe indisponible:", error);
-      explainCameraBlock(error);
       return false;
     }
   }
@@ -4854,7 +4135,6 @@
       return true;
     } catch (error) {
       console.warn("Enregistrement vidéo direct indisponible:", error);
-      explainCameraBlock(error);
       return false;
     }
   }
@@ -5214,14 +4494,14 @@ body.selfie-capture-active {
     if (!country) return "";
 
     if (country === "Cameroun") {
-      return "Étape 2 validée. Règle documentaire : CNI possible.";
+      return "Pré-inscription validée. Règle documentaire : CNI possible.";
     }
 
     if (CEMAC.includes(country)) {
-      return "Étape 2 validée. Pays CEMAC : CNI possible si disponible, sinon passeport.";
+      return "Pré-inscription validée. Pays CEMAC : CNI possible si disponible, sinon passeport.";
     }
 
-    return "Étape 2 validée. Hors CEMAC : passeport et titre de séjour/résidence à prévoir.";
+    return "Pré-inscription validée. Hors CEMAC : passeport et titre de séjour/résidence à prévoir.";
   }
 
   function validateStep0(showMessage) {
@@ -5708,482 +4988,9 @@ body.selfie-capture-active {
 </script>
 
 
-<script>
-/* AFB_STEP0_WHATSAPP_OTP_UI_V1 */
-(function () {
-  "use strict";
 
-  if (window.__AFB_STEP0_WHATSAPP_OTP_UI_V1) return;
-  window.__AFB_STEP0_WHATSAPP_OTP_UI_V1 = true;
+<!-- Removed duplicate OTP script: /* AFB_STEP0_WHATSAPP_OTP_UI_V1 */ -->
 
-  const OTP_VERIFIED_KEY = "diaspora_step0_whatsapp_otp_verified";
-  const OTP_PHONE_KEY = "diaspora_step0_whatsapp_otp_phone";
-  const OTP_SESSION_KEY = "diaspora_step0_whatsapp_otp_session";
-  const OTP_EMAIL_KEY = "diaspora_step0_email";
-  const OTP_COUNTRY_KEY = "diaspora_step0_country";
-
-  const COUNTRY_DIAL_CODES = {
-    "Cameroun": "+237",
-    "Gabon": "+241",
-    "Congo": "+242",
-    "Tchad": "+235",
-    "Centrafrique": "+236",
-    "Guinée équatoriale": "+240",
-    "France": "+33",
-    "Belgique": "+32",
-    "Suisse": "+41",
-    "Allemagne": "+49",
-    "Italie": "+39",
-    "Espagne": "+34",
-    "Portugal": "+351",
-    "Royaume-Uni": "+44",
-    "Canada": "+1",
-    "États-Unis": "+1",
-    "Brésil": "+55",
-    "Maroc": "+212",
-    "Sénégal": "+221",
-    "Côte d’Ivoire": "+225",
-    "Côte d'Ivoire": "+225",
-    "Nigéria": "+234",
-    "Afrique du Sud": "+27",
-    "Émirats Arabes Unis": "+971",
-    "Arabie Saoudite": "+966",
-    "Chine": "+86",
-    "Inde": "+91"
-  };
-
-  function el(id) {
-    return document.getElementById(id);
-  }
-
-  function setOtpStatus(message, ok) {
-    const status = el("step0-otp-status");
-    if (!status) return;
-
-    status.textContent = message;
-    status.className = ok ? "ok" : "error";
-  }
-
-  function setMainStep0Status(message, ok) {
-    const status = el("step0-status");
-    if (!status) return;
-
-    status.textContent = message;
-    status.style.color = ok ? "#047857" : "#b91c1c";
-    status.style.fontWeight = "900";
-  }
-
-  function value(id) {
-    const input = el(id);
-    return input ? String(input.value || "").trim() : "";
-  }
-
-  function resolvePreSessionId() {
-    if (typeof window.getOrCreatePreSessionId === "function") {
-      try {
-        return window.getOrCreatePreSessionId();
-      } catch (e) {}
-    }
-
-    const possibleKeys = [
-      "diaspora_pre_onboarding_session_id",
-      "pre_onboarding_session_id",
-      "diaspora_pre_session_id",
-      "diaspora_step0_session_id"
-    ];
-
-    for (const key of possibleKeys) {
-      const found = localStorage.getItem(key);
-      if (found) return found;
-    }
-
-    const sessionId = (window.crypto && window.crypto.randomUUID)
-      ? window.crypto.randomUUID()
-      : "pre_" + Date.now() + "_" + Math.random().toString(16).slice(2);
-
-    possibleKeys.forEach(function (key) {
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, sessionId);
-      }
-    });
-
-    return sessionId;
-  }
-
-  function buildInternationalPhone() {
-    if (typeof window.__AFB_BUILD_STEP0_WHATSAPP_FULL__ === "function") {
-      try {
-        const full = window.__AFB_BUILD_STEP0_WHATSAPP_FULL__();
-        if (full) return full;
-      } catch (e) {}
-    }
-
-    const raw = value("step0-whatsapp");
-    const country = value("step0-country");
-    const digits = raw.replace(/\D/g, "");
-
-    if (!digits) return "";
-
-    if (raw.trim().startsWith("+")) {
-      return "+" + digits;
-    }
-
-    const dial = COUNTRY_DIAL_CODES[country] || "";
-
-    if (dial) {
-      return dial + digits.replace(/^0+/, "");
-    }
-
-    return "+" + digits;
-  }
-
-  function resetOtpVerification(message) {
-    localStorage.removeItem(OTP_VERIFIED_KEY);
-    localStorage.removeItem(OTP_PHONE_KEY);
-    localStorage.removeItem(OTP_SESSION_KEY);
-
-    const codeInput = el("step0-otp-code");
-    const verifyBtn = el("step0-verify-otp-btn");
-    const demo = el("step0-demo-otp");
-
-    if (codeInput) {
-      codeInput.value = "";
-      codeInput.disabled = true;
-    }
-
-    if (verifyBtn) verifyBtn.disabled = true;
-
-    if (demo) {
-      demo.textContent = "";
-      demo.classList.remove("show");
-    }
-
-    setOtpStatus(message || "Numéro WhatsApp en attente de validation.", false);
-    syncValidateButton();
-  }
-
-  function isOtpVerifiedForCurrentPhone() {
-    const phone = buildInternationalPhone();
-    return localStorage.getItem(OTP_VERIFIED_KEY) === "true" &&
-           localStorage.getItem(OTP_PHONE_KEY) === phone &&
-           phone.length >= 8;
-  }
-
-  function syncValidateButton() {
-    const btn = el("step0-validate-btn");
-    if (!btn) return;
-
-    if (isOtpVerifiedForCurrentPhone()) {
-      btn.disabled = false;
-      btn.classList.remove("otp-locked");
-      btn.title = "";
-    } else {
-      btn.disabled = true;
-      btn.classList.add("otp-locked");
-      btn.title = "Vérifiez le numéro WhatsApp par OTP avant de valider vos informations de contact.";
-    }
-  }
-
-  function validateStep0FieldsForOtp() {
-    const email = value("step0-email");
-    const country = value("step0-country");
-    const phone = buildInternationalPhone();
-
-    if (!email || !email.includes("@")) {
-      setOtpStatus("Renseignez un email valide avant l’envoi du code.", false);
-      setMainStep0Status("Renseignez un email valide avant l’envoi du code.", false);
-      return null;
-    }
-
-    if (!country) {
-      setOtpStatus("Sélectionnez le pays de résidence avant l’envoi du code.", false);
-      setMainStep0Status("Sélectionnez le pays de résidence avant l’envoi du code.", false);
-      return null;
-    }
-
-    if (!phone || phone.length < 8) {
-      setOtpStatus("Renseignez un numéro WhatsApp valide.", false);
-      setMainStep0Status("Renseignez un numéro WhatsApp valide.", false);
-      return null;
-    }
-
-    return { email, country, phone };
-  }
-
-  async function readJsonResponse(response) {
-    const raw = await response.text();
-
-    try {
-      return JSON.parse(raw);
-    } catch (e) {
-      return { detail: raw || "Réponse serveur invalide." };
-    }
-  }
-
-  function errorMessage(data) {
-    if (!data) return "Erreur inconnue.";
-
-    if (typeof data.detail === "string") return data.detail;
-
-    if (Array.isArray(data.detail)) {
-      return data.detail.map(function (item) {
-        return item.msg || item.message || JSON.stringify(item);
-      }).join(" ");
-    }
-
-    return data.message || "Erreur inconnue.";
-  }
-
-  async function sendOtp() {
-    const checked = validateStep0FieldsForOtp();
-    if (!checked) return;
-
-    const sendBtn = el("step0-send-otp-btn");
-    const verifyBtn = el("step0-verify-otp-btn");
-    const codeInput = el("step0-otp-code");
-    const demo = el("step0-demo-otp");
-    const sessionId = resolvePreSessionId();
-
-    if (sendBtn) {
-      sendBtn.disabled = true;
-      sendBtn.textContent = "Envoi en cours...";
-    }
-
-    setOtpStatus("Envoi du code WhatsApp en cours...", true);
-
-    try {
-      const response = await fetch("/api/pre-onboarding/otp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          email: checked.email,
-          country: checked.country,
-          phone: checked.phone
-        })
-      });
-
-      const data = await readJsonResponse(response);
-
-      if (!response.ok || !data.ok) {
-        throw new Error(errorMessage(data));
-      }
-
-      localStorage.setItem(OTP_SESSION_KEY, sessionId);
-      localStorage.setItem(OTP_EMAIL_KEY, checked.email);
-      localStorage.setItem(OTP_COUNTRY_KEY, checked.country);
-
-      if (codeInput) {
-        codeInput.disabled = false;
-        codeInput.focus();
-      }
-
-      if (verifyBtn) verifyBtn.disabled = false;
-
-      if (demo && data.fallback_otp) {
-        if (typeof window.__afbShowOtpCode === "function") {
-          window.__afbShowOtpCode(data.fallback_otp, true);
-        } else {
-          demo.textContent = "Envoi WhatsApp indisponible — votre code OTP : " + data.fallback_otp;
-          demo.classList.add("show", "fallback");
-        }
-      } else if (demo && data.demo_otp) {
-        if (typeof window.__afbShowOtpCode === "function") {
-          window.__afbShowOtpCode(data.demo_otp, false);
-        } else {
-          demo.textContent = "Code démo : " + data.demo_otp;
-          demo.classList.add("show");
-        }
-      }
-
-      if (data.whatsapp_sent === false) {
-        const fallbackOk = Boolean(data.demo_mode || data.fallback_otp);
-        const fallbackMessage = data.fallback_otp
-          ? "Envoi WhatsApp indisponible. Utilisez le code affiché pour continuer."
-          : (data.demo_mode
-            ? "Envoi WhatsApp non confirmé (mode démo). Utilisez le code démo affiché."
-            : "L’envoi du code WhatsApp a échoué. Vérifiez le numéro puis réessayez.");
-        setOtpStatus(fallbackMessage, fallbackOk);
-        setMainStep0Status(fallbackMessage, fallbackOk);
-      } else {
-        // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : livraison non encore confirmée à ce stade.
-        setOtpStatus("Envoi du code en cours... Saisissez le code dès réception sur WhatsApp.", true);
-        setMainStep0Status("Code OTP en cours d’envoi. Vérifiez votre WhatsApp pour continuer.", true);
-      }
-    } catch (error) {
-      setOtpStatus(error.message || "Impossible d’envoyer le code OTP.", false);
-      setMainStep0Status(error.message || "Impossible d’envoyer le code OTP.", false);
-    } finally {
-      if (sendBtn) {
-        sendBtn.disabled = false;
-        sendBtn.textContent = "Renvoyer le code WhatsApp";
-      }
-      syncValidateButton();
-    }
-  }
-
-  // AFB_OTP_AUTO_VERIFY_V1 : évite les doubles vérifications simultanées
-  // quand la saisie/le collage déclenche automatiquement verifyOtp.
-  let otpVerifyInFlight = false;
-
-  async function verifyOtp() {
-    if (otpVerifyInFlight) return;
-
-    const checked = validateStep0FieldsForOtp();
-    if (!checked) return;
-
-    const codeInput = el("step0-otp-code");
-    const verifyBtn = el("step0-verify-otp-btn");
-    const otp = codeInput ? String(codeInput.value || "").replace(/\D/g, "") : "";
-    const sessionId = localStorage.getItem(OTP_SESSION_KEY) || resolvePreSessionId();
-
-    if (otp.length !== 6) {
-      setOtpStatus("Saisissez un code OTP à 6 chiffres.", false);
-      return;
-    }
-
-    otpVerifyInFlight = true;
-    setOtpStatus("Vérification du code en cours...", true);
-
-    if (verifyBtn) {
-      verifyBtn.disabled = true;
-      verifyBtn.textContent = "Vérification...";
-    }
-
-    try {
-      const response = await fetch("/api/pre-onboarding/otp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: sessionId,
-          phone: checked.phone,
-          otp: otp
-        })
-      });
-
-      const data = await readJsonResponse(response);
-
-      if (!response.ok || !data.verified) {
-        throw new Error(errorMessage(data));
-      }
-
-      localStorage.setItem(OTP_VERIFIED_KEY, "true");
-      localStorage.setItem(OTP_PHONE_KEY, checked.phone);
-      localStorage.setItem(OTP_SESSION_KEY, sessionId);
-      localStorage.setItem(OTP_EMAIL_KEY, checked.email);
-      localStorage.setItem(OTP_COUNTRY_KEY, checked.country);
-
-      window.__AFB_STEP0_EMAIL__ = checked.email;
-      window.__AFB_STEP0_WHATSAPP__ = checked.phone;
-      window.__AFB_STEP0_COUNTRY__ = checked.country;
-      window.__AFB_STEP0_WHATSAPP_VERIFIED__ = true;
-
-      setOtpStatus("WhatsApp vérifié. Vous pouvez valider vos informations de contact.", true);
-      setMainStep0Status("WhatsApp vérifié. Informations de contact prêtes à être validées.", true);
-      syncValidateButton();
-    } catch (error) {
-      localStorage.removeItem(OTP_VERIFIED_KEY);
-      setOtpStatus(error.message || "Code OTP incorrect.", false);
-      setMainStep0Status(error.message || "Code OTP incorrect.", false);
-      syncValidateButton();
-    } finally {
-      otpVerifyInFlight = false;
-
-      if (verifyBtn) {
-        verifyBtn.disabled = false;
-        verifyBtn.textContent = "Confirmer le code";
-      }
-    }
-  }
-
-  function blockStep0ValidationIfOtpMissing(event) {
-    if (isOtpVerifiedForCurrentPhone()) {
-      return;
-    }
-
-    event.preventDefault();
-    event.stopImmediatePropagation();
-
-    setOtpStatus("Vérifiez d’abord le numéro WhatsApp par OTP.", false);
-    setMainStep0Status("Vérifiez d’abord le numéro WhatsApp par OTP avant de continuer.", false);
-    syncValidateButton();
-  }
-
-  function bindOtpUi() {
-    const sendBtn = el("step0-send-otp-btn");
-    const verifyBtn = el("step0-verify-otp-btn");
-    const validateBtn = el("step0-validate-btn");
-    const codeInput = el("step0-otp-code");
-
-    if (sendBtn && sendBtn.dataset.otpBound !== "1") {
-      sendBtn.dataset.otpBound = "1";
-      sendBtn.addEventListener("click", sendOtp);
-    }
-
-    if (verifyBtn && verifyBtn.dataset.otpBound !== "1") {
-      verifyBtn.dataset.otpBound = "1";
-      verifyBtn.addEventListener("click", verifyOtp);
-    }
-
-    if (codeInput && codeInput.dataset.otpBound !== "1") {
-      codeInput.dataset.otpBound = "1";
-      codeInput.addEventListener("input", function () {
-        codeInput.value = String(codeInput.value || "").replace(/\D/g, "").slice(0, 6);
-
-        // AFB_OTP_AUTO_VERIFY_V1 : dès que 6 chiffres sont saisis ou collés,
-        // la vérification part automatiquement (plus de bouton à cliquer).
-        if (codeInput.value.length === 6 && !isOtpVerifiedForCurrentPhone()) {
-          verifyOtp();
-        }
-      });
-
-      codeInput.addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          verifyOtp();
-        }
-      });
-    }
-
-    if (validateBtn && validateBtn.dataset.otpGuardBound !== "1") {
-      validateBtn.dataset.otpGuardBound = "1";
-      validateBtn.addEventListener("click", blockStep0ValidationIfOtpMissing, true);
-    }
-
-    ["step0-email", "step0-whatsapp", "step0-country"].forEach(function (id) {
-      const input = el(id);
-      if (!input || input.dataset.otpResetBound === "1") return;
-
-      input.dataset.otpResetBound = "1";
-      input.addEventListener("input", function () {
-        if (!isOtpVerifiedForCurrentPhone()) {
-          resetOtpVerification("Numéro WhatsApp en attente de validation.");
-        }
-      });
-
-      input.addEventListener("change", function () {
-        if (!isOtpVerifiedForCurrentPhone()) {
-          resetOtpVerification("Numéro WhatsApp en attente de validation.");
-        }
-      });
-    });
-
-    syncValidateButton();
-
-    if (isOtpVerifiedForCurrentPhone()) {
-      setOtpStatus("WhatsApp déjà vérifié.", true);
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bindOtpUi);
-  } else {
-    bindOtpUi();
-  }
-
-  setInterval(syncValidateButton, 800);
-})();
-</script>
 
 
 <script>
@@ -9275,981 +8082,345 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
 </script>
 
 
+
+<!-- Removed duplicate OTP script: AFB_STEP0_OTP_DELIVERY_STATUS_POLL_V1 -->
+
+
+
+<!-- AFB_STEP0_OTP_CLEAN_FORCE_V4 -->
 <script>
-/* AFB_STEP0_STORE_VERIFIED_OTP_PAYLOAD_V2 */
 (function () {
   "use strict";
 
-  if (window.__AFB_STEP0_STORE_VERIFIED_OTP_PAYLOAD_V2) return;
-  window.__AFB_STEP0_STORE_VERIFIED_OTP_PAYLOAD_V2 = true;
+  window.__AFB_OTP_CLEAN_FORCE_V4 = true;
 
-  function clean(value) {
-    return String(value || "").trim();
-  }
-
-  function readPayload() {
-    try {
-      return JSON.parse(localStorage.getItem("diaspora_step0_payload") || "{}") || {};
-    } catch (e) {
-      return {};
-    }
-  }
-
-  function writePayload(payload) {
-    try {
-      localStorage.setItem("diaspora_step0_payload", JSON.stringify(payload || {}));
-    } catch (e) {}
-  }
-
-  function storeVerifiedOtp(data) {
-    if (!data || data.verified !== true) return;
-
-    const sessionId =
-      clean(data.session_id) ||
-      clean(localStorage.getItem("diaspora_pre_onboarding_session_id"));
-
-    const phone =
-      clean(data.whatsapp_phone_full) ||
-      clean(data.phone) ||
-      clean(localStorage.getItem("diaspora_step0_whatsapp_full")) ||
-      clean(localStorage.getItem("diaspora_step0_whatsapp_otp_phone"));
-
-    const verifiedAt =
-      clean(data.whatsapp_otp_verified_at) ||
-      clean(data.verified_at) ||
-      new Date().toISOString();
-
-    localStorage.setItem("diaspora_step0_whatsapp_otp_verified", "true");
-    localStorage.setItem("diaspora_step0_whatsapp_otp_phone", phone);
-    localStorage.setItem("diaspora_step0_whatsapp_otp_verified_at", verifiedAt);
-
-    if (sessionId) {
-      localStorage.setItem("diaspora_pre_onboarding_session_id", sessionId);
-    }
-
-    const payload = readPayload();
-
-    payload.pre_onboarding_session_id = sessionId || payload.pre_onboarding_session_id;
-    payload.phone = phone || payload.phone;
-    payload.whatsapp_phone_full = phone || payload.whatsapp_phone_full;
-    payload.whatsapp_otp_verified = true;
-    payload.whatsapp_otp_verified_at = verifiedAt;
-    payload.saved_by = "AFB_STEP0_STORE_VERIFIED_OTP_PAYLOAD_V2";
-    payload.saved_at = new Date().toISOString();
-
-    writePayload(payload);
-  }
-
-  const originalFetch = window.fetch;
-
-  window.fetch = function (input, init) {
-    return originalFetch.apply(this, arguments).then(function (response) {
-      try {
-        const url = typeof input === "string" ? input : String(input && input.url || "");
-
-        if (url.includes("/api/pre-onboarding/otp/verify")) {
-          response.clone().json().then(function (data) {
-            storeVerifiedOtp(data);
-          }).catch(function () {});
-        }
-      } catch (e) {}
-
-      return response;
-    });
-  };
-})();
-</script>
-
-<script>
-/* AFB_STEP0_I18N_BRIDGE_V1 */
-(function () {
-  "use strict";
-
-  if (window.__AFB_STEP0_I18N_BRIDGE_V1) return;
-  window.__AFB_STEP0_I18N_BRIDGE_V1 = true;
-
-  const STORAGE_KEY = "diaspora_client_lang";
-
-  const D = {
-    fr: {
-      badge: "Étape 2 — Renseigner et vérifier vos contacts",
-      title: "Vos informations de contact",
-      desc: "Ouvrez votre compte Afriland First Bank simplement, que vous soyez au Cameroun ou à l’étranger. Préparez vos informations personnelles, vos justificatifs et votre téléphone WhatsApp pour finaliser votre demande.",
-intro: "Renseignez ensuite votre email, votre numéro WhatsApp et votre pays de résidence/localisation. Ces informations nous permettent de sécuriser votre demande et d’identifier les pièces justificatives adaptées à votre situation.",
-      email: "Email",
-      emailPh: "example@email.com",
-      whatsapp: "Téléphone WhatsApp",
-      dial: "Indicatif du numéro WhatsApp",
-      local: "Numéro local WhatsApp",
-      localPh: "9 chiffres — ex. 699000000",
-      dialHelp: "Choisir l’indicatif du numéro WhatsApp. Ce choix est indépendant du pays de résidence.",
-      residence: "Pays de résidence / localisation",
-      countryFirst: "Sélectionner le pays",
-      residenceNote: "Ce pays sert aux règles documentaires : CEMAC, hors CEMAC, CNI, passeport et titre de séjour.",
-      otpTitle: "🔐 Validation du numéro WhatsApp",
-      otpHelp: "Un code de sécurité sera envoyé sur WhatsApp afin de confirmer votre numéro et protéger votre demande. Saisissez ou collez le code reçu : il est vérifié automatiquement.",
-      sendOtp: "Recevoir le code WhatsApp",
-      otpStatus: "Numéro WhatsApp en attente de validation.",
-      otpCodePh: "Saisir ou coller le code à 6 chiffres",
-      verifyOtp: "Confirmer le code",
-      validate: "Valider mes informations de contact",
-      validateTitle: "Vérifiez le numéro WhatsApp par OTP avant de valider vos informations de contact."
-    },
-    en: {
-      badge: "Step 2 — Provide and verify your contact details",
-      title: "Your contact information",
-      desc: "Open your Afriland First Bank account easily, whether you are in Cameroon or abroad. Prepare your personal information, supporting documents and WhatsApp phone to complete your request.",
-intro: "Next, enter your email, WhatsApp number and country of residence/location. This information helps us secure your request and identify the supporting documents required for your situation.",
-
-      email: "Email",
-      emailPh: "example@email.com",
-      whatsapp: "WhatsApp phone",
-      dial: "WhatsApp country code",
-      local: "Local WhatsApp number",
-      localPh: "9 digits — e.g. 699000000",
-      dialHelp: "Choose the WhatsApp phone country code. This choice is independent from your country of residence.",
-      residence: "Country of residence / location",
-      countryFirst: "Select country",
-      residenceNote: "This country is used for document rules: CEMAC, non-CEMAC, national ID card, passport and residence permit.",
-      otpTitle: "🔐 WhatsApp OTP verification",
-      otpHelp: "A security code will be sent on WhatsApp to confirm your number and protect your request. Type or paste the received code: it is verified automatically.",
-      sendOtp: "Send WhatsApp code",
-      otpStatus: "WhatsApp not verified.",
-      otpCodePh: "Type or paste the 6-digit code",
-      verifyOtp: "Verify code",
-      validate: "Validate my contact details",
-      validateTitle: "Verify your WhatsApp number by OTP before validating your contact details."
-    }
-  };
-
-  function lang() {
-    return localStorage.getItem(STORAGE_KEY) === "en" ? "en" : "fr";
-  }
-
-  function tr(key) {
-    return D[lang()][key] || D.fr[key] || "";
-  }
-
-  function one(selector) {
-    return document.querySelector(selector);
-  }
-
-  function all(selector) {
-    return Array.prototype.slice.call(document.querySelectorAll(selector));
-  }
-
-  function setText(selector, value) {
-    const el = one(selector);
-    if (el) el.textContent = value;
-  }
-
-  function setHtml(selector, value) {
-    const el = one(selector);
-    if (el) el.innerHTML = value;
-  }
-
-  function setPlaceholder(selector, value) {
-    const el = one(selector);
-    if (el) el.setAttribute("placeholder", value);
-  }
-
-  function translateKnownStatus(el) {
-    if (!el) return;
-
-    const raw = String(el.textContent || "").trim();
-
-    const frToEn = {
-      "Numéro WhatsApp en attente de validation.": "WhatsApp not verified.",
-      "WhatsApp vérifié. Vous pouvez valider vos informations de contact.": "WhatsApp verified. You can validate your contact details.",
-      "WhatsApp vérifié. Informations de contact prêtes à être validées.": "WhatsApp verified. Contact details ready to be validated.",
-      "Envoi en cours.": "Sending.",
-      "Envoi du code WhatsApp en cours.": "Sending WhatsApp code.",
-      "Code WhatsApp envoyé. Renseignez le code reçu.": "WhatsApp code sent. Enter the code received.",
-      "Renseignez un email valide avant l’envoi du code.": "Enter a valid email before sending the code.",
-      "Sélectionnez le pays de résidence avant l’envoi du code.": "Select your country of residence before sending the code.",
-      "Renseignez un numéro WhatsApp valide.": "Enter a valid WhatsApp number.",
-      "Vérification du code en cours...": "Verifying the code...",
-      "Saisissez un code OTP à 6 chiffres.": "Enter the 6-digit OTP code.",
-      "Code OTP incorrect.": "Incorrect OTP code.",
-      "WhatsApp vérifié.": "WhatsApp verified."
-    };
-
-    const enToFr = {};
-    Object.keys(frToEn).forEach(function (fr) {
-      enToFr[frToEn[fr]] = fr;
-    });
-
-    if (lang() === "en" && frToEn[raw]) {
-      el.textContent = frToEn[raw];
-    }
-
-    if (lang() === "fr" && enToFr[raw]) {
-      el.textContent = enToFr[raw];
-    }
-  }
-
-  function applyStep0Language() {
-    const required = ' <span style="color:var(--red);">*</span>';
-
-    setText("#step0-preinscription .badge-step0", tr("badge"));
-    setText("#step0-preinscription h2", tr("title"));
-
-    const desc = one("#step0-preinscription p[data-i18n='welcome.desc']");
-    if (desc) desc.textContent = tr("desc");
-
-    const intro = one("#step0-preinscription p:not([data-i18n])");
-    if (intro) intro.textContent = tr("intro");
-
-    setHtml('label[for="step0-email"]', tr("email") + required);
-    setPlaceholder("#step0-email", tr("emailPh"));
-
-    setHtml('label[for="step0-whatsapp"]', tr("whatsapp") + required);
-    setHtml('label[for="step0-country"]', tr("residence") + required);
-
-    all(".step0-dial-field label").forEach(function (el) {
-      el.textContent = tr("dial");
-    });
-
-    all(".step0-local-phone-field label").forEach(function (el) {
-      el.textContent = tr("local");
-    });
-
-    setPlaceholder("#step0-whatsapp", tr("localPh"));
-    setPlaceholder("#step0-otp-code", tr("otpCodePh"));
-
-    all(".step0-dial-list-help").forEach(function (el) {
-      el.textContent = tr("dialHelp");
-    });
-
-    all(".step0-residence-note, #step0-residence-note").forEach(function (el) {
-      el.textContent = tr("residenceNote");
-    });
-
-    const country = one("#step0-country option[value='']");
-    if (country) country.textContent = tr("countryFirst");
-
-    setText(".step0-otp-title", tr("otpTitle"));
-    setText(".step0-otp-help", tr("otpHelp"));
-    setText("#step0-send-otp-btn", tr("sendOtp"));
-    setText("#step0-verify-otp-btn", tr("verifyOtp"));
-    setText("#step0-validate-btn", tr("validate"));
-
-    const validateBtn = one("#step0-validate-btn");
-    if (validateBtn && validateBtn.classList.contains("otp-locked")) {
-      validateBtn.title = tr("validateTitle");
-    }
-
-    const otpStatus = one("#step0-otp-status");
-    const mainStatus = one("#step0-status");
-
-    if (otpStatus && !String(otpStatus.textContent || "").trim()) {
-      otpStatus.textContent = tr("otpStatus");
-    }
-
-    translateKnownStatus(otpStatus);
-    translateKnownStatus(mainStatus);
-  }
-
-  window.afbTranslateStep0 = applyStep0Language;
-
-  document.addEventListener("DOMContentLoaded", function () {
-    applyStep0Language();
-    setTimeout(applyStep0Language, 300);
-    setTimeout(applyStep0Language, 1000);
-    setTimeout(applyStep0Language, 2000);
-  });
-
-  document.addEventListener("click", function (event) {
-    const target = event.target;
-
-    if (
-      target &&
-      target.closest &&
-      target.closest("#lang-fr, #lang-en, #step0-send-otp-btn, #step0-verify-otp-btn, #step0-validate-btn")
-    ) {
-      setTimeout(applyStep0Language, 80);
-      setTimeout(applyStep0Language, 500);
-      setTimeout(applyStep0Language, 1500);
-    }
-  }, true);
-
-  document.addEventListener("change", function () {
-    setTimeout(applyStep0Language, 100);
-  }, true);
-})();
-</script>
-
-
-<!-- AFB_STEP0_OTP_SESSION_BRIDGE_V1 -->
-<script>
-(function () {
   const SESSION_KEY = "diaspora_pre_onboarding_session_id";
+  const VERIFIED_KEY = "diaspora_step0_whatsapp_otp_verified";
+  const VERIFIED_PHONE_KEY = "diaspora_step0_whatsapp_otp_phone";
 
-  function getSessionId() {
-    let sessionId = localStorage.getItem(SESSION_KEY);
-    if (!sessionId) {
-      if (window.crypto && typeof window.crypto.randomUUID === "function") {
-        sessionId = window.crypto.randomUUID();
-      } else {
-        sessionId = "pre-" + Date.now() + "-" + Math.random().toString(16).slice(2);
-      }
-      localStorage.setItem(SESSION_KEY, sessionId);
-    }
-    return sessionId;
+  function byId(id) {
+    return document.getElementById(id);
   }
 
-  function getValue(id) {
-    const el = document.getElementById(id);
+  function value(id) {
+    const el = byId(id);
     return el ? String(el.value || "").trim() : "";
   }
 
-  function getWhatsappPhone() {
-    let phone = "";
-
-    if (typeof window.__AFB_BUILD_STEP0_WHATSAPP_FULL__ === "function") {
-      phone = window.__AFB_BUILD_STEP0_WHATSAPP_FULL__() || "";
-    }
-
-    if (!phone) {
-      phone = getValue("step0-whatsapp") || "";
-    }
-
-    // Mémoire locale uniquement si le champ n'est pas présent sur la page :
-    // le numéro saisi dans le formulaire doit toujours avoir la priorité.
-    if (!phone && !document.getElementById("step0-whatsapp")) {
-      phone =
-        window.__AFB_STEP0_WHATSAPP__ ||
-        localStorage.getItem("diaspora_step0_whatsapp_full") ||
-        "";
-    }
-
-    phone = String(phone || "").replace(/\s+/g, "");
-
-    if (phone && phone[0] !== "+") {
-      const dial =
-        getValue("step0-whatsapp-dial-country") ||
-        getValue("step0-country-dial-combo") ||
-        "";
-      const cleanDial = String(dial || "").replace(/\s+/g, "");
-      if (cleanDial && cleanDial[0] === "+") {
-        phone = cleanDial + phone.replace(/^0+/, "");
-      }
-    }
-
-    return phone;
-  }
-
-  function getOtpPayload(extra) {
-    const email = getValue("step0-email") || localStorage.getItem("diaspora_step0_email") || "";
-    const country =
-      getValue("step0-country") ||
-      localStorage.getItem("diaspora_step0_country") ||
-      localStorage.getItem("diaspora_step0_residence") ||
-      "Cameroun";
-
-    const phone = getWhatsappPhone();
-
-    return Object.assign({
-      session_id: getSessionId(),
-      email: email,
-      phone: phone,
-      whatsapp: phone,
-      whatsapp_phone: phone,
-      residence_country: country,
-      country: country
-    }, extra || {});
-  }
-
   function setOtpStatus(message, type) {
-    const status = document.getElementById("step0-otp-status");
+    const status = byId("step0-otp-status");
     if (!status) return;
-
     status.textContent = message || "";
-
     status.classList.remove("ok", "error", "warning");
     if (type) status.classList.add(type);
   }
 
-  /* AFB_OTP_CLIPBOARD_V1 : copie le code dans le presse-papier */
-  function copyOtpToClipboard(code, feedbackEl) {
-    function done(ok) {
-      if (feedbackEl) {
-        feedbackEl.textContent = ok
-          ? "Code copié dans le presse-papier ✓"
-          : "Appuyez sur « Copier » pour copier le code.";
+  function setMainStatus(message, ok) {
+    const status = byId("step0-status");
+    if (!status) return;
+    status.textContent = message || "";
+    status.style.color = ok ? "#047857" : "#b91c1c";
+    status.style.fontWeight = "900";
+  }
+
+  function makeSessionId() {
+    let id = "pre_otp_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+    try {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        id = window.crypto.randomUUID();
       }
-    }
-
-    function legacyCopy() {
-      try {
-        var ta = document.createElement("textarea");
-        ta.value = code;
-        ta.setAttribute("readonly", "");
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        var ok = document.execCommand("copy");
-        document.body.removeChild(ta);
-        done(ok);
-      } catch (e) {
-        done(false);
-      }
-    }
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(code).then(
-        function () { done(true); },
-        function () { legacyCopy(); }
-      );
-    } else {
-      legacyCopy();
-    }
+    } catch (e) {}
+    localStorage.setItem(SESSION_KEY, id);
+    return id;
   }
 
-  function showDemoOtp(code, isFallback) {
-    const demo = document.getElementById("step0-demo-otp");
-    if (!demo) return;
-
-    if (code) {
-      demo.innerHTML = "";
-
-      var label = document.createElement("span");
-      label.textContent = (isFallback
-        ? "Envoi WhatsApp indisponible — votre code OTP : "
-        : "Code démo : ") + code;
-      demo.appendChild(label);
-
-      var copyBtn = document.createElement("button");
-      copyBtn.type = "button";
-      copyBtn.textContent = "Copier";
-      copyBtn.style.cssText = "margin-left:8px;padding:4px 12px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;font-weight:700;cursor:pointer;font-size:12px;";
-      var feedback = document.createElement("span");
-      feedback.style.cssText = "display:block;margin-top:4px;font-size:11px;font-weight:600;";
-      copyBtn.addEventListener("click", function () { copyOtpToClipboard(code, feedback); });
-
-      demo.appendChild(copyBtn);
-      demo.appendChild(feedback);
-      demo.classList.add("show");
-      demo.classList.toggle("fallback", Boolean(isFallback));
-
-      // Tentative de copie automatique (peut être refusée sans geste utilisateur :
-      // le bouton « Copier » reste le chemin garanti).
-      copyOtpToClipboard(code, feedback);
-    } else {
-      demo.innerHTML = "";
-      demo.classList.remove("show", "fallback");
-    }
+  function currentSessionId() {
+    return localStorage.getItem(SESSION_KEY) || makeSessionId();
   }
 
-  window.__afbShowOtpCode = showDemoOtp;
+  const COUNTRY_DIAL = {
+    "Cameroun": "+237",
+    "Cameroon": "+237",
+    "Gabon": "+241",
+    "République du Congo": "+242",
+    "Congo": "+242",
+    "Tchad": "+235",
+    "République Centrafricaine": "+236",
+    "Guinée Équatoriale": "+240",
+    "France": "+33",
+    "Belgique": "+32",
+    "Suisse": "+41",
+    "Allemagne": "+49",
+    "Italie": "+39",
+    "Espagne": "+34",
+    "Portugal": "+351",
+    "Royaume-Uni": "+44",
+    "Canada": "+1",
+    "États-Unis": "+1",
+    "Maroc": "+212",
+    "Sénégal": "+221",
+    "Côte d’Ivoire": "+225",
+    "Côte d'Ivoire": "+225"
+  };
 
-  function enableOtpInput() {
-    const input = document.getElementById("step0-otp-code");
-    const verifyBtn = document.getElementById("step0-verify-otp-btn");
+  function normalizePhone() {
+    const raw = value("step0-whatsapp");
+    const country = value("step0-country");
+    let phone = raw.replace(/\s+/g, "").replace(/[^\d+]/g, "");
 
-    if (input) input.disabled = false;
-    if (verifyBtn) verifyBtn.disabled = false;
+    if (!phone) return "";
+
+    if (phone.charAt(0) === "+") {
+      return "+" + phone.replace(/\D/g, "");
+    }
+
+    const digits = phone.replace(/\D/g, "").replace(/^0+/, "");
+    if (digits.indexOf("237") === 0) return "+" + digits;
+
+    const dial = COUNTRY_DIAL[country] || "+237";
+    return dial + digits;
   }
 
-  function markOtpVerified(phone, data) {
-    localStorage.setItem("diaspora_step0_whatsapp_otp_verified", "true");
-    localStorage.setItem("diaspora_step0_whatsapp_otp_phone", phone);
-    localStorage.setItem("diaspora_step0_whatsapp_otp_verified_at", data.verified_at || new Date().toISOString());
-    localStorage.setItem("diaspora_step0_whatsapp_full", phone);
+  function validateContact() {
+    const email = value("step0-email");
+    const country = value("step0-country") || "Cameroun";
+    const phone = normalizePhone();
 
-    window.__AFB_STEP0_WHATSAPP_OTP_VERIFIED__ = true;
-    window.__AFB_STEP0_WHATSAPP__ = phone;
-
-    const validateBtn = document.getElementById("step0-validate-btn");
-    if (validateBtn) {
-      validateBtn.classList.remove("otp-locked");
-      validateBtn.removeAttribute("disabled");
+    if (!email || email.indexOf("@") < 1) {
+      setOtpStatus("Renseignez un email valide avant l'envoi du code.", "error");
+      setMainStatus("Renseignez un email valide avant l'envoi du code.", false);
+      return null;
     }
+
+    if (!phone || phone.length < 8) {
+      setOtpStatus("Renseignez un numéro WhatsApp valide.", "error");
+      setMainStatus("Renseignez un numéro WhatsApp valide.", false);
+      return null;
+    }
+
+    return { email: email, country: country, phone: phone };
+  }
+
+  async function readJson(response) {
+    const raw = await response.text();
+    try { return raw ? JSON.parse(raw) : {}; }
+    catch (e) { return { detail: raw || "Réponse serveur invalide." }; }
+  }
+
+  function extractMessage(data, fallback) {
+    if (!data) return fallback;
+    if (typeof data.detail === "string") return data.detail;
+    if (data.detail && typeof data.detail.message === "string") return data.detail.message;
+    if (Array.isArray(data.detail)) {
+      return data.detail.map(function (x) { return x.msg || x.message || JSON.stringify(x); }).join(" ");
+    }
+    return data.message || fallback;
   }
 
   async function sendOtp(event) {
     if (event) {
       event.preventDefault();
+      event.stopPropagation();
       event.stopImmediatePropagation();
     }
 
-    const payload = getOtpPayload();
+    const contact = validateContact();
+    if (!contact) return false;
 
-    if (!payload.whatsapp_phone) {
-      setOtpStatus("Veuillez renseigner un numéro WhatsApp valide.", "error");
-      return;
+    const sessionId = makeSessionId();
+    const payload = {
+      session_id: sessionId,
+      email: contact.email,
+      country: contact.country,
+      phone: contact.phone,
+      whatsapp: contact.phone,
+      whatsapp_phone: contact.phone
+    };
+
+    const sendBtn = byId("step0-send-otp-btn");
+    const verifyBtn = byId("step0-verify-otp-btn");
+    const codeInput = byId("step0-otp-code");
+    const demo = byId("step0-demo-otp");
+
+    if (sendBtn) {
+      sendBtn.disabled = true;
+      sendBtn.textContent = "Envoi en cours...";
+    }
+    if (demo) {
+      demo.textContent = "";
+      demo.classList.remove("show");
     }
 
     setOtpStatus("Envoi du code WhatsApp en cours...", "warning");
+    setMainStatus("Envoi du code WhatsApp en cours...", true);
 
     try {
+      console.log("[AFB_STEP0_OTP_CLEAN_FORCE_V4] send", payload);
       const response = await fetch("/api/pre-onboarding/otp/send", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-
-      const data = await response.json().catch(function () { return {}; });
+      const data = await readJson(response);
+      console.log("[AFB_STEP0_OTP_CLEAN_FORCE_V4] send response", response.status, data);
 
       if (!response.ok || data.ok === false) {
-        const message = data.detail || data.message || "Impossible d’envoyer le code OTP WhatsApp.";
-        setOtpStatus(message, "error");
-        return;
+        const msg = extractMessage(data, "Impossible d'envoyer le code OTP WhatsApp.");
+        setOtpStatus(msg, "error");
+        setMainStatus(msg, false);
+        return false;
       }
 
-      localStorage.setItem("diaspora_step0_whatsapp_full", payload.whatsapp_phone);
-      localStorage.setItem("diaspora_step0_whatsapp_otp_phone_pending", payload.whatsapp_phone);
+      localStorage.setItem(SESSION_KEY, sessionId);
+      localStorage.setItem("diaspora_step0_whatsapp_full", contact.phone);
+      localStorage.setItem("diaspora_step0_whatsapp_otp_phone_pending", contact.phone);
+      localStorage.setItem("diaspora_step0_email", contact.email);
+      localStorage.setItem("diaspora_step0_country", contact.country);
+      localStorage.removeItem(VERIFIED_KEY);
+      localStorage.removeItem(VERIFIED_PHONE_KEY);
 
-      enableOtpInput();
+      if (codeInput) {
+        codeInput.disabled = false;
+        codeInput.focus();
+      }
+      if (verifyBtn) verifyBtn.disabled = false;
 
-      if (data.fallback_otp) {
-        showDemoOtp(data.fallback_otp, true);
-      } else {
-        showDemoOtp(data.demo_otp);
+      if (demo && data.demo_otp) {
+        demo.textContent = "Code demo : " + data.demo_otp;
+        demo.classList.add("show");
       }
 
-      if (data.whatsapp_sent === false) {
-        if (data.fallback_otp) {
-          setOtpStatus("L’envoi WhatsApp est indisponible. Utilisez le code affiché ci-dessous pour continuer.", "warning");
-        } else if (data.demo_mode) {
-          setOtpStatus("L’envoi WhatsApp n’a pas pu être confirmé (mode démo). Utilisez le code affiché ci-dessous.", "warning");
-        } else {
-          setOtpStatus("L’envoi du code WhatsApp a échoué. Vérifiez le numéro puis réessayez.", "error");
-          return;
-        }
-      } else {
-        // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : ne pas annoncer « envoyé » tant
-        // que la livraison n'est pas confirmée (trop de faux positifs sinon).
-        setOtpStatus("Envoi du code en cours... Vérification de la livraison WhatsApp.", "warning");
-        watchOtpDelivery(payload.session_id);
-      }
+      const delivery = data.whatsapp_delivery_status || (data.delivery && data.delivery.status) || "OK";
+      setOtpStatus("Code OTP envoyé. Vérifiez votre WhatsApp. Statut : " + delivery + ".", "ok");
+      setMainStatus("Code OTP envoyé. Vérifiez votre WhatsApp.", true);
+      return false;
 
     } catch (err) {
-      setOtpStatus("Erreur technique pendant l’envoi du code OTP WhatsApp.", "error");
+      console.error("[AFB_STEP0_OTP_CLEAN_FORCE_V4] send error", err);
+      setOtpStatus("Erreur technique pendant l'envoi du code OTP WhatsApp.", "error");
+      setMainStatus("Erreur technique pendant l'envoi du code OTP WhatsApp.", false);
+      return false;
+
+    } finally {
+      if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.textContent = "Renvoyer le code WhatsApp";
+      }
     }
-  }
-
-  var otpDeliveryWatchTimer = null;
-
-  function watchOtpDelivery(sessionId) {
-    if (!sessionId) return;
-    if (otpDeliveryWatchTimer) clearTimeout(otpDeliveryWatchTimer);
-
-    // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 :
-    // - « envoyé » affiché uniquement sur livraison confirmée (DELIVERED/READ) ;
-    // - « SENT » ne suffit pas : on a observé enqueued -> sent -> failed chez Meta.
-    var attempts = 0;
-    var maxAttempts = 8;
-    var failedStatuses = ["FAILED", "ERROR", "REJECTED", "UNDELIVERED", "CALLBELL_HTTP_ERROR", "CALLBELL_ERROR"];
-    var confirmedStatuses = ["DELIVERED", "READ"];
-
-    function poll() {
-      attempts += 1;
-      fetch("/api/pre-onboarding/otp/delivery-status/" + encodeURIComponent(sessionId))
-        .then(function (response) { return response.json(); })
-        .then(function (data) {
-          var status = String(data.whatsapp_delivery_status || "").toUpperCase();
-
-          if (failedStatuses.indexOf(status) !== -1) {
-            if (data.fallback_otp) {
-              showDemoOtp(data.fallback_otp, true);
-              setOtpStatus("La livraison WhatsApp a échoué. Utilisez le code affiché ci-dessous pour continuer.", "warning");
-            } else {
-              setOtpStatus("La livraison du code WhatsApp a échoué (statut : " + status + "). Vérifiez le numéro puis renvoyez le code.", "error");
-            }
-            return;
-          }
-
-          if (confirmedStatuses.indexOf(status) !== -1) {
-            setOtpStatus("Code livré sur WhatsApp ✓ Saisissez le code reçu.", "ok");
-            return;
-          }
-
-          if (attempts < maxAttempts) {
-            otpDeliveryWatchTimer = setTimeout(poll, 5000);
-          } else {
-            setOtpStatus("Livraison WhatsApp non confirmée pour l’instant. Si vous ne recevez pas le code, cliquez sur « Renvoyer le code ».", "warning");
-          }
-        })
-        .catch(function () {
-          // suivi best-effort : re-tenter sans perturber l'utilisateur
-          if (attempts < maxAttempts) {
-            otpDeliveryWatchTimer = setTimeout(poll, 5000);
-          }
-        });
-    }
-
-    otpDeliveryWatchTimer = setTimeout(poll, 4000);
   }
 
   async function verifyOtp(event) {
     if (event) {
       event.preventDefault();
+      event.stopPropagation();
       event.stopImmediatePropagation();
     }
 
-    const otp = getValue("step0-otp-code").replace(/\D/g, "");
+    const contact = validateContact();
+    if (!contact) return false;
+
+    const codeInput = byId("step0-otp-code");
+    const verifyBtn = byId("step0-verify-otp-btn");
+    const otp = codeInput ? String(codeInput.value || "").replace(/\D/g, "").slice(0, 6) : "";
 
     if (otp.length !== 6) {
       setOtpStatus("Veuillez saisir le code OTP à 6 chiffres.", "error");
-      return;
+      return false;
     }
 
-    const payload = getOtpPayload({otp: otp});
+    const payload = {
+      session_id: currentSessionId(),
+      phone: contact.phone,
+      whatsapp: contact.phone,
+      whatsapp_phone: contact.phone,
+      otp: otp
+    };
 
+    if (verifyBtn) {
+      verifyBtn.disabled = true;
+      verifyBtn.textContent = "Vérification...";
+    }
     setOtpStatus("Vérification du code OTP...", "warning");
 
     try {
+      console.log("[AFB_STEP0_OTP_CLEAN_FORCE_V4] verify", payload);
       const response = await fetch("/api/pre-onboarding/otp/verify", {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
+      const data = await readJson(response);
+      console.log("[AFB_STEP0_OTP_CLEAN_FORCE_V4] verify response", response.status, data);
 
-      const data = await response.json().catch(function () { return {}; });
-
-      if (!response.ok || data.ok === false) {
-        const message = data.detail || data.message || "Code OTP incorrect ou expiré.";
-        setOtpStatus(message, "error");
-        return;
+      if (!response.ok || data.ok === false || data.verified === false) {
+        const msg = extractMessage(data, "Code OTP incorrect ou expiré.");
+        setOtpStatus(msg, "error");
+        return false;
       }
 
-      markOtpVerified(payload.whatsapp_phone, data);
+      localStorage.setItem(VERIFIED_KEY, "true");
+      localStorage.setItem(VERIFIED_PHONE_KEY, contact.phone);
+      localStorage.setItem("diaspora_step0_whatsapp_otp_verified_at", data.verified_at || new Date().toISOString());
+      localStorage.setItem("diaspora_step0_whatsapp_full", contact.phone);
+
+      window.__AFB_STEP0_WHATSAPP_OTP_VERIFIED__ = true;
+      window.__AFB_STEP0_WHATSAPP__ = contact.phone;
+
+      const validateBtn = byId("step0-validate-btn");
+      if (validateBtn) {
+        validateBtn.disabled = false;
+        validateBtn.classList.remove("otp-locked");
+        validateBtn.removeAttribute("disabled");
+      }
+
       setOtpStatus("WhatsApp vérifié avec succès.", "ok");
+      setMainStatus("WhatsApp vérifié avec succès.", true);
+      return false;
 
     } catch (err) {
+      console.error("[AFB_STEP0_OTP_CLEAN_FORCE_V4] verify error", err);
       setOtpStatus("Erreur technique pendant la vérification OTP.", "error");
+      return false;
+
+    } finally {
+      if (verifyBtn) {
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = "Confirmer le code";
+      }
     }
   }
 
-  function attachOtpHandlers() {
-    const sendBtn = document.getElementById("step0-send-otp-btn");
-    const verifyBtn = document.getElementById("step0-verify-otp-btn");
+  function bindCleanOtp() {
+    const sendBtn = byId("step0-send-otp-btn");
+    const verifyBtn = byId("step0-verify-otp-btn");
+    const codeInput = byId("step0-otp-code");
 
-    if (sendBtn && sendBtn.dataset.afbOtpSessionBridge !== "1") {
-      sendBtn.dataset.afbOtpSessionBridge = "1";
+    if (sendBtn && sendBtn.dataset.afbCleanForceV4 !== "1") {
+      sendBtn.dataset.afbCleanForceV4 = "1";
+      sendBtn.textContent = "Recevoir le code WhatsApp";
       sendBtn.addEventListener("click", sendOtp, true);
     }
 
-    if (verifyBtn && verifyBtn.dataset.afbOtpSessionBridge !== "1") {
-      verifyBtn.dataset.afbOtpSessionBridge = "1";
+    if (verifyBtn && verifyBtn.dataset.afbCleanForceV4 !== "1") {
+      verifyBtn.dataset.afbCleanForceV4 = "1";
       verifyBtn.addEventListener("click", verifyOtp, true);
     }
 
-    getSessionId();
+    if (codeInput && codeInput.dataset.afbCleanForceV4 !== "1") {
+      codeInput.dataset.afbCleanForceV4 = "1";
+      codeInput.addEventListener("input", function () {
+        codeInput.value = String(codeInput.value || "").replace(/\D/g, "").slice(0, 6);
+      });
+      codeInput.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") verifyOtp(event);
+      });
+    }
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", attachOtpHandlers);
+    document.addEventListener("DOMContentLoaded", bindCleanOtp);
   } else {
-    attachOtpHandlers();
-  }
-})();
-</script>
-
-
-<!-- AFB_STEP0_OTP_DELIVERY_STATUS_POLL_V1 -->
-<script>
-(function () {
-  const SESSION_KEY = "diaspora_pre_onboarding_session_id";
-
-  function getSessionId() {
-    return localStorage.getItem(SESSION_KEY) || "";
-  }
-
-  function setOtpStatus(message, type) {
-    const status = document.getElementById("step0-otp-status");
-    if (!status) return;
-
-    status.textContent = message || "";
-    status.classList.remove("ok", "error", "warning");
-
-    if (type) {
-      status.classList.add(type);
-    }
-  }
-
-  async function checkOtpDeliveryStatus() {
-    const sessionId = getSessionId();
-    if (!sessionId) return;
-
-    try {
-      const response = await fetch("/api/pre-onboarding/otp/delivery-status/" + encodeURIComponent(sessionId));
-      const data = await response.json().catch(function () { return {}; });
-
-      if (!response.ok || !data.ok) return;
-
-      const liveStatus = String(
-        data.callbell_live_status ||
-        data.whatsapp_delivery_status ||
-        ""
-      ).toUpperCase();
-
-      const errors = data.callbell_live_errors || [];
-      const firstError = errors.length ? errors[0] : null;
-
-      if (liveStatus === "FAILED" || liveStatus === "ERROR") {
-        // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : si un code de secours est
-        // disponible, l'afficher au lieu d'un message d'indisponibilité.
-        if (data.fallback_otp && typeof window.__afbShowOtpCode === "function") {
-          window.__afbShowOtpCode(data.fallback_otp, true);
-          setOtpStatus("La livraison WhatsApp a échoué. Utilisez le code affiché ci-dessous pour continuer.", "warning");
-          return;
-        }
-
-        let message = "Le service de vérification WhatsApp est momentanément indisponible. Veuillez réessayer plus tard.";
-
-        if (firstError && firstError.code === 131042) {
-          message = "Le service de vérification WhatsApp est momentanément indisponible. Veuillez réessayer plus tard.";
-        } else if (firstError && firstError.message) {
-          message = "Échec WhatsApp : " + firstError.message;
-        }
-
-        setOtpStatus(message, "error");
-        return;
-      }
-
-      // AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : « SENT » ne prouve pas la
-      // réception (séquence enqueued -> sent -> failed observée). Seuls
-      // DELIVERED / READ valent confirmation.
-      if (liveStatus === "DELIVERED" || liveStatus === "READ") {
-        setOtpStatus("Code livré sur WhatsApp ✓ Saisissez le code reçu.", "ok");
-        return;
-      }
-
-      if (liveStatus === "SENT" || liveStatus === "ENQUEUED" || liveStatus === "QUEUED" || liveStatus === "PENDING") {
-        setOtpStatus("Envoi du code de sécurité en cours...", "warning");
-      }
-
-    } catch (e) {
-      // Ne pas bloquer l’utilisateur si le polling échoue.
-    }
-  }
-
-  function startOtpDeliveryPolling() {
-    let count = 0;
-
-    const timer = setInterval(function () {
-      count += 1;
-      checkOtpDeliveryStatus();
-
-      if (count >= 8) {
-        clearInterval(timer);
-      }
-    }, 3000);
-  }
-
-  document.addEventListener("click", function (event) {
-    const btn = event.target && event.target.closest
-      ? event.target.closest("#step0-send-otp-btn")
-      : null;
-
-    if (!btn) return;
-
-    setTimeout(startOtpDeliveryPolling, 2500);
-  }, true);
-})();
-</script>
-
-<!-- AFB_OTP_AUTO_VERIFY_V1 : vérification automatique dès 6 chiffres (saisie ou collage) -->
-<script>
-(function () {
-  if (window.__afbOtpAutoVerifyV1) return;
-  window.__afbOtpAutoVerifyV1 = true;
-
-  var lastTried = "";
-
-  function digitsOf(value) {
-    return String(value || "").replace(/\D/g, "");
-  }
-
-  function tryAutoVerify() {
-    var input = document.getElementById("step0-otp-code");
-    if (!input || input.disabled) return;
-
-    var code = digitsOf(input.value).slice(0, 6);
-    if (code.length !== 6 || code === lastTried) return;
-
-    // Nettoie un collage du type "Votre code : 123 456"
-    if (input.value !== code) input.value = code;
-
-    lastTried = code;
-
-    var btn = document.getElementById("step0-verify-otp-btn");
-    if (btn && !btn.disabled) btn.click();
-  }
-
-  function bind() {
-    var input = document.getElementById("step0-otp-code");
-    if (!input || input.dataset.afbAutoVerifyBound === "1") return;
-
-    input.dataset.afbAutoVerifyBound = "1";
-    input.addEventListener("input", function () { setTimeout(tryAutoVerify, 30); });
-    input.addEventListener("paste", function () { setTimeout(tryAutoVerify, 60); });
-  }
-
-  // Un renvoi de code doit permettre une nouvelle tentative automatique,
-  // même si le client colle à nouveau le même code.
-  document.addEventListener("click", function (event) {
-    if (event.target && event.target.closest && event.target.closest("#step0-send-otp-btn")) {
-      lastTried = "";
-    }
-  }, true);
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", bind);
-  } else {
-    bind();
-  }
-
-  setTimeout(bind, 800);
-})();
-</script>
-
-<!-- AFB_STEP0_AUTO_VALIDATE_AFTER_OTP_V1 :
-     après vérification automatique du code OTP, le bouton « Valider mes
-     informations de contact » devient redondant : on le masque, on affiche
-     un loader le temps de rejouer la validation existante, puis le label
-     « Informations de contact validées ». Si le numéro change (OTP réinitialisé),
-     le bouton réapparaît. -->
-<style>
-#step0-otp-validated-box {
-  display: none;
-  align-items: center;
-  gap: 10px;
-  min-height: 42px;
-  font-weight: 900;
-  font-size: 14px;
-}
-
-#step0-otp-validated-box.show { display: inline-flex; }
-
-#step0-otp-validated-box .step0-loader {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  border: 3px solid rgba(201, 0, 0, 0.18);
-  border-top-color: #C90000;
-  animation: step0-validate-spin 0.8s linear infinite;
-}
-
-@keyframes step0-validate-spin {
-  to { transform: rotate(360deg); }
-}
-
-#step0-otp-validated-box .step0-validating-label { color: #6b7280; }
-
-#step0-otp-validated-box .step0-validated-label {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  color: #12805c;
-  background: #ecfdf5;
-  border: 1px solid #bbf7d0;
-  border-radius: 999px;
-  padding: 10px 16px;
-}
-
-#step0-otp-validated-box.done .step0-loader { display: none; }
-#step0-otp-validated-box.done .step0-validating-label { display: none; }
-#step0-otp-validated-box.done .step0-validated-label { display: inline-flex; }
-</style>
-<script>
-(function () {
-  var VERIFIED_KEY = "diaspora_step0_whatsapp_otp_verified";
-  var PHONE_KEY = "diaspora_step0_whatsapp_otp_phone";
-  var LOADER_MS = 1400;
-  var wasVerified = null;
-
-  function currentFullPhone() {
-    if (typeof window.__AFB_BUILD_STEP0_WHATSAPP_FULL__ === "function") {
-      try {
-        return window.__AFB_BUILD_STEP0_WHATSAPP_FULL__() || "";
-      } catch (e) {}
-    }
-    return localStorage.getItem("diaspora_step0_whatsapp_full") || "";
-  }
-
-  function isVerifiedNow() {
-    if (localStorage.getItem(VERIFIED_KEY) !== "true") return false;
-
-    var verifiedPhone = localStorage.getItem(PHONE_KEY) || "";
-    var current = currentFullPhone();
-
-    // même règle que isOtpVerifiedForCurrentPhone : un numéro modifié
-    // invalide la vérification.
-    return !current || !verifiedPhone || verifiedPhone === current;
-  }
-
-  function ensureBox(btn) {
-    var box = document.getElementById("step0-otp-validated-box");
-
-    if (!box) {
-      box = document.createElement("div");
-      box.id = "step0-otp-validated-box";
-      box.innerHTML =
-        '<span class="step0-loader" aria-hidden="true"></span>' +
-        '<span class="step0-validating-label">Validation de vos informations de contact...</span>' +
-        '<span class="step0-validated-label">✓ Informations de contact validées</span>';
-      btn.insertAdjacentElement("afterend", box);
-    }
-
-    return box;
-  }
-
-  function showValidated(btn, withLoader) {
-    var box = ensureBox(btn);
-
-    btn.style.display = "none";
-    box.classList.add("show");
-
-    if (withLoader) {
-      box.classList.remove("done");
-      setTimeout(function () { box.classList.add("done"); }, LOADER_MS);
-    } else {
-      box.classList.add("done");
-    }
-  }
-
-  function showButtonAgain(btn) {
-    var box = document.getElementById("step0-otp-validated-box");
-
-    btn.style.display = "";
-    if (box) box.classList.remove("show", "done");
-  }
-
-  function tick() {
-    var btn = document.getElementById("step0-validate-btn");
-    if (!btn) return;
-
-    var verified = isVerifiedNow();
-    if (verified === wasVerified) return;
-
-    if (verified) {
-      if (wasVerified === false) {
-        // L'OTP vient d'être vérifié : loader, puis rejouer la validation
-        // existante du bouton (validateStep0 + défilement vers la suite).
-        showValidated(btn, true);
-        try { btn.click(); } catch (e) {}
-      } else {
-        // Déjà vérifié au chargement : label direct, sans loader ni défilement.
-        showValidated(btn, false);
-      }
-    } else {
-      showButtonAgain(btn);
-    }
-
-    wasVerified = verified;
-  }
-
-  setInterval(tick, 300);
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", tick);
-  } else {
-    tick();
+    bindCleanOtp();
   }
 })();
 </script>
@@ -10262,3 +8433,4 @@ intro: "Next, enter your email, WhatsApp number and country of residence/locatio
 <!-- AFB_FINAL_CLIENT_COPY_CLEANUP_V1 -->
 
 <!-- AFB_CAMERA_SOURCE_FIXED_BUTTON_DISABLED_V1 -->
+

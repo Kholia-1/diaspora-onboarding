@@ -83,7 +83,7 @@ async def favicon():
 def client_open_account(request: Request):
     return templates.TemplateResponse(
         request,
-        "client_open_account_manager.html"
+        "client_open_account_flow_test.html"
     )
 
 
@@ -224,21 +224,11 @@ def client_status(request: Request):
 
 @router.get("/open-account")
 async def open_account_page(request: Request):
-    return templates.TemplateResponse(request, "client_open_account_manager.html", {"request": request})
+    return templates.TemplateResponse(request, "client_open_account_flow_test.html", {"request": request})
 
 @router.get("/service-unavailable")
 async def service_unavailable_page(request: Request):
     return templates.TemplateResponse(request, "service_unavailable.html", {"request": request})
-
-
-@router.get("/")
-async def portal_home_page(request: Request):
-    return templates.TemplateResponse(request, "portal_home.html", {"request": request})
-
-
-@router.get("/client/open-account")
-async def client_open_account_page(request: Request):
-    return templates.TemplateResponse(request, "client_open_account_manager.html", {"request": request})
 
 
 @router.get("/backoffice/packages")
@@ -256,40 +246,8 @@ async def backoffice_packages_page(request: Request):
 
 @router.get("/open-account-test")
 async def open_account_test_page(request: Request):
-    return templates.TemplateResponse(request, "client_open_account_manager.html", {"request": request})
+    return templates.TemplateResponse(request, "client_open_account_flow_test.html", {"request": request})
 
-@router.get("/api/sectors/active")
-async def get_active_activity_sectors():
-    from pathlib import Path
-    import json
-
-    sectors_file = Path("data/bank_sectors.json")
-
-    if not sectors_file.exists():
-        return []
-
-    try:
-        sectors = json.loads(sectors_file.read_text(encoding="utf-8"))
-    except Exception:
-        return []
-
-    clean = []
-    for item in sectors:
-        if not isinstance(item, dict):
-            continue
-
-        code = str(item.get("code", "")).strip()
-        name = str(item.get("name", "")).strip()
-
-        if code and name:
-            clean.append({
-                "code": code,
-                "name": name
-            })
-
-    return clean
-
-# MANAGER_API_ACTIVITY_SECTORS
 @router.get("/api/sectors/active")
 async def get_active_activity_sectors():
     from pathlib import Path
@@ -336,11 +294,6 @@ async def card_subscription_page(request: Request):
 async def card_reload_page(request: Request):
     return templates.TemplateResponse(request, "client_card_reload.html", {"request": request})
 
-
-# BACKOFFICE_API_INTEGRATIONS_PAGE_V3
-
-
-# BACKOFFICE_API_INTEGRATIONS_PAGE_HTMLRESPONSE_V4
 
 # BACKOFFICE_API_INTEGRATIONS_PAGE_JINJA_V6 — le template étend backoffice_base.html
 @router.get("/backoffice/api-integrations")
