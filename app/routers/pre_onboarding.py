@@ -1434,6 +1434,33 @@ async def pre_onboarding_ocr(
                 "message": "Le fichier contient des indices d'écran back-office interne, pas un RIB bancaire client exploitable."
             }
 
+    # AFB_STAFF_BADGE_GUARD_V1 : un badge d'employé (« Matricule », logo
+    # banque) contient Nom/Prénom et passait pour une pièce d'identité.
+    # Sans marqueur fort d'une vraie pièce, on le signale explicitement.
+    identity_doc_expected = any(
+        marker in str(document_type or "").upper()
+        for marker in ("CNI", "PASSPORT", "IDENTITY", "RESIDENCE", "CONSULAR")
+    )
+    if identity_doc_expected and document_type_validation.get("status") != "DOCUMENT_TYPE_MISMATCH":
+        badge_hits = [
+            s for s in ("matricule", "afriland first bank", "first agent", "badge")
+            if normalize_text(s) in normalized_ocr_for_guard
+        ]
+        strong_identity_marker = re.search(
+            r"REPUBLIQUE|REPUBLIC|CARTE\s*NATIONALE|IDENTITY\s*CARD|PASSEPORT|PASSPORT|NATIONALIT|DELIVRANCE|<<",
+            normalize_text(ocr_text or ""),
+            flags=re.I,
+        )
+        if badge_hits and not strong_identity_marker:
+            document_type_validation = {
+                "status": "DOCUMENT_TYPE_MISMATCH",
+                "expected_category": "IDENTITY",
+                "detected_category": "STAFF_BADGE",
+                "confidence": 90,
+                "signals": badge_hits,
+                "message": "Le fichier ressemble à un badge professionnel, pas à la pièce d'identité attendue.",
+            }
+
     extracted_fields = extract_prefill_fields(account_type, document_type, ocr_text)
 
     # AFB_CNI_SIDE_AWARE_V1 : reconnaître le côté réellement photographié

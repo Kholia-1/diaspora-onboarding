@@ -3812,6 +3812,10 @@
               return isEn ? "Ticket2Cash screen" : "écran Ticket2Cash";
             }
 
+            if (raw === "STAFF_BADGE") {
+              return isEn ? "staff badge / professional card" : "badge professionnel";
+            }
+
             if (raw === "INCOME") {
               return isEn ? "income or payment-related document" : "document de revenu ou de paiement";
             }
@@ -3820,8 +3824,8 @@
               return isEn ? "bank details / RIB" : "RIB ou coordonnées bancaires";
             }
 
-            if (raw === "IDENTITY_DOCUMENT") {
-              return isEn ? "identity document" : "document d’identité";
+            if (raw === "IDENTITY_DOCUMENT" || raw === "IDENTITY") {
+              return isEn ? "identity document" : "pièce d’identité";
             }
 
             if (raw === "ADDRESS_PROOF") {
@@ -3834,10 +3838,21 @@
           const detectedLabel = cleanDetectedDocumentLabel(detected);
           const expectedLabel = cleanDetectedDocumentLabel(expected);
 
+          // AFB_CNI_SIDE_AWARE_V1 : recto photographié à la place du verso
+          // (ou l'inverse) — prioritaire sur « type documentaire cohérent ».
+          const sideInfo = ocrData.document_side || null;
+          const sideMismatch = sideInfo && sideInfo.status === "SIDE_MISMATCH";
+
           if (statusEl && validationStatus.indexOf("MISMATCH") >= 0) {
             statusEl.textContent = isEn
               ? "Document to verify: the uploaded file does not seem to match the requested document type. Expected: " + (expectedLabel || "expected document") + ". Detected: " + (detectedLabel || "other document") + "."
               : "Document à vérifier : le fichier transmis ne semble pas correspondre au type demandé. Attendu : " + (expectedLabel || "document attendu") + ". Détecté : " + (detectedLabel || "autre document") + ".";
+            statusEl.className = "doc-status warning";
+            ocrValidationDisplayed = true;
+          } else if (statusEl && sideMismatch) {
+            statusEl.textContent = isEn
+              ? ("This photo looks like the " + (sideInfo.detected === "RECTO" ? "front" : "back") + " of the ID card, but the " + (sideInfo.declared === "RECTO" ? "front" : "back") + " was expected. Please check which side you photographed.")
+              : (sideInfo.message || "Le côté photographié ne correspond pas à celui attendu (recto/verso). Vérifiez la photo.");
             statusEl.className = "doc-status warning";
             ocrValidationDisplayed = true;
           } else if (statusEl && (validationStatus === "DOCUMENT_TYPE_OK" || validationStatus === "DOCUMENT_TYPE_MATCH" || validationStatus === "OK")) {
@@ -4661,6 +4676,43 @@
     cameraMode = null;
   }
 
+  // AFB_CNI_FRAME_AUTOCROP_V1 : rogne automatiquement la photo à la zone du
+  // cadre affiché (CNI/document). Retourne {sx, sy, sw, sh} en pixels source
+  // vidéo, ou null si le rognage ne s'applique pas (selfie, cadre invisible).
+  function computeFrameCrop(video) {
+    const frame = document.getElementById("advanced-camera-frame");
+    if (!frame || frame.classList.contains("face")) return null;
+
+    const videoRect = video.getBoundingClientRect();
+    const frameRect = frame.getBoundingClientRect();
+    if (!videoRect.width || !videoRect.height || !frameRect.width) return null;
+
+    // La vidéo est affichée en object-fit: contain : on retrouve la zone
+    // réellement occupée par l'image dans l'élément (letterbox).
+    const scale = Math.min(videoRect.width / video.videoWidth, videoRect.height / video.videoHeight);
+    if (!scale || !isFinite(scale)) return null;
+
+    const contentLeft = videoRect.left + (videoRect.width - video.videoWidth * scale) / 2;
+    const contentTop = videoRect.top + (videoRect.height - video.videoHeight * scale) / 2;
+
+    // Petite marge de sécurité autour du cadre (2 %) pour ne pas couper les bords.
+    const margin = 0.02 * Math.min(frameRect.width, frameRect.height);
+
+    let sx = (frameRect.left - margin - contentLeft) / scale;
+    let sy = (frameRect.top - margin - contentTop) / scale;
+    let sw = (frameRect.width + margin * 2) / scale;
+    let sh = (frameRect.height + margin * 2) / scale;
+
+    sx = Math.max(0, Math.min(sx, video.videoWidth - 10));
+    sy = Math.max(0, Math.min(sy, video.videoHeight - 10));
+    sw = Math.min(sw, video.videoWidth - sx);
+    sh = Math.min(sh, video.videoHeight - sy);
+
+    if (sw < 50 || sh < 50) return null;
+
+    return { sx: sx, sy: sy, sw: sw, sh: sh };
+  }
+
   function captureAdvancedPhoto() {
     const video = document.getElementById("advanced-camera-video");
     if (!video || !video.videoWidth || !video.videoHeight) {
@@ -4672,10 +4724,21 @@
     const target = cameraTarget;
     const profile = profileFor(mode, target);
     const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // AFB_CNI_FRAME_AUTOCROP_V1 : on n'enregistre que la partie du flux vidéo
+    // située dans le cadre du document (le rognage est fait à la capture,
+    // avant tout envoi ou analyse).
+    const crop = computeFrameCrop(video);
+    if (crop) {
+      canvas.width = Math.round(crop.sw);
+      canvas.height = Math.round(crop.sh);
+      ctx.drawImage(video, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height);
+    } else {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    }
 
     canvas.toBlob(function (blob) {
       if (!blob) {
@@ -9071,19 +9134,12 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
   }
 
   function markStep0OnboardingDone(phone) {
-    try { sessionStorage.setItem(ONBOARDING_DONE_KEY, phone || "1"); } catch (e) {}
+    // Message éphémère : affiché uniquement dans la foulée de la validation OTP,
+    // NON restauré après un rafraîchissement — cohérent avec les champs du
+    // formulaire qui se vident au reload. On purge toute clé résiduelle d'une
+    // session ouverte avant ce changement.
+    try { sessionStorage.removeItem(ONBOARDING_DONE_KEY); } catch (e) {}
     renderStep0OnboardingSuccess();
-  }
-
-  function restoreStep0OnboardingDone() {
-    try {
-      if (sessionStorage.getItem(ONBOARDING_DONE_KEY)) renderStep0OnboardingSuccess();
-    } catch (e) {}
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", restoreStep0OnboardingDone);
-  } else {
-    restoreStep0OnboardingDone();
   }
 
   async function verifyOtp(event) {
