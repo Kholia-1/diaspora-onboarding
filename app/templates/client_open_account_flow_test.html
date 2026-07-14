@@ -60,8 +60,12 @@
     /* Le logo est une bannière large : on fixe la HAUTEUR (uniforme avec l'accueil du
        portail : 40px) et on laisse la largeur suivre le ratio. */
     .brand-logo img {
-      height: 40px;
+      /* AFB_FLOW_LOGO_SIZE_V2 : largeur alignée sur l'accueil du portail
+         (l'image 376x60 étirée à 40px de haut faisait 251px de large). */
+      max-height: 40px;
+      max-width: 180px;
       width: auto;
+      height: auto;
       object-fit: contain;
       display: block;
     }
@@ -439,7 +443,8 @@
 
     @media(max-width: 640px) {
       .topbar { flex-direction: column; align-items: flex-start; }
-      .brand-logo, .brand-logo img { height: 40px; width: auto; }
+      .brand-logo { height: 36px; }
+      .brand-logo img { max-height: 36px; max-width: 130px; width: auto; height: auto; }
       .doc-card { grid-template-columns: 1fr; }
       .doc-actions { justify-content: flex-start; }
       .media-grid { grid-template-columns: 1fr; }
@@ -8365,6 +8370,54 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
     }
   }
 
+  // AFB_STEP0_ONBOARDING_SUCCESS_V1 : notification de succès + masquage du bloc
+  // de validation WhatsApp, mémorisé pour la SESSION du client.
+  const ONBOARDING_DONE_KEY = "diaspora_step0_onboarding_done_session";
+
+  function renderStep0OnboardingSuccess() {
+    const otpBox = document.getElementById("step0-whatsapp-otp-box");
+    if (otpBox) otpBox.style.display = "none";
+
+    let notice = document.getElementById("step0-onboarding-success");
+    if (!notice) {
+      notice = document.createElement("div");
+      notice.id = "step0-onboarding-success";
+      notice.setAttribute("role", "status");
+      notice.innerHTML =
+        '<div style="font-size:15px;">✅ Onboarding réalisé avec succès.</div>' +
+        '<div style="margin-top:4px;font-weight:500;color:#1b7a43;font-size:13.5px;">' +
+        'Votre numéro WhatsApp est vérifié. Vous pouvez poursuivre votre demande.</div>';
+
+      const anchor = otpBox || document.getElementById("step0-preinscription");
+      if (otpBox && otpBox.parentNode) {
+        otpBox.parentNode.insertBefore(notice, otpBox);
+      } else if (anchor) {
+        anchor.appendChild(notice);
+      } else {
+        return;
+      }
+    }
+    notice.style.cssText =
+      "display:block;margin:0 0 18px;padding:16px 18px;border-radius:12px;" +
+      "background:#E7F7EC;border:1px solid #B7E4C7;color:#166534;font-weight:600;";
+  }
+
+  function markStep0OnboardingDone(phone) {
+    try { sessionStorage.setItem(ONBOARDING_DONE_KEY, phone || "1"); } catch (e) {}
+    renderStep0OnboardingSuccess();
+  }
+
+  function restoreStep0OnboardingDone() {
+    try {
+      if (sessionStorage.getItem(ONBOARDING_DONE_KEY)) renderStep0OnboardingSuccess();
+    } catch (e) {}
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", restoreStep0OnboardingDone);
+  } else {
+    restoreStep0OnboardingDone();
+  }
+
   async function verifyOtp(event) {
     if (event) {
       event.preventDefault();
@@ -8431,6 +8484,8 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
 
       setOtpStatus("WhatsApp vérifié avec succès.", "ok");
       setMainStatus("", true);
+      // Notifier le succès et masquer le bloc de validation WhatsApp pour la session.
+      markStep0OnboardingDone(contact.phone);
       return false;
 
     } catch (err) {
