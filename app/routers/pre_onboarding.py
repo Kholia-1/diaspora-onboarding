@@ -1728,8 +1728,10 @@ async def get_pre_onboarding_session(session_id: str):
 
 # AFB_PRE_ONBOARDING_WHATSAPP_OTP_DEMO_V1
 import hashlib
+import asyncio
 import json
 import os
+import time
 import random
 import re
 import secrets
@@ -1752,6 +1754,44 @@ OTP_SECRET = os.getenv("PRE_ONBOARDING_OTP_SECRET", "diaspora-onboarding-demo-se
 # WhatsApp échoue, le code est renvoyé au client pour affichage à l'écran.
 # Mettre PRE_ONBOARDING_OTP_FALLBACK_DISPLAY=false dès que WhatsApp refonctionne.
 OTP_FALLBACK_DISPLAY = os.getenv("PRE_ONBOARDING_OTP_FALLBACK_DISPLAY", "true").lower() in ("1", "true", "yes", "on")
+
+# AFB_OTP_DELIVERY_CONFIRMED_ONLY_V2
+# Callbell répond « sent » dès qu'il a ACCEPTÉ le message : ce n'est pas une
+# livraison. Sans template AUTHENTICATION approuvé, Meta n'achemine pas les
+# messages en texte libre hors fenêtre de service de 24 h — le message reste
+# « sent » indéfiniment et le client attend un code qui n'arrivera jamais.
+# On attend donc la confirmation de LIVRAISON avant de déclarer l'envoi réussi.
+OTP_DELIVERY_TIMEOUT_S = float(os.getenv("PRE_ONBOARDING_OTP_DELIVERY_TIMEOUT_S", "12"))
+OTP_DELIVERY_POLL_S = float(os.getenv("PRE_ONBOARDING_OTP_DELIVERY_POLL_S", "1.5"))
+_DELIVERED_STATUSES = {"delivered", "read"}
+_FAILED_STATUSES = {"failed", "undelivered", "rejected", "error", "expired"}
+
+
+async def _confirm_whatsapp_delivery(uuid: str | None) -> tuple[bool, str]:
+    """Confirme la LIVRAISON réelle du message Callbell (delivered/read).
+
+    Renvoie (livré, dernier statut connu). Un « sent » qui ne progresse pas
+    signifie : accepté par Meta, jamais remis au téléphone du client.
+    """
+    if not uuid:
+        return False, "NO_MESSAGE_UUID"
+
+    deadline = time.monotonic() + OTP_DELIVERY_TIMEOUT_S
+    status = "sent"
+
+    while True:
+        live = await run_in_threadpool(get_callbell_message_status, uuid)
+        if live.get("success"):
+            status = str(live.get("status") or status or "").lower()
+            if status in _DELIVERED_STATUSES:
+                return True, status.upper()
+            if status in _FAILED_STATUSES:
+                return False, status.upper()
+
+        if time.monotonic() >= deadline:
+            return False, (status or "sent").upper()
+
+        await asyncio.sleep(OTP_DELIVERY_POLL_S)
 
 
 def _utcnow():
@@ -1867,10 +1907,22 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
     callbell_uuid = whatsapp_result.get("callbell_message_uuid") or callbell_message.get("uuid")
     callbell_status = whatsapp_result.get("callbell_message_status") or callbell_message.get("status")
 
-    whatsapp_sent = bool(whatsapp_result.get("success"))
-    whatsapp_status = str(callbell_status or whatsapp_result.get("status") or "UNKNOWN").upper()
+    # AFB_OTP_DELIVERY_CONFIRMED_ONLY_V2 : « accepté par Callbell » ≠ « reçu par
+    # le client ». On ne déclare l'envoi réussi qu'une fois la LIVRAISON
+    # confirmée ; sinon on bascule sur le repli (code affiché à l'écran).
+    whatsapp_accepted = bool(whatsapp_result.get("success"))
 
+    if whatsapp_accepted:
+        whatsapp_delivered, whatsapp_status = await _confirm_whatsapp_delivery(callbell_uuid)
+    else:
+        whatsapp_delivered = False
+        whatsapp_status = str(callbell_status or whatsapp_result.get("status") or "UNKNOWN").upper()
+
+    whatsapp_sent = whatsapp_delivered
+
+    record["whatsapp_accepted"] = whatsapp_accepted
     record["whatsapp_sent"] = whatsapp_sent
+    record["whatsapp_delivered"] = whatsapp_delivered
     record["whatsapp_delivery_status"] = whatsapp_status
     record["whatsapp_delivery_at"] = _utcnow().isoformat()
     record["whatsapp_http_status"] = whatsapp_result.get("http_status")
@@ -1884,16 +1936,23 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
 
     response = {
         "ok": whatsapp_sent or OTP_DEMO_MODE,
-        # AFB_OTP_DELIVERY_CONFIRMED_ONLY_V1 : à ce stade Callbell a seulement
-        # accepté le message ; la livraison n'est pas encore confirmée.
-        "message": "Code OTP en cours d'envoi via WhatsApp." if whatsapp_sent else "Code OTP généré mais non envoyé par WhatsApp.",
+        # AFB_OTP_DELIVERY_CONFIRMED_ONLY_V2 : le message ne parle plus d'un envoi
+        # « en cours » quand Meta n'a jamais remis le message (statut figé à « sent »).
+        "message": (
+            "Code OTP reçu sur WhatsApp."
+            if whatsapp_delivered
+            else "WhatsApp n'a pas remis le code au client."
+        ),
         "phone": phone,
         "expires_at": expires_at,
         "demo_mode": OTP_DEMO_MODE,
         "whatsapp_sent": whatsapp_sent,
+        "whatsapp_accepted": whatsapp_accepted,
+        "whatsapp_delivered": whatsapp_delivered,
         "whatsapp_delivery_status": whatsapp_status,
         "delivery": {
-            "success": whatsapp_sent,
+            "success": whatsapp_delivered,
+            "accepted": whatsapp_accepted,
             "status": whatsapp_status,
             "http_status": whatsapp_result.get("http_status"),
             "provider": whatsapp_result.get("provider"),
