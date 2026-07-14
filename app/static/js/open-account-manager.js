@@ -560,7 +560,7 @@ const API_BASE = "";
 
         const stepperLang = (localStorage.getItem("diaspora_client_lang") === "en") ? "en" : "fr";
         const shortLabels = {
-            "0": {fr: "Pré-inscription", en: "Pre-registration"},
+            "0": {fr: "Documents à fournir", en: "Required documents"},
             "1": {fr: "Identité", en: "Identity"},
             "2": {fr: "Parents / tuteurs", en: "Parents / guardians"},
             "3": {fr: "Coordonnées", en: "Contact details"},
@@ -583,8 +583,8 @@ const API_BASE = "";
         preItem.type = "button";
         preItem.className = "step-item" + (preDone ? " is-done" : "");
         preItem.title = stepperLang === "en"
-            ? "Pre-registration (WhatsApp verification and documents)"
-            : "Pré-inscription (vérification WhatsApp et documents)";
+            ? "Required documents (WhatsApp verification and document capture)"
+            : "Documents à fournir (vérification WhatsApp et capture des documents)";
         preItem.innerHTML = '<div class="step' + (preDone ? ' done' : '') + '">' + (preDone ? "✓" : "0") + '</div><div class="step-label">' + stepLabel("0") + '</div>';
         stepper.appendChild(preItem);
 
@@ -11251,6 +11251,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ["Document attendu : registre de commerce, justificatif fiscal ou preuve d'activité commerciale.", "Expected document: business registration, tax certificate, or proof of business activity."],
 
         ["Pré-inscription", "Pre-registration"],
+        ["Documents à fournir", "Required documents"],
         ["Identité", "Identity"],
         ["Parents / tuteurs", "Parents / guardians"],
         ["Pièce & activité", "ID & activity"],
@@ -14118,6 +14119,19 @@ document.addEventListener("DOMContentLoaded", function () {
             return "";
         })();
 
+        // AFB_CNI_SIDE_AWARE_V1 : père/mère extraits du verso de la CNI.
+        // Convention CNI camerounaise : le nom de famille est en tête.
+        function splitParentName(full) {
+            const parts = String(full || "").trim().split(/\s+/).filter(Boolean);
+            return {
+                last: parts[0] || "",
+                first: parts.slice(1).join(" ")
+            };
+        }
+
+        const father = splitParentName(prefill.father_full_name);
+        const mother = splitParentName(prefill.mother_full_name);
+
         const mapping = [
             ["last_name", prefill.last_name || prefill.surname, false],
             ["first_name", prefill.first_name || prefill.given_names, false],
@@ -14129,7 +14143,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 false
             ],
             ["identity_document_issue_date", prefill.identity_issue_date, true],
-            ["sex", sexValue, false]
+            ["sex", sexValue, false],
+            ["father_last_name_ui", father.last, false],
+            ["father_first_name_ui", father.first, false],
+            ["mother_last_name_ui", mother.last, false],
+            ["mother_first_name_ui", mother.first, false]
         ];
 
         const conflicts = [];

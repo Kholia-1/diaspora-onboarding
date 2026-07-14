@@ -21,7 +21,7 @@ from app.services.document_auth_service import (  # noqa: E402
     extract_text_with_best_engine,
     validate_document_type_against_ocr,
 )
-from app.routers.pre_onboarding import extract_prefill_fields  # noqa: E402
+from app.routers.pre_onboarding import extract_prefill_fields, detect_cni_side  # noqa: E402
 
 KEY_FIELDS = [
     "last_name",
@@ -32,6 +32,8 @@ KEY_FIELDS = [
     "identity_issue_date",
     "identity_expiry_date",
     "sex",
+    "father_full_name",
+    "mother_full_name",
 ]
 
 
@@ -69,10 +71,15 @@ def main() -> None:
         text = ocr.get("text", "") or ""
         validation = validate_document_type_against_ocr(doc_type, text)
         fields = extract_prefill_fields("PERSONAL", doc_type, text)
+        side = detect_cni_side(text)
 
         (texts_dir / (path.stem + ".txt")).write_text(text, encoding="utf-8")
 
         found = {k: fields.get(k) for k in KEY_FIELDS if fields.get(k)}
+        declared_side = "RECTO" if doc_type == "CNI_RECTO" else "VERSO"
+        side_flag = side.get("detected_side", "?")
+        side_note = side_flag if side_flag == declared_side else f"{side_flag}!"
+
         entry = {
             "file": path.name,
             "document_type": doc_type,
@@ -80,15 +87,17 @@ def main() -> None:
             "text_length": len(text),
             "type_validation": validation.get("status"),
             "detected_category": validation.get("detected_category"),
+            "detected_side": side_flag,
+            "side_scores": {"recto": side.get("recto_score"), "verso": side.get("verso_score")},
             "fields_found": found,
             "all_fields": fields,
         }
         report.append(entry)
 
+        fields_txt = ", ".join(sorted(found)) if found else "(aucun champ)"
         print(
-            f"{path.name[:52]:52} | {entry['type_validation'] or '?':24} "
-            f"| txt {len(text):4} | " + ", ".join(sorted(found)) if found else
-            f"{path.name[:52]:52} | {entry['type_validation'] or '?':24} | txt {len(text):4} | (aucun champ)"
+            f"{path.name[:52]:52} | {entry['type_validation'] or '?':22} "
+            f"| côté {side_note:8} | txt {len(text):4} | {fields_txt}"
         )
 
     out = ROOT / "data" / "ocr_corpus_report.json"

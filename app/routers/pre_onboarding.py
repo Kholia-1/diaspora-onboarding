@@ -610,7 +610,22 @@ def v2_parse_name_from_mrz(text: str) -> dict[str, str]:
         if "<<" not in candidate:
             continue
 
-        left, right = candidate.split("<<", 1)
+        # AFB_CNI_MRZ_FUSED_LINES_V1 : RapidOCR fusionne souvent les 3 lignes
+        # MRZ en une seule (« 9911053M...<<<<7I<CMR...<<<<<YEDNA<NZOGUE<<ULRICH
+        # <VIANNEY<< »). Le segment des noms est celui dont la partie gauche
+        # ne contient AUCUN chiffre : on choisit ce candidat plutôt que le
+        # premier « << » rencontré.
+        left = None
+        right = None
+        for m in re.finditer(r"([A-Z][A-Z<]{2,}?)<<([A-Z][A-Z<]*)", candidate):
+            left_candidate = m.group(1)
+            if re.search(r"\d", left_candidate):
+                continue
+            left = left_candidate
+            right = m.group(2)
+
+        if left is None:
+            left, right = candidate.split("<<", 1)
 
         # Nettoyer préfixes parasites
         left = re.sub(r"^(IDCMR|CMR|I?DCMR|P<CMR|POCMR)", "", left)
@@ -666,7 +681,9 @@ def v2_extract_names(text: str) -> dict[str, str]:
             lines,
             [
                 r"\bNOM\s*/?\s*SURNAME\b",
-                r"\bNOMS?\b",
+                # AFB_CNI_SIDE_AWARE_V1 : ne jamais confondre le NOM du
+                # titulaire avec « NOM DU PERE » / « NOM DE LA MERE » du verso.
+                r"\bNOMS?\b(?!\s*(?:DU\s*PERE|DE\s*LA\s*MERE|DU|DE\s*LA)\b)",
                 r"\bSURNAME\b",
                 r"\bSURNAMES\b",
                 r"\bSURAAWE\b",
@@ -724,6 +741,139 @@ def v2_extract_names(text: str) -> dict[str, str]:
         result["full_name"] = result["first_name"]
 
     return result
+
+
+# AFB_CNI_SIDE_AWARE_V1 — bande MRZ TD1 de l'ancienne CNI (verso).
+# Ligne 2 : AAMMJJ + clé + sexe + AAMMJJ (expiration) + clé + nationalité.
+# Exemple OCR réel : « 9911053m3511037cMR<<<<<<<<<<<7 » -> naissance 05/11/1999,
+# sexe M, expiration 03/11/2035. Source la plus fiable du verso.
+def v2_parse_mrz_td1(text: str) -> dict[str, str]:
+    result: dict[str, str] = {}
+
+    def century(yy: int, is_birth: bool) -> int:
+        if is_birth:
+            return 1900 + yy if yy > 30 else 2000 + yy
+        return 2000 + yy
+
+    for raw_line in (text or "").splitlines():
+        compact = re.sub(r"[^A-Z0-9<]", "", raw_line.upper())
+
+        m = re.search(r"(\d{2})(\d{2})(\d{2})\d([MF])(\d{2})(\d{2})(\d{2})\d", compact)
+        if m:
+            by, bm, bd = int(m.group(1)), int(m.group(2)), int(m.group(3))
+            ey, em, ed = int(m.group(5)), int(m.group(6)), int(m.group(7))
+
+            if 1 <= bm <= 12 and 1 <= bd <= 31:
+                result["birth_date"] = f"{bd:02d}/{bm:02d}/{century(by, True)}"
+            if 1 <= em <= 12 and 1 <= ed <= 31:
+                result["identity_expiry_date"] = f"{ed:02d}/{em:02d}/{century(ey, False)}"
+
+            result["sex"] = m.group(4)
+
+        # Ligne 1 : I<CMR + numéro de document (9 chiffres + clé).
+        m = re.search(r"I?[<D]?CMR(\d{9})", compact)
+        if m and "cni_number" not in result:
+            result["cni_number"] = m.group(1)
+
+    return result
+
+
+# AFB_CNI_SIDE_AWARE_V1 — noms du père et de la mère (verso).
+# RapidOCR imprime souvent la valeur AVANT son libellé sur la même ligne :
+# « YEDNA ADELE MARIE SOLANGE NOMDE LA MERE/MOTHER'S NAME ».
+def v2_extract_parent_names(text: str) -> dict[str, str]:
+    result: dict[str, str] = {}
+    lines = v2_lines(text)
+
+    targets = [
+        ("mother_full_name", r"NOM\s*DE\s*LA\s*MERE|NOMDE\s*LA\s*MERE|MOTHER'?S?\s*NAME|M[0O]THER"),
+        ("father_full_name", r"NOM\s*DU\s*PERE|NOMDU\s*PERE|FATHER'?S?\s*NAME|FATHER"),
+    ]
+
+    for key, pattern in targets:
+        for line in lines:
+            nline = normalize_text(line)
+            m = re.search(pattern, nline, flags=re.I)
+            if not m:
+                continue
+
+            # Mots immédiatement avant le libellé (jusqu'à 4), sans déborder
+            # sur le libellé précédent (père/mère se suivent souvent).
+            before = nline[:m.start()]
+            before = re.split(r"NAME|MERE|PERE|MOTHER|FATHER|S\s*P\s*S\s*M", before, flags=re.I)[-1]
+            candidate = v2_clean_name(" ".join(before.split()[-4:]))
+
+            if not candidate:
+                after = nline[m.end():]
+                candidate = v2_clean_name(" ".join(after.split()[:4]))
+
+            if candidate:
+                result[key] = candidate
+                break
+
+    return result
+
+
+# AFB_CNI_SIDE_AWARE_V1 — reconnaître de quel côté de la CNI provient le texte,
+# indépendamment de ce que l'utilisateur a déclaré (recto photographié comme
+# verso et inversement : cas fréquents observés dans le corpus réel).
+def detect_cni_side(ocr_text: str) -> dict[str, Any]:
+    t = normalize_text(ocr_text or "")
+    compact = t.replace(" ", "")
+
+    recto_score = 0
+    verso_score = 0
+    signals: list[str] = []
+
+    def hit(side: str, points: int, label: str):
+        nonlocal recto_score, verso_score
+        if side == "R":
+            recto_score += points
+        else:
+            verso_score += points
+        signals.append(f"{'recto' if side == 'R' else 'verso'}:{label}")
+
+    if re.search(r"NOM\s*/?\s*SURNAME|SURNAME", t):
+        hit("R", 25, "nom_surname")
+    if re.search(r"PRENOM|GIVEN\s*NAME|RENOMS", t):
+        hit("R", 25, "prenoms")
+    if re.search(r"NAISSANCE|BIRTH", t) and not re.search(r"LIEU|PLACE", t):
+        hit("R", 10, "naissance")
+    if re.search(r"SEXE|SEX\b", t):
+        hit("R", 10, "sexe")
+    if re.search(r"CARTE\s*NATIONALE|NATIONAL\s*IDENTITY|IDENTITY\s*CAR", t):
+        hit("R", 10, "titre_carte")
+
+    if "<<" in (ocr_text or ""):
+        hit("V", 40, "mrz")
+    if re.search(r"DELIVRANCE|DATE\s*OF\s*ISSUE|DELI[VY]RAN", t):
+        hit("V", 30, "delivrance")
+    if re.search(r"PERE|MERE|FATHER|MOTHER", t):
+        hit("V", 30, "parents")
+    if re.search(r"POSTE\s*D\s*IDENTIFICATION|IDENTIFICATION\s*POST|AUTORITE|AUTHORIT", t):
+        hit("V", 20, "autorite")
+    if re.search(r"MBARGA\s*NGUELE", t):
+        hit("V", 20, "signature_dgsn")
+    if re.search(r"(?<!\d)20\d{15}(?!\d)", compact):
+        hit("V", 20, "identifiant_unique")
+    if re.search(r"ADRESSE|ADDRESS", t):
+        hit("V", 10, "adresse")
+
+    if recto_score == 0 and verso_score == 0:
+        detected = "UNKNOWN"
+    elif recto_score >= verso_score + 15:
+        detected = "RECTO"
+    elif verso_score >= recto_score + 15:
+        detected = "VERSO"
+    else:
+        detected = "UNKNOWN"
+
+    return {
+        "detected_side": detected,
+        "recto_score": recto_score,
+        "verso_score": verso_score,
+        "signals": signals,
+    }
 
 
 def v2_extract_dates(text: str) -> list[str]:
@@ -933,6 +1083,20 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
 
     names = v2_extract_names(ocr_text)
     fields.update(names)
+
+    # AFB_CNI_SIDE_AWARE_V1 : la bande MRZ (verso ancienne CNI) est la source
+    # la plus fiable — elle complète naissance, sexe, expiration et numéro.
+    mrz = v2_parse_mrz_td1(ocr_text)
+    for key in ("birth_date", "sex", "identity_expiry_date", "cni_number"):
+        if mrz.get(key) and not fields.get(key):
+            fields[key] = mrz[key]
+
+    if mrz.get("cni_number"):
+        fields.setdefault("identity_document_number", mrz["cni_number"])
+
+    # Noms du père et de la mère (verso).
+    parents = v2_extract_parent_names(ocr_text)
+    fields.update(parents)
 
     birth_date = v2_find_date_near_keywords(
         ocr_text,
@@ -1272,6 +1436,38 @@ async def pre_onboarding_ocr(
 
     extracted_fields = extract_prefill_fields(account_type, document_type, ocr_text)
 
+    # AFB_CNI_SIDE_AWARE_V1 : reconnaître le côté réellement photographié
+    # (les inversions recto/verso sont fréquentes dans le corpus réel).
+    document_side = None
+    if "CNI" in str(document_type or "").upper():
+        side = detect_cni_side(ocr_text)
+        declared = "RECTO" if "RECTO" in str(document_type).upper() else "VERSO"
+
+        side_status = "SIDE_UNKNOWN"
+        side_message = None
+
+        if side["detected_side"] != "UNKNOWN":
+            if side["detected_side"] == declared:
+                side_status = "SIDE_MATCH"
+            else:
+                side_status = "SIDE_MISMATCH"
+                side_message = (
+                    "Cette photo ressemble au "
+                    + ("recto" if side["detected_side"] == "RECTO" else "verso")
+                    + " de la CNI alors que le "
+                    + ("recto" if declared == "RECTO" else "verso")
+                    + " était attendu. Vérifiez le côté photographié."
+                )
+
+        document_side = {
+            "declared": declared,
+            "detected": side["detected_side"],
+            "status": side_status,
+            "message": side_message,
+            "recto_score": side["recto_score"],
+            "verso_score": side["verso_score"],
+        }
+
     # AFB_OCR_FIELDS_SERVER_PERSIST_V1
     if session_id and extracted_fields:
         try:
@@ -1281,6 +1477,7 @@ async def pre_onboarding_ocr(
 
     return {
         "status": "OK",
+        "document_side": document_side,
         "account_type": account_type,
         "document_type": document_type,
         "filename": file.filename,
