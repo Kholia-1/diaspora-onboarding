@@ -1859,6 +1859,157 @@
   }
 </style>
 
+<style>
+/* AFB_TOPNAV_PROCESS_ACTIVE_V2 — menu commun style accueil (desktop) :
+   pilules centrées, élément « Ouverture de compte » actif. */
+.topbar .topnav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.topbar .topnav a {
+  text-decoration: none;
+  color: var(--text, #1f2937);
+  border: none;
+  background: transparent;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: 0.15s ease;
+}
+
+.topbar .topnav a:hover {
+  background: rgba(201, 0, 0, 0.08);
+  color: var(--red);
+}
+
+.topbar .topnav a.active {
+  background: var(--red);
+  color: #fff;
+}
+
+/* AFB_MOBILE_BURGER_NAV_V2 — menu hamburger en vue mobile */
+.nav-toggle {
+  display: none;
+  background: #fff;
+  border: 1px solid #f0c3c6;
+  border-radius: 12px;
+  padding: 8px 10px;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--red);
+  margin: 4px 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.nav-toggle[aria-expanded="true"] span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+@media (max-width: 900px) {
+  /* Header sur une seule ligne : logo/titre à gauche, langue + burger à droite
+     (annule le passage en colonne de la media query 640px plus haut) */
+  .topbar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar .brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 10px;
+  }
+
+  .topbar .brand > div {
+    min-width: 0;
+  }
+
+  .topbar .brand h1 {
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar .brand p {
+    display: none;
+  }
+
+  .topbar-actions {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    margin-left: auto;
+  }
+
+  .nav-toggle {
+    display: block;
+  }
+
+  /* Le menu devient un panneau déroulant sous le header sticky */
+  .topbar .topnav {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 20px 32px rgba(15, 23, 42, 0.14);
+    padding: 14px 18px 18px;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 10px;
+    flex-wrap: nowrap;
+    overflow: visible;
+  }
+
+  .topbar .topnav.open {
+    display: flex;
+  }
+
+  .topbar .topnav a {
+    display: block;
+    text-align: center;
+    font-size: 15px;
+    padding: 12px 14px;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Très petit écran : le titre (répété dans le contenu) laisse
+     la place au logo + langue + burger sans troncature disgracieuse */
+  .topbar .brand h1 {
+    display: none;
+  }
+}
+</style>
+
 </head>
 
 <body>
@@ -1873,14 +2024,57 @@
       </div>
     </div>
 
+    <!-- AFB_TOPNAV_PROCESS_ACTIVE_V2 : menu commun, parcours en cours actif -->
+    <nav class="topnav" id="topnavMenu" aria-label="Menu des services">
+      <a href="/" data-i18n="nav.home">Accueil</a>
+      <a href="/open-account-flow-test" class="active" aria-current="page" data-i18n="nav.open_account">Ouverture de compte</a>
+      <a href="/souscrire-carte" data-i18n="nav.card">Carte bancaire</a>
+      <a href="/recharger-carte" data-i18n="nav.topup">Recharge de carte</a>
+    </nav>
+
     <div class="topbar-actions">
       <div class="lang-switcher" aria-label="Language selector">
         <button id="lang-fr" type="button">FR</button>
         <button id="lang-en" type="button">EN</button>
       </div>
-      <a href="/" data-i18n="nav.back_home">Retour accueil</a>
+
+      <!-- AFB_MOBILE_BURGER_NAV_V2 : bouton hamburger (visible <= 900px) -->
+      <button type="button" class="nav-toggle" id="navToggle" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="topnavMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </header>
+
+  <script>
+  /* AFB_MOBILE_BURGER_NAV_V2 : ouverture/fermeture du menu mobile */
+  (function () {
+    var btn = document.getElementById("navToggle");
+    var nav = document.getElementById("topnavMenu");
+    if (!btn || !nav) return;
+
+    function setOpen(open) {
+      nav.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+      btn.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
+    }
+
+    btn.addEventListener("click", function () {
+      setOpen(!nav.classList.contains("open"));
+    });
+
+    nav.addEventListener("click", function (event) {
+      if (event.target.closest("a")) setOpen(false);
+    });
+
+    document.addEventListener("click", function (event) {
+      if (!nav.classList.contains("open")) return;
+      if (event.target.closest(".topbar")) return;
+      setOpen(false);
+    });
+  })();
+  </script>
   <main class="page">
 
   <!-- AFB_REMOTE_ACCOUNT_WELCOME_ABOVE_PREONBOARDING_V1 -->
@@ -1983,11 +2177,20 @@
         function initFlowGate() {
           var page = document.querySelector('main.page');
           var startBtn = document.getElementById('start-preinscription-btn');
-          if (!page || !startBtn) return;
-          startBtn.addEventListener('click', function () {
-            page.classList.add('flow-started');
-            try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
-          });
+          if (!page) return;
+          // Sur mobile, l'intro/étapes est masquée : on affiche DIRECTEMENT le formulaire
+          // (sinon il ne resterait qu'un bouton « Commencer » isolé sur une page vide).
+          try {
+            if (window.matchMedia('(max-width: 768px)').matches) {
+              page.classList.add('flow-started');
+            }
+          } catch (e) {}
+          if (startBtn) {
+            startBtn.addEventListener('click', function () {
+              page.classList.add('flow-started');
+              try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) { window.scrollTo(0, 0); }
+            });
+          }
         }
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', initFlowGate);
@@ -2618,6 +2821,10 @@
           "title.account_opening": "Ouverture de compte",
           "title.customer_file_preparation": "Préparez votre dossier",
           "nav.back_home": "Retour accueil",
+          "nav.home": "Accueil",
+          "nav.open_account": "Ouverture de compte",
+          "nav.card": "Carte bancaire",
+          "nav.topup": "Recharge de carte",
           "intro.badge": "Pré-onboarding",
           "intro.heading": "Préparer votre demande d’ouverture de compte",
           "steps.choose_account.title": "Choisir le type de compte",
@@ -2693,6 +2900,10 @@
           "title.account_opening": "Account opening",
           "title.customer_file_preparation": "Prepare your file",
           "nav.back_home": "Back to home",
+          "nav.home": "Home",
+          "nav.open_account": "Account opening",
+          "nav.card": "Bank card",
+          "nav.topup": "Card top-up",
           "intro.badge": "Pre-onboarding",
           "intro.heading": "Prepare your account opening request",
           "steps.choose_account.title": "Choose the account type",
@@ -3310,6 +3521,45 @@
         status.className = "doc-status" + (className ? " " + className : "");
       }
 
+      // AFB_FACE_MATCH_V1 : résume le résultat de la comparaison faciale
+      // sous la carte vidéo (conforme / non conforme / visage non détecté).
+      function showFaceMatchVerdict(faceMatch) {
+        const status = document.getElementById("status-CLIENT_VIDEO");
+        if (!status || !faceMatch) return;
+
+        if (faceMatch.status !== "OK") {
+          if (faceMatch.status === "NO_FACE_DETECTED") {
+            status.textContent = "Vidéo enregistrée, mais aucun visage n'y a été détecté — reprenez la vidéo.";
+            status.className = "doc-status warning";
+          }
+          return;
+        }
+
+        const refs = faceMatch.references || {};
+        const cni = refs.cni_recto && refs.cni_recto.status === "MATCH"
+          ? refs.cni_recto
+          : (refs.cni_verso && refs.cni_verso.status === "MATCH" ? refs.cni_verso : (refs.cni_recto || refs.cni_verso));
+        const photo = refs.client_photo;
+
+        const cniOk = cni && cni.status === "MATCH";
+        const photoOk = photo && photo.status === "MATCH";
+        const cniKo = cni && cni.status === "MISMATCH";
+        const photoKo = photo && photo.status === "MISMATCH";
+
+        if (cniOk && (photoOk || !photo)) {
+          status.textContent = "Vidéo transmise ✓ Visage vérifié : conforme à la pièce d'identité" + (photoOk ? " et à votre photo." : ".");
+          status.className = "doc-status ok";
+        } else if (cniKo || photoKo) {
+          status.textContent = "Vidéo transmise, mais le visage ne correspond pas à " +
+            (cniKo ? "la pièce d'identité" : "votre photo") +
+            ". Reprenez la vidéo ou vérifiez vos documents.";
+          status.className = "doc-status warning";
+        } else {
+          status.textContent = "Vidéo transmise ✓ (comparaison faciale : portrait de référence non détecté).";
+          status.className = "doc-status ok";
+        }
+      }
+
       function withTimeout(promiseFactory, milliseconds) {
         const controller = new AbortController();
         const timer = setTimeout(function () { controller.abort(); }, milliseconds);
@@ -3336,6 +3586,12 @@
         savedDocuments[documentType] = data;
         localStorage.setItem(SAVED_DOCS_KEY, JSON.stringify(savedDocuments));
         persistOcrResults();
+
+        // AFB_FACE_MATCH_V1 : verdict de la reconnaissance faciale (vidéo
+        // comparée au portrait de la CNI et à la photo du client).
+        if (documentType === "CLIENT_VIDEO" && data && data.face_match) {
+          showFaceMatchVerdict(data.face_match);
+        }
         updateContinueAvailability();
         return data;
       }
@@ -4335,6 +4591,111 @@
     }, "image/jpeg", 0.92);
   }
 
+  // AFB_FACE_MATCH_V1 : plus de démarrage manuel obligatoire — un visage
+  // réellement détecté (YuNet côté serveur, sur de petites frames d'aperçu)
+  // déclenche l'enregistrement de lui-même. Le bouton « Démarrer » reste en
+  // secours si le réseau ou la détection sont indisponibles.
+  let videoFaceWatchTimer = null;
+  let videoFaceStable = 0;
+
+  function setVideoFrameDetected(detected) {
+    const modal = document.getElementById("advanced-video-modal");
+    const frame = modal ? modal.querySelector(".advanced-frame") : null;
+    if (frame) frame.classList.toggle("detected", Boolean(detected));
+  }
+
+  function setVideoGuidance(message) {
+    const modal = document.getElementById("advanced-video-modal");
+    const guidance = modal ? modal.querySelector(".advanced-guidance") : null;
+    if (guidance) guidance.textContent = message;
+  }
+
+  function stopVideoFaceWatch() {
+    if (videoFaceWatchTimer) {
+      clearInterval(videoFaceWatchTimer);
+      videoFaceWatchTimer = null;
+    }
+    videoFaceStable = 0;
+    setVideoFrameDetected(false);
+  }
+
+  function snapshotVideoPreview(preview) {
+    return new Promise(function (resolve) {
+      try {
+        const scale = Math.min(1, 320 / (preview.videoWidth || 320));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(8, Math.round((preview.videoWidth || 320) * scale));
+        canvas.height = Math.max(8, Math.round((preview.videoHeight || 240) * scale));
+        canvas.getContext("2d").drawImage(preview, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) { resolve(blob); }, "image/jpeg", 0.7);
+      } catch (error) {
+        resolve(null);
+      }
+    });
+  }
+
+  function startVideoFaceWatch() {
+    stopVideoFaceWatch();
+
+    const preview = document.getElementById("advanced-video-preview");
+    if (!preview) return;
+
+    let inFlight = false;
+
+    setVideoGuidance(text(
+      "Placez votre visage au centre : l'enregistrement démarre automatiquement.",
+      "Center your face: recording starts automatically."
+    ));
+
+    videoFaceWatchTimer = setInterval(async function () {
+      if (inFlight) return;
+      if (!videoStream) { stopVideoFaceWatch(); return; }
+      if (recorder && recorder.state === "recording") { stopVideoFaceWatch(); return; }
+      if (!preview.videoWidth || !preview.videoHeight) return;
+
+      inFlight = true;
+
+      try {
+        const blob = await snapshotVideoPreview(preview);
+        if (!blob) return;
+
+        const formData = new FormData();
+        formData.append("file", blob, "frame.jpg");
+
+        const response = await fetch("/api/pre-onboarding/face-detect", { method: "POST", body: formData });
+        const data = await response.json().catch(function () { return {}; });
+
+        if (!videoStream || (recorder && recorder.state === "recording")) return;
+
+        if (data && data.ok && data.face) {
+          videoFaceStable += 1;
+          setVideoFrameDetected(true);
+          setVideoGuidance(text("Visage détecté — démarrage...", "Face detected — starting..."));
+
+          if (videoFaceStable >= 2) {
+            stopVideoFaceWatch();
+            startAdvancedVideoRecording();
+            setVideoGuidance(text(
+              "Enregistrement en cours... Regardez la caméra et parlez naturellement.",
+              "Recording... Look at the camera and speak naturally."
+            ));
+          }
+        } else {
+          videoFaceStable = 0;
+          setVideoFrameDetected(false);
+          setVideoGuidance(text(
+            "Placez votre visage au centre : l'enregistrement démarre automatiquement.",
+            "Center your face: recording starts automatically."
+          ));
+        }
+      } catch (error) {
+        // Réseau ou détection indisponible : le bouton « Démarrer » reste le secours.
+      } finally {
+        inFlight = false;
+      }
+    }, 500);
+  }
+
   async function openAdvancedVideo() {
     const modal = document.getElementById("advanced-video-modal");
     const preview = document.getElementById("advanced-video-preview");
@@ -4360,6 +4721,9 @@
       if (stopBtn) stopBtn.disabled = true;
       modal.classList.add("show");
       modal.setAttribute("aria-hidden", "false");
+
+      // AFB_FACE_MATCH_V1 : démarrage automatique dès que le visage est détecté.
+      startVideoFaceWatch();
       return true;
     } catch (error) {
       console.warn("Enregistrement vidéo direct indisponible:", error);
@@ -4372,6 +4736,8 @@
     const preview = document.getElementById("advanced-video-preview");
     const startBtn = document.getElementById("advanced-video-start");
     const stopBtn = document.getElementById("advanced-video-stop");
+
+    stopVideoFaceWatch();
 
     if (videoAutoStop) {
       clearTimeout(videoAutoStop);
@@ -4398,6 +4764,8 @@
   }
 
   function startAdvancedVideoRecording() {
+    stopVideoFaceWatch();
+
     const startBtn = document.getElementById("advanced-video-start");
     const stopBtn = document.getElementById("advanced-video-stop");
 
