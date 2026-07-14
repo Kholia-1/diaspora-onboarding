@@ -3,9 +3,30 @@ import { Router } from '@angular/router';
 import { OnbSectionCard, OnbStepNav } from '../ui/section-card';
 import { OnbFormField, OnbInput, OnbSelect } from '../ui/form-field';
 import { OnbStepperRail, StepDef } from '../ui/stepper-rail';
-import { DiasporaApi } from '../core/diaspora-api.service';
-import { ApplicationCreate, Country, Nationality, Agency } from '../core/application.model';
+import { OnbIdCapture } from '../ui/id-capture';
+import { DiasporaApi, OcrExtractedFields } from '../core/diaspora-api.service';
+import { ApplicationCreate, ApplicationResponse, Country, Nationality, Agency } from '../core/application.model';
 import { ONBOARDING_STEPS } from '../core/onboarding-flow';
+
+/** JJ/MM/AAAA (ou AAAA/MM/JJ) → ISO AAAA-MM-JJ ; '' si non parsable. */
+function toIsoDate(value: string): string {
+  const s = (value || '').trim();
+  let m = s.match(/^(\d{2})[/.\-](\d{2})[/.\-](\d{4})$/); // JJ/MM/AAAA
+  if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+  m = s.match(/^(\d{4})[/.\-](\d{2})[/.\-](\d{2})$/); // AAAA/MM/JJ (déjà ~ISO)
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  return '';
+}
+
+/** Correspondance champ OCR (extracted_fields) → champ du modèle ApplicationCreate. */
+const OCR_TO_MODEL: [keyof OcrExtractedFields, string][] = [
+  ['last_name', 'last_name'],
+  ['first_name', 'first_name'],
+  ['birth_date', 'birth_date'],
+  ['place_of_birth', 'birth_place'],
+  ['identity_document_number', 'identity_document_number'],
+  ['profession', 'profession'],
+];
 
 const LABELS: Record<string, string> = {
   last_name: 'Nom', first_name: 'Prénom', birth_name: 'Nom de naissance',
@@ -18,7 +39,7 @@ const LABELS: Record<string, string> = {
   whatsapp_phone_full: 'WhatsApp', email: 'E-mail',
   contact_person_1_name: 'Contact 1 — nom', contact_person_1_phone: 'Contact 1 — téléphone',
   contact_person_2_name: 'Contact 2 — nom', contact_person_2_phone: 'Contact 2 — téléphone',
-  identity_document_number: "N° pièce d'identité",
+  identity_document_number: "N° pièce d'identité", profession: 'Profession',
   identity_document_issue_date: 'Date de délivrance', identity_document_issue_place: 'Lieu de délivrance',
   activity_sector: "Secteur d'activité", activity_subsector: 'Sous-secteur',
   income_range: 'Tranche de revenus', income_currency: 'Devise', funds_origin: 'Origine des fonds',
@@ -47,7 +68,7 @@ const ENUMS: Record<string, { value: string; label: string }[]> = {
   selector: 'diaspora-onboarding',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [OnbSectionCard, OnbStepNav, OnbFormField, OnbInput, OnbSelect, OnbStepperRail],
+  imports: [OnbSectionCard, OnbStepNav, OnbFormField, OnbInput, OnbSelect, OnbStepperRail, OnbIdCapture],
   template: `
     <div style="min-height:100vh;background:#F7F2EC;font-family:'Inter',system-ui,sans-serif;">
       <div style="max-width:1040px;margin:0 auto;padding:32px 20px 60px;">
@@ -71,6 +92,13 @@ const ENUMS: Record<string, { value: string; label: string }[]> = {
           <!-- Formulaire de l'étape -->
           <form (submit)="onSubmitForm($event)">
             @if (step().key !== 'review') {
+              @if (step().key === 'kyc') {
+                <onb-id-capture
+                  [documentType]="'CNI_RECTO'"
+                  [accountType]="accountTypeValue()"
+                  (extracted)="applyOcr($event)"
+                  (fileSelected)="idDocFile.set($event)" />
+              }
               <onb-section-card [section]="current()" [title]="step().title" [subtitle]="step().description">
                 <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;" class="onb-fields">
                   @for (f of step().fields; track f) {
@@ -127,6 +155,8 @@ export class DiasporaOnboardingPage {
   readonly current = signal(1);
   readonly submitting = signal(false);
   readonly error = signal<string | null>(null);
+  /** Photo de la pièce d'identité capturée/importée, jointe au dossier à l'envoi. */
+  readonly idDocFile = signal<File | null>(null);
 
   private countries = signal<Country[]>([]);
   private nationalities = signal<Nationality[]>([]);
@@ -162,6 +192,34 @@ export class DiasporaOnboardingPage {
   setEvt(f: string, e: Event) { this.set(f, (e.target as HTMLInputElement).value); }
   set(f: string, v: unknown): void { this.model.update((m) => ({ ...m, [f]: v })); }
 
+  /** Type de compte courant (étape 4) — transmis à l'OCR ; vide tant que non choisi. */
+  accountTypeValue(): string { return String((this.model() as Record<string, unknown>)['account_type'] ?? ''); }
+
+  /**
+   * Préremplit le formulaire depuis les champs OCR SANS écraser une valeur déjà
+   * saisie par l'utilisateur (préremplissage seulement si le champ est vide).
+   * `birth_date` (JJ/MM/AAAA) est converti en ISO pour l'<input type="date">.
+   */
+  applyOcr(fields: OcrExtractedFields): void {
+    const src = fields as Record<string, unknown>;
+    this.model.update((m) => {
+      const next = { ...m } as Record<string, unknown>;
+      for (const [from, to] of OCR_TO_MODEL) {
+        const raw = src[from as string];
+        if (raw == null || raw === '') continue;
+        const current = next[to];
+        if (current != null && current !== '') continue; // ne pas écraser la saisie
+        if (to === 'birth_date') {
+          const iso = toIsoDate(String(raw));
+          if (iso) next[to] = iso;
+        } else {
+          next[to] = String(raw);
+        }
+      }
+      return next;
+    });
+  }
+
   onSubmitForm(e: Event): void {
     e.preventDefault();
     if (this.step().key === 'review') this.submit();
@@ -174,8 +232,21 @@ export class DiasporaOnboardingPage {
     this.submitting.set(true);
     this.error.set(null);
     this.api.createApplication(this.model() as ApplicationCreate).subscribe({
-      next: (res) => this.router.navigate(['/status'], { queryParams: { reference: res.reference } }),
+      next: (res) => this.afterCreate(res),
       error: (err) => { this.error.set('Échec de l’envoi. Vérifiez les champs obligatoires.'); this.submitting.set(false); console.error(err); },
     });
+  }
+
+  /** Joint la photo de la pièce (si capturée) puis redirige vers le suivi de dossier. */
+  private afterCreate(res: ApplicationResponse): void {
+    const file = this.idDocFile();
+    const goToStatus = () =>
+      this.router.navigate(['/status'], { queryParams: { reference: res.reference } });
+    if (file) {
+      // Best-effort : un échec d'upload ne bloque pas la confirmation du dossier.
+      this.api.uploadDocument(res.id, file, 'CNI_RECTO').subscribe({ next: goToStatus, error: goToStatus });
+    } else {
+      goToStatus();
+    }
   }
 }
