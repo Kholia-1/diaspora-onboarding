@@ -133,9 +133,15 @@
         }
 
         .status-badge-lg {
-            padding: 9px 16px;
-            border-radius: 24px;
-            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            /* Rester dans la carte : plus petit + retour à la ligne des libellés longs. */
+            max-width: 100%;
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.35;
+            text-align: center;
         }
 
         .status-submitted {
