@@ -230,29 +230,46 @@ def send_whatsapp_message(
         },
     )
 
-    try:
-        with urllib.request.urlopen(request, timeout=20) as response:
-            body = response.read().decode("utf-8", errors="replace")
+    # AFB_CALLBELL_NETWORK_RETRY_V1 : une erreur réseau transitoire (timeout,
+    # DNS, coupure TLS) est retentée une fois avant de renvoyer CALLBELL_ERROR.
+    # Les réponses HTTP d'erreur ne sont PAS retentées (le serveur a répondu).
+    last_network_error = None
 
-            try:
-                parsed_body = json.loads(body) if body else {}
-            except Exception:
-                parsed_body = {"raw": body}
+    for _attempt in range(2):
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                body = response.read().decode("utf-8", errors="replace")
 
-            message_obj = {}
-            if isinstance(parsed_body, dict):
-                message_obj = parsed_body.get("message") or {}
+                try:
+                    parsed_body = json.loads(body) if body else {}
+                except Exception:
+                    parsed_body = {"raw": body}
 
-            callbell_uuid = message_obj.get("uuid")
-            callbell_status = message_obj.get("status")
+                message_obj = {}
+                if isinstance(parsed_body, dict):
+                    message_obj = parsed_body.get("message") or {}
 
-            # Un HTTP 200 sans UUID de message signifie que Callbell n'a pas
-            # réellement accepté le message : ne pas le compter comme envoyé.
-            failed_statuses = {"failed", "error", "rejected", "undelivered"}
-            if not callbell_uuid or str(callbell_status or "").lower() in failed_statuses:
+                callbell_uuid = message_obj.get("uuid")
+                callbell_status = message_obj.get("status")
+
+                # Un HTTP 200 sans UUID de message signifie que Callbell n'a pas
+                # réellement accepté le message : ne pas le compter comme envoyé.
+                failed_statuses = {"failed", "error", "rejected", "undelivered"}
+                if not callbell_uuid or str(callbell_status or "").lower() in failed_statuses:
+                    return {
+                        "success": False,
+                        "status": str(callbell_status or "CALLBELL_NOT_ACCEPTED").upper(),
+                        "http_status": response.status,
+                        "to": normalized_phone,
+                        "provider": "CALLBELL",
+                        "callbell_message_uuid": callbell_uuid,
+                        "callbell_message_status": callbell_status,
+                        "response": parsed_body,
+                    }
+
                 return {
-                    "success": False,
-                    "status": str(callbell_status or "CALLBELL_NOT_ACCEPTED").upper(),
+                    "success": True,
+                    "status": str(callbell_status or "ACCEPTED_BY_CALLBELL").upper(),
                     "http_status": response.status,
                     "to": normalized_phone,
                     "provider": "CALLBELL",
@@ -261,39 +278,32 @@ def send_whatsapp_message(
                     "response": parsed_body,
                 }
 
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode("utf-8", errors="replace")
+
+            try:
+                parsed_body = json.loads(body) if body else {}
+            except Exception:
+                parsed_body = {"raw": body}
+
             return {
-                "success": True,
-                "status": str(callbell_status or "ACCEPTED_BY_CALLBELL").upper(),
-                "http_status": response.status,
+                "success": False,
+                "status": "CALLBELL_HTTP_ERROR",
+                "http_status": exc.code,
                 "to": normalized_phone,
                 "provider": "CALLBELL",
-                "callbell_message_uuid": callbell_uuid,
-                "callbell_message_status": callbell_status,
                 "response": parsed_body,
             }
 
-    except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
+        except Exception as exc:
+            last_network_error = exc
+            print("[WHATSAPP][CALLBELL][NETWORK_RETRY]", _attempt + 1, normalized_phone, str(exc))
+            continue
 
-        try:
-            parsed_body = json.loads(body) if body else {}
-        except Exception:
-            parsed_body = {"raw": body}
-
-        return {
-            "success": False,
-            "status": "CALLBELL_HTTP_ERROR",
-            "http_status": exc.code,
-            "to": normalized_phone,
-            "provider": "CALLBELL",
-            "response": parsed_body,
-        }
-
-    except Exception as exc:
-        return {
-            "success": False,
-            "status": "CALLBELL_ERROR",
-            "to": normalized_phone,
-            "provider": "CALLBELL",
-            "error": str(exc),
-        }
+    return {
+        "success": False,
+        "status": "CALLBELL_ERROR",
+        "to": normalized_phone,
+        "provider": "CALLBELL",
+        "error": str(last_network_error),
+    }

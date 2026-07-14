@@ -1,0 +1,439 @@
+[
+  {
+    "file": "CNI_RECTO_1ea9830abea24387a79026630cc0b269.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 145256,
+    "text_length": 114,
+    "type_validation": "DOCUMENT_TYPE_MISMATCH",
+    "detected_category": "RIB",
+    "fields_found": {},
+    "all_fields": {}
+  },
+  {
+    "file": "CNI_RECTO_2a2924c6fee043a2b29d04dea74ad06a.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 181329,
+    "text_length": 231,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "KEVIN KAMDEM FAHA",
+      "first_name": "KEVIN KAMDEM FAHA",
+      "cni_number": "100384267"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "19/06/2035",
+        "20/02/1992"
+      ],
+      "last_name": "KEVIN KAMDEM FAHA",
+      "surname": "KEVIN KAMDEM FAHA",
+      "first_name": "KEVIN KAMDEM FAHA",
+      "given_names": "KEVIN KAMDEM FAHA",
+      "full_name": "KEVIN KAMDEM FAHA KEVIN KAMDEM FAHA",
+      "cni_number": "100384267",
+      "identity_document_number": "100384267"
+    }
+  },
+  {
+    "file": "CNI_RECTO_3813fa21bfbf45a89644383e6e1537b1.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 258862,
+    "text_length": 275,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "DZANGUE",
+      "first_name": "DANIELLANDRY",
+      "cni_number": "100766173",
+      "identity_expiry_date": "28/08/2035"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "28/08/2035",
+        "17/06/1997"
+      ],
+      "last_name": "DZANGUE",
+      "surname": "DZANGUE",
+      "first_name": "DANIELLANDRY",
+      "given_names": "DANIELLANDRY",
+      "full_name": "DZANGUE DANIELLANDRY",
+      "identity_expiry_date": "28/08/2035",
+      "cni_number": "100766173",
+      "identity_document_number": "100766173"
+    }
+  },
+  {
+    "file": "CNI_RECTO_5735abc081f24495bd1f0f81dd0534b2.png",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 6303744,
+    "text_length": 0,
+    "type_validation": "OCR_TEXT_INSUFFICIENT",
+    "detected_category": "UNKNOWN",
+    "fields_found": {},
+    "all_fields": {}
+  },
+  {
+    "file": "CNI_RECTO_5fbfbea0398746a89c4cda6d69a0043d.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 145151,
+    "text_length": 281,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "YEDNA NZOGUE",
+      "first_name": "ULRICHVIANNEY",
+      "birth_date": "05/11/1999",
+      "cni_number": "101041933",
+      "identity_expiry_date": "03/11/2035"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "03/11/2035",
+        "05/11/1999"
+      ],
+      "last_name": "YEDNA NZOGUE",
+      "surname": "YEDNA NZOGUE",
+      "first_name": "ULRICHVIANNEY",
+      "given_names": "ULRICHVIANNEY",
+      "full_name": "YEDNA NZOGUE ULRICHVIANNEY",
+      "birth_date": "05/11/1999",
+      "identity_expiry_date": "03/11/2035",
+      "cni_number": "101041933",
+      "identity_document_number": "101041933"
+    }
+  },
+  {
+    "file": "CNI_RECTO_7650a29a394643cd822f049368efe712.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 200075,
+    "text_length": 230,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "DZANGUE",
+      "first_name": "DZANGUE",
+      "birth_date": "17/06/1997",
+      "identity_expiry_date": "17/06/1997"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "17/06/1997",
+        "28/08/2035"
+      ],
+      "last_name": "DZANGUE",
+      "surname": "DZANGUE",
+      "first_name": "DZANGUE",
+      "given_names": "DZANGUE",
+      "full_name": "DZANGUE DZANGUE",
+      "birth_date": "17/06/1997",
+      "identity_expiry_date": "17/06/1997"
+    }
+  },
+  {
+    "file": "CNI_RECTO_941716a08a984ce8a02b205a9200a891.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 160329,
+    "text_length": 241,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "BELLO",
+      "first_name": "ETIENNEKHOLIA",
+      "birth_date": "31/07/1996",
+      "sex": "M"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "31/07/1996"
+      ],
+      "last_name": "BELLO",
+      "surname": "BELLO",
+      "first_name": "ETIENNEKHOLIA",
+      "given_names": "ETIENNEKHOLIA",
+      "full_name": "BELLO ETIENNEKHOLIA",
+      "birth_date": "31/07/1996",
+      "sex": "M"
+    }
+  },
+  {
+    "file": "CNI_RECTO_ba9533b33570455b991fcd8dac68156c.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 6158,
+    "text_length": 0,
+    "type_validation": "OCR_TEXT_INSUFFICIENT",
+    "detected_category": "UNKNOWN",
+    "fields_found": {},
+    "all_fields": {}
+  },
+  {
+    "file": "CNI_RECTO_bde4960cb02c47019f104899dd79f3f0.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 186312,
+    "text_length": 258,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "first_name": "ETIENNE KHOLIA",
+      "birth_date": "31/07/1995",
+      "place_of_birth": "YAOUNDEY"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "31/07/1995"
+      ],
+      "first_name": "ETIENNE KHOLIA",
+      "given_names": "ETIENNE KHOLIA",
+      "full_name": "ETIENNE KHOLIA",
+      "birth_date": "31/07/1995",
+      "place_of_birth": "YAOUNDEY"
+    }
+  },
+  {
+    "file": "CNI_VERSO_08f986cd06a441708985259156f8af1f.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 149037,
+    "text_length": 223,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "cni_number": "20240019849910220",
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "05/02/2024",
+        "05/02/2034"
+      ],
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034",
+      "cni_number": "20240019849910220",
+      "identity_document_number": "20240019849910220"
+    }
+  },
+  {
+    "file": "CNI_VERSO_4fda8c6f2eac4eca86afea8d30f7b81a.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 281413,
+    "text_length": 384,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "DZANGUE",
+      "first_name": "DANIEL LANDRY",
+      "cni_number": "100766173",
+      "identity_issue_date": "28/08/2025"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "28/08/2025"
+      ],
+      "last_name": "DZANGUE",
+      "surname": "DZANGUE",
+      "first_name": "DANIEL LANDRY",
+      "given_names": "DANIEL LANDRY",
+      "full_name": "DZANGUE DANIEL LANDRY",
+      "identity_issue_date": "28/08/2025",
+      "cni_number": "100766173",
+      "identity_document_number": "100766173"
+    }
+  },
+  {
+    "file": "CNI_VERSO_5a3e90c83ffc4036aeb21294a060d5c6.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 185969,
+    "text_length": 191,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "DRIC KEVIN KAMDEMFAHA",
+      "first_name": "EAPR",
+      "cni_number": "100384267"
+    },
+    "all_fields": {
+      "last_name": "DRIC KEVIN KAMDEMFAHA",
+      "surname": "DRIC KEVIN KAMDEMFAHA",
+      "first_name": "EAPR",
+      "given_names": "EAPR",
+      "full_name": "DRIC KEVIN KAMDEMFAHA EAPR",
+      "cni_number": "100384267",
+      "identity_document_number": "100384267"
+    }
+  },
+  {
+    "file": "CNI_VERSO_6a171bb3dbbb418ba0ca8c406e476c8a.png",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 6303744,
+    "text_length": 0,
+    "type_validation": "OCR_TEXT_INSUFFICIENT",
+    "detected_category": "UNKNOWN",
+    "fields_found": {},
+    "all_fields": {}
+  },
+  {
+    "file": "CNI_VERSO_6a788ebf8c5b4bc3bdb6681e45dc41fa.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 193575,
+    "text_length": 409,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "MCMR",
+      "cni_number": "101041933",
+      "identity_issue_date": "03/11/2025"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "03/11/2025"
+      ],
+      "last_name": "MCMR",
+      "surname": "MCMR",
+      "full_name": "MCMR",
+      "identity_issue_date": "03/11/2025",
+      "cni_number": "101041933",
+      "identity_document_number": "101041933"
+    }
+  },
+  {
+    "file": "CNI_VERSO_8c8d636ed0da46fdbe0aa39a5180af66.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 169972,
+    "text_length": 200,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "cni_number": "20240019849910220",
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "05/02/2024",
+        "05/02/2034"
+      ],
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034",
+      "cni_number": "20240019849910220",
+      "identity_document_number": "20240019849910220"
+    }
+  },
+  {
+    "file": "CNI_VERSO_8dcb845b0b074d5ab0fff189a87908f5.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 165248,
+    "text_length": 259,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "cni_number": "20240019849910220",
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "05/02/2024",
+        "05/02/2034"
+      ],
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034",
+      "cni_number": "20240019849910220",
+      "identity_document_number": "20240019849910220"
+    }
+  },
+  {
+    "file": "CNI_VERSO_b2aadbb6caa044018f4204badb26a898.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 235201,
+    "text_length": 357,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "CMRAA",
+      "cni_number": "AA14533820",
+      "identity_issue_date": "28/08/2025"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "28/08/2025"
+      ],
+      "last_name": "CMRAA",
+      "surname": "CMRAA",
+      "full_name": "CMRAA",
+      "identity_issue_date": "28/08/2025",
+      "cni_number": "AA14533820",
+      "identity_document_number": "AA14533820"
+    }
+  },
+  {
+    "file": "CNI_VERSO_b8ba1ce685ce4c598aa62e21bcef9c54.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 183516,
+    "text_length": 166,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "cni_number": "20240019849910220",
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "05/02/2024",
+        "05/02/2034"
+      ],
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034",
+      "cni_number": "20240019849910220",
+      "identity_document_number": "20240019849910220"
+    }
+  },
+  {
+    "file": "CNI_VERSO_cdfe9f9921e34a30badc8162985c29e5.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 142267,
+    "text_length": 176,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "cni_number": "20240019849910220",
+      "identity_issue_date": "05/02/2024"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "05/02/2024",
+        "05/02/2034"
+      ],
+      "identity_issue_date": "05/02/2024",
+      "cni_number": "20240019849910220",
+      "identity_document_number": "20240019849910220"
+    }
+  },
+  {
+    "file": "CNI_VERSO_f2638799379b4ec5971e96fd28d22651.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 170449,
+    "text_length": 355,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "fields_found": {
+      "last_name": "KAMDEM FAHA",
+      "first_name": "IDRIC KEVIN",
+      "cni_number": "100384267",
+      "identity_issue_date": "19/06/2025"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "19/06/2025"
+      ],
+      "last_name": "KAMDEM FAHA",
+      "surname": "KAMDEM FAHA",
+      "first_name": "IDRIC KEVIN",
+      "given_names": "IDRIC KEVIN",
+      "full_name": "KAMDEM FAHA IDRIC KEVIN",
+      "identity_issue_date": "19/06/2025",
+      "cni_number": "100384267",
+      "identity_document_number": "100384267"
+    }
+  }
+]

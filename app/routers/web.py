@@ -246,7 +246,11 @@ async def backoffice_packages_page(request: Request):
 
 @router.get("/open-account-test")
 async def open_account_test_page(request: Request):
-    return templates.TemplateResponse(request, "client_open_account_flow_test.html", {"request": request})
+    # AFB_RESTORE_MANAGER_FORM_V1 : cette route doit servir le FORMULAIRE COMPLET
+    # (client_open_account_manager.html), pas la page de pré-onboarding.
+    # Le pré-onboarding (/open-account-flow-test) redirige ici après les documents ;
+    # servir flow_test ici créait une boucle sans jamais atteindre le formulaire.
+    return templates.TemplateResponse(request, "client_open_account_manager.html", {"request": request})
 
 @router.get("/api/sectors/active")
 async def get_active_activity_sectors():

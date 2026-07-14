@@ -366,6 +366,37 @@
       box-shadow: none;
     }
 
+    /* Petit loader (points qui tournent) affiché 1s au clic sur un bouton */
+    .btn.is-loading {
+      position: relative;
+      color: transparent !important;
+      pointer-events: none;
+    }
+    .btn-dots {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 16px;
+      height: 16px;
+      animation: btn-dots-spin .8s linear infinite;
+    }
+    .btn-dots > i {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 5px;
+      height: 5px;
+      margin: -2.5px 0 0 -2.5px;
+      border-radius: 50%;
+      background: var(--red);
+    }
+    .btn-dots > i:nth-child(1) { transform: rotate(0deg) translateX(6px); opacity: 1; }
+    .btn-dots > i:nth-child(2) { transform: rotate(120deg) translateX(6px); opacity: .55; }
+    .btn-dots > i:nth-child(3) { transform: rotate(240deg) translateX(6px); opacity: .3; }
+    .btn-primary.is-loading .btn-dots > i { background: #ffffff; }
+    .btn-blue.is-loading .btn-dots > i { background: var(--blue); }
+    @keyframes btn-dots-spin { to { transform: rotate(360deg); } }
+
     .doc-status {
       margin-top: 6px;
       font-size: 12px;
@@ -9097,6 +9128,26 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
     bindCleanOtp();
   }
 })();
+</script>
+
+<script>
+  /* Loader générique : 1s de points qui tournent à chaque clic sur un .btn */
+  (function () {
+    document.addEventListener("click", function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest(".btn") : null;
+      if (!btn || btn.disabled || btn.classList.contains("is-loading")) return;
+      btn.classList.add("is-loading");
+      var dots = document.createElement("span");
+      dots.className = "btn-dots";
+      dots.setAttribute("aria-hidden", "true");
+      dots.innerHTML = "<i></i><i></i><i></i>";
+      btn.appendChild(dots);
+      setTimeout(function () {
+        btn.classList.remove("is-loading");
+        if (dots.parentNode) dots.parentNode.removeChild(dots);
+      }, 1000);
+    }, true);
+  })();
 </script>
 
 </body>
