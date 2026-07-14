@@ -34,11 +34,11 @@ export function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-topbar-from via-[#121318] to-topbar-to p-4">
-      {/* Halos rouges */}
-      <div className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full bg-afriland/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-48 -right-32 h-[32rem] w-[32rem] rounded-full bg-afriland/20 blur-3xl" />
-      <div className="pointer-events-none absolute top-1/3 right-1/4 h-64 w-64 rounded-full bg-afriland/10 blur-2xl" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-[#eef0f4] via-[#e5e8ee] to-[#d6d9e1] p-4">
+      {/* Halos premium subtils sur fond gris */}
+      <div className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full bg-white/60 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-48 -right-32 h-[32rem] w-[32rem] rounded-full bg-afriland/8 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/3 right-1/4 h-64 w-64 rounded-full bg-white/50 blur-2xl" />
 
       <div className="relative w-full max-w-md">
         <div className="rounded-2xl bg-white p-8 shadow-2xl sm:p-10">
