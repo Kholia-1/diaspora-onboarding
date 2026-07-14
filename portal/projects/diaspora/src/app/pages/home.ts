@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 /**
@@ -22,25 +22,45 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     <div class="hub">
       <!-- ═══════════ Topbar ═══════════ -->
       <header class="topbar">
-        <a routerLink="/diaspora/home" class="brand">
-          <span class="brand-mark">A</span>
+        <a routerLink="/diaspora/home" class="brand" (click)="closeMenu()">
+          <img class="brand-logo" src="/afriland-logo.png" alt="Afriland First Bank" />
           <span class="brand-txt">
             <span class="brand-title">Portail d'onboarding client</span>
             <span class="brand-sub">Services bancaires digitaux à distance</span>
           </span>
         </a>
-        <nav class="topnav" aria-label="Menu des services">
-          <a routerLink="/diaspora/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
-          <a routerLink="/diaspora/onboarding" routerLinkActive="active">Ouverture de compte</a>
-          <a routerLink="/promote/subscribe" routerLinkActive="active">Souscription produit</a>
-          <a routerLink="/promote/recharge" routerLinkActive="active">Recharge de carte</a>
-          <a routerLink="/diaspora/status" routerLinkActive="active">Suivre ma demande</a>
+
+        <!-- Bouton hamburger : visible uniquement en mobile (≤900px) -->
+        <button
+          type="button"
+          class="burger"
+          [class.open]="menuOpen()"
+          (click)="toggleMenu()"
+          [attr.aria-expanded]="menuOpen()"
+          aria-controls="diaspora-topnav"
+          [attr.aria-label]="menuOpen() ? 'Fermer le menu' : 'Ouvrir le menu'"
+        >
+          <span class="burger-bar"></span>
+          <span class="burger-bar"></span>
+          <span class="burger-bar"></span>
+        </button>
+
+        <nav id="diaspora-topnav" class="topnav" [class.open]="menuOpen()" aria-label="Menu des services">
+          <a routerLink="/diaspora/home" (click)="closeMenu()" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+          <a routerLink="/diaspora/onboarding" (click)="closeMenu()" routerLinkActive="active">Ouverture de compte</a>
+          <a routerLink="/promote/subscribe" (click)="closeMenu()" routerLinkActive="active">Souscription produit</a>
+          <a routerLink="/promote/recharge" (click)="closeMenu()" routerLinkActive="active">Recharge de carte</a>
+          <a routerLink="/diaspora/status" (click)="closeMenu()" routerLinkActive="active">Suivre ma demande</a>
         </nav>
         <a routerLink="/promote/login" class="staff-access" title="Connexion des collaborateurs (agents, manager, admin…)">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
           Espace collaborateur
         </a>
       </header>
+
+      @if (menuOpen()) {
+        <div class="menu-overlay" (click)="closeMenu()" aria-hidden="true"></div>
+      }
 
       <main>
         <!-- ═══════════ Hero ═══════════ -->
@@ -144,11 +164,9 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       position:sticky; top:0; z-index:1000; flex-wrap:wrap;
     }
     .brand { display:flex; align-items:center; gap:14px; text-decoration:none; flex:0 0 auto; }
-    .brand-mark {
-      width:42px; height:42px; border-radius:12px; flex:0 0 auto;
-      background:linear-gradient(135deg,#C8102E,#8f0e15); color:#fff;
-      display:flex; align-items:center; justify-content:center;
-      font-weight:800; font-size:19px; box-shadow:0 8px 20px rgba(200,16,46,0.22);
+    .brand-logo {
+      height:40px; width:auto; flex:0 0 auto; display:block;
+      object-fit:contain; max-width:64vw;
     }
     .brand-txt { display:flex; flex-direction:column; }
     .brand-title { font-family:'Source Serif 4',Georgia,serif; font-size:16px; color:#C8102E; letter-spacing:-0.2px; }
@@ -170,6 +188,25 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       transition:.15s ease;
     }
     .staff-access:hover { background:#C8102E; color:#fff; border-color:#C8102E; }
+
+    /* Hamburger — caché en desktop, affiché en mobile via la media query */
+    .burger {
+      display:none; flex-direction:column; align-items:center; justify-content:center;
+      gap:4px; width:44px; height:44px; padding:0; flex:0 0 auto; margin-left:auto;
+      cursor:pointer; border-radius:12px; border:1.5px solid rgba(200,16,46,0.30);
+      background:rgba(200,16,46,0.04); transition:.15s ease;
+    }
+    .burger:hover { background:rgba(200,16,46,0.09); }
+    .burger-bar {
+      display:block; width:22px; height:3px; border-radius:999px;
+      background:#C8102E; transition:transform .2s ease, opacity .2s ease;
+    }
+    .burger.open .burger-bar:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+    .burger.open .burger-bar:nth-child(2) { opacity:0; }
+    .burger.open .burger-bar:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+
+    /* Overlay de fermeture du panneau mobile (activé dans la media query) */
+    .menu-overlay { display:none; }
 
     /* Hero */
     main { flex:1; }
@@ -253,9 +290,39 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     @media (max-width:900px) {
       .hero { grid-template-columns:1fr; }
       .services-grid { grid-template-columns:1fr; }
-      .topnav { justify-content:flex-start; width:100%; overflow-x:auto; }
-      .brand-sub { display:none; }
+
+      /* Header mobile : logo à gauche, hamburger à droite ; nav en panneau déroulant.
+         Le logo contient déjà « Afriland First Bank » : on masque le bloc texte. */
+      .brand-txt { display:none; }
+      .burger { display:flex; }
+      .staff-access { display:none; }
+
+      .topnav {
+        position:absolute; top:100%; left:0; right:0;
+        flex-direction:column; align-items:center; gap:6px;
+        padding:12px 7% 18px; background:#fff;
+        border-bottom:1px solid rgba(20,20,30,0.08);
+        box-shadow:0 20px 34px rgba(20,20,30,0.12);
+        display:none;
+      }
+      .topnav.open { display:flex; }
+      .topnav a { width:100%; max-width:360px; text-align:center; padding:12px 16px; font-size:14.5px; }
+
+      .menu-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.20); z-index:900; }
     }
   `],
 })
-export class DiasporaHomePage {}
+export class DiasporaHomePage {
+  /** État d'ouverture du menu mobile (hamburger). */
+  readonly menuOpen = signal(false);
+
+  /** Ouvre / ferme le panneau de navigation mobile. */
+  toggleMenu(): void {
+    this.menuOpen.update((open) => !open);
+  }
+
+  /** Ferme le menu (appelé au clic sur un lien ou sur l'overlay). */
+  closeMenu(): void {
+    this.menuOpen.set(false);
+  }
+}
