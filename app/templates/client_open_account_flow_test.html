@@ -2158,7 +2158,7 @@
 
       <!-- AFB_FLOW_START_GATE_V1 : d'abord les étapes, puis « Commencer » -> pré-inscription -->
       <div class="start-cta">
-        <button class="btn btn-primary" id="start-preinscription-btn" type="button">Commencer</button>
+        <button class="btn btn-primary" id="start-preinscription-btn" type="button" data-i18n="steps.start">Commencer</button>
       </div>
     </section>
 
@@ -2177,29 +2177,18 @@
          Le type de compte est masqué mais « Compte personnel » est sélectionné
          automatiquement par script (sinon les documents requis ne s'afficheraient pas). */
       @media (max-width: 768px) {
+        /* Vue mobile allégée : on masque l'intro/étapes (dont « Commencer »), la bienvenue,
+           le type de compte et la photo/vidéo, et on affiche DIRECTEMENT le formulaire de
+           pré-inscription (CSS pur, indépendant du JS). */
         #remote-account-welcome,
+        #preonboarding-intro,
         #account-type-section,
         #media-verification-section {
           display: none !important;
         }
-        /* 1er card en mobile : on retire le panneau des 4 étapes (badge + titre + liste)
-           et son habillage de carte, en ne gardant que le bouton « Commencer ». */
-        #preonboarding-intro > .badge,
-        #preonboarding-intro > h2,
-        #preonboarding-intro > .steps {
-          display: none !important;
-        }
-        #preonboarding-intro {
-          padding: 0 !important;
-          border: none !important;
-          background: transparent !important;
-          box-shadow: none !important;
-        }
-        #preonboarding-intro .start-cta {
-          margin-top: 0 !important;
-        }
-        #preonboarding-intro .start-cta .btn {
-          width: 100%;
+        .page .panel.workspace {
+          display: block !important;
+          grid-column: 1 / -1 !important;
         }
       }
     </style>
@@ -2858,6 +2847,7 @@
           "nav.topup": "Recharge de carte",
           "intro.badge": "Pré-onboarding",
           "intro.heading": "Préparer votre demande d’ouverture de compte",
+          "steps.start": "Commencer",
           "steps.choose_account.title": "Choisir le type de compte",
           "steps.choose_account.desc": "Compte personnel ou compte entreprise.",
           "steps.upload_docs.title": "Importer vos pièces",
@@ -2937,6 +2927,7 @@
           "nav.topup": "Card top-up",
           "intro.badge": "Pre-onboarding",
           "intro.heading": "Prepare your account opening request",
+          "steps.start": "Start",
           "steps.choose_account.title": "Choose the account type",
           "steps.choose_account.desc": "Personal or business account.",
           "steps.upload_docs.title": "Upload your documents",
