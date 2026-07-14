@@ -4,6 +4,7 @@ import com.afriland.diaspora.application.exception.ApiException;
 import com.afriland.diaspora.application.port.in.BrowseApplicationsUseCase;
 import com.afriland.diaspora.application.port.out.ApplicationRepositoryPort;
 import com.afriland.diaspora.application.port.out.DocumentRepositoryPort;
+import com.afriland.diaspora.application.port.out.DocumentStoragePort;
 import com.afriland.diaspora.domain.model.ApplicationDetail;
 import com.afriland.diaspora.domain.model.ApplicationDocumentInfo;
 import com.afriland.diaspora.domain.model.ApplicationSummary;
@@ -83,10 +84,13 @@ public class ApplicationBrowsingService implements BrowseApplicationsUseCase {
 
     private final ApplicationRepositoryPort applications;
     private final DocumentRepositoryPort documents;
+    private final DocumentStoragePort storage;
 
-    public ApplicationBrowsingService(ApplicationRepositoryPort applications, DocumentRepositoryPort documents) {
+    public ApplicationBrowsingService(ApplicationRepositoryPort applications, DocumentRepositoryPort documents,
+                                      DocumentStoragePort storage) {
         this.applications = applications;
         this.documents = documents;
+        this.storage = storage;
     }
 
     @Override
@@ -151,6 +155,8 @@ public class ApplicationBrowsingService implements BrowseApplicationsUseCase {
 
     private DocumentView toView(ApplicationDocumentInfo doc) {
         String type = documentType(doc);
+        boolean video = isVideo(doc);
+        boolean mediaOnly = MEDIA_ONLY_TYPES.contains(type);
         return new DocumentView(
                 docId(doc),
                 doc.documentType(),
@@ -161,8 +167,22 @@ public class ApplicationBrowsingService implements BrowseApplicationsUseCase {
                 doc.verificationStatus(),
                 doc.qualityScore(),
                 doc.sha256Hash(),
-                isVideo(doc),
-                MEDIA_ONLY_TYPES.contains(type));
+                video,
+                mediaOnly,
+                analysisAvailable(doc, video, mediaOnly));
+    }
+
+    /**
+     * Analyse disponible — parité is_analysis_available (app/routers/backoffice.py) :
+     * ni vidéo ni média de preuve de vie, et fichier {@code <file_path>.analysis.enc} présent.
+     */
+    private boolean analysisAvailable(ApplicationDocumentInfo doc, boolean video, boolean mediaOnly) {
+        if (video || mediaOnly) {
+            return false;
+        }
+        String filePath = doc.filePath();
+        return filePath != null && !filePath.isBlank()
+                && storage.exists(filePath + ".analysis.enc");
     }
 
     private static boolean isVideo(ApplicationDocumentInfo doc) {

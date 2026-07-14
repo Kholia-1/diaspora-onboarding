@@ -53,6 +53,11 @@ public class BackofficeApplicationsController {
             boolean isMediaOnly) {
 
         static DocumentDto from(DocumentView doc) {
+            // Parité is_analysis_available : URL et bouton d'analyse seulement si
+            // l'analyse chiffrée <file_path>.analysis.enc existe (hors média preuve de vie).
+            String analysisUrl = doc.analysisAvailable()
+                    ? "/api/applications/documents/" + doc.id() + "/analysis"
+                    : null;
             return new DocumentDto(
                     doc.id(),
                     doc.documentType(),
@@ -64,9 +69,8 @@ public class BackofficeApplicationsController {
                     doc.qualityScore(),
                     doc.sha256Hash(),
                     "/api/applications/documents/" + doc.id() + "/content",
-                    // Phase 1 : l'analyse OCR n'est pas encore portée côté Java.
-                    null,
-                    false,
+                    analysisUrl,
+                    doc.analysisAvailable(),
                     doc.video(),
                     doc.mediaOnly());
         }

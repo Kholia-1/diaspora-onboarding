@@ -27,6 +27,7 @@ public interface BrowseApplicationsUseCase {
             Double qualityScore,
             String sha256Hash,
             boolean video,
-            boolean mediaOnly) {
+            boolean mediaOnly,
+            boolean analysisAvailable) {
     }
 }

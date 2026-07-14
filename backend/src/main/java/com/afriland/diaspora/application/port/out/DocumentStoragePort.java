@@ -11,6 +11,13 @@ public interface DocumentStoragePort {
     Optional<byte[]> read(String storedPath);
 
     /**
+     * Vrai si un fichier régulier existe au chemin indiqué (relatif à la racine du
+     * dépôt ou absolu, séparateurs Windows possibles). Utilisé pour savoir si
+     * l'analyse chiffrée {@code <file_path>.analysis.enc} d'un document est disponible.
+     */
+    boolean exists(String storedPath);
+
+    /**
      * Écrit un document chiffré (.enc) et son analyse chiffrée (.enc.analysis.enc) dans le
      * dossier d'upload des dossiers. Retourne le file_path stocké en base (relatif à la
      * racine du dépôt, parité UPLOAD_DIR/filename du monolithe).

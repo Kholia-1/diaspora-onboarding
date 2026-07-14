@@ -59,6 +59,19 @@ public class FileSystemDocumentStorageAdapter implements DocumentStoragePort {
     }
 
     @Override
+    public boolean exists(String storedPath) {
+        if (storedPath == null || storedPath.isBlank()) {
+            return false;
+        }
+        String normalized = storedPath.replace('\\', '/');
+        Path candidate = Path.of(normalized);
+        Path resolved = candidate.isAbsolute()
+                ? candidate.normalize()
+                : baseDir.resolve(normalized).normalize();
+        return Files.isRegularFile(resolved);
+    }
+
+    @Override
     public String saveApplicationDocument(String fileName, byte[] encryptedContent, byte[] encryptedAnalysis) {
         try {
             Files.createDirectories(uploadDir);
