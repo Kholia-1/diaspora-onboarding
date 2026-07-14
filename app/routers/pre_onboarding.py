@@ -452,7 +452,7 @@ def v2_clean_name(value: str | None) -> str | None:
     # Supprimer libellés normaux et variantes OCR
     # (GIVEM/G1VEN/GLVEN : déformations fréquentes de GIVEN ; NAMES seul aussi)
     value = re.sub(
-        r"\b(NOMS?|SURNAME|SURNAMES|SURAAWE|SURAWE|SURNARNE|PRENOMS?|PRENOM|(?:GIVEN|GIVEM|G1VEN|GLVEN)\s*NAMES?|NAMES|FIRST NAME|FORENAMES?)\b",
+        r"\b(NOMS?|SURNAME|SURNAMES|SURAAWE|SURAWE|SURNARNE|[PR]RENOMS?|RENOMS?|PRENOM|(?:GIVEN|GIVEM|G1VEN|GLVEN)\s*NAMES?|NAMES|FIRST NAME|FORENAMES?)\b",
         " ",
         value,
         flags=re.I
@@ -490,6 +490,13 @@ def v2_clean_name(value: str | None) -> str | None:
         if len(word) < 3:
             continue
 
+        # AFB_CNI_CORPUS_TUNING_V1 : débris de libellés fusionnés par l'OCR
+        # (« DATEDENAISSANCHARATEOFBIRTH ») — jamais de vrais noms.
+        if len(word) > 14:
+            continue
+        if re.search(r"NAISSANCE|BIRTH|EXPIR|SIGNAT|IDENTIT|REPUBL|DELIVR|OCCUPAT|PROFESS|CAMEROUN|CAMEROON|NATIONAL", word):
+            continue
+
         vowels = sum(1 for c in word if c in "AEIOUY")
         if len(word) >= 5 and vowels == 0:
             continue
@@ -522,6 +529,22 @@ def v2_extract_label_value(lines: list[str], label_patterns: list[str], max_next
         parts = re.split(r"[:：\-]", line, maxsplit=1)
         if len(parts) == 2:
             candidate = v2_clean_name(parts[1])
+            if candidate:
+                return candidate
+
+        # AFB_OCR_VALUE_ADJACENT_LABEL_V1 : RapidOCR fusionne souvent plusieurs
+        # zones en une seule grande ligne, avec la valeur juste AVANT son
+        # libellé (sur la CNI 2024 la valeur est imprimée au-dessus du
+        # libellé). On ne garde que les mots immédiatement adjacents.
+        m = re.search(matched, nline, flags=re.I)
+        if m:
+            before_words = nline[:m.start()].split()[-3:]
+            candidate = v2_clean_name(" ".join(before_words))
+            if candidate:
+                return candidate
+
+            after_words = nline[m.end():].split()[:3]
+            candidate = v2_clean_name(" ".join(after_words))
             if candidate:
                 return candidate
 
@@ -587,7 +610,19 @@ def v2_parse_name_from_mrz(text: str) -> dict[str, str]:
         # Nettoyer préfixes parasites
         left = re.sub(r"^(IDCMR|CMR|I?DCMR|P<CMR|POCMR)", "", left)
         left = re.sub(r"[^A-Z<]", "", left).replace("<", " ")
-        right = re.sub(r"[^A-Z<]", "", right).replace("<", " ")
+
+        # AFB_CNI_CORPUS_TUNING_V2 : la partie droite s'arrête au premier
+        # segment contenant des chiffres (lignes MRZ suivantes fusionnées),
+        # et les débris « CMR » sont écartés.
+        right_tokens = []
+        for token in right.replace("<", " ").split():
+            if re.search(r"\d", token):
+                break
+            token = re.sub(r"[^A-Z]", "", token)
+            if not token or "CMR" in token:
+                continue
+            right_tokens.append(token)
+        right = " ".join(right_tokens)
 
         last_name = v2_clean_name(left)
         first_name = v2_clean_name(right)
@@ -647,7 +682,12 @@ def v2_extract_names(text: str) -> dict[str, str]:
                 r"\bPRENOMS?\b",
                 r"\bGIVEN\s+NAMES?\b",
                 r"\bFIRST\s+NAME\b",
-                r"\bFORENAMES?\b"
+                r"\bFORENAMES?\b",
+                # AFB_CNI_CORPUS_TUNING_V1 : variantes OCR observées sur le
+                # corpus : « RENOMS/GIVEN NAMES » (P perdu), « JYIN NAMI »
+                # (GIVEN NAMES très dégradé).
+                r"\bRENOMS?\b",
+                r"\b[GJ][A-Z]{0,3}N\s+NAM[EI]S?\w*\b"
             ]
         )
 
@@ -717,12 +757,31 @@ def v2_find_date_near_keywords(text: str, keywords: list[str]) -> str | None:
     for i, line in enumerate(lines):
         nline = normalize_text(line)
 
-        if any(keyword in nline for keyword in keywords):
-            window = " ".join(lines[i:i + 4])
-            dates = v2_extract_dates(window)
+        matched_keyword = next((k for k in keywords if k in nline), None)
+        if not matched_keyword:
+            continue
 
-            if dates:
-                return dates[0]
+        # AFB_CNI_CORPUS_TUNING_V2 : RapidOCR fusionne plusieurs zones en une
+        # seule ligne (« 03.11.2035 DATE OF EXPIRY 05.11.1999 DATEDENAISSANCE »).
+        # Quand le libellé et plusieurs dates cohabitent sur la ligne, prendre
+        # la date la plus proche AVANT le libellé (la valeur est imprimée
+        # au-dessus de son libellé), sinon la plus proche après.
+        keyword_pos = nline.find(matched_keyword)
+        same_line_dates = []
+        for m in re.finditer(r"\b(\d{2})[./\s-](\d{2})[./\s-](\d{4})\b", nline):
+            same_line_dates.append((m.start(), f"{m.group(1)}/{m.group(2)}/{m.group(3)}"))
+
+        if same_line_dates:
+            before = [d for d in same_line_dates if d[0] < keyword_pos]
+            if before:
+                return before[-1][1]
+            return same_line_dates[0][1]
+
+        window = " ".join(lines[i:i + 4])
+        dates = v2_extract_dates(window)
+
+        if dates:
+            return dates[0]
 
     return None
 
@@ -775,11 +834,15 @@ def v2_extract_cni_number(text: str) -> str | None:
     for pattern in patterns:
         m = re.search(pattern, normalized)
         if m:
-            return m.group(1)
+            value = m.group(1)
+            # AFB_CNI_CORPUS_TUNING_V2 : un numéro de CNI contient forcément
+            # des chiffres — écarte les libellés happés (« NOM DE LA MERE »).
+            if sum(1 for c in value if c.isdigit()) >= 4:
+                return value
 
     # Ancienne CNI MRZ : IDCMR1159672694...
     for line in v2_extract_mrz_lines(text):
-        m = re.search(r"(?:IDCMR|DCMR|ICMR)([0-9]{8,12})", line)
+        m = re.search(r"(?:IDCMR|DCMR|ICMR|I<CMR|ICMR|CMR)([0-9]{8,12})", line)
         if m:
             value = m.group(1)
 
@@ -814,6 +877,12 @@ def v2_extract_simple_value(text: str, label_patterns: list[str]) -> str | None:
             for pattern in label_patterns:
                 residue = re.sub(pattern, " ", residue, flags=re.I)
             residue = re.sub(r"[/|]", " ", residue)
+            # AFB_CNI_CORPUS_TUNING_V1 : écarter les débris de libellés
+            # fusionnés (« PCACEOFRRTH ») qui restent collés à la valeur.
+            residue = " ".join(
+                word for word in residue.split()
+                if not re.search(r"ACE|BIRTH|RRTH|NAISSANCE|SEX|TAILLE|HEIGHT|DATE|SIGNAT", word, flags=re.I)
+            )
             residue = clean_text(residue)
 
             if residue and 2 <= len(residue) <= 40:
@@ -822,8 +891,16 @@ def v2_extract_simple_value(text: str, label_patterns: list[str]) -> str | None:
             # Ligne suivante
             for j in range(i + 1, min(i + 3, len(lines))):
                 value = clean_text(lines[j])
-                if value:
-                    return value.upper()
+                if not value:
+                    continue
+                # Ne pas prendre une ligne de libellés pour une valeur.
+                if re.search(r"SEX|TAILLE|HEIGHT|DATE|SIGNAT|PROFESS|OCCUPAT|NATIONALIT", normalize_text(value)):
+                    continue
+                # AFB_CNI_CORPUS_TUNING_V2 : ni une ligne MRZ ni un bloc
+                # numérique, ni une ligne démesurée.
+                if "<" in value or re.search(r"\d{6,}", value) or len(value) > 40:
+                    continue
+                return value.upper()
 
     return None
 
@@ -862,7 +939,9 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
             "DATE DE DELIVRANCE",
             "DATE OF ISSUE",
             "DELIVRANCE",
-            "ISSUE"
+            "ISSUE",
+            # AFB_CNI_CORPUS_TUNING_V1 : « DATEDEDELIYRAN » (V lu Y, fusion).
+            "DELI"
         ]
     )
 
@@ -874,9 +953,24 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
             "EXPIRATION",
             "EXPIRY",
             "EXPIRE",
-            "VALIDITE"
+            "VALIDITE",
+            # AFB_CNI_CORPUS_TUNING_V1 : « DATEOFEXPI », « DATEDEXS » (fusion).
+            "EXPI",
+            "DATEDEX"
         ]
     )
+
+    # AFB_CNI_CORPUS_TUNING_V2 : plausibilité — une date de naissance est
+    # forcément passée d'au moins ~10 ans (évite de prendre une date de
+    # délivrance/expiration quand les libellés sont détruits).
+    if birth_date:
+        try:
+            birth_year = int(str(birth_date).split("/")[-1])
+            from datetime import datetime as _dt
+            if not (1900 <= birth_year <= _dt.now().year - 10):
+                birth_date = None
+        except Exception:
+            pass
 
     if birth_date:
         fields["birth_date"] = birth_date
@@ -902,7 +996,13 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
         ocr_text,
         [
             r"\bLIEU\s+DE\s+NAISSANCE\b",
-            r"\bPLACE\s+OF\s+BIRTH\b"
+            r"\bPLACE\s+OF\s+BIRTH\b",
+            # AFB_CNI_CORPUS_TUNING_V1 : libellés fusionnés/dégradés observés
+            # (« LI DENAISSANCEPCACEOFRRTH ») — le mot NAISSANCE collé à une
+            # variante de PLACE suffit à identifier le libellé du lieu.
+            r"L\w{0,2}\s*DE\s*NAISSANCE\w*[PC][CLR]?ACE",
+            r"NAISSANCE\w*[PC][CLR]?ACE\w*OF",
+            r"PLACEOF\w*[BR]\w*TH"
         ]
     )
 
@@ -923,6 +1023,20 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
         r"IDENTIT|NATIONALE|NATIONAL\s*ID|REPUBLI", normalize_text(occupation)
     ):
         fields["profession"] = occupation
+
+    # AFB_CNI_CORPUS_TUNING_V1 : sexe — un M ou F isolé près d'un libellé
+    # SEXE/SEX, même très dégradé (« SENCSEX TAILLE/SHE » puis « M 1,76 »).
+    sex_lines = v2_lines(ocr_text)
+    for i, line in enumerate(sex_lines):
+        nline = normalize_text(line)
+        if not re.search(r"\bSEXE?\b|SEXESEX|SE[NX]CSEX|SEXE\s*SEX|\bSEX\b", nline):
+            continue
+
+        window = normalize_text(" ".join(sex_lines[i:i + 3]))
+        m = re.search(r"(?:^|\s)([MF])(?:\s|$)", window)
+        if m:
+            fields["sex"] = m.group(1)
+        break
 
     # Numéros document
     if "PASSPORT" in normalized_doc or "PASSEPORT" in normalized_doc or "PASSPORT" in normalized_text:

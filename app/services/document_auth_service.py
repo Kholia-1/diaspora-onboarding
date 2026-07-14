@@ -993,6 +993,19 @@ def detect_document_category_from_ocr(ocr_text: str) -> dict[str, Any]:
         "sexe",
         "sex",
         "mrz",
+        # AFB_CNI_CORPUS_TUNING_V1 : vocabulaire du verso CNI (souvent seul
+        # présent sur les scans de verso, appris sur le corpus réel).
+        "date de delivrance",
+        "date of issue",
+        "date d expiration",
+        "date of expiry",
+        "expiration",
+        "delivrance",
+        "identifiant unique",
+        "poste d identification",
+        "identification post",
+        "taille",
+        "idcmr",
     ]
 
     address_keywords = [
@@ -1047,10 +1060,35 @@ def detect_document_category_from_ocr(ocr_text: str) -> dict[str, Any]:
             "long_numeric_score": long_numeric_score,
         }
 
+    # AFB_CNI_STRUCTURAL_SIGNALS_V1 : signaux structurels des CNI camerounaises,
+    # calibrés sur le corpus des CNI réellement envoyées. Le verso 2024 perd
+    # souvent tous ses libellés à l'OCR, mais conserve :
+    # - l'identifiant unique : 17 chiffres commençant par 20 ;
+    # - la signature imprimée du DGSN (« Martin MBARGA NGUELE ») ;
+    # - la répétition de libellés bilingues « DATE DE » / « DATE OF »,
+    #   même fusionnés (« DATEDEDELIYRAN DATEOFSSA »).
+    normalized_full = normalize_for_match(text)
+    compact_text = normalized_full.replace(" ", "")
+
+    identity_structural = 0
+    structural_signals = []
+
+    if re.search(r"(?<![0-9])20[0-9]{15}(?![0-9])", compact_text):
+        identity_structural += 40
+        structural_signals.append("identifiant_unique_17_chiffres")
+
+    if "MBARGA NGUELE" in normalized_full:
+        identity_structural += 25
+        structural_signals.append("signature_dgsn")
+
+    if len(re.findall(r"DATEDE|DATEOF", compact_text)) >= 2:
+        identity_structural += 20
+        structural_signals.append("libelles_dates_bilingues")
+
     category_scores = {
         "RIB": len(rib_hits) * 25 + (35 if long_numeric_score >= 18 else 0),
         "INCOME": len(income_hits) * 25,
-        "IDENTITY": len(identity_hits) * 15,
+        "IDENTITY": len(identity_hits) * 15 + identity_structural,
         "ADDRESS": len(address_hits) * 25,
         "TAX": len(tax_hits) * 25,
     }
@@ -1061,7 +1099,7 @@ def detect_document_category_from_ocr(ocr_text: str) -> dict[str, Any]:
     signals_by_category = {
         "RIB": rib_hits,
         "INCOME": income_hits,
-        "IDENTITY": identity_hits,
+        "IDENTITY": identity_hits + structural_signals,
         "ADDRESS": address_hits,
         "TAX": tax_hits,
     }
