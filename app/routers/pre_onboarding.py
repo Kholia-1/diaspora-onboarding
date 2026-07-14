@@ -1371,7 +1371,65 @@ async def save_pre_onboarding_file(
     metadata_path = target_dir / f"{document_safe}_{pre_document_id}.json"
     metadata_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
 
+    # AFB_FACE_MATCH_V1 : dès que la vidéo client est enregistrée, elle est
+    # comparée aux photos de référence de la session (portrait CNI, photo
+    # client) par reconnaissance faciale locale (YuNet + SFace).
+    if "CLIENT_VIDEO" in document_safe.upper():
+        try:
+            from app.services.face_match_service import run_session_face_match
+            metadata["face_match"] = run_session_face_match(target_dir)
+        except Exception as exc:
+            metadata["face_match"] = {"status": "ERROR", "error": str(exc)}
+
     return metadata
+
+
+# AFB_FACE_MATCH_V1 : détection de visage en direct (aperçu caméra) — la page
+# vidéo envoie une petite frame et démarre l'enregistrement dès qu'un visage
+# est réellement détecté (plus de délai fixe).
+@router.post("/face-detect")
+async def pre_onboarding_face_detect(file: UploadFile = File(...)):
+    import numpy as _np
+    import cv2 as _cv2
+    from app.services.face_match_service import models_available, detect_largest_face
+
+    if not models_available():
+        return {"ok": False, "status": "MODELS_MISSING", "face": False}
+
+    content = await file.read()
+    if not content:
+        return {"ok": False, "status": "EMPTY", "face": False}
+
+    image = _cv2.imdecode(_np.frombuffer(content, dtype=_np.uint8), _cv2.IMREAD_COLOR)
+    if image is None:
+        return {"ok": False, "status": "UNREADABLE", "face": False}
+
+    face = detect_largest_face(image)
+
+    return {
+        "ok": True,
+        "face": face is not None,
+        "score": round(float(face[14]), 3) if face is not None else 0.0,
+    }
+
+
+# AFB_FACE_MATCH_V1 : relance manuelle de la comparaison faciale d'une session.
+@router.post("/face-match/{session_id}")
+async def pre_onboarding_face_match(session_id: str):
+    from pathlib import Path as _Path2
+    import os as _os
+    import re as _re
+    from app.services.face_match_service import run_session_face_match
+
+    safe = _re.sub(r"[^A-Za-z0-9_-]", "_", str(session_id or "").strip())[:80]
+    if not safe:
+        raise HTTPException(status_code=400, detail="session_id requis.")
+
+    session_dir = _Path2(_os.getenv("PRE_ONBOARDING_UPLOAD_DIR", "uploads/pre_onboarding")) / safe
+    if not session_dir.exists():
+        raise HTTPException(status_code=404, detail="Session introuvable.")
+
+    return run_session_face_match(session_dir)
 
 
 # PREONBOARDING_SESSION_READ_ENDPOINT_V1
@@ -1403,9 +1461,9 @@ async def get_pre_onboarding_session(session_id: str):
     documents = []
 
     for metadata_file in sorted(target_dir.glob("*.json")):
-        # AFB_OCR_FIELDS_SERVER_PERSIST_V1 : ce fichier porte les champs OCR
-        # de la session, ce n'est pas un document client.
-        if metadata_file.name == "ocr_fields.json":
+        # AFB_OCR_FIELDS_SERVER_PERSIST_V1 / AFB_FACE_MATCH_V1 : fichiers
+        # techniques de la session, pas des documents client.
+        if metadata_file.name in ("ocr_fields.json", "face_match.json"):
             continue
 
         try:
@@ -1425,12 +1483,22 @@ async def get_pre_onboarding_session(session_id: str):
         except Exception:
             extracted_fields = {}
 
+    # AFB_FACE_MATCH_V1 : dernier résultat de comparaison faciale de la session.
+    face_match = None
+    face_match_path = target_dir / "face_match.json"
+    if face_match_path.exists():
+        try:
+            face_match = json.loads(face_match_path.read_text(encoding="utf-8"))
+        except Exception:
+            face_match = None
+
     return {
         "session_id": session_safe,
         "exists": True,
         "documents_count": len(documents),
         "documents": documents,
-        "extracted_fields": extracted_fields
+        "extracted_fields": extracted_fields,
+        "face_match": face_match
     }
 
 
