@@ -1330,9 +1330,225 @@ Package : ${getFormValue(form, "selected_package_ui")}
             populateCountrySelect("contact1_country", "CM");
             populateCountrySelect("contact2_country", "CM");
 
+            // Reprend le numéro WhatsApp saisi en pré-inscription (step0).
+            prefillWhatsappFromStep0();
+
+            // Rend les listes d'indicatifs pays cherchables (le <select> natif
+            // n'est pas filtrable).
+            ["phone_country", "contact1_country", "contact2_country"].forEach(function (id) {
+                const s = document.getElementById(id);
+                if (s) enhanceSearchableCountrySelect(s);
+            });
+
         } catch (error) {
             console.error("Erreur chargement pays :", error);
         }
+    }
+
+    function normalizeCountryText(value) {
+        return String(value || "")
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[̀-ͯ]/g, "")
+            .trim();
+    }
+
+    // Transforme un <select> d'indicatifs en liste cherchable, tout en gardant le
+    // <select> natif comme source de vérité : aucun autre code n'est à modifier,
+    // `select.value` continue de fonctionner exactement comme avant.
+    function enhanceSearchableCountrySelect(select) {
+        if (!select || select.dataset.searchableEnhanced === "1") return;
+        select.dataset.searchableEnhanced = "1";
+
+        // AFB_PHONE_COUNTRY_SINGLE_SEARCH_V1 : si l'ancien filtre superposé
+        // (country-code-search-box) a déjà été injecté dans ce bloc téléphone,
+        // le retirer — ce combo assure seul la recherche de pays.
+        const phoneGroup = select.closest(".phone-group");
+        if (phoneGroup) {
+            phoneGroup.querySelectorAll(".country-code-search-box").forEach(function (node) {
+                node.remove();
+            });
+        }
+
+        const options = Array.from(select.options).map(function (opt) {
+            return {
+                value: opt.value,
+                text: opt.textContent,
+                norm: normalizeCountryText(opt.textContent + " " + opt.value)
+            };
+        });
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "searchable-country";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.className = "searchable-country-input";
+        input.setAttribute("autocomplete", "off");
+        input.setAttribute("role", "combobox");
+        input.setAttribute("aria-expanded", "false");
+        input.placeholder = "Rechercher un pays…";
+
+        const dropdown = document.createElement("div");
+        dropdown.className = "searchable-country-dropdown";
+        dropdown.style.display = "none";
+
+        // Le wrapper prend la place du <select> dans la grille, puis on y déplace
+        // le <select> (masqué) pour qu'il reste la source de vérité.
+        select.parentNode.insertBefore(wrapper, select);
+        wrapper.appendChild(input);
+        wrapper.appendChild(select);
+        wrapper.appendChild(dropdown);
+        select.classList.add("searchable-country-native");
+
+        let activeIndex = -1;
+
+        function selectedText() {
+            const opt = select.options[select.selectedIndex];
+            return opt ? opt.textContent : "";
+        }
+
+        function syncInputToSelection() {
+            input.value = selectedText();
+        }
+
+        function renderList(filter) {
+            const norm = normalizeCountryText(filter);
+            dropdown.innerHTML = "";
+            activeIndex = -1;
+
+            const matches = options.filter(function (o) {
+                return !norm || o.norm.includes(norm);
+            });
+
+            if (!matches.length) {
+                const empty = document.createElement("div");
+                empty.className = "searchable-country-empty";
+                empty.textContent = "Aucun pays trouvé.";
+                dropdown.appendChild(empty);
+                return;
+            }
+
+            matches.forEach(function (o) {
+                const item = document.createElement("div");
+                item.className = "searchable-country-option";
+                if (o.value === select.value) item.classList.add("is-selected");
+                item.textContent = o.text;
+                item.dataset.value = o.value;
+                item.addEventListener("mousedown", function (e) {
+                    e.preventDefault(); // empêche le blur de fermer avant le clic
+                    choose(o.value);
+                });
+                dropdown.appendChild(item);
+            });
+        }
+
+        function open() {
+            renderList("");
+            dropdown.style.display = "block";
+            input.setAttribute("aria-expanded", "true");
+        }
+
+        function close() {
+            dropdown.style.display = "none";
+            input.setAttribute("aria-expanded", "false");
+            syncInputToSelection();
+        }
+
+        function choose(value) {
+            select.value = value;
+            select.dispatchEvent(new Event("change", { bubbles: true }));
+            syncInputToSelection();
+            close();
+        }
+
+        input.addEventListener("focus", function () { open(); input.select(); });
+        input.addEventListener("click", function () {
+            if (dropdown.style.display === "none") open();
+        });
+        input.addEventListener("input", function () {
+            dropdown.style.display = "block";
+            renderList(input.value);
+        });
+        input.addEventListener("keydown", function (e) {
+            const items = Array.from(dropdown.querySelectorAll(".searchable-country-option"));
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                if (dropdown.style.display === "none") open();
+                activeIndex = Math.min(activeIndex + 1, items.length - 1);
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                activeIndex = Math.max(activeIndex - 1, 0);
+            } else if (e.key === "Enter") {
+                if (dropdown.style.display !== "none") {
+                    e.preventDefault();
+                    const target = items[activeIndex] || items[0];
+                    if (target) choose(target.dataset.value);
+                }
+                return;
+            } else if (e.key === "Escape") {
+                close();
+                return;
+            } else {
+                return;
+            }
+            items.forEach(function (it, i) { it.classList.toggle("is-active", i === activeIndex); });
+            if (items[activeIndex]) items[activeIndex].scrollIntoView({ block: "nearest" });
+        });
+
+        // Fermeture au clic en dehors du widget.
+        document.addEventListener("click", function (e) {
+            if (!wrapper.contains(e.target)) close();
+        });
+
+        // Rafraîchit l'affichage quand le select change par programmation
+        // (préremplissage step0, restauration de brouillon, etc.).
+        select.addEventListener("change", syncInputToSelection);
+
+        syncInputToSelection();
+    }
+
+    // Préremplit l'indicatif + le numéro WhatsApp à partir des données de
+    // pré-inscription (localStorage step0). Le numéro complet est stocké sous
+    // la forme "+<indicatif><local>" (ex. "+237653935666") ; on le découpe en
+    // cherchant l'indicatif pays le plus long qui préfixe le numéro.
+    function prefillWhatsappFromStep0() {
+        const select = document.getElementById("phone_country");
+        const localInput = document.getElementById("phone_local");
+        if (!select || !localInput || !countries || !countries.length) return;
+
+        // Ne jamais écraser une saisie existante (OCR, brouillon, utilisateur).
+        if (cleanPhoneNumber(localInput.value)) return;
+
+        let full = (
+            localStorage.getItem("diaspora_step0_whatsapp_full") ||
+            localStorage.getItem("diaspora_step0_whatsapp_otp_phone") ||
+            ""
+        ).trim();
+        if (!full) return;
+
+        const digits = full.replace(/\D/g, "");
+        if (!digits) return;
+
+        let best = null;
+        countries.forEach(function (country) {
+            const cc = String(country.calling_code || "").replace(/\D/g, "");
+            if (cc && digits.startsWith(cc)) {
+                if (!best || cc.length > best.ccLen) {
+                    best = { country: country, ccLen: cc.length };
+                }
+            }
+        });
+
+        if (best) {
+            select.value = best.country.calling_code;
+            localInput.value = digits.slice(best.ccLen);
+        } else {
+            // Aucun indicatif reconnu : on met le numéro complet dans le champ.
+            localInput.value = full.startsWith("+") ? full : ("+" + digits);
+        }
+
+        syncPhoneFields();
     }
 
     function populateCountrySelect(selectId, defaultIsoCode) {
@@ -7327,6 +7543,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function addSearchToSelect(select, index) {
         if (select.dataset.countrySearchBound === "1") return;
+
+        // AFB_PHONE_COUNTRY_SINGLE_SEARCH_V1 : les listes d'indicatif téléphone
+        // ont déjà leur propre combo cherchable (searchable-country). Empiler ce
+        // second filtre au-dessus dupliquait la recherche de pays et disloquait
+        // la grille « N° de téléphone » des personnes à contacter.
+        if (
+            select.classList.contains("phone-country-select") ||
+            select.dataset.searchableEnhanced === "1" ||
+            select.closest(".searchable-country")
+        ) {
+            return;
+        }
 
         select.dataset.countrySearchBound = "1";
 
