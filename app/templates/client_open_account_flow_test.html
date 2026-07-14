@@ -548,9 +548,11 @@
 .step0-actions {
   margin-top: 16px;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 12px;
-  flex-wrap: wrap;
+  text-align: center;
 }
 
 #step0-status {
@@ -2039,6 +2041,17 @@
     display: none;
   }
 }
+
+/* AFB_GATE_AFTER_PREINSCRIPTION_V1 : tant que la pré-inscription n'est pas
+   validée (OTP WhatsApp vérifié), les sections suivantes restent masquées.
+   La classe .preinscription-ok est posée sur .page par le script associé. */
+.page:not(.preinscription-ok) #identity-doc-choice,
+.page:not(.preinscription-ok) #documents-section,
+.page:not(.preinscription-ok) #media-verification-section,
+.page:not(.preinscription-ok) #ocr-summary,
+.page:not(.preinscription-ok) .actions-bottom {
+  display: none !important;
+}
 </style>
 
 </head>
@@ -2428,7 +2441,7 @@
     </div>
   </section>
 
-<div class="section-box">
+<div class="section-box" id="identity-doc-choice">
         <h4 data-i18n="identity.title">Type de document d’identité</h4>
         <p data-i18n="identity.desc">Choisissez le document principal à analyser pour précharger les informations du formulaire.</p>
 
@@ -2439,6 +2452,10 @@
           <option value="RESIDENCE_PERMIT" data-i18n="identity.residence_permit">Titre de séjour</option>
           <option value="CONSULAR_CARD" data-i18n="identity.consular_card">Carte consulaire</option>
         </select>
+
+        <!-- Les captures de la pièce d'identité choisie (CNI recto/verso, passeport…)
+             sont regroupées ICI avec le sélecteur. -->
+        <div class="doc-list" id="identity-docs-list"></div>
       </div>
 
       <div class="section-box" id="documents-section">
@@ -2481,7 +2498,35 @@
     </section>
   </main>
 
+<script>
+/* AFB_GATE_AFTER_PREINSCRIPTION_V1 : pose/retire la classe .preinscription-ok
+   sur .page selon l'état de vérification OTP (localStorage). Le drapeau est posé
+   à la vérification réussie du code et retiré si le numéro change ou si un
+   nouveau code est envoyé — l'affichage suit automatiquement. */
+(function () {
+  var VERIFIED_KEY = "diaspora_step0_whatsapp_otp_verified";
+  var page = document.querySelector(".page");
+  if (!page) return;
 
+  function isVerified() {
+    try {
+      return localStorage.getItem(VERIFIED_KEY) === "true";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function apply() {
+    page.classList.toggle("preinscription-ok", isVerified());
+  }
+
+  apply();
+  /* La vérification peut aboutir dans plusieurs modules (saisie manuelle,
+     auto-vérification) : on observe l'état plutôt que chaque chemin de code. */
+  setInterval(apply, 700);
+  window.addEventListener("storage", apply);
+})();
+</script>
 
 <!-- CLIENT_OPEN_ACCOUNT_FLOW_ADVANCED_CAMERA_MODAL_V1 -->
 <div id="advanced-camera-modal" class="advanced-camera-overlay" aria-hidden="true">
@@ -3345,7 +3390,7 @@
           return;
         }
 
-        docList.innerHTML = getDocs().map(function (doc) {
+        const docCardHtml = function (doc) {
           const code = doc[0];
           const label = t(doc[1]);
           const desc = t(doc[2]);
@@ -3374,7 +3419,19 @@
               </div>
             </div>
           `;
-        }).join("");
+        };
+
+        // Pièces d'identité (regroupées avec le sélecteur « Type de document d'identité »)
+        // vs autres documents à fournir (section séparée).
+        const allDocs = getDocs();
+        const identityDocs = allDocs.filter(function (doc) { return isCameraOnlyIdentityDoc(doc[0]); });
+        const otherDocs = allDocs.filter(function (doc) { return !isCameraOnlyIdentityDoc(doc[0]); });
+
+        const identityDocsList = document.getElementById("identity-docs-list");
+        if (identityDocsList) {
+          identityDocsList.innerHTML = identityDocs.map(docCardHtml).join("");
+        }
+        docList.innerHTML = otherDocs.map(docCardHtml).join("");
 
         getDocs().forEach(function (doc) {
           const code = doc[0];
