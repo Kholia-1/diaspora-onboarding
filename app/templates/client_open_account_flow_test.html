@@ -132,7 +132,11 @@
     }
 
     .page {
-      padding: 34px 7% 70px;
+      /* Desktop : contenu borné et centré (cohérent avec le formulaire
+         d'ouverture de compte, .container à 1080px) */
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 34px 24px 70px;
       display: grid;
       grid-template-columns: 0.9fr 1.1fr;
       gap: 26px;
@@ -1887,7 +1891,7 @@
     Ouvrez votre compte Afriland First Bank simplement, que vous soyez au Cameroun ou à l’étranger. Préparez vos informations personnelles, vos justificatifs et votre téléphone WhatsApp pour finaliser votre demande.
   </p>
 </section>
-    <section class="panel intro">
+    <section class="panel intro" id="preonboarding-intro">
       <div class="badge" data-i18n="intro.badge">Pré-onboarding</div>
       <h2 data-i18n="intro.heading">Préparer votre demande d’ouverture de compte</h2>
 
@@ -1952,6 +1956,25 @@
         #account-type-section,
         #media-verification-section {
           display: none !important;
+        }
+        /* 1er card en mobile : on retire le panneau des 4 étapes (badge + titre + liste)
+           et son habillage de carte, en ne gardant que le bouton « Commencer ». */
+        #preonboarding-intro > .badge,
+        #preonboarding-intro > h2,
+        #preonboarding-intro > .steps {
+          display: none !important;
+        }
+        #preonboarding-intro {
+          padding: 0 !important;
+          border: none !important;
+          background: transparent !important;
+          box-shadow: none !important;
+        }
+        #preonboarding-intro .start-cta {
+          margin-top: 0 !important;
+        }
+        #preonboarding-intro .start-cta .btn {
+          width: 100%;
         }
       }
     </style>
