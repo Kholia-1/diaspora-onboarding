@@ -40,6 +40,11 @@
       justify-content: space-between;
       gap: 18px;
       flex-wrap: wrap;
+      /* menu fixe au défilement (comme l'accueil et le formulaire) ;
+         sert aussi d'ancre au panneau déroulant du burger mobile */
+      position: sticky;
+      top: 0;
+      z-index: 1000;
     }
 
     .brand {
@@ -1526,6 +1531,17 @@
 .advanced-corner.tr { top: -4px; right: -4px; border-width: 6px 6px 0 0; border-radius: 0 14px 0 0; }
 .advanced-corner.bl { bottom: -4px; left: -4px; border-width: 0 0 6px 6px; border-radius: 0 0 0 14px; }
 .advanced-corner.br { bottom: -4px; right: -4px; border-width: 0 6px 6px 0; border-radius: 0 0 14px 0; }
+
+/* AFB_CNI_BORDER_DETECT_CAPTURE_V2 : cadre vert dès que la pièce et ses
+   bordures sont détectées — la capture part immédiatement après. */
+.advanced-frame.detected {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.34), 0 0 22px rgba(34, 197, 94, 0.65);
+  transition: border-color 0.15s ease;
+}
+.advanced-frame.detected .advanced-corner {
+  border-color: #22c55e;
+}
 .advanced-guidance {
   position: absolute;
   left: 14px;
@@ -1927,6 +1943,17 @@
       .page.flow-started .panel.workspace { grid-column: 1 / -1; }
       .start-cta { margin-top: 22px; }
       .start-cta .btn { min-width: 200px; }
+
+      /* Allègement de la vue mobile : on masque les cartes superflues.
+         Le type de compte est masqué mais « Compte personnel » est sélectionné
+         automatiquement par script (sinon les documents requis ne s'afficheraient pas). */
+      @media (max-width: 768px) {
+        #remote-account-welcome,
+        #account-type-section,
+        #media-verification-section {
+          display: none !important;
+        }
+      }
     </style>
     <script>
       (function () {
@@ -1944,12 +1971,26 @@
         } else {
           initFlowGate();
         }
+
+        // Vue mobile : le bloc « Type de compte » est masqué → on sélectionne
+        // « Compte personnel » par défaut (clic simulé) pour que les pièces s'affichent.
+        function autoSelectAccountOnMobile() {
+          try {
+            if (!window.matchMedia('(max-width: 768px)').matches) return;
+            var personal = document.querySelector('.account-card[data-account-type="PERSONAL"]');
+            if (personal && !document.querySelector('.account-card.active')) {
+              personal.click();
+            }
+          } catch (e) {}
+        }
+        window.addEventListener('load', function () { setTimeout(autoSelectAccountOnMobile, 0); });
       })();
     </script>
 
     <section class="panel workspace">
 
 
+      <div id="account-type-section">
       <h3 data-i18n="account_type.title">Type de compte</h3>
       <p data-i18n="account_type.desc">Choisissez le type de compte que vous souhaitez ouvrir.</p>
 
@@ -1965,6 +2006,7 @@
           <h4 data-i18n="account.business.title">Compte entreprise</h4>
           <p data-i18n="account.business.desc">Pour une société, un entrepreneur ou une structure représentée par un mandataire.</p>
         </article>
+      </div>
       </div>
 
       <!-- AFB_FLOW_STEP0_PREINSCRIPTION_V1 -->
@@ -2152,7 +2194,7 @@
         <div class="doc-list" id="doc-list"></div>
       </div>
 
-      <div class="section-box">
+      <div class="section-box" id="media-verification-section">
         <h4 data-i18n="media.title">Photo / vidéo de vérification</h4>
         <p data-i18n="media.desc">Cette étape permet d’ajouter une photo ou une courte vidéo afin de sécuriser votre dossier.</p>
 
@@ -4002,6 +4044,114 @@
     };
   }
 
+  // AFB_CNI_BORDER_DETECT_CAPTURE_V2 : plus de décompte fixe — la capture
+  // part dès que la pièce est réellement détectée dans le cadre. La zone
+  // analysée reproduit le cadre-guide (86% de largeur, ratio 1.58) : on exige
+  // des contours nets sur les 4 bords (les bordures de la carte) et de la
+  // texture à l'intérieur (le texte imprimé).
+  function detectDocumentInFrame(video) {
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      return { present: false, message: text("Caméra en préparation...", "Camera is getting ready...") };
+    }
+
+    const maxWidth = 240;
+    const scale = Math.min(1, maxWidth / video.videoWidth);
+    const width = Math.max(8, Math.round(video.videoWidth * scale));
+    const height = Math.max(8, Math.round(video.videoHeight * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(video, 0, 0, width, height);
+
+    const data = ctx.getImageData(0, 0, width, height).data;
+    const gray = new Float32Array(width * height);
+
+    for (let i = 0, p = 0; p < gray.length; i += 4, p += 1) {
+      gray[p] = (data[i] * 0.299) + (data[i + 1] * 0.587) + (data[i + 2] * 0.114);
+    }
+
+    // Zone attendue de la pièce : mêmes proportions que le cadre-guide.
+    const rw = Math.round(width * 0.86);
+    let rh = Math.round(rw / 1.58);
+    if (rh > height * 0.86) rh = Math.round(height * 0.86);
+    const rx = Math.round((width - rw) / 2);
+    const ry = Math.round((height - rh) / 2);
+
+    const band = Math.max(3, Math.round(rh * 0.10));
+    const strongEdge = 20;
+
+    // Couverture d'un bord : fraction des colonnes (ou lignes) de la zone
+    // traversées par un contour net dans la bande. Un bord de carte droit
+    // donne une couverture proche de 1, un fond uni proche de 0.
+    function horizontalBandCoverage(y0, y1) {
+      let cols = 0;
+      let hits = 0;
+      for (let x = rx + 2; x < rx + rw - 2; x += 2) {
+        cols += 1;
+        for (let y = Math.max(1, y0); y < Math.min(height - 1, y1); y += 1) {
+          if (Math.abs(gray[y * width + x] - gray[(y - 1) * width + x]) > strongEdge) { hits += 1; break; }
+        }
+      }
+      return cols ? hits / cols : 0;
+    }
+
+    function verticalBandCoverage(x0, x1) {
+      let rows = 0;
+      let hits = 0;
+      for (let y = ry + 2; y < ry + rh - 2; y += 2) {
+        rows += 1;
+        for (let x = Math.max(1, x0); x < Math.min(width - 1, x1); x += 1) {
+          if (Math.abs(gray[y * width + x] - gray[y * width + x - 1]) > strongEdge) { hits += 1; break; }
+        }
+      }
+      return rows ? hits / rows : 0;
+    }
+
+    const coverage = [
+      horizontalBandCoverage(ry - band, ry + band),
+      horizontalBandCoverage(ry + rh - band, ry + rh + band),
+      verticalBandCoverage(rx - band, rx + band),
+      verticalBandCoverage(rx + rw - band, rx + rw + band)
+    ];
+
+    // Texture intérieure : le texte imprimé de la pièce.
+    let interiorSum = 0;
+    let interiorCount = 0;
+    for (let y = ry + band * 2; y < ry + rh - band * 2; y += 3) {
+      for (let x = rx + band * 2; x < rx + rw - band * 2; x += 3) {
+        interiorSum += Math.abs(gray[y * width + x] - gray[y * width + x - 1])
+          + Math.abs(gray[y * width + x] - gray[(y - 1) * width + x]);
+        interiorCount += 1;
+      }
+    }
+    const interiorTexture = interiorSum / Math.max(1, interiorCount);
+
+    const strongBands = coverage.filter(function (d) { return d >= 0.5; }).length;
+    const present = strongBands >= 3 && interiorTexture >= 4;
+
+    let message;
+    if (present) {
+      message = text("Pièce détectée.", "Document detected.");
+    } else if (interiorTexture < 4) {
+      message = text("Rapprochez la pièce et améliorez la lumière.", "Move the document closer and improve lighting.");
+    } else {
+      message = text("Alignez les bords de la pièce sur le cadre.", "Align the document edges with the frame.");
+    }
+
+    return { present: present, message: message, strongBands: strongBands, interiorTexture: interiorTexture };
+  }
+
+  // Exposé pour diagnostic et tests automatisés.
+  window.__afbDetectDocumentInFrame = detectDocumentInFrame;
+
+  function setFrameDetected(detected) {
+    const frame = document.getElementById("advanced-camera-frame");
+    if (frame) frame.classList.toggle("detected", Boolean(detected));
+  }
+
   function startAutoCaptureMonitor(profile) {
     stopAutoCaptureMonitor();
     updateAutoPanel(profile);
@@ -4009,37 +4159,54 @@
     const video = document.getElementById("advanced-camera-video");
     const guidance = document.getElementById("advanced-camera-guidance");
 
-    autoCaptureReadyAt = Date.now() + 2800;
+    const documentMode = profile && (profile.frame === "identity" || profile.frame === "document");
+
+    // Pas de décompte : seulement le temps que la caméra livre ses premières
+    // images nettes (exposition), puis détection en continu.
+    const warmupMs = documentMode ? 400 : 1500;
+    const intervalMs = documentMode ? 300 : 600;
+    const requiredStable = documentMode ? 2 : 3;
+
+    autoCaptureReadyAt = Date.now() + warmupMs;
 
     autoCaptureTimer = setInterval(function () {
       if (!autoCaptureEnabled || autoCaptureLocked) return;
       if (Date.now() < autoCaptureReadyAt) return;
       if (!video || !video.videoWidth || !video.videoHeight) return;
 
-      const result = scoreCurrentVideoFrame(video, profile);
+      const quality = scoreCurrentVideoFrame(video, profile);
+      let ok = quality.ok;
+      let failMessage = quality.message + " Score : " + quality.score + "/100.";
 
-      if (result.ok) {
+      if (documentMode) {
+        const detection = detectDocumentInFrame(video);
+        ok = detection.present && quality.ok;
+        setFrameDetected(detection.present);
+        if (!detection.present) failMessage = detection.message;
+      }
+
+      if (ok) {
         autoStableCounter += 1;
-        const remaining = Math.max(0, 5 - autoStableCounter);
 
         if (guidance) {
-          guidance.textContent = remaining > 0
-            ? text("Image correcte. Capture dans ", "Good image. Capture in ") + remaining + "..."
-            : text("Capture...", "Capturing...");
+          guidance.textContent = documentMode
+            ? text("Pièce détectée — capture...", "Document detected — capturing...")
+            : text("Image correcte — ne bougez plus...", "Good image — hold still...");
         }
 
-        if (autoStableCounter >= 5) {
+        if (autoStableCounter >= requiredStable) {
           autoCaptureLocked = true;
           stopAutoCaptureMonitor();
+          setFrameDetected(false);
           captureAdvancedPhoto();
         }
       } else {
         autoStableCounter = 0;
         if (guidance) {
-          guidance.textContent = result.message + " Score : " + result.score + "/100.";
+          guidance.textContent = failMessage;
         }
       }
-    }, 850);
+    }, intervalMs);
   }
 
   async function openAdvancedCamera(mode, target) {
