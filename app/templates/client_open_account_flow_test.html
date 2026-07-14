@@ -2143,7 +2143,6 @@
       <div class="actions-bottom">
         <div class="selected-label" id="selected-label"></div>
         <div>
-          <a class="btn btn-light" href="/" data-i18n="buttons.back">Retour</a>
           <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Continuer vers le formulaire</button>
         </div>
       </div>
@@ -2957,8 +2956,10 @@
         continueBtn.title = "";
 
         if (box) {
-          box.className = "required-docs-message-afb ok";
-          box.textContent = "Tous les documents obligatoires sont fournis. Vous pouvez continuer vers le formulaire.";
+          // Plus de message de confirmation quand tout est fourni : on masque la boîte.
+          box.className = "required-docs-message-afb";
+          box.textContent = "";
+          box.style.display = "none";
         }
 
         return true;
