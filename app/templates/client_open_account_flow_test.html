@@ -2189,6 +2189,13 @@
         .page .panel.workspace {
           display: block !important;
           grid-column: 1 / -1 !important;
+          /* Retirer la carte englobante : fond/bordure/ombre/padding/coins arrondis. */
+          background: transparent !important;
+          border: none !important;
+          border-radius: 0 !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          overflow: visible !important;
         }
       }
     </style>
@@ -2435,7 +2442,7 @@
       </div>
 
       <div class="section-box" id="documents-section">
-        <h4 data-i18n="docs.title">Documents à fournir</h4>
+        <h4 data-i18n="docs.title">Étape 0 — Documents à fournir</h4>
         <p data-i18n="docs.desc">Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préchargées vers le formulaire.</p>
         <div class="doc-list" id="doc-list"></div>
       </div>
@@ -2468,7 +2475,7 @@
       <div class="actions-bottom">
         <div class="selected-label" id="selected-label"></div>
         <div>
-          <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Continuer vers le formulaire</button>
+          <button class="btn btn-primary" id="continue-btn" disabled data-i18n="buttons.continue">Suivant</button>
         </div>
       </div>
     </section>
@@ -2872,7 +2879,7 @@
           "identity.passport": "Passeport",
           "identity.residence_permit": "Titre de séjour",
           "identity.consular_card": "Carte consulaire",
-          "docs.title": "Documents à fournir",
+          "docs.title": "Étape 0 — Documents à fournir",
           "docs.desc": "Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préchargées vers le formulaire.",
           "docs.no_account.title": "Type de compte non sélectionné",
           "docs.no_account.desc": "Choisissez compte personnel ou entreprise pour afficher les documents requis.",
@@ -2894,7 +2901,7 @@
           "selected.label": "Type de compte sélectionné :",
           "selected.none": "Aucun",
           "buttons.back": "Retour",
-          "buttons.continue": "Continuer vers le formulaire",
+          "buttons.continue": "Suivant",
           "buttons.upload": "Importer",
           "buttons.photo": "Photographier",
           "status.not_analyzed": "Non analysé",
@@ -2950,7 +2957,7 @@
           "identity.passport": "Passport",
           "identity.residence_permit": "Residence permit",
           "identity.consular_card": "Consular card",
-          "docs.title": "Required documents",
+          "docs.title": "Step 0 — Required documents",
           "docs.desc": "Upload or photograph the documents. Usable data will be pre-filled into the form.",
           "docs.no_account.title": "Account type not selected",
           "docs.no_account.desc": "Choose personal or business account to display the required documents.",
@@ -2972,7 +2979,7 @@
           "selected.label": "Selected account type:",
           "selected.none": "None",
           "buttons.back": "Back",
-          "buttons.continue": "Continue to the form",
+          "buttons.continue": "Next",
           "buttons.upload": "Upload",
           "buttons.photo": "Take photo",
           "status.not_analyzed": "Not analyzed",
