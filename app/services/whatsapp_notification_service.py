@@ -12,6 +12,22 @@ API_INTEGRATIONS_FILE = DATA_DIR / "api_integrations.json"
 NOTIFICATION_LOG = DATA_DIR / "notifications.log"
 
 
+def build_callbell_send_url(base_url: str) -> str:
+    """
+    base_url peut déjà inclure /v1 (ex: https://api.callbell.eu/v1) selon la
+    config admin. Ne pas dupliquer /v1 dans l'URL finale, sinon Callbell renvoie 404.
+    """
+    base_url = str(base_url or "https://api.callbell.eu").strip().rstrip("/")
+
+    if base_url.endswith("/v1/messages/send"):
+        return base_url
+
+    if base_url.endswith("/v1"):
+        return base_url + "/messages/send"
+
+    return base_url + "/v1/messages/send"
+
+
 def _load_file_config():
     if not CONFIG_FILE.exists():
         return {}
@@ -348,7 +364,7 @@ def send_callbell_message(phone: str, message: str, context: dict | None = None,
         })
         return result
 
-    url = f"{config['base_url']}/v1/messages/send"
+    url = build_callbell_send_url(config["base_url"])
 
     request = urllib.request.Request(
         url,

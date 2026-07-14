@@ -132,6 +132,12 @@
             display: inline-block;
         }
 
+        .status-badge-lg {
+            padding: 9px 16px;
+            border-radius: 24px;
+            font-size: 14px;
+        }
+
         .status-submitted {
             background: #E0F2FE;
             color: #075985;
@@ -157,11 +163,17 @@
             color: #374151;
         }
 
+        .status-kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
         .score-box {
             border: 1px solid var(--border);
+            border-left: 4px solid var(--border);
             border-radius: 12px;
             padding: 14px;
-            margin-bottom: 12px;
             background: #FAFAFA;
         }
 
@@ -186,6 +198,18 @@
 
         .score-low {
             color: #991B1B;
+        }
+
+        .score-box.score-good {
+            border-left-color: var(--green);
+        }
+
+        .score-box.score-mid {
+            border-left-color: var(--orange);
+        }
+
+        .score-box.score-low {
+            border-left-color: #991B1B;
         }
 
         .documents-grid {
@@ -355,6 +379,100 @@
             font-size: 13px;
         }
 
+        .field-group {
+            margin-bottom: 16px;
+        }
+
+        .field-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .field-group label {
+            display: block;
+            font-weight: bold;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .pay-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .pay-summary strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .pay-note {
+            margin-top: 14px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #FAFAFA;
+            border: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .pay-note-warning {
+            background: #FFF7ED;
+            border-color: #FDBA74;
+            color: #9A3412;
+        }
+
+        .pay-note-danger {
+            background: #FEE2E2;
+            border-color: #FECACA;
+            color: #991B1B;
+        }
+
+        .pay-note-success {
+            background: #DCFCE7;
+            border-color: #BBF7D0;
+            color: #166534;
+        }
+
+        .pay-link-row {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .pay-link-row input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .account-opening-group {
+            background: #FAFAFA;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--red);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+
+        .account-opening-group.hidden {
+            display: none;
+        }
+
+        .account-opening-group-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+
+        .account-opening-group-title h4 {
+            margin: 0;
+            color: #111827;
+            font-size: 15px;
+        }
+
         .print-btn {
     background: #C90000;
     color: white;
@@ -428,6 +546,10 @@
             .info-grid {
                 grid-template-columns: 1fr;
             }
+
+            .status-kpi-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 
@@ -471,29 +593,6 @@
         font-size: 13px;
     }
 
-    .bo-extra-field-v30 {
-        margin-top: 12px;
-    }
-
-    .bo-extra-field-v30 label {
-        display: block;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-
-    .bo-extra-field-v30 input,
-    .bo-extra-field-v30 textarea {
-        width: 100%;
-        padding: 11px 12px;
-        border-radius: 10px;
-        border: 1px solid #d1d5db;
-        font-family: inherit;
-    }
-
-    .bo-extra-field-v30 textarea {
-        min-height: 85px;
-        resize: vertical;
-    }
 </style>
 
 
@@ -538,29 +637,6 @@
         line-height: 1.35;
     }
 
-    .bo-extra-field-v31 {
-        margin-top: 12px;
-    }
-
-    .bo-extra-field-v31 label {
-        display: block;
-        font-weight: 700;
-        margin-bottom: 6px;
-    }
-
-    .bo-extra-field-v31 input,
-    .bo-extra-field-v31 textarea {
-        width: 100%;
-        padding: 11px 12px;
-        border-radius: 10px;
-        border: 1px solid #d1d5db;
-        font-family: inherit;
-    }
-
-    .bo-extra-field-v31 textarea {
-        min-height: 85px;
-        resize: vertical;
-    }
 </style>
 
 
@@ -993,38 +1069,40 @@ body > .afb-otp-card {
                 <h3>Statut du dossier</h3>
 
                 <p>
-                    <span id="statusBadge" class="badge status-submitted">...</span>
+                    <span id="statusBadge" class="badge status-badge-lg status-submitted">...</span>
                 </p>
 
-                <div class="score-box">
-                    <span>Score KYC</span>
-                    <strong id="kycScore">0%</strong>
-                </div>
+                <div class="status-kpi-row">
+                    <div class="score-box">
+                        <span>Score KYC</span>
+                        <strong id="kycScore">0%</strong>
+                    </div>
 
-                <div class="score-box">
-                    <span>Score documentaire</span>
-                    <strong id="documentScore">0%</strong>
-                </div>
+                    <div class="score-box">
+                        <span>Score documentaire</span>
+                        <strong id="documentScore">0%</strong>
+                    </div>
 
-                <div class="score-box">
-                    <span>Niveau de risque</span>
-                    <strong id="riskLevel">...</strong>
+                    <div class="score-box">
+                        <span>Niveau de risque</span>
+                        <strong id="riskLevel">...</strong>
+                    </div>
                 </div>
             </div>
 
             <div class="panel">
                 <h3>BLACKMODULE</h3>
 
-                <div class="info">
-                    <label>Statut screening</label>
-                    <strong id="blackmoduleStatus">...</strong>
-                </div>
+                <div class="status-kpi-row">
+                    <div class="info">
+                        <label>Statut screening</label>
+                        <span id="blackmoduleStatus" class="badge status-badge-lg status-submitted">...</span>
+                    </div>
 
-                <br>
-
-                <div class="info">
-                    <label>Score</label>
-                    <strong id="blackmoduleScore">0</strong>
+                    <div class="score-box">
+                        <span>Score</span>
+                        <strong id="blackmoduleScore">0</strong>
+                    </div>
                 </div>
 
                 <div id="blackmoduleAlert"></div>
@@ -1037,50 +1115,66 @@ body > .afb-otp-card {
             </div>
 
             <div class="panel">
+                <h3>Diagnostic paiement & WhatsApp</h3>
+                <div id="paymentDiagnosticContent"></div>
+                <div id="paymentLinkActionContent"></div>
+            </div>
+
+            <div class="panel">
                 <h3>Décision back-office</h3>
 
-                <label>Décision</label>
-                <select id="decision">
-                    <option value="ACCOUNT_OPENED">Compte ouvert / RIB attribué</option>
+                <div id="decisionPaymentStatus"></div>
+
+                <div class="field-group">
+                    <label>Décision</label>
+                    <select id="decision">
+                        <option value="ACCOUNT_OPENED">Compte ouvert / RIB attribué</option>
                         <option value="APPROVED">Approuver le dossier</option>
-                    <option value="REJECTED">Rejeter le dossier</option>
-                    <option value="NEED_MORE_DOCUMENTS">Demander un complément</option>
-                    <option value="COMPLIANCE_REVIEW">Envoyer en revue conformité</option>
-                </select>
-
-                <br><br>
-
-                <label>Agent / utilisateur</label>
-                <input id="reviewedBy" placeholder="Nom de l’agent">
-
-                <br><br>
-
-                <label>Commentaire</label>
-                <textarea id="comment" placeholder="Observation, justification, pièces manquantes..."></textarea>
-
-                
-
-
-                
-                <div class="bo-extra-field-v30">
-                    <label>Numéro de compte attribué</label>
-                    <input id="accountNumber" placeholder="Ex : 10001-00001-12345678901">
+                        <option value="REJECTED">Rejeter le dossier</option>
+                        <option value="NEED_MORE_DOCUMENTS">Demander un complément</option>
+                        <option value="COMPLIANCE_REVIEW">Envoyer en revue conformité</option>
+                    </select>
                 </div>
 
-                <div class="bo-extra-field-v30">
-                    <label>RIB final Afriland à communiquer au client</label>
-                    <textarea id="finalRib" placeholder="Saisir ou coller le RIB final attribué au client"></textarea>
+                <div class="field-group">
+                    <label>Agent / utilisateur</label>
+                    <input id="reviewedBy" placeholder="Nom de l’agent">
                 </div>
 
-                <div class="bo-extra-field-v30">
-                    <label>Message au client</label>
-                    <textarea id="clientMessage" placeholder="Ex : Votre dossier est conforme. Votre compte a été ouvert avec succès."></textarea>
+                <div class="field-group">
+                    <label>Commentaire</label>
+                    <textarea id="comment" placeholder="Observation, justification, pièces manquantes..."></textarea>
+                </div>
+
+                <div class="account-opening-group" id="accountOpenedFieldsGroup">
+                    <div class="account-opening-group-title">
+                        <h4>Informations d’ouverture de compte</h4>
+                        <span class="badge status-ok">Saisie manuelle back-office</span>
+                    </div>
+                    <p class="muted" style="margin:0 0 14px;">
+                        Le numéro de compte et le RIB doivent provenir du back-office ou du Core Banking.
+                        Diaspora Onboarding ne les génère pas ; il les enregistre et les communique au client.
+                    </p>
+
+                    <div class="field-group">
+                        <label>Numéro de compte attribué</label>
+                        <input id="accountNumber" placeholder="Ex : 10001-00001-12345678901">
+                    </div>
+
+                    <div class="field-group">
+                        <label>RIB final Afriland à communiquer au client</label>
+                        <textarea id="finalRib" placeholder="Saisir ou coller le RIB final attribué au client"></textarea>
+                    </div>
+
+                    <div class="field-group">
+                        <label>Message au client</label>
+                        <textarea id="clientMessage" placeholder="Ex : Votre dossier est conforme. Votre compte a été ouvert avec succès."></textarea>
+                    </div>
                 </div>
 
                 <button class="btn btn-full" onclick="submitDecision()">
                     Enregistrer la décision
                 </button>
-
 
                 <div id="decisionMessage" class="message"></div>
             </div>
@@ -1153,6 +1247,59 @@ body > .afb-otp-card {
         }
 
         return "score-low";
+    }
+
+    function riskLevelClass(value) {
+        const v = (value || "").toString().trim().toUpperCase();
+
+        if (["FAIBLE", "LOW"].includes(v)) {
+            return "score-good";
+        }
+
+        if (["MOYEN", "MEDIUM", "A_VERIFIER"].includes(v)) {
+            return "score-mid";
+        }
+
+        if (["ELEVE", "HIGH", "CRITIQUE"].includes(v)) {
+            return "score-low";
+        }
+
+        return "";
+    }
+
+    function blackmoduleStatusLabel(status) {
+        const labels = {
+            "NOT_SCREENED": "Non lancé",
+            "BLACKMODULE_UNAVAILABLE": "Indisponible",
+            "BLACKMODULE_ERROR": "Erreur technique",
+            "SCREENED": "Effectué"
+        };
+
+        return labels[status] || status || "N/A";
+    }
+
+    function blackmoduleStatusClass(status, hasAlert) {
+        const v = (status || "").toString().toUpperCase();
+
+        if (v === "NOT_SCREENED") {
+            return "status-submitted";
+        }
+
+        if (v === "BLACKMODULE_UNAVAILABLE" || v === "BLACKMODULE_ERROR") {
+            return "status-review";
+        }
+
+        return hasAlert ? "status-alert" : "status-ok";
+    }
+
+    function blackmoduleScoreClass(status, score) {
+        const v = (status || "").toString().toUpperCase();
+
+        if (v === "NOT_SCREENED" || v === "BLACKMODULE_UNAVAILABLE" || v === "BLACKMODULE_ERROR") {
+            return "";
+        }
+
+        return scoreClass(score);
     }
 
     function info(label, value) {
@@ -1322,20 +1469,34 @@ async function loadDetail() {
             `${app.last_name || ""} ${app.first_name || ""} - ${app.email || ""}`;
 
         const badge = document.getElementById("statusBadge");
-        badge.className = `badge ${statusClass(app.status)}`;
+        badge.className = `badge status-badge-lg ${statusClass(app.status)}`;
         badge.innerText = statusLabel(app.status);
 
         const kyc = document.getElementById("kycScore");
+        const kycCls = scoreClass(app.kyc_score);
         kyc.innerText = `${Number(app.kyc_score || 0)}%`;
-        kyc.className = scoreClass(app.kyc_score);
+        kyc.className = kycCls;
+        kyc.closest(".score-box").className = `score-box ${kycCls}`;
 
         const docScore = document.getElementById("documentScore");
+        const docCls = scoreClass(app.document_score);
         docScore.innerText = `${Number(app.document_score || 0)}%`;
-        docScore.className = scoreClass(app.document_score);
+        docScore.className = docCls;
+        docScore.closest(".score-box").className = `score-box ${docCls}`;
 
-        document.getElementById("riskLevel").innerText = app.risk_level || "NON_EVALUE";
-        document.getElementById("blackmoduleStatus").innerText = app.blackmodule_status || "NOT_SCREENED";
-        document.getElementById("blackmoduleScore").innerText = Number(app.blackmodule_score || 0);
+        const riskLevelEl = document.getElementById("riskLevel");
+        riskLevelEl.innerText = app.risk_level || "NON_EVALUE";
+        riskLevelEl.closest(".score-box").className = `score-box ${riskLevelClass(app.risk_level)}`;
+        const bmStatus = app.blackmodule_status || "NOT_SCREENED";
+        const bmBadge = document.getElementById("blackmoduleStatus");
+        bmBadge.innerText = blackmoduleStatusLabel(bmStatus);
+        bmBadge.className = `badge status-badge-lg ${blackmoduleStatusClass(bmStatus, !!app.blackmodule_alert)}`;
+
+        const bmScoreEl = document.getElementById("blackmoduleScore");
+        const bmScoreCls = blackmoduleScoreClass(bmStatus, app.blackmodule_score);
+        bmScoreEl.innerText = Number(app.blackmodule_score || 0);
+        bmScoreEl.className = bmScoreCls;
+        bmScoreEl.closest(".score-box").className = `score-box ${bmScoreCls}`;
 
         if (app.blackmodule_alert) {
             document.getElementById("blackmoduleAlert").innerHTML =
@@ -1583,6 +1744,17 @@ async function loadDetail() {
     document.title = `Dossier_${reference}`;
     window.print();
     }
+
+    function updateAccountOpenedFieldsVisibility() {
+        const select = document.getElementById("decision");
+        const group = document.getElementById("accountOpenedFieldsGroup");
+        if (!select || !group) return;
+
+        group.classList.toggle("hidden", select.value !== "ACCOUNT_OPENED");
+    }
+
+    document.getElementById("decision").addEventListener("change", updateAccountOpenedFieldsVisibility);
+    updateAccountOpenedFieldsVisibility();
 
     loadDetail();
 
@@ -2082,168 +2254,6 @@ async function renderComplianceSummaryV30(data) {
 </script>
 
 
-<!-- BACKOFFICE_PAYMENT_SUMMARY_BANNER_V1 -->
-<script>
-(function () {
-    function findApplicationReference() {
-        const sources = [
-            window.location.href,
-            document.body ? document.body.innerText : ""
-        ];
-
-        for (const src of sources) {
-            const match = String(src || "").match(/DIA-[0-9]{8}-[A-Z0-9]+/);
-            if (match && match[0]) return match[0];
-        }
-
-        return "";
-    }
-
-    function fmt(value) {
-        if (value === null || value === undefined || value === "") return "—";
-        return String(value);
-    }
-
-    function createPaymentBanner(data) {
-        const app = data.application || {};
-        const payment = data.payment || {};
-        const computed = data.computed || {};
-
-        const confirmed = computed.payment_confirmed === true;
-        const required = computed.payment_required === true;
-        const canOpen = computed.can_open_account === true;
-
-        const box = document.createElement("div");
-        box.id = "backofficePaymentSummaryBanner";
-        box.style.maxWidth = "1180px";
-        box.style.margin = "18px auto";
-        box.style.padding = "18px 20px";
-        box.style.borderRadius = "16px";
-        box.style.boxShadow = "0 10px 30px rgba(15, 23, 42, 0.10)";
-        box.style.fontFamily = "Arial, sans-serif";
-        box.style.lineHeight = "1.45";
-
-        if (!required) {
-            box.style.background = "#f8fafc";
-            box.style.border = "1px solid #cbd5e1";
-            box.style.color = "#334155";
-            box.innerHTML = `
-                <div style="font-size:20px;font-weight:800;margin-bottom:8px;">
-                    Paiement package : non requis
-                </div>
-                <div>Ce dossier ne nécessite pas de paiement package avant ouverture du compte.</div>
-            `;
-            return box;
-        }
-
-        if (confirmed) {
-            box.style.background = "#ecfdf3";
-            box.style.border = "1px solid #22c55e";
-            box.style.color = "#064e3b";
-            box.innerHTML = `
-                <div style="font-size:20px;font-weight:800;margin-bottom:8px;">
-                    Paiement confirmé
-                </div>
-                <div>
-                    Le paiement package est confirmé. L’ouverture du compte peut se poursuivre.
-                </div>
-                <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;font-size:14px;">
-                    <div><strong>Référence :</strong><br>${fmt(payment.payment_reference || app.package_payment_reference)}</div>
-                    <div><strong>Montant :</strong><br>${fmt(payment.amount || app.package_payment_amount)} ${fmt(payment.currency || app.package_payment_currency)}</div>
-                    <div><strong>Statut :</strong><br>${fmt(payment.status || app.package_payment_status)}</div>
-                    <div><strong>Session Mastercard :</strong><br>${fmt(payment.provider_transaction_id)}</div>
-                    <div><strong>Date paiement :</strong><br>${fmt(payment.paid_at)}</div>
-                </div>
-            `;
-        } else {
-            box.style.background = "#fff7df";
-            box.style.border = "1px solid #facc15";
-            box.style.color = "#78350f";
-            box.innerHTML = `
-                <div style="font-size:20px;font-weight:800;margin-bottom:8px;">
-                    Paiement package en attente
-                </div>
-                <div>
-                    Ce dossier nécessite un paiement package avant ouverture du compte.
-                </div>
-                <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;font-size:14px;">
-                    <div><strong>Référence :</strong><br>${fmt(payment.payment_reference || app.package_payment_reference)}</div>
-                    <div><strong>Montant :</strong><br>${fmt(payment.amount || app.package_payment_amount)} ${fmt(payment.currency || app.package_payment_currency)}</div>
-                    <div><strong>Statut :</strong><br>${fmt(payment.status || app.package_payment_status)}</div>
-                    <div><strong>Blocage :</strong><br>${fmt(computed.blocking_reason)}</div>
-                </div>
-            `;
-        }
-
-        return box;
-    }
-
-    function disableAccountOpeningIfNeeded(data) {
-        const computed = data.computed || {};
-        if (computed.can_open_account === true) return;
-
-        const words = ["ouvrir le compte", "compte ouvert", "ouvrir compte", "account opened", "open account"];
-
-        const elements = Array.from(document.querySelectorAll("button, a, input[type='submit']"));
-
-        elements.forEach(function (el) {
-            const text = String(el.innerText || el.value || el.getAttribute("title") || "").toLowerCase();
-            const shouldBlock = words.some(function (w) { return text.includes(w); });
-
-            if (!shouldBlock) return;
-
-            el.setAttribute("data-payment-blocked", "true");
-            el.style.opacity = "0.55";
-            el.style.cursor = "not-allowed";
-            el.title = "Ouverture bloquée : paiement package requis mais non confirmé.";
-
-            el.addEventListener("click", function (ev) {
-                ev.preventDefault();
-                ev.stopPropagation();
-                alert("Ouverture bloquée : le paiement package doit être confirmé avant l’ouverture du compte.");
-                return false;
-            }, true);
-        });
-    }
-
-    async function loadPaymentSummary() {
-        const appRef = findApplicationReference();
-        if (!appRef) return;
-
-        try {
-            const response = await fetch("/api/payments/mastercard/application-payment-summary/" + encodeURIComponent(appRef));
-            const data = await response.json();
-
-            if (!data || data.success !== true) return;
-
-            const banner = createPaymentBanner(data);
-
-            const main =
-                document.querySelector("main") ||
-                document.querySelector(".container") ||
-                document.querySelector(".content") ||
-                document.body;
-
-            if (!main) return;
-
-            main.insertBefore(banner, main.firstChild);
-
-            disableAccountOpeningIfNeeded(data);
-
-        } catch (e) {
-            console.log("Erreur chargement résumé paiement back-office", e);
-        }
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", loadPaymentSummary);
-    } else {
-        loadPaymentSummary();
-    }
-})();
-</script>
-
-
 <!-- BACKOFFICE_PAYMENT_SUMMARY_BANNER_FIX_V2 -->
 <script>
 (function () {
@@ -2302,76 +2312,69 @@ async function renderComplianceSummaryV30(data) {
 
         const box = document.createElement("div");
         box.id = "backofficePaymentSummaryBannerV2";
-        box.style.margin = "18px 0";
-        box.style.padding = "18px";
-        box.style.borderRadius = "16px";
-        box.style.boxShadow = "0 10px 28px rgba(15, 23, 42, 0.10)";
-        box.style.fontFamily = "Arial, sans-serif";
-        box.style.lineHeight = "1.45";
+        box.className = "panel";
 
         if (!required) {
-            box.style.background = "#f8fafc";
-            box.style.border = "1px solid #cbd5e1";
-            box.style.color = "#334155";
             box.innerHTML = `
-                <div style="font-size:18px;font-weight:800;margin-bottom:8px;">
-                    Paiement package : non requis
-                </div>
-                <div>Ce dossier ne nécessite pas de paiement package avant ouverture du compte.</div>
+                <h3>Paiement package</h3>
+                <span class="badge status-submitted">Non requis</span>
+                <p class="muted" style="margin-top:10px;">Ce dossier ne nécessite pas de paiement package avant ouverture du compte.</p>
             `;
             return box;
         }
 
         if (confirmed) {
-            box.style.background = "#ecfdf3";
-            box.style.border = "1px solid #22c55e";
-            box.style.color = "#064e3b";
             box.innerHTML = `
-                <div style="font-size:18px;font-weight:800;margin-bottom:8px;">
-                    Paiement package confirmé
-                </div>
-                <div style="margin-bottom:12px;">
-                    Le paiement Mastercard est confirmé. L’ouverture du compte peut se poursuivre.
-                </div>
+                <h3>Paiement package</h3>
+                <span class="badge status-ok">Confirmé</span>
+                <p class="muted" style="margin:10px 0 14px;">Le paiement Mastercard est confirmé. L’ouverture du compte peut se poursuivre.</p>
 
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;font-size:14px;">
-                    <div><strong>Référence paiement</strong><br>${ref}</div>
-                    <div><strong>Package</strong><br>${packageName}</div>
-                    <div><strong>Montant</strong><br>${amount} ${currency}</div>
-                    <div><strong>Statut transaction</strong><br>${status}</div>
-                    <div><strong>Session Mastercard</strong><br><span style="word-break:break-word;">${session}</span></div>
-                    <div><strong>Date paiement</strong><br>${paidAt}</div>
+                <div class="pay-summary">
+                    <div><strong>Référence paiement</strong><span>${ref}</span></div>
+                    <div><strong>Package</strong><span>${packageName}</span></div>
+                    <div><strong>Montant</strong><span>${amount} ${currency}</span></div>
+                    <div><strong>Statut transaction</strong><span>${status}</span></div>
+                    <div><strong>Session Mastercard</strong><span style="word-break:break-word;">${session}</span></div>
+                    <div><strong>Date paiement</strong><span>${paidAt}</span></div>
                 </div>
             `;
             return box;
         }
 
-        box.style.background = "#fff7df";
-        box.style.border = "1px solid #facc15";
-        box.style.color = "#78350f";
         box.innerHTML = `
-            <div style="font-size:18px;font-weight:800;margin-bottom:8px;">
-                Paiement package en attente
-            </div>
-            <div style="margin-bottom:12px;">
-                Ce dossier nécessite un paiement package avant ouverture du compte.
-            </div>
+            <h3>Paiement package</h3>
+            <span class="badge status-review">En attente</span>
+            <p class="muted" style="margin:10px 0 14px;">Ce dossier nécessite un paiement package avant ouverture du compte.</p>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;font-size:14px;">
-                <div><strong>Référence paiement</strong><br>${ref}</div>
-                <div><strong>Package</strong><br>${packageName}</div>
-                <div><strong>Montant</strong><br>${amount} ${currency}</div>
-                <div><strong>Statut transaction</strong><br>${status}</div>
-                <div><strong>Blocage</strong><br>${fmt(computed.blocking_reason)}</div>
+            <div class="pay-summary">
+                <div><strong>Référence paiement</strong><span>${ref}</span></div>
+                <div><strong>Package</strong><span>${packageName}</span></div>
+                <div><strong>Montant</strong><span>${amount} ${currency}</span></div>
+                <div><strong>Statut transaction</strong><span>${status}</span></div>
+                <div><strong>Blocage</strong><span>${fmt(computed.blocking_reason)}</span></div>
             </div>
         `;
 
         return box;
     }
 
+    function findPaymentPanel() {
+        const marker = document.getElementById("paymentDiagnosticContent");
+        if (!marker) return null;
+
+        return marker.closest(".panel");
+    }
+
     function insertBanner(banner) {
         const old = document.getElementById("backofficePaymentSummaryBannerV2");
         if (old) old.remove();
+
+        const paymentPanel = findPaymentPanel();
+
+        if (paymentPanel && paymentPanel.parentNode) {
+            paymentPanel.parentNode.insertBefore(banner, paymentPanel);
+            return;
+        }
 
         const statusBlock = findStatusBlock();
 
@@ -2474,13 +2477,13 @@ async function renderComplianceSummaryV30(data) {
 
     function statusBadge(value) {
         const v = (value || "N/A").toString();
-        let bg = "#6c757d";
+        let cls = "status-rejected";
 
-        if (["PAID", "PAYMENT_CONFIRMED", "PAID_CAPTURED", "read", "delivered"].includes(v)) bg = "#198754";
-        if (["PENDING", "AUTHENTICATED_NOT_CAPTURED", "enqueued"].includes(v)) bg = "#ffc107";
-        if (["FAILED", "failed", "NOT_PAID", "ERROR"].includes(v)) bg = "#dc3545";
+        if (["PAID", "PAYMENT_CONFIRMED", "PAID_CAPTURED", "read", "delivered"].includes(v)) cls = "status-ok";
+        if (["PENDING", "AUTHENTICATED_NOT_CAPTURED", "enqueued"].includes(v)) cls = "status-review";
+        if (["FAILED", "failed", "NOT_PAID", "ERROR"].includes(v)) cls = "status-alert";
 
-        return `<span style="display:inline-block;padding:4px 8px;border-radius:999px;background:${bg};color:#fff;font-size:12px;font-weight:700;">${v}</span>`;
+        return `<span class="badge ${cls}">${v}</span>`;
     }
 
     function createPanel(data) {
@@ -2494,67 +2497,65 @@ async function renderComplianceSummaryV30(data) {
         }).join("");
 
         const html = `
-            <div id="paymentWhatsappDiagnosticPanel" style="margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);">
-                <h3 style="margin:0 0 12px 0;color:#b00020;">Paiement & WhatsApp</h3>
-
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
-                    <div>
-                        <strong>Référence paiement</strong><br>
-                        <span>${payment.payment_reference || "N/A"}</span>
-                    </div>
-
-                    <div>
-                        <strong>Statut transaction</strong><br>
-                        ${statusBadge(payment.status)}
-                    </div>
-
-                    <div>
-                        <strong>Session Mastercard</strong><br>
-                        <small>${payment.provider_transaction_id || "N/A"}</small>
-                    </div>
-
-                    <div>
-                        <strong>WhatsApp dernier statut</strong><br>
-                        ${statusBadge(whatsapp.delivery_status || whatsapp.initial_status)}
-                    </div>
+            <div class="pay-summary">
+                <div>
+                    <strong>Référence paiement</strong>
+                    <span>${payment.payment_reference || "N/A"}</span>
                 </div>
 
-                ${mastercard.decision ? `
-                    <div style="margin-top:14px;padding:10px;border-radius:8px;background:#f8f9fa;">
-                        <strong>Diagnostic Mastercard :</strong>
-                        ${statusBadge(mastercard.decision)}
-                        <br>
-                        <small>${mastercard.message || ""}</small>
-                    </div>
-                ` : ""}
+                <div>
+                    <strong>Statut transaction</strong>
+                    ${statusBadge(payment.status)}
+                </div>
 
-                ${link ? `
-                    <div style="margin-top:14px;">
-                        <strong>Lien de paiement</strong><br>
-                        <input id="paymentLinkInput" value="${link}" readonly style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:6px;">
-                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('paymentLinkInput').value).then(()=>alert('Lien copié'))" style="margin-top:8px;padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
-                            Copier le lien de paiement
-                        </button>
-                    </div>
-                ` : `
-                    <div style="margin-top:14px;color:#dc3545;">
-                        Aucun lien de paiement disponible.
-                    </div>
-                `}
+                <div>
+                    <strong>Session Mastercard</strong>
+                    <small>${payment.provider_transaction_id || "N/A"}</small>
+                </div>
 
-                ${errors ? `
-                    <div style="margin-top:14px;padding:10px;border-radius:8px;background:#fff3cd;">
-                        <strong>Erreur WhatsApp détectée :</strong>
-                        <ul style="margin-top:8px;">${errors}</ul>
-                    </div>
-                ` : ""}
+                <div>
+                    <strong>WhatsApp dernier statut</strong>
+                    ${statusBadge(whatsapp.delivery_status || whatsapp.initial_status)}
+                </div>
             </div>
+
+            ${mastercard.decision ? `
+                <div class="pay-note">
+                    <strong>Diagnostic Mastercard :</strong>
+                    ${statusBadge(mastercard.decision)}
+                    <br>
+                    <small>${mastercard.message || ""}</small>
+                </div>
+            ` : ""}
+
+            ${link ? `
+                <div class="pay-link-row">
+                    <input id="paymentLinkInput" value="${link}" readonly>
+                    <button type="button" class="btn" onclick="navigator.clipboard.writeText(document.getElementById('paymentLinkInput').value).then(()=>alert('Lien copié'))">
+                        Copier le lien de paiement
+                    </button>
+                </div>
+            ` : `
+                <div class="pay-note pay-note-danger">
+                    Aucun lien de paiement disponible.
+                </div>
+            `}
+
+            ${errors ? `
+                <div class="pay-note pay-note-warning">
+                    <strong>Erreur WhatsApp détectée :</strong>
+                    <ul style="margin-top:8px;">${errors}</ul>
+                </div>
+            ` : ""}
         `;
 
         return html;
     }
 
     async function loadDiagnostic() {
+        const target = document.getElementById("paymentDiagnosticContent");
+        if (!target) return;
+
         const reference = findReference();
         if (!reference) return;
 
@@ -2565,15 +2566,7 @@ async function renderComplianceSummaryV30(data) {
 
             if (!data || !data.found) return;
 
-            const panel = document.createElement("div");
-            panel.innerHTML = createPanel(data);
-
-            const target =
-                document.querySelector(".card") ||
-                document.querySelector("main") ||
-                document.body;
-
-            target.prepend(panel.firstElementChild);
+            target.innerHTML = createPanel(data);
         } catch (e) {
             console.warn("Diagnostic paiement/WhatsApp indisponible", e);
         }
@@ -2588,196 +2581,9 @@ async function renderComplianceSummaryV30(data) {
 </script>
 
 
-<script>
-/* BACKOFFICE_GENERATE_PAYMENT_LINK_PANEL_V1 */
-(function () {
-    function findReference() {
-        if (window.currentApplication && window.currentApplication.reference) {
-            return window.currentApplication.reference;
-        }
-
-        const bodyText = document.body.innerText || "";
-        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
-        return match ? match[0] : null;
-    }
-
-    function createPanel(reference) {
-        const panel = document.createElement("div");
-        panel.id = "backofficeGeneratePaymentLinkPanel";
-        panel.style.cssText = "margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-left:5px solid #D22630;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);";
-
-        panel.innerHTML = `
-            <h3 style="margin:0 0 10px 0;color:#b00020;">Lien de paiement Mastercard</h3>
-
-            <p style="margin:0 0 12px 0;color:#555;">
-                Après approbation du dossier, le back-office peut générer ou récupérer ici le lien de paiement du client.
-            </p>
-
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px;">
-                <div>
-                    <label style="font-weight:700;">Référence dossier</label>
-                    <input id="boPaymentApplicationRef" value="${reference || ""}" readonly
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
-                </div>
-
-                <div>
-                    <label style="font-weight:700;">Montant test facultatif</label>
-                    <input id="boPaymentAmountOverride" type="number" min="1" step="1" placeholder="Ex: 100"
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
-                </div>
-            </div>
-
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button id="boGeneratePaymentLinkBtn" type="button"
-                    style="padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
-                    Générer / récupérer le lien
-                </button>
-
-                <button id="boGeneratePaymentLinkWhatsappBtn" type="button"
-                    style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
-                    Générer + tenter WhatsApp
-                </button>
-            </div>
-
-            <div id="boPaymentLinkResult" style="margin-top:14px;"></div>
-        `;
-
-        return panel;
-    }
-
-    async function generateLink(sendWhatsapp) {
-        const reference = document.getElementById("boPaymentApplicationRef").value.trim();
-        const amountRaw = document.getElementById("boPaymentAmountOverride").value.trim();
-        const resultBox = document.getElementById("boPaymentLinkResult");
-
-        if (!reference) {
-            resultBox.innerHTML = `<div style="color:#dc3545;">Référence dossier introuvable.</div>`;
-            return;
-        }
-
-        const payload = {
-            send_whatsapp: !!sendWhatsapp
-        };
-
-        if (amountRaw) {
-            payload.amount_override = Number(amountRaw);
-        }
-
-        resultBox.innerHTML = `<div style="color:#555;">Génération du lien en cours...</div>`;
-
-        try {
-            const response = await fetch(`/api/backoffice/payment-link/${encodeURIComponent(reference)}/generate`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-                resultBox.innerHTML = `
-                    <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
-                        ${typeof data.detail === "object" ? (data.detail.message || JSON.stringify(data.detail)) : (data.detail || data.message || "Lien non généré.")}
-                    </div>
-                `;
-                return;
-            }
-
-            if (data.status === "PAYMENT_ALREADY_CONFIRMED") {
-                resultBox.innerHTML = `
-                    <div style="padding:10px;border-radius:8px;background:#d1e7dd;color:#0f5132;">
-                        ${data.message}
-                    </div>
-                `;
-                return;
-            }
-
-            const payment = data.payment || {};
-            const link = payment.full_payment_url || "";
-
-            const whatsappStatus = data.whatsapp
-                ? `<div style="margin-top:8px;font-size:13px;color:#555;">WhatsApp : ${data.whatsapp.status || "N/A"}</div>`
-                : "";
-
-            resultBox.innerHTML = `
-                <div style="padding:12px;border-radius:8px;background:#f8f9fa;border:1px solid #e5e7eb;">
-                    <strong>Lien Mastercard disponible</strong><br>
-
-                    <input id="boGeneratedPaymentLink" value="${link}" readonly
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:8px;">
-
-                    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                        <a href="${link}" target="_blank"
-                            style="padding:10px 14px;border-radius:8px;background:#D22630;color:#fff;text-decoration:none;font-weight:700;">
-                            Ouvrir le paiement
-                        </a>
-
-                        <button type="button"
-                            onclick="navigator.clipboard.writeText(document.getElementById('boGeneratedPaymentLink').value).then(()=>alert('Lien copié'))"
-                            style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
-                            Copier le lien
-                        </button>
-                    </div>
-
-                    <div style="margin-top:8px;color:#555;font-size:13px;">
-                        Référence paiement : ${payment.payment_reference || "N/A"}<br>
-                        Montant : ${payment.amount || "N/A"} ${payment.currency || ""}<br>
-                        Statut : ${payment.status || "N/A"}<br>
-                        Session Mastercard : ${payment.session_mastercard || "N/A"}
-                    </div>
-
-                    ${whatsappStatus}
-                </div>
-            `;
-        } catch (e) {
-            resultBox.innerHTML = `
-                <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
-                    Erreur technique pendant la génération du lien.
-                </div>
-            `;
-        }
-    }
-
-    function init() {
-        const reference = findReference();
-        if (!reference) return;
-
-        if (document.getElementById("backofficeGeneratePaymentLinkPanel")) return;
-
-        const panel = createPanel(reference);
-
-        const target =
-            document.querySelector("#paymentWhatsappDiagnosticPanel") ||
-            document.querySelector(".card") ||
-            document.querySelector("main") ||
-            document.body;
-
-        if (target.id === "paymentWhatsappDiagnosticPanel") {
-            target.parentNode.insertBefore(panel, target.nextSibling);
-        } else {
-            target.prepend(panel);
-        }
-
-        document.getElementById("boGeneratePaymentLinkBtn").addEventListener("click", function () {
-            generateLink(false);
-        });
-
-        document.getElementById("boGeneratePaymentLinkWhatsappBtn").addEventListener("click", function () {
-            generateLink(true);
-        });
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", init);
-    } else {
-        init();
-    }
-})();
-</script>
-
 
 <script>
-/* BACKOFFICE_PAYMENT_PANEL_VISIBLE_FIX_V3 */
+/* BACKOFFICE_PAYMENT_LINK_ACTION_PANEL_V1 */
 (function () {
     function isApplicationDetail() {
         return /^\/backoffice\/applications\/[^\/]+/.test(window.location.pathname);
@@ -2792,61 +2598,32 @@ async function renderComplianceSummaryV30(data) {
         return parts[parts.length - 1] || "";
     }
 
-    function removeOldHiddenPanels() {
-        document.querySelectorAll("#backofficeGeneratePaymentLinkPanel").forEach(function (el) {
-            el.remove();
-        });
-    }
-
     function buildPanel(appKey) {
         const div = document.createElement("div");
-        div.id = "backofficePaymentPanelVisibleV3";
-        div.style.cssText = `
-            display:block !important;
-            visibility:visible !important;
-            opacity:1 !important;
-            position:relative !important;
-            z-index:1 !important; /* sous le bandeau sticky (z-index 1000) */
-            margin:20px 0 !important;
-            padding:18px !important;
-            border:2px solid #D22630 !important;
-            border-radius:12px !important;
-            background:#fff !important;
-            color:#222 !important;
-            box-shadow:0 4px 14px rgba(0,0,0,.12) !important;
-        `;
 
         div.innerHTML = `
-            <h3 style="margin:0 0 10px 0;color:#b00020;font-size:20px;">
-                Lien de paiement Mastercard
-            </h3>
-
-            <p style="margin:0 0 12px 0;color:#555;">
+            <p class="muted" style="margin:0 0 12px 0;">
                 Générer ou récupérer le lien de paiement Mastercard pour ce dossier.
             </p>
 
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:12px;">
-                <div>
-                    <label style="font-weight:700;">Référence ou ID dossier</label>
-                    <input id="boPaymentApplicationRefV3" value="${appKey}" 
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+            <div class="pay-summary" style="margin-bottom:12px;">
+                <div class="field-group">
+                    <label>Référence ou ID dossier</label>
+                    <input id="boPaymentApplicationRefV3" value="${appKey}">
                 </div>
 
-                <div>
-                    <label style="font-weight:700;">Montant test facultatif</label>
-                    <input id="boPaymentAmountOverrideV3" type="number" min="1" step="1" placeholder="Ex: 100"
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:5px;">
+                <div class="field-group">
+                    <label>Montant test facultatif</label>
+                    <input id="boPaymentAmountOverrideV3" type="number" min="1" step="1" placeholder="Ex: 100">
                 </div>
             </div>
 
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <button id="boGeneratePaymentLinkBtnV3" type="button"
-                    style="padding:10px 14px;border:0;border-radius:8px;background:#D22630;color:#fff;font-weight:700;cursor:pointer;">
+                <button id="boGeneratePaymentLinkBtnV3" type="button" class="btn">
                     Générer / récupérer le lien
                 </button>
 
-                <button id="boGeneratePaymentLinkWhatsappBtnV3" type="button"
-                    style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
+                <button id="boGeneratePaymentLinkWhatsappBtnV3" type="button" class="btn btn-dark">
                     Générer + tenter WhatsApp
                 </button>
             </div>
@@ -2866,7 +2643,7 @@ async function renderComplianceSummaryV30(data) {
         const amountRaw = amountInput.value.trim();
 
         if (!reference) {
-            resultBox.innerHTML = `<div style="color:#dc3545;">Référence ou ID dossier introuvable.</div>`;
+            resultBox.innerHTML = `<div class="pay-note pay-note-danger">Référence ou ID dossier introuvable.</div>`;
             return;
         }
 
@@ -2878,7 +2655,7 @@ async function renderComplianceSummaryV30(data) {
             payload.amount_override = Number(amountRaw);
         }
 
-        resultBox.innerHTML = `<div style="color:#555;">Génération du lien en cours...</div>`;
+        resultBox.innerHTML = `<div class="muted">Génération du lien en cours...</div>`;
 
         try {
             const response = await fetch(`/api/backoffice/payment-link/${encodeURIComponent(reference)}/generate`, {
@@ -2891,7 +2668,7 @@ async function renderComplianceSummaryV30(data) {
 
             if (!response.ok || !data.success) {
                 resultBox.innerHTML = `
-                    <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
+                    <div class="pay-note pay-note-danger">
                         ${typeof data.detail === "object" ? (data.detail.message || JSON.stringify(data.detail)) : (data.detail || data.message || "Lien non généré.")}
                     </div>
                 `;
@@ -2900,7 +2677,7 @@ async function renderComplianceSummaryV30(data) {
 
             if (data.status === "PAYMENT_ALREADY_CONFIRMED") {
                 resultBox.innerHTML = `
-                    <div style="padding:10px;border-radius:8px;background:#d1e7dd;color:#0f5132;">
+                    <div class="pay-note pay-note-success">
                         ${data.message}
                     </div>
                 `;
@@ -2912,25 +2689,24 @@ async function renderComplianceSummaryV30(data) {
             const link = payment.full_payment_url || "";
 
             resultBox.innerHTML = `
-                <div style="padding:12px;border-radius:8px;background:#f8f9fa;border:1px solid #e5e7eb;">
-                    <strong>Lien Mastercard disponible</strong><br>
+                <div class="pay-note">
+                    <strong>Lien Mastercard disponible</strong>
 
-                    <input id="boGeneratedPaymentLinkV3" value="${link}" readonly
-                        style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-top:8px;">
+                    <div class="pay-link-row">
+                        <input id="boGeneratedPaymentLinkV3" value="${link}" readonly>
+                    </div>
 
-                    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-                        <a href="${link}" target="_blank"
-                           style="padding:10px 14px;border-radius:8px;background:#D22630;color:#fff;text-decoration:none;font-weight:700;">
+                    <div class="pay-link-row">
+                        <a href="${link}" target="_blank" class="btn">
                             Ouvrir le paiement
                         </a>
 
-                        <button type="button" id="boCopyPaymentLinkBtnV3"
-                            style="padding:10px 14px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:700;cursor:pointer;">
+                        <button type="button" id="boCopyPaymentLinkBtnV3" class="btn btn-dark">
                             Copier le lien
                         </button>
                     </div>
 
-                    <div style="margin-top:8px;color:#555;font-size:13px;">
+                    <div class="muted" style="margin-top:8px;">
                         Dossier : ${app.reference || reference}<br>
                         Référence paiement : ${payment.payment_reference || "N/A"}<br>
                         Montant : ${payment.amount || "N/A"} ${payment.currency || ""}<br>
@@ -2938,7 +2714,7 @@ async function renderComplianceSummaryV30(data) {
                         Session Mastercard : ${payment.session_mastercard || "N/A"}
                     </div>
 
-                    ${data.whatsapp ? `<div style="margin-top:8px;color:#555;font-size:13px;">WhatsApp : ${data.whatsapp.status || "N/A"}</div>` : ""}
+                    ${data.whatsapp ? `<div class="muted" style="margin-top:8px;">WhatsApp : ${data.whatsapp.status || "N/A"}</div>` : ""}
                 </div>
             `;
 
@@ -2949,29 +2725,23 @@ async function renderComplianceSummaryV30(data) {
 
         } catch (e) {
             resultBox.innerHTML = `
-                <div style="padding:10px;border-radius:8px;background:#f8d7da;color:#842029;">
+                <div class="pay-note pay-note-danger">
                     Erreur technique pendant la génération du lien.
                 </div>
             `;
         }
     }
 
-    function insertVisiblePanel() {
+    function insertPanel() {
         if (!isApplicationDetail()) return;
-        if (document.getElementById("backofficePaymentPanelVisibleV3")) return;
 
-        removeOldHiddenPanels();
+        const target = document.getElementById("paymentLinkActionContent");
+        if (!target || target.dataset.rendered === "1") return;
+
+        target.dataset.rendered = "1";
 
         const appKey = getApplicationKey();
-        const panel = buildPanel(appKey);
-
-        const target =
-            document.querySelector("main") ||
-            document.querySelector(".container") ||
-            document.querySelector(".content") ||
-            document.body;
-
-        target.insertBefore(panel, target.firstChild);
+        target.appendChild(buildPanel(appKey));
 
         document.getElementById("boGeneratePaymentLinkBtnV3").addEventListener("click", function () {
             generateLink(false);
@@ -2983,14 +2753,10 @@ async function renderComplianceSummaryV30(data) {
     }
 
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", insertVisiblePanel);
+        document.addEventListener("DOMContentLoaded", insertPanel);
     } else {
-        insertVisiblePanel();
+        insertPanel();
     }
-
-    setTimeout(insertVisiblePanel, 500);
-    setTimeout(insertVisiblePanel, 1500);
-    setTimeout(insertVisiblePanel, 3000);
 })();
 </script>
 
@@ -3009,7 +2775,6 @@ async function renderComplianceSummaryV30(data) {
         if (!dia) return;
 
         const inputs = [
-            document.getElementById("boPaymentApplicationRef"),
             document.getElementById("boPaymentApplicationRefV3")
         ].filter(Boolean);
 
@@ -3031,278 +2796,6 @@ async function renderComplianceSummaryV30(data) {
     setTimeout(updatePaymentPanelReference, 3000);
 })();
 </script>
-
-
-<script>
-/* BACKOFFICE_DECISION_SIMPLIFIED_UI_V1 */
-(function () {
-    function isBackofficeDetailPage() {
-        return /^\/backoffice\/applications\/[^\/]+/.test(window.location.pathname);
-    }
-
-    function findApplicationRefOrId() {
-        const bodyText = document.body.innerText || "";
-        const match = bodyText.match(/DIA-\d{8}-[A-Z0-9]+/);
-        if (match) return match[0];
-
-        const parts = window.location.pathname.split("/").filter(Boolean);
-        return parts[parts.length - 1] || "";
-    }
-
-    function badge(text, type) {
-        let bg = "#6c757d";
-        let color = "#fff";
-
-        if (type === "success") bg = "#198754";
-        if (type === "warning") {
-            bg = "#ffc107";
-            color = "#111";
-        }
-        if (type === "danger") bg = "#dc3545";
-        if (type === "info") bg = "#0d6efd";
-
-        return `<span style="display:inline-block;padding:5px 10px;border-radius:999px;background:${bg};color:${color};font-weight:800;font-size:12px;">${text}</span>`;
-    }
-
-    function normalize(value) {
-        return (value || "").toString().trim().toUpperCase();
-    }
-
-    function isPaymentConfirmed(data) {
-        const app = data.application || {};
-        const payment = data.payment || {};
-
-        const appPaymentStatus = normalize(app.package_payment_status);
-        const appStatus = normalize(app.status);
-        const paymentStatus = normalize(payment.status);
-
-        return (
-            ["PAID", "PAYMENT_CONFIRMED", "CONFIRMED", "CAPTURED", "SUCCESS"].includes(appPaymentStatus) ||
-            ["PAYMENT_CONFIRMED"].includes(appStatus) ||
-            ["PAID", "PAYMENT_CONFIRMED", "CONFIRMED", "CAPTURED", "SUCCESS"].includes(paymentStatus)
-        );
-    }
-
-    function isPaymentRequired(data) {
-        const app = data.application || {};
-        const payment = data.payment || {};
-
-        if (normalize(app.package_payment_status) === "NOT_REQUIRED") return false;
-        if (payment && payment.payment_reference) return true;
-        if (app.package_payment_reference) return true;
-
-        return false;
-    }
-
-    function buildDecisionPanel(data) {
-        const app = data.application || {};
-        const payment = data.payment || {};
-        const actions = data.actions || {};
-
-        const required = isPaymentRequired(data);
-        const confirmed = isPaymentConfirmed(data);
-
-        let stateHtml = "";
-        let actionHtml = "";
-
-        if (!required) {
-            stateHtml = `
-                ${badge("Paiement non requis", "success")}
-                <p style="margin:8px 0 0 0;color:#444;">
-                    Ce dossier peut être ouvert directement après validation back-office.
-                </p>
-            `;
-            actionHtml = `
-                <strong>Action autorisée :</strong> saisir le numéro de compte et le RIB, puis ouvrir le compte.
-            `;
-        } else if (required && !confirmed) {
-            stateHtml = `
-                ${badge("Paiement en attente", "warning")}
-                <p style="margin:8px 0 0 0;color:#664d03;">
-                    Le paiement est requis mais non confirmé. Le compte ne doit pas être ouvert.
-                </p>
-            `;
-
-            const link = actions.copy_payment_link || payment.payment_link || payment.payment_url || "";
-
-            actionHtml = `
-                <strong>Action à faire :</strong> générer ou copier le lien Mastercard et attendre la confirmation du paiement.
-                ${link ? `
-                    <div style="margin-top:10px;">
-                        <input id="decisionPaymentLinkCopyInput" value="${link}" readonly
-                            style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
-                        <button type="button" id="decisionPaymentLinkCopyBtn"
-                            style="margin-top:8px;padding:9px 12px;border:0;border-radius:8px;background:#444;color:#fff;font-weight:800;cursor:pointer;">
-                            Copier le lien de paiement
-                        </button>
-                    </div>
-                ` : ""}
-            `;
-        } else {
-            stateHtml = `
-                ${badge("Paiement confirmé", "success")}
-                <p style="margin:8px 0 0 0;color:#0f5132;">
-                    Le paiement est confirmé. Le back-office peut ouvrir le compte.
-                </p>
-            `;
-            actionHtml = `
-                <strong>Action autorisée :</strong> saisir le numéro de compte et le RIB final, puis enregistrer l’ouverture.
-            `;
-        }
-
-        return `
-            <div id="backofficeDecisionSimplifiedPanel" style="margin:18px 0;padding:18px;border:1px solid #e5e7eb;border-left:5px solid #0d6efd;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);">
-                <h3 style="margin:0 0 10px 0;color:#0d3b66;">Décision back-office simplifiée</h3>
-
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;">
-                    <div style="padding:12px;border-radius:10px;background:#f8f9fa;">
-                        <strong>Dossier</strong><br>
-                        <span>${app.reference || findApplicationRefOrId()}</span><br>
-                        <small>Statut : ${app.status || "N/A"}</small>
-                    </div>
-
-                    <div style="padding:12px;border-radius:10px;background:#f8f9fa;">
-                        <strong>Paiement</strong><br>
-                        ${stateHtml}
-                    </div>
-
-                    <div style="padding:12px;border-radius:10px;background:#f8f9fa;">
-                        <strong>Référence paiement</strong><br>
-                        <span>${payment.payment_reference || app.package_payment_reference || "Aucune"}</span><br>
-                        <small>${payment.amount || app.package_payment_amount || ""} ${payment.currency || app.package_payment_currency || ""}</small>
-                    </div>
-                </div>
-
-                <div style="margin-top:14px;padding:12px;border-radius:10px;background:#eef5ff;color:#0d3b66;">
-                    ${actionHtml}
-                </div>
-
-                ${required && !confirmed ? `
-                    <div style="margin-top:14px;padding:12px;border-radius:10px;background:#fff3cd;color:#664d03;font-weight:700;">
-                        Sécurité : l’option “Compte ouvert / RIB attribué” est bloquée tant que le paiement reste en attente.
-                    </div>
-                ` : ""}
-            </div>
-        `;
-    }
-
-    function disableAccountOpenedOption(data) {
-        const required = isPaymentRequired(data);
-        const confirmed = isPaymentConfirmed(data);
-
-        const shouldBlock = required && !confirmed;
-
-        const selects = Array.from(document.querySelectorAll("select"));
-        const decisionSelects = selects.filter(function (select) {
-            return Array.from(select.options || []).some(function (opt) {
-                return normalize(opt.value) === "ACCOUNT_OPENED" ||
-                       normalize(opt.textContent).includes("COMPTE OUVERT");
-            });
-        });
-
-        decisionSelects.forEach(function (select) {
-            Array.from(select.options || []).forEach(function (opt) {
-                const isOpenOption =
-                    normalize(opt.value) === "ACCOUNT_OPENED" ||
-                    normalize(opt.textContent).includes("COMPTE OUVERT");
-
-                if (isOpenOption) {
-                    opt.disabled = shouldBlock;
-                    if (shouldBlock) {
-                        opt.textContent = "Compte ouvert / RIB attribué — bloqué : paiement non confirmé";
-                    }
-                }
-            });
-
-            if (shouldBlock && normalize(select.value) === "ACCOUNT_OPENED") {
-                select.value = "";
-            }
-        });
-
-        const forms = Array.from(document.querySelectorAll("form"));
-
-        forms.forEach(function (form) {
-            if (form.dataset.paymentGuardAttached === "1") return;
-            form.dataset.paymentGuardAttached = "1";
-
-            form.addEventListener("submit", function (event) {
-                if (!shouldBlock) return;
-
-                const selectedOpen = decisionSelects.some(function (select) {
-                    return normalize(select.value) === "ACCOUNT_OPENED";
-                });
-
-                if (selectedOpen) {
-                    event.preventDefault();
-                    alert("Ouverture bloquée : le paiement package est requis mais non confirmé.");
-                }
-            });
-        });
-    }
-
-    async function loadDecisionState() {
-        if (!isBackofficeDetailPage()) return;
-
-        const key = findApplicationRefOrId();
-        if (!key) return;
-
-        try {
-            const response = await fetch(`/api/backoffice/diagnostics/payment/${encodeURIComponent(key)}?refresh_callbell=false&refresh_mastercard=false`);
-            const data = await response.json();
-
-            if (!data || !data.found) return;
-
-            const old = document.getElementById("backofficeDecisionSimplifiedPanel");
-            if (old) old.remove();
-
-            const html = buildDecisionPanel(data);
-
-            const paymentPanel =
-                document.getElementById("backofficePaymentPanelVisibleV3") ||
-                document.getElementById("backofficeGeneratePaymentLinkPanel");
-
-            if (paymentPanel) {
-                paymentPanel.insertAdjacentHTML("afterend", html);
-            } else {
-                const target =
-                    document.querySelector("main") ||
-                    document.querySelector(".container") ||
-                    document.querySelector(".content") ||
-                    document.body;
-
-                target.insertAdjacentHTML("afterbegin", html);
-            }
-
-            disableAccountOpenedOption(data);
-
-            const copyBtn = document.getElementById("decisionPaymentLinkCopyBtn");
-            if (copyBtn) {
-                copyBtn.addEventListener("click", function () {
-                    const input = document.getElementById("decisionPaymentLinkCopyInput");
-                    if (!input) return;
-
-                    navigator.clipboard.writeText(input.value).then(function () {
-                        alert("Lien copié");
-                    });
-                });
-            }
-
-        } catch (e) {
-            console.warn("Impossible de charger le panneau de décision simplifiée", e);
-        }
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", loadDecisionState);
-    } else {
-        loadDecisionState();
-    }
-
-    setTimeout(loadDecisionState, 800);
-    setTimeout(loadDecisionState, 2000);
-})();
-</script>
-
 
 
 <script>
@@ -3390,46 +2883,73 @@ async function renderComplianceSummaryV30(data) {
         return false;
     }
 
-    function addWarning(form, data) {
-        if (document.getElementById("targetedPaymentDecisionWarning")) return;
+    function badge(text, type) {
+        let cls = "status-rejected";
+
+        if (type === "success") cls = "status-ok";
+        if (type === "warning") cls = "status-review";
+        if (type === "danger") cls = "status-alert";
+
+        return `<span class="badge ${cls}">${text}</span>`;
+    }
+
+    function renderPaymentStatus(data, required, confirmed) {
+        const container = document.getElementById("decisionPaymentStatus");
+        if (!container) return;
 
         const app = data.application || {};
         const payment = data.payment || {};
 
-        const warning = document.createElement("div");
-        warning.id = "targetedPaymentDecisionWarning";
-        warning.style.cssText = `
-            margin:12px 0;
-            padding:12px;
-            border-radius:10px;
-            background:#fff3cd;
-            border:1px solid #ffecb5;
-            color:#664d03;
-            font-weight:700;
-            line-height:1.4;
-        `;
+        let stateHtml;
 
-        warning.innerHTML = `
-            Paiement requis mais non confirmé.<br>
-            L’ouverture du compte est bloquée tant que le paiement Mastercard reste en attente.<br>
-            <small>
-                Référence paiement : ${payment.payment_reference || app.package_payment_reference || "N/A"} —
-                Statut paiement : ${payment.status || app.package_payment_status || "N/A"}
-            </small>
-        `;
+        if (!required) {
+            stateHtml = `
+                ${badge("Paiement non requis", "success")}
+                <p class="muted" style="margin:8px 0 0 0;">Ce dossier peut être ouvert directement après validation back-office.</p>
+            `;
+        } else if (!confirmed) {
+            const link = payment.payment_link || payment.payment_url || "";
 
-        const select = form.querySelector("select");
-
-        if (select && select.parentNode) {
-            select.parentNode.insertBefore(warning, select);
+            stateHtml = `
+                ${badge("Paiement en attente", "warning")}
+                <p class="muted" style="margin:8px 0 0 0;">Le paiement est requis mais non confirmé. L'ouverture du compte est bloquée.</p>
+                ${link ? `
+                    <div class="pay-link-row">
+                        <input id="decisionPaymentLinkCopyInput" value="${link}" readonly>
+                        <button type="button" id="decisionPaymentLinkCopyBtn" class="btn btn-dark">
+                            Copier le lien de paiement
+                        </button>
+                    </div>
+                ` : ""}
+            `;
         } else {
-            form.insertBefore(warning, form.firstChild);
+            stateHtml = `
+                ${badge("Paiement confirmé", "success")}
+                <p class="muted" style="margin:8px 0 0 0;">Le paiement est confirmé. Le back-office peut ouvrir le compte.</p>
+            `;
         }
-    }
 
-    function removeWarning() {
-        const warning = document.getElementById("targetedPaymentDecisionWarning");
-        if (warning) warning.remove();
+        container.innerHTML = `
+            <div class="pay-note" style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                    <span><strong>Référence paiement :</strong> ${payment.payment_reference || app.package_payment_reference || "Aucune"}</span>
+                    <span>${payment.amount || app.package_payment_amount || ""} ${payment.currency || app.package_payment_currency || ""}</span>
+                </div>
+                <div style="margin-top:8px;">${stateHtml}</div>
+            </div>
+        `;
+
+        const copyBtn = document.getElementById("decisionPaymentLinkCopyBtn");
+        if (copyBtn) {
+            copyBtn.addEventListener("click", function () {
+                const input = document.getElementById("decisionPaymentLinkCopyInput");
+                if (!input) return;
+
+                navigator.clipboard.writeText(input.value).then(function () {
+                    alert("Lien copié");
+                });
+            });
+        }
     }
 
     function blockAccountOpenedOption(form, shouldBlock) {
@@ -3509,12 +3029,7 @@ async function renderComplianceSummaryV30(data) {
 
             blockAccountOpenedOption(form, shouldBlock);
             attachSubmitGuard(form, shouldBlock);
-
-            if (shouldBlock) {
-                addWarning(form, data);
-            } else {
-                removeWarning();
-            }
+            renderPaymentStatus(data, required, confirmed);
 
         } catch (e) {
             console.warn("Verrou décision paiement indisponible", e);
@@ -4447,1315 +3962,3 @@ async function renderComplianceSummaryV30(data) {
 })();
 </script>
 
-<!-- BACKOFFICE_ACCOUNT_OPENING_FORM_V1 -->
-<style>
-  .account-opening-panel-v1 {
-    margin-top: 24px;
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-left: 6px solid #C90000;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-  }
-
-  .account-opening-panel-v1 h3 {
-    margin: 0 0 8px 0;
-    color: #111827;
-    font-size: 20px;
-  }
-
-  .account-opening-panel-v1 .hint {
-    color: #6b7280;
-    font-size: 14px;
-    margin-bottom: 16px;
-    line-height: 1.5;
-  }
-
-  .account-opening-grid-v1 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-  }
-
-  .account-opening-field-v1 {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .account-opening-field-v1.full {
-    grid-column: 1 / -1;
-  }
-
-  .account-opening-field-v1 label {
-    font-weight: 700;
-    color: #374151;
-    font-size: 14px;
-  }
-
-  .account-opening-field-v1 input,
-  .account-opening-field-v1 textarea {
-    border: 1px solid #d1d5db;
-    border-radius: 10px;
-    padding: 11px 12px;
-    font-size: 14px;
-    outline: none;
-  }
-
-  .account-opening-field-v1 input:focus,
-  .account-opening-field-v1 textarea:focus {
-    border-color: #C90000;
-    box-shadow: 0 0 0 3px rgba(201, 0, 0, 0.10);
-  }
-
-  .account-opening-actions-v1 {
-    display: flex;
-    gap: 10px;
-    margin-top: 16px;
-    flex-wrap: wrap;
-  }
-
-  .account-opening-btn-v1 {
-    border: none;
-    border-radius: 10px;
-    padding: 12px 16px;
-    cursor: pointer;
-    font-weight: 800;
-    background: #C90000;
-    color: white;
-  }
-
-  .account-opening-btn-v1.secondary {
-    background: #111827;
-  }
-
-  .account-opening-message-v1 {
-    margin-top: 14px;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 14px;
-    display: none;
-    line-height: 1.5;
-  }
-
-  .account-opening-message-v1.ok {
-    display: block;
-    background: #ecfdf5;
-    border: 1px solid #bbf7d0;
-    color: #166534;
-  }
-
-  .account-opening-message-v1.error {
-    display: block;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-  }
-
-  .account-opening-current-v1 {
-    margin-top: 14px;
-    background: #f9fafb;
-    border: 1px dashed #d1d5db;
-    border-radius: 12px;
-    padding: 12px;
-    color: #374151;
-    line-height: 1.6;
-  }
-
-  @media (max-width: 800px) {
-    .account-opening-grid-v1 {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
-
-<script>
-(function () {
-  const MARKER = "BACKOFFICE_ACCOUNT_OPENING_FORM_V1";
-
-  if (window.__backofficeAccountOpeningFormV1Loaded) {
-    return;
-  }
-
-  window.__backofficeAccountOpeningFormV1Loaded = true;
-
-  function getApplicationIdFromUrl() {
-    const parts = window.location.pathname.split("/").filter(Boolean);
-    return parts[parts.length - 1];
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-  function statusAllowsOpening(data) {
-    const status = String(data.status || "").toUpperCase();
-    const paymentStatus = String(data.package_payment_status || data.payment_status || "").toUpperCase();
-
-    return [
-      "PAYMENT_CONFIRMED",
-      "ACCOUNT_OPENED"
-    ].includes(status) || [
-      "PAID",
-      "NOT_REQUIRED"
-    ].includes(paymentStatus);
-  }
-
-  function findInsertionTarget() {
-    const candidates = [
-      document.querySelector("#documents-section"),
-      document.querySelector(".documents-section"),
-      document.querySelector(".detail-card"),
-      document.querySelector(".container"),
-      document.querySelector("main"),
-      document.body
-    ];
-
-    return candidates.find(Boolean);
-  }
-
-  async function fetchApplicationDetail(appId) {
-    const response = await fetch(`/api/backoffice/applications/${encodeURIComponent(appId)}?v=${Date.now()}`);
-
-    if (!response.ok) {
-      throw new Error("Impossible de charger le dossier back-office.");
-    }
-
-    return await response.json();
-  }
-
-  async function fetchOpenedAccount(reference) {
-    const response = await fetch(`/api/backoffice/applications/${encodeURIComponent(reference)}/opened-account?v=${Date.now()}`);
-
-    if (response.status === 404) {
-      return null;
-    }
-
-    if (!response.ok) {
-      throw new Error("Impossible de vérifier le compte ouvert.");
-    }
-
-    return await response.json();
-  }
-
-  function renderCurrentAccount(panel, account) {
-    const box = panel.querySelector("[data-account-opening-current]");
-
-    if (!account) {
-      box.innerHTML = `
-        <strong>Aucun compte encore enregistré pour ce dossier.</strong><br>
-        Le numéro de compte et le RIB doivent être saisis manuellement par le back-office.
-      `;
-      return;
-    }
-
-    box.innerHTML = `
-      <strong>Compte déjà enregistré</strong><br>
-      <strong>Numéro de compte :</strong> ${escapeHtml(account.account_number)}<br>
-      <strong>RIB :</strong> ${escapeHtml(account.rib)}<br>
-      <strong>Statut :</strong> ${escapeHtml(account.status || "OPENED")}
-    `;
-
-    const accountInput = panel.querySelector("[name='account_number']");
-    const ribInput = panel.querySelector("[name='rib']");
-
-    if (accountInput && !accountInput.value) {
-      accountInput.value = account.account_number || "";
-    }
-
-    if (ribInput && !ribInput.value) {
-      ribInput.value = account.rib || "";
-    }
-  }
-
-  function setMessage(panel, type, text) {
-    const msg = panel.querySelector("[data-account-opening-message]");
-    msg.className = `account-opening-message-v1 ${type}`;
-    msg.innerHTML = text;
-  }
-
-  function buildPanel(data) {
-    const reference = data.reference || data.application_reference || "";
-    const allowed = statusAllowsOpening(data);
-
-    const panel = document.createElement("section");
-    panel.className = "account-opening-panel-v1";
-    panel.setAttribute("data-marker", MARKER);
-
-    panel.innerHTML = `
-      <h3>Ouverture de compte</h3>
-      <div class="hint">
-        Cette section permet au back-office d’enregistrer le numéro de compte et le RIB après validation du dossier.
-        Le RIB n’est pas généré automatiquement par Diaspora Onboarding.
-      </div>
-
-      <div class="account-opening-current-v1" data-account-opening-current>
-        Chargement des informations compte...
-      </div>
-
-      <div class="account-opening-grid-v1" style="margin-top:16px;">
-        <div class="account-opening-field-v1">
-          <label>Référence dossier</label>
-          <input type="text" value="${escapeHtml(reference)}" disabled>
-        </div>
-
-        <div class="account-opening-field-v1">
-          <label>Statut dossier</label>
-          <input type="text" value="${escapeHtml(data.status || "")}" disabled>
-        </div>
-
-        <div class="account-opening-field-v1">
-          <label>Numéro de compte *</label>
-          <input name="account_number" type="text" placeholder="Ex: 12345678901">
-        </div>
-
-        <div class="account-opening-field-v1">
-          <label>RIB saisi par le back-office *</label>
-          <input name="rib" type="text" placeholder="Ex: CM21 AFB 10001 00001 12345678901 00">
-        </div>
-
-        <div class="account-opening-field-v1">
-          <label>Ouvert par</label>
-          <input name="opened_by" type="text" value="BACKOFFICE_ADMIN">
-        </div>
-
-        <div class="account-opening-field-v1 full">
-          <label>Commentaire</label>
-          <textarea name="comment" rows="3" placeholder="Ex: Compte ouvert après confirmation du paiement package."></textarea>
-        </div>
-      </div>
-
-      <div class="account-opening-actions-v1">
-        <button class="account-opening-btn-v1" data-account-opening-submit ${allowed ? "" : "disabled"}>
-          Ouvrir / mettre à jour le compte
-        </button>
-        <button class="account-opening-btn-v1 secondary" data-account-opening-refresh>
-          Actualiser
-        </button>
-      </div>
-
-      <div class="account-opening-message-v1" data-account-opening-message></div>
-
-      ${allowed ? "" : `
-        <div class="account-opening-message-v1 error" style="display:block;">
-          Le compte ne peut être ouvert qu’après paiement confirmé ou si aucun paiement n’est requis.
-        </div>
-      `}
-    `;
-
-    const submitBtn = panel.querySelector("[data-account-opening-submit]");
-    const refreshBtn = panel.querySelector("[data-account-opening-refresh]");
-
-    submitBtn?.addEventListener("click", async function () {
-      const accountNumber = panel.querySelector("[name='account_number']").value.trim();
-      const rib = panel.querySelector("[name='rib']").value.trim();
-      const openedBy = panel.querySelector("[name='opened_by']").value.trim() || "BACKOFFICE_ADMIN";
-      const comment = panel.querySelector("[name='comment']").value.trim();
-
-      if (!accountNumber || !rib) {
-        setMessage(panel, "error", "Le numéro de compte et le RIB sont obligatoires.");
-        return;
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Enregistrement...";
-
-      try {
-        const response = await fetch(`/api/backoffice/applications/${encodeURIComponent(reference)}/open-account`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            account_number: accountNumber,
-            rib: rib,
-            opened_by: openedBy,
-            comment: comment
-          })
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-          throw new Error(result.detail || "Erreur lors de l’ouverture du compte.");
-        }
-
-        renderCurrentAccount(panel, result.account);
-
-        const whatsapp = result.whatsapp_notification || {};
-        const preparedMessage = whatsapp.prepared_message
-          ? `<br><strong>WhatsApp simulation :</strong> ${escapeHtml(whatsapp.prepared_message)}`
-          : "";
-
-        setMessage(
-          panel,
-          "ok",
-          `${escapeHtml(result.message || "Compte enregistré.")}${preparedMessage}`
-        );
-      } catch (error) {
-        setMessage(panel, "error", escapeHtml(error.message));
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Ouvrir / mettre à jour le compte";
-      }
-    });
-
-    refreshBtn?.addEventListener("click", async function () {
-      try {
-        const account = await fetchOpenedAccount(reference);
-        renderCurrentAccount(panel, account);
-        setMessage(panel, "ok", "Informations actualisées.");
-      } catch (error) {
-        setMessage(panel, "error", escapeHtml(error.message));
-      }
-    });
-
-    return panel;
-  }
-
-  async function initAccountOpeningPanel() {
-    if (document.querySelector("[data-marker='BACKOFFICE_ACCOUNT_OPENING_FORM_V1']")) {
-      return;
-    }
-
-    const appId = getApplicationIdFromUrl();
-
-    if (!appId) {
-      return;
-    }
-
-    try {
-      const data = await fetchApplicationDetail(appId);
-      const reference = data.reference || data.application_reference;
-
-      if (!reference) {
-        return;
-      }
-
-      const panel = buildPanel(data);
-      const target = findInsertionTarget();
-
-      target.appendChild(panel);
-
-      const account = await fetchOpenedAccount(reference);
-      renderCurrentAccount(panel, account);
-    } catch (error) {
-      console.warn("Compte opening panel:", error);
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initAccountOpeningPanel);
-  } else {
-    initAccountOpeningPanel();
-  }
-})();
-</script>
-
-<!-- BACKOFFICE_DECISION_ACCOUNT_UI_V2 -->
-<style>
-  .decision-account-enhanced-v2 {
-    border-left: 6px solid #C90000 !important;
-    position: relative;
-  }
-
-  .decision-account-intro-v2 {
-    background: linear-gradient(135deg, #fff7ed, #ffffff);
-    border: 1px solid #fed7aa;
-    border-radius: 14px;
-    padding: 14px 16px;
-    margin: 12px 0 18px 0;
-    color: #7c2d12;
-    line-height: 1.5;
-  }
-
-  .decision-account-intro-v2 strong {
-    color: #9a3412;
-  }
-
-  .decision-account-grid-v2 {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 16px;
-    margin-top: 16px;
-  }
-
-  .decision-account-title-v2 {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-
-  .decision-account-title-v2 h4 {
-    margin: 0;
-    color: #111827;
-    font-size: 17px;
-  }
-
-  .decision-account-badge-v2 {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 6px 10px;
-    font-size: 12px;
-    font-weight: 800;
-    background: #dcfce7;
-    color: #166534;
-    border: 1px solid #bbf7d0;
-  }
-
-  .decision-account-warning-v2 {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    color: #1e3a8a;
-    border-radius: 12px;
-    padding: 12px;
-    margin-bottom: 12px;
-    line-height: 1.5;
-    font-size: 14px;
-  }
-
-  .decision-account-hidden-v2 {
-    display: none !important;
-  }
-
-  .decision-account-field-highlight-v2 input,
-  .decision-account-field-highlight-v2 textarea {
-    border-color: #C90000 !important;
-    box-shadow: 0 0 0 3px rgba(201, 0, 0, 0.08) !important;
-  }
-
-  .decision-account-success-v2 {
-    background: #ecfdf5;
-    border: 1px solid #bbf7d0;
-    color: #166534;
-    border-radius: 12px;
-    padding: 12px;
-    margin-top: 14px;
-    font-weight: 700;
-    line-height: 1.5;
-  }
-
-  .decision-account-process-v2 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin: 14px 0;
-  }
-
-  .decision-account-step-v2 {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 10px;
-    font-size: 13px;
-    color: #374151;
-  }
-
-  .decision-account-step-v2 strong {
-    display: block;
-    color: #111827;
-    margin-bottom: 4px;
-  }
-
-  @media (max-width: 900px) {
-    .decision-account-process-v2 {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>
-
-<script>
-(function () {
-  const MARKER = "BACKOFFICE_DECISION_ACCOUNT_UI_V2";
-
-  if (window.__backofficeDecisionAccountUiV2Loaded) {
-    return;
-  }
-
-  window.__backofficeDecisionAccountUiV2Loaded = true;
-
-  function textOf(el) {
-    return String(el?.innerText || el?.textContent || "").trim();
-  }
-
-  function normalize(value) {
-    return String(value || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  }
-
-  function findDecisionSection() {
-    const headings = Array.from(document.querySelectorAll("h1, h2, h3, h4, strong, legend"));
-
-    const title = headings.find(el => normalize(textOf(el)).includes("decision back-office"));
-
-    if (!title) {
-      return null;
-    }
-
-    return title.closest("section, .card, .detail-card, .panel, .box, div") || title.parentElement;
-  }
-
-  function findFieldContainerByLabel(section, keywords) {
-    const labels = Array.from(section.querySelectorAll("label, strong, span, div, p"));
-
-    const label = labels.find(el => {
-      const t = normalize(textOf(el));
-      return keywords.some(k => t.includes(normalize(k)));
-    });
-
-    if (!label) {
-      return null;
-    }
-
-    return label.closest(".form-group, .field, .input-group, div") || label.parentElement;
-  }
-
-  function findDecisionSelect(section) {
-    const selects = Array.from(section.querySelectorAll("select"));
-
-    if (!selects.length) {
-      return null;
-    }
-
-    return selects[0];
-  }
-
-  function isAccountOpenedDecision(select) {
-    if (!select) {
-      return false;
-    }
-
-    const selectedText = select.options?.[select.selectedIndex]?.text || "";
-    const selectedValue = select.value || "";
-
-    const mixed = normalize(selectedText + " " + selectedValue);
-
-    return (
-      mixed.includes("account_opened") ||
-      mixed.includes("compte ouvert") ||
-      mixed.includes("rib attribue") ||
-      mixed.includes("rib attribué")
-    );
-  }
-
-  function addIntro(section) {
-    if (section.querySelector("[data-marker='" + MARKER + "_INTRO']")) {
-      return;
-    }
-
-    const intro = document.createElement("div");
-    intro.className = "decision-account-intro-v2";
-    intro.setAttribute("data-marker", MARKER + "_INTRO");
-
-    intro.innerHTML = `
-      <strong>Workflow final :</strong>
-      après paiement confirmé, le back-office attribue manuellement le numéro de compte et le RIB.
-      Diaspora Onboarding ne génère pas le RIB ; il l’enregistre, le communique au client et prépare la notification WhatsApp en simulation.
-    `;
-
-    const heading = Array.from(section.querySelectorAll("h1, h2, h3, h4"))
-      .find(el => normalize(textOf(el)).includes("decision back-office"));
-
-    if (heading && heading.nextSibling) {
-      heading.parentNode.insertBefore(intro, heading.nextSibling);
-    } else {
-      section.prepend(intro);
-    }
-  }
-
-  function addProcess(section) {
-    if (section.querySelector("[data-marker='" + MARKER + "_PROCESS']")) {
-      return;
-    }
-
-    const process = document.createElement("div");
-    process.className = "decision-account-process-v2";
-    process.setAttribute("data-marker", MARKER + "_PROCESS");
-
-    process.innerHTML = `
-      <div class="decision-account-step-v2">
-        <strong>1. Paiement</strong>
-        Paiement package confirmé ou non requis.
-      </div>
-      <div class="decision-account-step-v2">
-        <strong>2. Saisie back-office</strong>
-        Numéro de compte et RIB final saisis manuellement.
-      </div>
-      <div class="decision-account-step-v2">
-        <strong>3. Décision</strong>
-        Statut dossier : ACCOUNT_OPENED.
-      </div>
-      <div class="decision-account-step-v2">
-        <strong>4. Client</strong>
-        Suivi client + WhatsApp simulation.
-      </div>
-    `;
-
-    const intro = section.querySelector("[data-marker='" + MARKER + "_INTRO']");
-    if (intro) {
-      intro.insertAdjacentElement("afterend", process);
-    } else {
-      section.prepend(process);
-    }
-  }
-
-  function groupAccountFields(section) {
-    if (section.querySelector("[data-marker='" + MARKER + "_GROUP']")) {
-      return;
-    }
-
-    const accountField = findFieldContainerByLabel(section, [
-      "numero de compte",
-      "numéro de compte"
-    ]);
-
-    const ribField = findFieldContainerByLabel(section, [
-      "rib final",
-      "rib"
-    ]);
-
-    const clientMessageField = findFieldContainerByLabel(section, [
-      "message au client"
-    ]);
-
-    if (!accountField && !ribField && !clientMessageField) {
-      return;
-    }
-
-    const group = document.createElement("div");
-    group.className = "decision-account-grid-v2";
-    group.setAttribute("data-marker", MARKER + "_GROUP");
-
-    group.innerHTML = `
-      <div class="decision-account-title-v2">
-        <h4>Informations d’ouverture de compte</h4>
-        <span class="decision-account-badge-v2">Saisie manuelle back-office</span>
-      </div>
-      <div class="decision-account-warning-v2">
-        Le numéro de compte et le RIB doivent provenir du back-office ou du Core Banking.
-        Ces informations seront communiquées au client après enregistrement de la décision.
-      </div>
-    `;
-
-    const first = accountField || ribField || clientMessageField;
-    first.parentNode.insertBefore(group, first);
-
-    [accountField, ribField, clientMessageField].forEach(el => {
-      if (!el) return;
-      el.classList.add("decision-account-field-highlight-v2");
-      group.appendChild(el);
-    });
-  }
-
-  function improveSuccessMessage(section) {
-    const nodes = Array.from(section.querySelectorAll("div, p, span"));
-
-    const success = nodes.find(el => {
-      const t = normalize(textOf(el));
-      return t.includes("decision enregistree") || t.includes("décision enregistrée");
-    });
-
-    if (!success || success.dataset.enhancedDecisionV2 === "1") {
-      return;
-    }
-
-    success.dataset.enhancedDecisionV2 = "1";
-    success.classList.add("decision-account-success-v2");
-
-    if (normalize(textOf(success)).includes("account_opened")) {
-      success.innerHTML = `
-        Décision enregistrée : <strong>ACCOUNT_OPENED</strong><br>
-        Le compte est marqué comme ouvert. Vérifie que le numéro de compte et le RIB final ont bien été saisis avant communication au client.
-      `;
-    }
-  }
-
-  function hideOldExtraForm() {
-    const oldPanel = document.querySelector("[data-marker='BACKOFFICE_ACCOUNT_OPENING_FORM_V1']");
-
-    if (oldPanel) {
-      oldPanel.style.display = "none";
-    }
-  }
-
-  function updateVisibility(section) {
-    const select = findDecisionSelect(section);
-    const group = section.querySelector("[data-marker='" + MARKER + "_GROUP']");
-
-    if (!group || !select) {
-      return;
-    }
-
-    const show = isAccountOpenedDecision(select);
-
-    group.classList.toggle("decision-account-hidden-v2", !show);
-  }
-
-  function init() {
-    const section = findDecisionSection();
-
-    if (!section) {
-      return;
-    }
-
-    section.classList.add("decision-account-enhanced-v2");
-
-    addIntro(section);
-    addProcess(section);
-    groupAccountFields(section);
-    improveSuccessMessage(section);
-    hideOldExtraForm();
-    updateVisibility(section);
-
-    const select = findDecisionSelect(section);
-    if (select) {
-      select.addEventListener("change", function () {
-        updateVisibility(section);
-      });
-    }
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-})();
-</script>
-
-<!-- BACKOFFICE_DECISION_ACCOUNT_FIELDS_ORDER_V3 -->
-<style>
-  .account-fields-order-box-v3 {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-left: 5px solid #C90000;
-    border-radius: 14px;
-    padding: 16px;
-    margin: 16px 0;
-  }
-
-  .account-fields-order-box-v3 h4 {
-    margin: 0 0 10px 0;
-    color: #111827;
-    font-size: 17px;
-  }
-
-  .account-fields-order-note-v3 {
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    color: #1e3a8a;
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-bottom: 12px;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-
-  .account-fields-order-box-v3 label {
-    font-weight: 700;
-    color: #111827;
-    margin-top: 10px;
-    display: block;
-  }
-
-  .account-fields-order-box-v3 input,
-  .account-fields-order-box-v3 textarea {
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .account-fields-hidden-v3 {
-    display: none !important;
-  }
-</style>
-
-<script>
-(function () {
-  const MARKER = "BACKOFFICE_DECISION_ACCOUNT_FIELDS_ORDER_V3";
-
-  if (window.__accountFieldsOrderV3Loaded) {
-    return;
-  }
-
-  window.__accountFieldsOrderV3Loaded = true;
-
-  function normalize(value) {
-    return String(value || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  }
-
-  function visibleText(el) {
-    return String(el?.innerText || el?.textContent || "").trim();
-  }
-
-  function findDecisionSection() {
-    const headings = Array.from(document.querySelectorAll("h1, h2, h3, h4, strong, legend"));
-
-    const heading = headings.find(el => {
-      return normalize(visibleText(el)).includes("decision back-office");
-    });
-
-    if (!heading) {
-      return null;
-    }
-
-    return heading.closest("section, .card, .detail-card, .panel, .box, form, div") || heading.parentElement;
-  }
-
-  function findSaveButton(section) {
-    const buttons = Array.from(section.querySelectorAll("button, input[type='submit']"));
-
-    return buttons.find(btn => {
-      const text = normalize(visibleText(btn) || btn.value || "");
-      return text.includes("enregistrer la decision") || text.includes("enregistrer la décision");
-    });
-  }
-
-  function findDecisionSelect(section) {
-    const selects = Array.from(section.querySelectorAll("select"));
-    return selects[0] || null;
-  }
-
-  function isAccountOpenedDecision(section) {
-    const select = findDecisionSelect(section);
-
-    if (!select) {
-      return true;
-    }
-
-    const selectedText = select.options?.[select.selectedIndex]?.text || "";
-    const selectedValue = select.value || "";
-    const mixed = normalize(selectedText + " " + selectedValue);
-
-    return (
-      mixed.includes("account_opened") ||
-      mixed.includes("compte ouvert") ||
-      mixed.includes("rib attribue") ||
-      mixed.includes("rib attribué")
-    );
-  }
-
-  function findFieldByLabel(section, keywords) {
-    const labels = Array.from(section.querySelectorAll("label"));
-
-    let label = labels.find(el => {
-      const t = normalize(visibleText(el));
-      return keywords.some(k => t.includes(normalize(k)));
-    });
-
-    if (!label) {
-      const candidates = Array.from(section.querySelectorAll("div, p, span, strong"))
-        .filter(el => visibleText(el).length < 160);
-
-      label = candidates.find(el => {
-        const t = normalize(visibleText(el));
-        return keywords.some(k => t.includes(normalize(k)));
-      });
-    }
-
-    if (!label) {
-      return null;
-    }
-
-    let node = label;
-
-    for (let i = 0; i < 5; i++) {
-      if (!node.parentElement) {
-        break;
-      }
-
-      const parent = node.parentElement;
-      const hasInput = parent.querySelector("input, textarea, select");
-
-      if (hasInput && visibleText(parent).length < 900) {
-        return parent;
-      }
-
-      node = parent;
-    }
-
-    return label.parentElement;
-  }
-
-  function createOrGetBox(section, saveButton) {
-    let box = section.querySelector("[data-marker='" + MARKER + "']");
-
-    if (box) {
-      return box;
-    }
-
-    box = document.createElement("div");
-    box.className = "account-fields-order-box-v3";
-    box.setAttribute("data-marker", MARKER);
-
-    box.innerHTML = `
-      <h4>Informations d’ouverture de compte</h4>
-      <div class="account-fields-order-note-v3">
-        Le numéro de compte et le RIB final doivent être saisis par le back-office.
-        Ces informations seront utilisées pour le suivi client et la notification WhatsApp en simulation.
-      </div>
-    `;
-
-    saveButton.parentNode.insertBefore(box, saveButton);
-
-    return box;
-  }
-
-  function reorderAccountFields() {
-    const section = findDecisionSection();
-
-    if (!section) {
-      return;
-    }
-
-    const saveButton = findSaveButton(section);
-
-    if (!saveButton) {
-      return;
-    }
-
-    const accountField = findFieldByLabel(section, [
-      "numero de compte attribue",
-      "numéro de compte attribué",
-      "numero de compte",
-      "numéro de compte"
-    ]);
-
-    const ribField = findFieldByLabel(section, [
-      "rib final afriland",
-      "rib final",
-      "rib"
-    ]);
-
-    const clientMessageField = findFieldByLabel(section, [
-      "message au client"
-    ]);
-
-    if (!accountField && !ribField && !clientMessageField) {
-      return;
-    }
-
-    const box = createOrGetBox(section, saveButton);
-
-    [
-      accountField,
-      ribField,
-      clientMessageField
-    ].forEach(field => {
-      if (!field) return;
-
-      if (field === box || box.contains(field)) {
-        return;
-      }
-
-      box.appendChild(field);
-    });
-
-    const show = isAccountOpenedDecision(section);
-    box.classList.toggle("account-fields-hidden-v3", !show);
-
-    const select = findDecisionSelect(section);
-    if (select && !select.dataset.accountFieldsOrderV3Bound) {
-      select.dataset.accountFieldsOrderV3Bound = "1";
-
-      select.addEventListener("change", function () {
-        const visible = isAccountOpenedDecision(section);
-        box.classList.toggle("account-fields-hidden-v3", !visible);
-      });
-    }
-  }
-
-  function run() {
-    reorderAccountFields();
-
-    setTimeout(reorderAccountFields, 300);
-    setTimeout(reorderAccountFields, 900);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", run);
-  } else {
-    run();
-  }
-})();
-</script>
-
-<!-- BACKOFFICE_DECISION_RIB_FORCE_ORDER_V4 -->
-<style>
-  .account-field-force-wrapper-v4 {
-    margin-top: 12px;
-  }
-
-  .account-field-force-wrapper-v4 label {
-    display: block;
-    font-weight: 700;
-    color: #111827;
-    margin-bottom: 6px;
-  }
-
-  .account-field-force-wrapper-v4 input,
-  .account-field-force-wrapper-v4 textarea {
-    width: 100%;
-    box-sizing: border-box;
-  }
-</style>
-
-<script>
-(function () {
-  const MARKER = "BACKOFFICE_DECISION_RIB_FORCE_ORDER_V4";
-
-  if (window.__decisionRibForceOrderV4Loaded) {
-    return;
-  }
-
-  window.__decisionRibForceOrderV4Loaded = true;
-
-  function normalize(value) {
-    return String(value || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-  }
-
-  function textOf(el) {
-    return String(el?.innerText || el?.textContent || "").trim();
-  }
-
-  function findSaveButton() {
-    const buttons = Array.from(document.querySelectorAll("button, input[type='submit']"));
-
-    return buttons.find(btn => {
-      const txt = normalize(textOf(btn) || btn.value || "");
-      return txt.includes("enregistrer la decision") || txt.includes("enregistrer la décision");
-    });
-  }
-
-  function findAccountBox() {
-    let box = document.querySelector("[data-marker='BACKOFFICE_DECISION_ACCOUNT_FIELDS_ORDER_V3']");
-
-    if (box) {
-      return box;
-    }
-
-    const saveButton = findSaveButton();
-
-    if (!saveButton) {
-      return null;
-    }
-
-    box = document.createElement("div");
-    box.className = "account-fields-order-box-v3";
-    box.setAttribute("data-marker", "BACKOFFICE_DECISION_ACCOUNT_FIELDS_ORDER_V3");
-
-    box.innerHTML = `
-      <h4>Informations d’ouverture de compte</h4>
-      <div class="account-fields-order-note-v3">
-        Le numéro de compte et le RIB final doivent être saisis par le back-office.
-        Ces informations seront utilisées pour le suivi client et la notification WhatsApp en simulation.
-      </div>
-    `;
-
-    saveButton.parentNode.insertBefore(box, saveButton);
-
-    return box;
-  }
-
-  function findFieldLabel(keywords) {
-    const labels = Array.from(document.querySelectorAll("label, strong, span, div"));
-
-    return labels.find(el => {
-      const t = normalize(textOf(el));
-      return keywords.some(k => t.includes(normalize(k)));
-    });
-  }
-
-  function buildFieldContainer(label) {
-    if (!label) {
-      return null;
-    }
-
-    for (let i = 0; i < 4; i++) {
-      const parent = label.parentElement;
-
-      if (!parent) {
-        break;
-      }
-
-      const hasControl = parent.querySelector("input, textarea, select");
-      const hasSaveButton = parent.querySelector("button, input[type='submit']");
-
-      if (hasControl && !hasSaveButton && textOf(parent).length < 900) {
-        return parent;
-      }
-
-      label = parent;
-    }
-
-    return null;
-  }
-
-  function wrapLooseLabelAndControl(label) {
-    if (!label || !label.parentNode) {
-      return null;
-    }
-
-    const existingContainer = buildFieldContainer(label);
-
-    if (existingContainer) {
-      return existingContainer;
-    }
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "account-field-force-wrapper-v4";
-
-    const parent = label.parentNode;
-    parent.insertBefore(wrapper, label);
-
-    wrapper.appendChild(label);
-
-    let movedControl = false;
-    let next = wrapper.nextSibling;
-
-    while (next) {
-      const current = next;
-      next = next.nextSibling;
-
-      if (current.nodeType === 1) {
-        const tag = current.tagName ? current.tagName.toLowerCase() : "";
-        const txt = normalize(textOf(current));
-
-        if (tag === "button" || tag === "select") {
-          break;
-        }
-
-        if (txt.includes("enregistrer la decision") || txt.includes("enregistrer la décision")) {
-          break;
-        }
-
-        wrapper.appendChild(current);
-
-        if (current.matches && current.matches("input, textarea")) {
-          movedControl = true;
-          break;
-        }
-
-        if (current.querySelector && current.querySelector("input, textarea")) {
-          movedControl = true;
-          break;
-        }
-      } else {
-        wrapper.appendChild(current);
-      }
-    }
-
-    return movedControl ? wrapper : wrapper;
-  }
-
-  function findField(keywords) {
-    const label = findFieldLabel(keywords);
-
-    if (!label) {
-      return null;
-    }
-
-    return wrapLooseLabelAndControl(label);
-  }
-
-  function moveBefore(referenceNode, node) {
-    if (!node || !referenceNode || node === referenceNode) {
-      return;
-    }
-
-    referenceNode.parentNode.insertBefore(node, referenceNode);
-  }
-
-  function forceCorrectOrder() {
-    const saveButton = findSaveButton();
-    const box = findAccountBox();
-
-    if (!saveButton || !box) {
-      return;
-    }
-
-    if (box.nextElementSibling !== saveButton) {
-      saveButton.parentNode.insertBefore(box, saveButton);
-    }
-
-    const accountField = findField([
-      "numero de compte attribue",
-      "numéro de compte attribué",
-      "numero de compte",
-      "numéro de compte"
-    ]);
-
-    const ribField = findField([
-      "rib final afriland",
-      "rib final",
-      "rib"
-    ]);
-
-    const messageField = findField([
-      "message au client"
-    ]);
-
-    const note = box.querySelector(".account-fields-order-note-v3") || box.querySelector("h4");
-
-    if (accountField && !box.contains(accountField)) {
-      box.appendChild(accountField);
-    }
-
-    if (ribField && !box.contains(ribField)) {
-      box.appendChild(ribField);
-    }
-
-    if (messageField && !box.contains(messageField)) {
-      box.appendChild(messageField);
-    }
-
-    if (note && accountField) {
-      note.insertAdjacentElement("afterend", accountField);
-    }
-
-    if (accountField && ribField) {
-      accountField.insertAdjacentElement("afterend", ribField);
-    }
-
-    if (ribField && messageField) {
-      ribField.insertAdjacentElement("afterend", messageField);
-    }
-
-    if (box.nextElementSibling !== saveButton) {
-      saveButton.parentNode.insertBefore(box, saveButton);
-    }
-  }
-
-  function run() {
-    forceCorrectOrder();
-
-    setTimeout(forceCorrectOrder, 300);
-    setTimeout(forceCorrectOrder, 800);
-    setTimeout(forceCorrectOrder, 1500);
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", run);
-  } else {
-    run();
-  }
-})();
-</script>

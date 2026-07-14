@@ -971,3 +971,178 @@ document.addEventListener("DOMContentLoaded", loadIntegrations);
 })();
 </script>
 {% endblock %}
+
+
+<!-- MASTERCARD_OPERATIONAL_CONFIG_ADMIN_UI_V2 -->
+<section id="mastercard-operational-config" style="max-width:1180px;margin:24px auto;background:#ffffff;border:1px solid #e5e7eb;border-radius:18px;padding:22px;box-shadow:0 12px 30px rgba(15,23,42,.08);">
+  <h2 style="margin:0 0 8px;color:#111827;">Mastercard Gateway — Configuration opérationnelle</h2>
+  <p style="margin:0 0 16px;color:#6b7280;line-height:1.5;">
+    Configurez ici les paramètres Mastercard Gateway utilisés pour les paiements réels ou sandbox.
+  </p>
+
+  <div style="padding:12px 14px;border-radius:12px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-weight:700;margin-bottom:16px;">
+    Important : ne jamais committer les vrais identifiants Mastercard dans GitHub. En production, utiliser des URLs publiques HTTPS.
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;">
+    <label><strong>Activer Mastercard</strong><br><input id="mc_enabled" type="checkbox"> Enabled</label>
+    <label><strong>Ready for real call</strong><br><input id="mc_ready" type="checkbox"> Autoriser vrais appels API</label>
+
+    <label>
+      <strong>Environnement</strong><br>
+      <select id="mc_environment" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+        <option value="SANDBOX">SANDBOX</option>
+        <option value="PRODUCTION">PRODUCTION</option>
+      </select>
+    </label>
+
+    <label>
+      <strong>Provider</strong><br>
+      <input id="mc_provider" value="MASTERCARD_GATEWAY" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+    </label>
+
+    <label>
+      <strong>Base URL</strong><br>
+      <input id="mc_base_url" placeholder="https://test-gateway.mastercard.com" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+    </label>
+
+    <label>
+      <strong>Merchant ID</strong><br>
+      <input id="mc_merchant_id" placeholder="Merchant ID" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+    </label>
+
+    <label>
+      <strong>API Password</strong><br>
+      <input id="mc_api_password" type="password" placeholder="Laisser vide pour conserver le mot de passe existant" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+    </label>
+
+    <label>
+      <strong>API Version</strong><br>
+      <input id="mc_api_version" value="100" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+    </label>
+
+    <label>
+      <strong>Devise</strong><br>
+      <input id="mc_currency" value="XAF" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+    </label>
+
+    <label>
+      <strong>Operation</strong><br>
+      <select id="mc_operation" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+        <option value="PURCHASE">PURCHASE</option>
+        <option value="AUTHORIZE">AUTHORIZE</option>
+      </select>
+    </label>
+
+    <label style="grid-column:1/-1;">
+      <strong>Return URL</strong><br>
+      <input id="mc_return_url" placeholder="https://diaspora-onboarding.com/api/payments/mastercard/return" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+    </label>
+
+    <label style="grid-column:1/-1;">
+      <strong>Webhook URL</strong><br>
+      <input id="mc_webhook_url" placeholder="https://diaspora-onboarding.com/api/payments/mastercard/webhook" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:10px;">
+    </label>
+  </div>
+
+  <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+    <button id="mc_save_btn" type="button" style="border:0;border-radius:10px;background:#b5121b;color:white;padding:11px 16px;font-weight:800;cursor:pointer;">Enregistrer Mastercard</button>
+    <button id="mc_reload_btn" type="button" style="border:1px solid #ddd;border-radius:10px;background:white;color:#111827;padding:11px 16px;font-weight:800;cursor:pointer;">Recharger</button>
+  </div>
+
+  <div id="mc_message" style="margin-top:14px;font-weight:800;"></div>
+</section>
+
+<script>
+(function () {
+  function el(id) { return document.getElementById(id); }
+  function val(id) { return el(id) ? String(el(id).value || "").trim() : ""; }
+  function chk(id) { return el(id) ? !!el(id).checked : false; }
+
+  function showMessage(text, color) {
+    const box = el("mc_message");
+    if (!box) return;
+    box.textContent = text || "";
+    box.style.color = color || "#111827";
+  }
+
+  async function loadMastercardConfig() {
+    showMessage("Chargement de la configuration Mastercard...", "#92400e");
+
+    try {
+      const response = await fetch("/api/backoffice/mastercard/operational-config?v=" + Date.now(), { cache: "no-store" });
+      const data = await response.json();
+
+      el("mc_enabled").checked = !!data.enabled;
+      el("mc_ready").checked = !!data.ready_for_real_call;
+      el("mc_environment").value = data.environment || "SANDBOX";
+      el("mc_provider").value = data.provider || "MASTERCARD_GATEWAY";
+      el("mc_base_url").value = data.base_url || "";
+      el("mc_merchant_id").value = data.merchant_id || "";
+      el("mc_api_version").value = data.api_version || "100";
+      el("mc_currency").value = data.currency || "XAF";
+      el("mc_operation").value = data.operation || "PURCHASE";
+      el("mc_return_url").value = data.return_url || "";
+      el("mc_webhook_url").value = data.webhook_url || "";
+
+      const missing = data.missing || [];
+      if (missing.length > 0) {
+        showMessage("Configuration incomplète : " + missing.join(" | "), "#92400e");
+      } else {
+        showMessage("Configuration Mastercard chargée.", "#047857");
+      }
+    } catch (err) {
+      showMessage("Erreur chargement Mastercard : " + err.message, "#b91c1c");
+    }
+  }
+
+  async function saveMastercardConfig() {
+    const payload = {
+      enabled: chk("mc_enabled"),
+      environment: val("mc_environment"),
+      provider: val("mc_provider") || "MASTERCARD_GATEWAY",
+      base_url: val("mc_base_url"),
+      merchant_id: val("mc_merchant_id"),
+      api_version: val("mc_api_version") || "100",
+      currency: val("mc_currency") || "XAF",
+      operation: val("mc_operation") || "PURCHASE",
+      return_url: val("mc_return_url"),
+      webhook_url: val("mc_webhook_url"),
+      ready_for_real_call: chk("mc_ready")
+    };
+
+    const apiPassword = val("mc_api_password");
+    if (apiPassword) {
+      payload.api_password = apiPassword;
+    }
+
+    showMessage("Enregistrement Mastercard...", "#92400e");
+
+    try {
+      const response = await fetch("/api/backoffice/mastercard/operational-config", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showMessage("Erreur : " + JSON.stringify(data), "#b91c1c");
+        return;
+      }
+
+      showMessage("Configuration Mastercard enregistrée.", "#047857");
+      await loadMastercardConfig();
+    } catch (err) {
+      showMessage("Erreur enregistrement Mastercard : " + err.message, "#b91c1c");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (el("mc_save_btn")) el("mc_save_btn").addEventListener("click", saveMastercardConfig);
+    if (el("mc_reload_btn")) el("mc_reload_btn").addEventListener("click", loadMastercardConfig);
+    loadMastercardConfig();
+  });
+})();
+</script>

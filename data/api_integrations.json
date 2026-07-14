@@ -24,9 +24,8 @@
       "webhook_url": "",
       "callback_url": "",
       "notes": "Canal Callbell actif. Blocage Meta 131042 sur les templates : envoi en texte libre (use_template=false).",
-      "use_template": false,
-      "password": "",
       "access_token": "",
+      "password": "",
       "private_key": ""
     },
     {
@@ -50,11 +49,11 @@
       "api_version": "100",
       "currency": "XAF",
       "operation": "PURCHASE",
-      "webhook_url": "https://diaspora-onboarding.com/api/payments/mastercard/webhook",
-      "callback_url": "https://diaspora-onboarding.com/api/payments/mastercard/return",
+      "webhook_url": "https://onboarding.afb-firstagent.com/api/payments/mastercard/webhook",
+      "callback_url": "https://onboarding.afb-firstagent.com/api/payments/mastercard/return",
       "notes": "Ne jamais stocker ni manipuler les numéros de carte dans l’application.",
-      "password": "",
       "access_token": "",
+      "password": "",
       "private_key": ""
     },
     {
@@ -81,8 +80,8 @@
       "webhook_url": "",
       "callback_url": "",
       "notes": "Intégration avec le moteur de filtrage conformité.",
-      "password": "",
       "access_token": "",
+      "password": "",
       "private_key": ""
     }
   ]

@@ -419,8 +419,21 @@ def decide_application(
 
     # WHATSAPP_NOTIFY_BACKOFFICE_DECISION_V1 — notification client via Callbell
     whatsapp_result = None
+    # AVOID_DOUBLE_APPROVAL_NOTIFICATION_V1 — quand un paiement est requis,
+    # create_package_payment_after_approval() a déjà notifié le client avec le
+    # lien de paiement ; on ne renvoie pas un deuxième message ici.
+    payment_link_already_notified = bool(
+        payment_workflow
+        and payment_workflow.get("payment_required")
+        and "whatsapp_notification" in payment_workflow
+        and (payment_workflow.get("payment") or {}).get("payment_url")
+    )
+
     try:
-        if application.phone:
+        if payment_link_already_notified:
+            whatsapp_result = payment_workflow.get("whatsapp_notification")
+
+        elif application.phone:
             decision = str(application.review_decision or "").upper()
 
             if decision == "APPROVED":
