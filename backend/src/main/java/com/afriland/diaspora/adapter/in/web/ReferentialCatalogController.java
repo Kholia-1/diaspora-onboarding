@@ -55,6 +55,36 @@ public class ReferentialCatalogController {
         return filtered;
     }
 
+    /** Sous-secteurs groupés par secteur parent (parité app/routers/subsectors.py::/grouped). */
+    @GetMapping("/api/subsectors/grouped")
+    public List<Map<String, Object>> subsectorsGrouped() {
+        List<Map<String, Object>> all = readArray("bank_subsectors.json");
+        // LinkedHashMap : conserve l'ordre d'apparition des secteurs.
+        Map<String, Map<String, Object>> grouped = new java.util.LinkedHashMap<>();
+        for (Map<String, Object> item : all) {
+            String sectorCode = item.get("sector_code") != null
+                    ? String.valueOf(item.get("sector_code")) : "UNKNOWN";
+            String sectorLabel = item.get("sector") != null
+                    ? String.valueOf(item.get("sector")) : "Secteur non défini";
+
+            Map<String, Object> group = grouped.computeIfAbsent(sectorCode, k -> {
+                Map<String, Object> g = new java.util.LinkedHashMap<>();
+                g.put("sector_code", sectorCode);
+                g.put("sector", sectorLabel);
+                g.put("subsectors", new ArrayList<Map<String, Object>>());
+                return g;
+            });
+
+            Map<String, Object> sub = new java.util.LinkedHashMap<>();
+            sub.put("code", item.get("code"));
+            sub.put("label", item.get("label"));
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> subs = (List<Map<String, Object>>) group.get("subsectors");
+            subs.add(sub);
+        }
+        return new ArrayList<>(grouped.values());
+    }
+
     /** Packages actifs proposés au client (frais + services). */
     @GetMapping("/api/packages/active")
     public List<Map<String, Object>> activePackages() {

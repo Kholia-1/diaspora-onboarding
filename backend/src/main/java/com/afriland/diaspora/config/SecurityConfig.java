@@ -59,6 +59,7 @@ public class SecurityConfig {
                                 "/api/sectors/active",
                                 "/api/subsectors/active",
                                 "/api/subsectors/by-sector/**",
+                                "/api/subsectors/grouped",
                                 "/api/packages/active",
                                 "/api/agencies/active",
                                 "/api/nationalities/active",
@@ -89,6 +90,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
                 "http://localhost:5173",
+                // union-portal Angular : shell (host) + remotes promote/diaspora en dev.
+                "http://localhost:4200",
+                "http://localhost:4201",
+                "http://localhost:4202",
                 "https://onboarding.afb-firstagent.com"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

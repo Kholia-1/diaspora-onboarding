@@ -12,9 +12,9 @@ module.exports = {
     pathRewrite: { '^/promote-api': '/api' },
     on: stripOrigin,
   },
-  // diaspora (onboarding)
+  // diaspora (onboarding) — backend Spring Boot de ce dépôt (port 8080)
   '/api': {
-    target: 'http://localhost:10002',
+    target: 'http://localhost:8080',
     secure: false,
     changeOrigin: true,
     on: stripOrigin,
