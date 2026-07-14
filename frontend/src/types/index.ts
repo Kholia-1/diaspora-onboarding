@@ -109,13 +109,91 @@ export interface ApplicationDetail extends ApplicationSummary {
 
 export interface ApplicationDocument {
   id: number
+  document_type?: string | null
   document_label: string | null
   original_filename: string | null
   mime_type: string | null
   verification_status: string | null
   quality_score: number | null
   content_url: string | null
+  can_analyze?: boolean
+  analysis_url?: string | null
   is_video: boolean
+  is_media_only?: boolean
+}
+
+// ---------------------------------------------------------------------------
+// Analyse documentaire (OCR + rapprochement) d'un document
+// GET /api/applications/documents/{id}/analysis (quand can_analyze = true)
+// ---------------------------------------------------------------------------
+
+/** Un contrôle du rapprochement OCR ↔ dossier. La forme varie selon le champ :
+ *  identité {field, expected, matched}, RIB {field:"rib", expected, detected, score, status},
+ *  revenu {field:"income_proof", expected, detected_keywords, status, score}. */
+export interface MatchingCheck {
+  field: string
+  expected?: unknown
+  matched?: boolean
+  detected?: string
+  detected_candidates?: string[]
+  detected_keywords?: string[]
+  status?: string
+  score?: number
+  [key: string]: unknown
+}
+
+export interface DocumentMatching {
+  match_score?: number
+  match_status?: string
+  checks?: MatchingCheck[]
+  [key: string]: unknown
+}
+
+export interface DocumentQualityInfo {
+  supported?: boolean
+  quality_score?: number
+  quality_status?: string
+  findings?: string[]
+  brightness?: number | null
+  laplacian_variance?: number | null
+  glare_fraction?: number
+  /** Variantes possibles selon le backend. */
+  score?: number
+  verdict?: string
+  issues?: string[]
+  [key: string]: unknown
+}
+
+export interface DocumentOcrInfo {
+  engine?: string
+  ocr_status?: string
+  message?: string
+  text?: string
+  text_preview?: string
+  text_length?: number
+  confidence?: number
+  [key: string]: unknown
+}
+
+export interface DocumentAnalysisBody {
+  document_type?: string
+  text_preview?: string
+  extracted_fields?: Record<string, unknown>
+  quality_score?: number
+  verification_status?: string
+  quality?: DocumentQualityInfo
+  ocr?: DocumentOcrInfo
+  matching?: DocumentMatching
+  document_type_validation?: Record<string, unknown>
+  [key: string]: unknown
+}
+
+export interface DocumentAnalysis {
+  document_id: number
+  document_type: string | null
+  verification_status: string | null
+  quality_score: number | null
+  analysis: DocumentAnalysisBody
 }
 
 export interface ApplicationDetailResponse {

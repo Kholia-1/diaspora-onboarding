@@ -5,6 +5,7 @@ import type {
   DashboardSummary,
   DecisionPayload,
   DecisionResponse,
+  DocumentAnalysis,
   OpenAccountPayload,
   OpenAccountResponse,
   OpenedAccount,
@@ -23,6 +24,11 @@ export function fetchApplication(idOrReference: string): Promise<ApplicationDeta
 
 export function fetchDashboardSummary(): Promise<DashboardSummary> {
   return api.get<DashboardSummary>('/api/backoffice/dashboard/summary')
+}
+
+/** Analyse OCR + rapprochement d'un document (quand can_analyze = true). */
+export function fetchDocumentAnalysis(documentId: number): Promise<DocumentAnalysis> {
+  return api.get<DocumentAnalysis>(`/api/applications/documents/${documentId}/analysis`)
 }
 
 /** Décision back-office (approbation, rejet, complément) sur un dossier. */

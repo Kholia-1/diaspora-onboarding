@@ -17,3 +17,26 @@ body {
   font-family: "Segoe UI", "Inter", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Export PDF du dossier back-office (équivalent .no-print du legacy) :
+   masque la navigation et les actions interactives pour une sortie propre. */
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    display: none !important;
+  }
+
+  .shadow-card {
+    box-shadow: none !important;
+  }
+}

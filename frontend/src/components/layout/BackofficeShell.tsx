@@ -54,7 +54,7 @@ export function BackofficeShell() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b-[3px] border-afriland bg-gradient-to-r from-topbar-from to-topbar-to shadow-lg">
+      <header className="no-print sticky top-0 z-40 border-b-[3px] border-afriland bg-gradient-to-r from-topbar-from to-topbar-to shadow-lg">
         <div className="relative mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:gap-6">
           {/* Logo dans une pastille blanche */}
           <div className="flex min-w-0 items-center gap-3">

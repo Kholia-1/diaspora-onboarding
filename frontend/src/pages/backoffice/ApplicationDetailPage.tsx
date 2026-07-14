@@ -2,15 +2,24 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { fetchApplication, screenBlackmodule } from '../../api/applications'
+import { fetchApplication, fetchDocumentAnalysis, screenBlackmodule } from '../../api/applications'
 import { ApiError } from '../../api/client'
 import { useSession } from '../../app/guards'
 import { AccountOpeningPanel } from '../../components/backoffice/AccountOpeningPanel'
 import { DecisionPanel, DECISION_ROLES } from '../../components/backoffice/DecisionPanel'
 import { Badge, StatusBadge } from '../../components/ui/Badge'
+import type { BadgeTone } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import type { ApplicationDetail, ApplicationDocument, ScreeningResponse } from '../../types'
+import { Modal } from '../../components/ui/Modal'
+import { TBody, Table, Td, Th, THead, Tr } from '../../components/ui/Table'
+import type {
+  ApplicationDetail,
+  ApplicationDocument,
+  DocumentAnalysis,
+  MatchingCheck,
+  ScreeningResponse,
+} from '../../types'
 
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—'
@@ -51,8 +60,241 @@ function docStatusTone(status: string | null): 'green' | 'orange' | 'red' | 'gra
   return 'gray'
 }
 
+// --- Analyse OCR / rapprochement (libellés FR repris du back-office legacy) ---
+
+const ANALYSIS_STATUS_LABELS: Record<string, string> = {
+  AUTHENTICATED: 'Authentifié',
+  REVIEW_REQUIRED: 'Revue requise',
+  QUALITY_REJECTED: 'Qualité rejetée',
+  UPLOADED: 'Téléversé',
+  OCR_REVIEW_REQUIRED: 'OCR à revoir',
+  MATCH_OK: 'Conforme',
+  MATCH: 'Correspond',
+  PARTIAL_MATCH: 'Partiel',
+  MISMATCH: 'Non conforme',
+  NOT_REQUIRED: 'Non requis',
+  NOT_CHECKED: 'Non vérifié',
+  NO_RIB_PROVIDED: 'RIB non fourni',
+  DOCUMENT_READABLE: 'Document lisible',
+  OK: 'Correct',
+  LOW_QUALITY: 'Qualité faible',
+  NOT_ANALYZED: 'Non analysé',
+  TEXT_EXTRACTED: 'Texte extrait',
+  NO_TEXT_FOUND: 'Aucun texte détecté',
+  OCR_UNAVAILABLE: 'OCR indisponible',
+}
+
+function analysisStatusLabel(status: string | null | undefined): string {
+  if (!status) return 'Non défini'
+  return ANALYSIS_STATUS_LABELS[status] ?? status
+}
+
+/** Couleur du badge selon un statut de vérification ou de rapprochement. */
+function analysisTone(status: string | null | undefined): BadgeTone {
+  const value = (status ?? '').toUpperCase()
+  if (['AUTHENTICATED', 'MATCH_OK', 'MATCH', 'OK', 'DOCUMENT_READABLE', 'TEXT_EXTRACTED'].includes(value))
+    return 'green'
+  if (['REVIEW_REQUIRED', 'OCR_REVIEW_REQUIRED', 'PARTIAL_MATCH', 'LOW_QUALITY'].includes(value))
+    return 'orange'
+  if (['QUALITY_REJECTED', 'MISMATCH', 'OCR_UNAVAILABLE', 'NO_TEXT_FOUND'].includes(value)) return 'red'
+  return 'gray'
+}
+
+const CHECK_FIELD_LABELS: Record<string, string> = {
+  last_name: 'Nom',
+  first_name: 'Prénom',
+  birth_name: 'Nom de naissance',
+  birth_date: 'Date de naissance',
+  identity_document_number: "N° pièce d'identité",
+  rib: 'RIB / IBAN',
+  income_proof: 'Justificatif de revenu',
+}
+
+function checkFieldLabel(field: string): string {
+  return CHECK_FIELD_LABELS[field] ?? field
+}
+
+function displayValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return '—'
+  if (Array.isArray(value)) return value.length ? value.join(', ') : '—'
+  return String(value)
+}
+
+/** Cellule « résultat » d'un contrôle : ✓/✗ pour l'identité, détecté + score
+ *  pour le RIB, mots-clés + score pour le revenu. */
+function CheckResult({ check }: { check: MatchingCheck }) {
+  if (typeof check.matched === 'boolean') {
+    return check.matched ? (
+      <span className="inline-flex items-center gap-1 font-semibold text-emerald-700">✓ Conforme</span>
+    ) : (
+      <span className="inline-flex items-center gap-1 font-semibold text-red-700">✗ Écart</span>
+    )
+  }
+
+  const detected =
+    check.field === 'income_proof'
+      ? displayValue(check.detected_keywords)
+      : displayValue(check.detected ?? check.detected_candidates)
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge tone={analysisTone(check.status)}>{analysisStatusLabel(check.status)}</Badge>
+        {typeof check.score === 'number' && (
+          <span className="text-xs font-semibold text-gray-500">{check.score}%</span>
+        )}
+      </div>
+      {detected !== '—' && (
+        <span className="text-xs text-gray-500">Détecté : {detected}</span>
+      )}
+    </div>
+  )
+}
+
+/** Contenu de la modale d'analyse : statut, qualité, OCR, champs extraits,
+ *  rapprochement OCR ↔ dossier (esprit du back-office legacy). */
+function AnalysisModalContent({ data }: { data: DocumentAnalysis }) {
+  const body = data.analysis ?? {}
+  const quality = body.quality ?? {}
+  const ocr = body.ocr ?? {}
+  const matching = body.matching ?? {}
+  const checks = matching.checks ?? []
+
+  const qualityScore = data.quality_score ?? body.quality_score ?? quality.quality_score ?? quality.score
+  const findings = quality.findings ?? quality.issues ?? []
+  const textPreview = body.text_preview ?? ocr.text_preview ?? (ocr.text ? ocr.text.slice(0, 600) : '')
+  const extracted = body.extracted_fields ?? {}
+  const extractedEntries = Object.entries(extracted).filter(
+    ([, v]) => v !== null && v !== undefined && v !== '',
+  )
+
+  return (
+    <div className="space-y-5 text-sm">
+      {/* En-tête : statut de vérification + score qualité */}
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge tone={analysisTone(data.verification_status ?? body.verification_status)}>
+          {analysisStatusLabel(data.verification_status ?? body.verification_status)}
+        </Badge>
+        {qualityScore !== null && qualityScore !== undefined && (
+          <Badge tone="gray">Score qualité : {qualityScore}%</Badge>
+        )}
+        {(data.document_type ?? body.document_type) && (
+          <span className="font-mono text-xs text-gray-400">{data.document_type ?? body.document_type}</span>
+        )}
+      </div>
+
+      {/* Qualité de l'image */}
+      {(quality.quality_status || findings.length > 0) && (
+        <section>
+          <h4 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-gray-500">Qualité de l'image</h4>
+          <div className="flex flex-wrap items-center gap-2">
+            {quality.quality_status && (
+              <Badge tone={analysisTone(quality.quality_status)}>{analysisStatusLabel(quality.quality_status)}</Badge>
+            )}
+          </div>
+          {findings.length > 0 && (
+            <ul className="mt-2 list-disc space-y-0.5 pl-5 text-xs text-gray-600">
+              {findings.map((f, i) => (
+                <li key={i}>{f}</li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {/* OCR */}
+      {(ocr.engine || ocr.ocr_status || textPreview) && (
+        <section>
+          <h4 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-gray-500">Lecture OCR</h4>
+          <div className="flex flex-wrap items-center gap-2">
+            {ocr.ocr_status && (
+              <Badge tone={analysisTone(ocr.ocr_status)}>{analysisStatusLabel(ocr.ocr_status)}</Badge>
+            )}
+            {ocr.engine && <span className="text-xs text-gray-500">Moteur : {ocr.engine}</span>}
+            {typeof ocr.confidence === 'number' && ocr.confidence > 0 && (
+              <span className="text-xs text-gray-500">Confiance : {ocr.confidence}%</span>
+            )}
+          </div>
+          {textPreview && (
+            <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-gray-50 p-3 text-xs text-gray-600 ring-1 ring-inset ring-gray-100">
+              {textPreview}
+            </pre>
+          )}
+        </section>
+      )}
+
+      {/* Champs extraits (si le backend les fournit) */}
+      {extractedEntries.length > 0 && (
+        <section>
+          <h4 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-gray-500">Champs extraits</h4>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+            {extractedEntries.map(([key, value]) => (
+              <div key={key}>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  {checkFieldLabel(key)}
+                </dt>
+                <dd className="text-sm font-medium text-gray-900">{displayValue(value)}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+
+      {/* Rapprochement OCR ↔ dossier */}
+      <section>
+        <h4 className="mb-1.5 text-xs font-bold uppercase tracking-wide text-gray-500">
+          Rapprochement OCR ↔ dossier
+        </h4>
+        <div className="mb-2 flex flex-wrap items-center gap-2">
+          <Badge tone={analysisTone(matching.match_status)}>{analysisStatusLabel(matching.match_status)}</Badge>
+          {typeof matching.match_score === 'number' && (
+            <span className="text-xs font-semibold text-gray-500">Score : {matching.match_score}%</span>
+          )}
+        </div>
+        {checks.length === 0 ? (
+          <p className="text-xs text-gray-400">Aucun contrôle de rapprochement pour ce document.</p>
+        ) : (
+          <Table>
+            <THead>
+              <Th>Champ</Th>
+              <Th>Valeur attendue</Th>
+              <Th>Résultat</Th>
+            </THead>
+            <TBody>
+              {checks.map((check, i) => (
+                <Tr key={`${check.field}-${i}`}>
+                  <Td className="font-medium text-gray-900">{checkFieldLabel(check.field)}</Td>
+                  <Td>{displayValue(check.expected)}</Td>
+                  <Td>
+                    <CheckResult check={check} />
+                  </Td>
+                </Tr>
+              ))}
+            </TBody>
+          </Table>
+        )}
+      </section>
+    </div>
+  )
+}
+
 function DocumentCard({ doc }: { doc: ApplicationDocument }) {
   const isImage = (doc.mime_type ?? '').startsWith('image/')
+  const canAnalyze = doc.can_analyze === true && Boolean(doc.analysis_url)
+  const [showAnalysis, setShowAnalysis] = useState(false)
+
+  const {
+    data: analysis,
+    isLoading: analysisLoading,
+    isError: analysisError,
+    error: analysisErr,
+  } = useQuery({
+    queryKey: ['document-analysis', doc.id],
+    queryFn: () => fetchDocumentAnalysis(doc.id),
+    enabled: showAnalysis && canAnalyze,
+    staleTime: 60_000,
+  })
+
   return (
     <div className="overflow-hidden rounded-xl ring-1 ring-gray-100">
       {doc.content_url && isImage && !doc.is_video ? (
@@ -101,7 +343,33 @@ function DocumentCard({ doc }: { doc: ApplicationDocument }) {
             </svg>
           </a>
         )}
+        {canAnalyze && (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="no-print mt-1 w-full"
+            onClick={() => setShowAnalysis(true)}
+          >
+            Voir l'analyse
+          </Button>
+        )}
       </div>
+
+      <Modal
+        open={showAnalysis}
+        onClose={() => setShowAnalysis(false)}
+        title={`Analyse — ${doc.document_label ?? doc.document_type ?? 'Document'}`}
+      >
+        {analysisLoading && <p className="py-6 text-center text-sm text-gray-500">Chargement de l'analyse…</p>}
+        {analysisError && (
+          <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700 ring-1 ring-inset ring-red-100">
+            {analysisErr instanceof ApiError
+              ? analysisErr.message
+              : "Analyse OCR introuvable ou indisponible pour ce document."}
+          </p>
+        )}
+        {analysis && <AnalysisModalContent data={analysis} />}
+      </Modal>
     </div>
   )
 }
@@ -158,6 +426,17 @@ export function ApplicationDetailPage() {
   const status = String(app.status)
   const canDecide = DECISION_ROLES.includes(user?.role ?? '')
 
+  // Export PDF : équivalent de exportDossierPdf() du legacy (window.print()
+  // avec les styles @media print qui masquent la navigation et les actions).
+  const handleExportPdf = () => {
+    const previousTitle = document.title
+    document.title = `Dossier_${app.reference}`
+    window.print()
+    window.setTimeout(() => {
+      document.title = previousTitle
+    }, 500)
+  }
+
   return (
     <div className="space-y-6">
       {/* En-tête */}
@@ -177,6 +456,16 @@ export function ApplicationDetailPage() {
         <div className="flex flex-col items-start gap-2 sm:items-end">
           <StatusBadge status={String(app.status)} />
           <p className="text-xs text-gray-400">Créé le {formatValue(app.created_at)}</p>
+          <Button size="sm" variant="secondary" className="no-print" onClick={handleExportPdf}>
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+              <path
+                d="M6 9V4h8v5m-8 5h8m-9 0h10a1 1 0 001-1v-3a1 1 0 00-1-1H5a1 1 0 00-1 1v3a1 1 0 001 1zm3 0v3h4v-3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Exporter PDF
+          </Button>
         </div>
       </div>
 
