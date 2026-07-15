@@ -94,3 +94,6 @@ data/mastercard_payment_events.jsonl
 # versionné — dépôt privé — pour retrouver la config en changeant de poste)
 data/*.key
 data/*.token
+
+# Modele ArcFace KYC (~174 Mo, > limite GitHub 100 Mo) : cf. app/models/download_arcface.py
+app/models/face_recognition_arcface_w600k_r50.onnx
