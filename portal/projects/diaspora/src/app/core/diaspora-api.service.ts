@@ -60,6 +60,19 @@ export interface OcrResult {
   [key: string]: unknown;
 }
 
+/** Résultat de la vérification faciale KYC (POST /api/pre-onboarding/face-verify). */
+export interface FaceVerifyResult {
+  available?: boolean;
+  status?: string;
+  match: boolean;
+  confidence?: number;
+  recognizer?: string;
+  reasons?: string[];
+  pairs?: Record<string, { cosine_similarity?: number; threshold?: number; match?: boolean }>;
+  sources?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
 /**
  * Wrapper typé de l'API FastAPI diaspora-onboarding (base /api).
  * Endpoints dérivés de app/routers/*.py (côté client public).
@@ -96,6 +109,15 @@ export class DiasporaApi {
     form.append('file', file);
     form.append('document_type', documentType);
     return this.http.post(`${this.base}/applications/${applicationId}/documents`, form);
+  }
+
+  // ---- Vérification faciale KYC (liveness vidéo + selfie vs photo CNI) ----
+  verifyFace(video: File, selfie: File, cni: File | null): Observable<FaceVerifyResult> {
+    const form = new FormData();
+    form.append('video', video);
+    form.append('selfie', selfie);
+    if (cni) form.append('cni', cni);
+    return this.http.post<FaceVerifyResult>(`${this.base}/pre-onboarding/face-verify`, form);
   }
 
   // ---- Pré-onboarding (OCR prefill) ----

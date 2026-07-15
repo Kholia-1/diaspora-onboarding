@@ -4,9 +4,10 @@ import { OnbSectionCard, OnbStepNav } from '../ui/section-card';
 import { OnbFormField, OnbInput, OnbSelect } from '../ui/form-field';
 import { OnbStepperRail, StepDef } from '../ui/stepper-rail';
 import { OnbIdCapture } from '../ui/id-capture';
+import { OnbFaceVerify } from '../ui/face-verify';
 import { OnbPhoneField } from '../ui/phone-field';
 import { isValidPhoneNumber } from 'libphonenumber-js';
-import { DiasporaApi, OcrExtractedFields } from '../core/diaspora-api.service';
+import { DiasporaApi, OcrExtractedFields, FaceVerifyResult } from '../core/diaspora-api.service';
 import { ApplicationCreate, ApplicationResponse, Country, Nationality, Agency } from '../core/application.model';
 import { ONBOARDING_STEPS } from '../core/onboarding-flow';
 
@@ -70,7 +71,7 @@ const ENUMS: Record<string, { value: string; label: string }[]> = {
   selector: 'diaspora-onboarding',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [OnbSectionCard, OnbStepNav, OnbFormField, OnbInput, OnbSelect, OnbStepperRail, OnbIdCapture, OnbPhoneField],
+  imports: [OnbSectionCard, OnbStepNav, OnbFormField, OnbInput, OnbSelect, OnbStepperRail, OnbIdCapture, OnbFaceVerify, OnbPhoneField],
   template: `
     <div style="min-height:100vh;background:#F7F2EC;font-family:'Inter',system-ui,sans-serif;">
       <div style="max-width:1040px;margin:0 auto;padding:32px 20px 60px;">
@@ -100,6 +101,7 @@ const ENUMS: Record<string, { value: string; label: string }[]> = {
                   [accountType]="accountTypeValue()"
                   (extracted)="applyOcr($event)"
                   (fileSelected)="idDocFile.set($event)" />
+                <onb-face-verify [cniFile]="idDocFile()" (verified)="faceResult.set($event)" />
               }
               <onb-section-card [section]="current()" [title]="step().title" [subtitle]="step().description">
                 <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;" class="onb-fields">
@@ -161,6 +163,7 @@ export class DiasporaOnboardingPage {
   readonly error = signal<string | null>(null);
   /** Photo de la pièce d'identité capturée/importée, jointe au dossier à l'envoi. */
   readonly idDocFile = signal<File | null>(null);
+  readonly faceResult = signal<FaceVerifyResult | null>(null);
 
   private countries = signal<Country[]>([]);
   private nationalities = signal<Nationality[]>([]);

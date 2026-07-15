@@ -4,6 +4,7 @@ import com.afriland.diaspora.application.exception.ApiException;
 import com.afriland.diaspora.application.port.in.PreOnboardingDraftUseCase;
 import com.afriland.diaspora.application.port.in.PreOnboardingOcrUseCase;
 import com.afriland.diaspora.application.port.in.PreOnboardingOtpUseCase;
+import com.afriland.diaspora.application.port.in.VerifyFaceUseCase;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,12 +28,14 @@ public class PreOnboardingController {
     private final PreOnboardingOcrUseCase ocr;
     private final PreOnboardingOtpUseCase otp;
     private final PreOnboardingDraftUseCase drafts;
+    private final VerifyFaceUseCase faceVerification;
 
     public PreOnboardingController(PreOnboardingOcrUseCase ocr, PreOnboardingOtpUseCase otp,
-                                   PreOnboardingDraftUseCase drafts) {
+                                   PreOnboardingDraftUseCase drafts, VerifyFaceUseCase faceVerification) {
         this.ocr = ocr;
         this.otp = otp;
         this.drafts = drafts;
+        this.faceVerification = faceVerification;
     }
 
     // AFB_PREONBOARDING_DRAFT_RESUME_V1 — brouillon serveur et reprise de dossier.
@@ -85,6 +88,22 @@ public class PreOnboardingController {
         return ocr.getSession(sessionId);
     }
 
+    /**
+     * Vérification faciale KYC : la vidéo (liveness), le selfie et la photo de la
+     * CNI sont-ils la même personne ? Sources multipart (toutes optionnelles, mais
+     * le verdict exige vidéo + CNI). Délègue au microservice (ArcFace).
+     */
+    @PostMapping("/face-verify")
+    public Map<String, Object> faceVerify(
+            @RequestParam(value = "video", required = false) MultipartFile video,
+            @RequestParam(value = "selfie", required = false) MultipartFile selfie,
+            @RequestParam(value = "cni", required = false) MultipartFile cni) {
+        return faceVerification.verify(
+                bytesOrNull(video), nameOrNull(video),
+                bytesOrNull(selfie), nameOrNull(selfie),
+                bytesOrNull(cni), nameOrNull(cni));
+    }
+
     @PostMapping("/otp/send")
     public Map<String, Object> sendOtp(@RequestBody(required = false) Map<String, Object> payload) {
         return otp.sendOtp(payload == null ? Map.of() : payload);
@@ -111,5 +130,13 @@ public class PreOnboardingController {
         } catch (IOException e) {
             throw ApiException.badRequest("Fichier illisible.");
         }
+    }
+
+    private static byte[] bytesOrNull(MultipartFile file) {
+        return (file == null || file.isEmpty()) ? null : readBytes(file);
+    }
+
+    private static String nameOrNull(MultipartFile file) {
+        return file == null ? null : file.getOriginalFilename();
     }
 }
