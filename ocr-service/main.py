@@ -95,3 +95,75 @@ async def quality(
         raise HTTPException(status_code=400, detail="Fichier vide.")
 
     return assess_quality(content)
+
+
+# --------------------------------------------------------------------------- #
+# Reconnaissance faciale KYC (ArcFace) — réutilise app/services/face_match_service
+# (même code et mêmes modèles que le monolithe ; imports légers cv2/numpy/onnx,
+# aucune dépendance à FastAPI/DB du monolithe). Import paresseux : si le moteur
+# facial a un souci, l'OCR reste disponible.
+# --------------------------------------------------------------------------- #
+import sys as _sys
+
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _REPO_ROOT not in _sys.path:
+    _sys.path.insert(0, _REPO_ROOT)
+
+
+@app.get("/v1/face/status")
+def face_status(x_api_key: str | None = Header(default=None)):
+    """Disponibilité du moteur facial + recogniseur actif (arcface/sface)."""
+    require_api_key(x_api_key)
+    from app.services.face_match_service import models_available, recognizer_kind
+
+    ok = models_available()
+    return {"available": ok, "recognizer": recognizer_kind() if ok else None}
+
+
+@app.post("/v1/face/verify")
+async def face_verify(
+    video: UploadFile | None = File(default=None),
+    selfie: UploadFile | None = File(default=None),
+    cni: UploadFile | None = File(default=None),
+    x_api_key: str | None = Header(default=None),
+):
+    """Vérifie que la vidéo (liveness), le selfie et la photo de la CNI sont la
+    MÊME personne. Au moins une source requise ; le verdict global exige vidéo + CNI."""
+    require_api_key(x_api_key)
+
+    from app.services.face_match_service import models_available, verify_identity
+
+    if not models_available():
+        raise HTTPException(
+            status_code=503,
+            detail="Modèles de reconnaissance faciale absents (cf. app/models/download_arcface.py).",
+        )
+    if video is None and selfie is None and cni is None:
+        raise HTTPException(status_code=400, detail="Fournir au moins une source (video, selfie, cni).")
+
+    import pathlib
+    import shutil
+    import tempfile
+
+    started = time.perf_counter()
+    tmpdir = tempfile.mkdtemp(prefix="face_")
+    defaults = {"video": ".webm", "selfie": ".jpg", "cni": ".jpg"}
+    paths: dict[str, str] = {}
+    try:
+        for name, up in (("video", video), ("selfie", selfie), ("cni", cni)):
+            if up is None:
+                continue
+            data = await up.read()
+            if not data:
+                continue
+            ext = pathlib.Path(up.filename or "").suffix or defaults[name]
+            dest = os.path.join(tmpdir, name + ext)
+            with open(dest, "wb") as handle:
+                handle.write(data)
+            paths[name] = dest
+
+        result = verify_identity(paths.get("video"), paths.get("selfie"), paths.get("cni"))
+        result["duration_ms"] = round((time.perf_counter() - started) * 1000)
+        return result
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
