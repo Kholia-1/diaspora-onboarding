@@ -9866,7 +9866,9 @@ document.addEventListener("DOMContentLoaded", function () {
             v.includes("CAMEROUN") ||
             v.includes("CAMEROONIAN")
         ) {
-            return "Cameroun";
+            // AFB_OCR_NATIONALITY_LABEL_V2 : le référentiel des nationalités
+            // attend « Camerounaise » (pas le pays « Cameroun »).
+            return "Camerounaise";
         }
 
         return value;
@@ -9930,12 +9932,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (el.value && String(el.value).trim() !== "") return false;
 
-        const wanted = String(value).trim().toUpperCase();
-        const allKeywords = [wanted].concat(keywords.map(k => String(k).toUpperCase()));
+        // AFB_OCR_SELECT_ACCENT_INSENSITIVE_V1 : l'OCR rend « ETUDIANT » sans
+        // accent alors que les options portent « Étudiant » — comparaison
+        // insensible aux accents des deux côtés.
+        const foldV2 = s => String(s || "")
+            .normalize("NFD")
+            .replace(/[̀-ͯ]/g, "")
+            .trim()
+            .toUpperCase();
+
+        const wanted = foldV2(value);
+        const allKeywords = [wanted].concat(keywords.map(foldV2)).filter(Boolean);
 
         for (const opt of Array.from(el.options)) {
-            const optValue = String(opt.value || "").trim().toUpperCase();
-            const optText = String(opt.textContent || "").trim().toUpperCase();
+            const optValue = foldV2(opt.value);
+            const optText = foldV2(opt.textContent);
 
             if (allKeywords.includes(optValue) || allKeywords.includes(optText)) {
                 el.value = opt.value;
@@ -10128,7 +10139,13 @@ document.addEventListener("DOMContentLoaded", function () {
         // car il faut découper indicatif + numéro local.
         if (setInputV2("rib", prefill.rib || prefill.iban_or_account_number)) filled++;
 
-        if (setSelectSmartV2("profession_ui", prefill.profession, [prefill.profession || ""])) filled++;
+        // AFB_OCR_PROFESSION_SYNONYMS_V1 : la CNI porte souvent « ELEVE » —
+        // rapproché de l'option « Étudiant » du formulaire.
+        const professionKeywords = [prefill.profession || ""];
+        if (/ELEVE|ECOLIER|LYCEEN|SCOLAIRE/i.test(String(prefill.profession || ""))) {
+            professionKeywords.push("ETUDIANT");
+        }
+        if (setSelectSmartV2("profession_ui", prefill.profession, professionKeywords)) filled++;
 
         if (filled > 0) {
             let banner = document.getElementById("ocrPrefillBanner");
@@ -12080,6 +12097,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function prefillPhone(payload) {
+    // AFB_WHATSAPP_PREFILL_KEEP_V9 : le téléphone WhatsApp est prérempli par
+    // le module final unique (V8), qui respecte le formatage PHONE_FINAL_V10
+    // et la saisie manuelle. Les variantes historiques se contredisaient
+    // (change d'indicatif → purge du champ) et laissaient le champ vide.
+    return;
+
     const fullPhone = normalizePhone(payload.phone);
     if (!fullPhone) return;
 
@@ -12342,6 +12365,12 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function fillPhoneOnce() {
+    // AFB_WHATSAPP_PREFILL_KEEP_V9 : neutralisé — ce remplisseur répétait un
+    // « change » d'indicatif toutes les 300 ms, que PHONE_FINAL_V10 punissait
+    // en vidant le champ : le numéro ne se préchargeait jamais. Le module
+    // final unique (V8) assure désormais seul le préremplissage.
+    return true;
+
     const fullPhone = readStep0Phone();
     if (!fullPhone) return false;
 
@@ -12830,6 +12859,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function fillPhone(data) {
+    // AFB_WHATSAPP_PREFILL_KEEP_V9 : neutralisé au profit du module final
+    // unique (V8) — voir fillWhatsappOnly.
+    return;
+
     const fullPhone = normalizePhone(data.phone);
     if (!fullPhone) return;
 
@@ -13096,13 +13129,67 @@ document.addEventListener("DOMContentLoaded", function () {
 
     local = local.replace(/^0+/, "");
 
+    // AFB_WHATSAPP_PREFILL_KEEP_V9 : si le numéro local attendu est déjà en
+    // place, ne pas re-remplir — mais corriger l'indicatif s'il n'a pas pu
+    // l'être au premier passage (la liste des pays se charge en asynchrone).
+    const currentDigits = digits(localInput.value);
+    if (currentDigits === local && local) {
+      if (countrySelect && code && countrySelect.options && countrySelect.options.length) {
+        const option = findOption(countrySelect, code);
+
+        if (option && countrySelect.value !== option.value) {
+          countrySelect.value = option.value;
+          countrySelect.dispatchEvent(new Event("change", { bubbles: true }));
+
+          // PHONE_FINAL_V10 vide le champ local après un changement
+          // d'indicatif : reposer le numéro après ses purges différées.
+          setTimeout(function () {
+            setValue(localInput, local);
+            try {
+              if (typeof window.composePhoneNumber === "function") {
+                window.composePhoneNumber("phone_country", "phone_local", "phone");
+              }
+            } catch (e) {}
+            setValue(hiddenPhone, fullPhone);
+          }, 320);
+        }
+      }
+
+      setValue(hiddenPhone, fullPhone);
+      return true;
+    }
+
+    // Une saisie manuelle différente du préremplissage est respectée.
+    if (currentDigits && currentDigits !== local) {
+      return false;
+    }
+
+    let countryChanged = false;
+
     if (countrySelect && code && countrySelect.options && countrySelect.options.length) {
       const option = findOption(countrySelect, code);
 
-      if (option) {
+      // Ne déclencher « change » que si l'indicatif change réellement :
+      // PHONE_FINAL_V10 vide le champ local à +50 ms et +200 ms après chaque
+      // changement d'indicatif.
+      if (option && countrySelect.value !== option.value) {
         countrySelect.value = option.value;
         countrySelect.dispatchEvent(new Event("change", { bubbles: true }));
+        countryChanged = true;
       }
+    }
+
+    if (countryChanged) {
+      // Repasser après les purges différées de PHONE_FINAL_V10.
+      setTimeout(function () {
+        setValue(localInput, local);
+        try {
+          if (typeof window.composePhoneNumber === "function") {
+            window.composePhoneNumber("phone_country", "phone_local", "phone");
+          }
+        } catch (e) {}
+        setValue(hiddenPhone, fullPhone);
+      }, 320);
     }
 
     setValue(localInput, local);
@@ -14413,3 +14500,180 @@ document.addEventListener("DOMContentLoaded", function () {
 
     console.log("AFB_OCR_PRIORITY_OVER_DRAFT_V1 actif.");
 });
+
+;/* ==== AFB_DRAFT_RESUME_V1 — brouillon serveur ==== */
+
+/* Sauvegarde automatique du formulaire dans un brouillon serveur (après
+   pré-inscription validée : le serveur refuse sinon), et préremplissage au
+   retour d'une reprise de dossier (?resume_draft=...). */
+(function () {
+    var SAVE_DEBOUNCE_MS = 1800;
+    var SAVE_MAX_LATENCY_MS = 5000;
+    var saveTimer = null;
+    var maxTimer = null;
+
+    function draftSessionId() {
+        var hidden = document.getElementById("pre_onboarding_session_id");
+        var fromHidden = hidden && hidden.value ? String(hidden.value).trim() : "";
+        if (fromHidden) return fromHidden;
+        try {
+            return localStorage.getItem("diaspora_pre_onboarding_session_id") || "";
+        } catch (e) {
+            return "";
+        }
+    }
+
+    function collectFields() {
+        var form = document.getElementById("accountForm");
+        if (!form) return null;
+
+        var fields = {};
+        form.querySelectorAll("input[name], select[name], textarea[name]").forEach(function (input) {
+            var name = input.name;
+            if (!name || input.type === "file" || input.type === "password") return;
+
+            if (input.type === "checkbox" || input.type === "radio") {
+                if (input.checked) fields[name] = input.value || "on";
+                return;
+            }
+
+            var value = String(input.value || "");
+            if (value !== "") fields[name] = value;
+        });
+        return fields;
+    }
+
+    function saveDraft() {
+        var sid = draftSessionId();
+        if (!sid) return;
+
+        var fields = collectFields();
+        if (!fields || !Object.keys(fields).length) return;
+
+        try {
+            fetch("/api/pre-onboarding/draft/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    session_id: sid,
+                    account_type: localStorage.getItem("diaspora_account_type") || "PERSONAL",
+                    fields: fields
+                })
+            }).catch(function () {});
+        } catch (e) {}
+    }
+
+    function runSave() {
+        if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+        if (maxTimer) { clearTimeout(maxTimer); maxTimer = null; }
+        saveDraft();
+    }
+
+    function scheduleSave() {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(runSave, SAVE_DEBOUNCE_MS);
+
+        // Garantie de latence : certains modules de la page émettent des événements
+        // input en continu et réarmeraient le debounce indéfiniment.
+        if (!maxTimer) {
+            maxTimer = setTimeout(runSave, SAVE_MAX_LATENCY_MS);
+        }
+    }
+
+    function bindAutosave() {
+        var form = document.getElementById("accountForm");
+        if (!form || form.dataset.draftAutosave === "1") return;
+        form.dataset.draftAutosave = "1";
+
+        form.addEventListener("input", scheduleSave, true);
+        form.addEventListener("change", scheduleSave, true);
+        window.addEventListener("beforeunload", saveDraft);
+    }
+
+    function applyDraftFields(fields) {
+        var form = document.getElementById("accountForm");
+        if (!form || !fields) return 0;
+
+        var filled = 0;
+
+        Object.keys(fields).forEach(function (name) {
+            var value = String(fields[name]);
+            var selector = '[name="' + name.replace(/"/g, '\\"') + '"]';
+            var inputs = form.querySelectorAll(selector);
+            if (!inputs.length) return;
+
+            var first = inputs[0];
+
+            if (first.type === "radio") {
+                inputs.forEach(function (radio) {
+                    if (String(radio.value) === value && !radio.checked) {
+                        radio.checked = true;
+                        radio.dispatchEvent(new Event("change", { bubbles: true }));
+                        filled++;
+                    }
+                });
+                return;
+            }
+
+            if (first.type === "checkbox") {
+                if (!first.checked) {
+                    first.checked = true;
+                    first.dispatchEvent(new Event("change", { bubbles: true }));
+                    filled++;
+                }
+                return;
+            }
+
+            if (first.type === "file") return;
+
+            // On ne remplace jamais une saisie déjà présente (OCR ou client).
+            if (String(first.value || "") === "") {
+                first.value = value;
+                first.dispatchEvent(new Event("input", { bubbles: true }));
+                first.dispatchEvent(new Event("change", { bubbles: true }));
+                filled++;
+            }
+        });
+
+        return filled;
+    }
+
+    function prefillFromDraft() {
+        var params = new URLSearchParams(window.location.search);
+        var draftId = params.get("resume_draft");
+        if (!draftId) return;
+
+        fetch("/api/pre-onboarding/draft/open", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ draft_id: draftId })
+        }).then(function (response) {
+            return response.json().then(function (data) {
+                if (!response.ok || !data.ok) return;
+
+                var hidden = document.getElementById("pre_onboarding_session_id");
+                if (hidden && !hidden.value) hidden.value = data.session_id;
+
+                // Trois passes : certains selects (agences, secteurs, pays) se
+                // peuplent en asynchrone après le chargement de la page.
+                var run = function () { return applyDraftFields(data.fields); };
+                var firstPass = run();
+                setTimeout(run, 1800);
+                setTimeout(run, 4200);
+                console.log("[DRAFT] reprise de dossier :", firstPass, "champ(s) préremplis (1re passe).");
+            });
+        }).catch(function () {});
+    }
+
+    function init() {
+        bindAutosave();
+        prefillFromDraft();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+    setTimeout(bindAutosave, 1500);
+})();
