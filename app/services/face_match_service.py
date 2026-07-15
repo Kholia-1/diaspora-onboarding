@@ -94,22 +94,38 @@ def _cosine(f1: np.ndarray, f2: np.ndarray) -> float:
 
 
 def embed_image_file(path: str | Path) -> dict[str, Any]:
-    """Détecte le plus grand visage d'une image et retourne son embedding."""
+    """Détecte le plus grand visage d'une image et retourne son embedding.
+
+    AFB_FACE_ROTATION_V1 : les CNI sont souvent photographiées carte tournée
+    (texte vertical) — si aucun visage n'est trouvé, on réessaie l'image
+    pivotée à 90/180/270 degrés.
+    """
     data = np.fromfile(str(path), dtype=np.uint8)
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)
 
     if image is None:
         return {"status": "UNREADABLE_IMAGE"}
 
-    face = detect_largest_face(image)
-    if face is None:
-        return {"status": "NO_FACE_DETECTED"}
+    rotations = [
+        (None, 0),
+        (cv2.ROTATE_90_CLOCKWISE, 90),
+        (cv2.ROTATE_90_COUNTERCLOCKWISE, 270),
+        (cv2.ROTATE_180, 180),
+    ]
 
-    return {
-        "status": "OK",
-        "feature": _embed_face(image, face),
-        "detection_score": float(face[14]),
-    }
+    for rotation, degrees in rotations:
+        candidate = image if rotation is None else cv2.rotate(image, rotation)
+        face = detect_largest_face(candidate)
+
+        if face is not None:
+            return {
+                "status": "OK",
+                "feature": _embed_face(candidate, face),
+                "detection_score": float(face[14]),
+                "rotation_degrees": degrees,
+            }
+
+    return {"status": "NO_FACE_DETECTED"}
 
 
 def embed_video_file(path: str | Path, max_samples: int = 8) -> dict[str, Any]:
