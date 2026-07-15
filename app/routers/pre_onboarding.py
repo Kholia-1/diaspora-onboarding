@@ -499,7 +499,12 @@ def v2_clean_name(value: str | None) -> str | None:
         # (« DATEDENAISSANCHARATEOFBIRTH ») — jamais de vrais noms.
         if len(word) > 14:
             continue
-        if re.search(r"NAISSANCE|BIRTH|EXPIR|SIGNAT|IDENTIT|REPUBL|DELIVR|OCCUPAT|PROFESS|CAMEROUN|CAMEROON|NATIONAL", word):
+        if re.search(
+            r"NAISSANCE|BIRTH|EXPIR|SIGNAT|IDENTIT|REPUBL|DELIVR|OCCUPAT|PROFESS|CAMEROUN|CAMEROON|NATIONAL"
+            # AFB_CNI_CONGO_NIU_V1 : libellés bilingues personne/entreprise.
+            r"|COMMERCIAL|RAISON|SOCIAL|JURIDIQUE|CREATION|DOMICILE|SIEGE",
+            word
+        ):
             continue
 
         vowels = sum(1 for c in word if c in "AEIOUY")
@@ -682,8 +687,9 @@ def v2_extract_names(text: str) -> dict[str, str]:
             [
                 r"\bNOM\s*/?\s*SURNAME\b",
                 # AFB_CNI_SIDE_AWARE_V1 : ne jamais confondre le NOM du
-                # titulaire avec « NOM DU PERE » / « NOM DE LA MERE » du verso.
-                r"\bNOMS?\b(?!\s*(?:DU\s*PERE|DE\s*LA\s*MERE|DU|DE\s*LA)\b)",
+                # titulaire avec « NOM DU PERE » / « NOM DE LA MERE » du verso,
+                # ni avec « NOM COMMERCIAL » (carte NIU congolaise).
+                r"\bNOMS?\b(?!\s*(?:DU\s*PERE|DE\s*LA\s*MERE|DU|DE\s*LA|COMMERCIAL)\b)",
                 r"\bSURNAME\b",
                 r"\bSURNAMES\b",
                 r"\bSURAAWE\b",
@@ -879,6 +885,13 @@ def detect_cni_side(ocr_text: str) -> dict[str, Any]:
         hit("R", 10, "sexe")
     if re.search(r"CARTE\s*NATIONALE|NATIONAL\s*IDENTITY|IDENTITY\s*CAR", t):
         hit("R", 10, "titre_carte")
+    # AFB_CNI_CONGO_NIU_V1 : la carte NIU congolaise porte toutes ses données
+    # sur la face avant — libellés bilingues personne/entreprise et bandeau
+    # « NUMÉRO D'IDENTIFICATION UNIQUE ».
+    if re.search(r"RAISON\s*SOCIALE|FORME\s*JURIDIQUE|NOM\s*COMMERCIAL", t):
+        hit("R", 20, "libelles_niu_congo")
+    if re.search(r"NUMERO\s*D\s*IDENTIFICATION\s*UNIQUE", t) or re.search(r"(?<![A-Z0-9])P20\d{14}(?![0-9])", compact):
+        hit("R", 15, "bandeau_niu")
 
     if "<<" in (ocr_text or ""):
         hit("V", 40, "mrz")
@@ -1018,6 +1031,10 @@ def v2_extract_cni_number(text: str) -> str | None:
         # AFB_CNI_2024_IDENTIFIANT_UNIQUE_V1 : libellé de la nouvelle CNI.
         r"\bIDENTIFIANT\s+UNIQUE\s*[:\-]?\s*([A-Z0-9]{6,20})",
         r"\bUNIQUE\s+IDENTIFIER\s*[:\-]?\s*([A-Z0-9]{6,20})",
+        # AFB_CNI_CONGO_NIU_V1 : carte NIU de la République du Congo —
+        # « NUMÉRO D'IDENTIFICATION UNIQUE » suivi de P + 16 chiffres.
+        r"NUMERO\s*D\s*IDENTIFICATION\s*UNIQUE\s*[:\-]?\s*(P?\d{10,20})",
+        r"\b(P20\d{14})\b",
         r"\bCNI\s*[:\-]?\s*([A-Z0-9]{6,20})",
         r"\bN[°O]\s*[:\-]?\s*([A-Z0-9]{6,20})"
     ]
@@ -1083,7 +1100,10 @@ def v2_extract_simple_value(text: str, label_patterns: list[str]) -> str | None:
                 word for word in residue.split()
                 if len(word) > 2 and not re.search(
                     r"ACE|BIRTH|B?RTH|NAISSANCE|MAISSANCE|SEX|TAILLE|HEIGHT|DATE|SIGNAT"
-                    r"|IDENTIT|NATIONAL|CARTE|CARD|REPUBLI|ARTE|^PLA|POST|^S\.?[PM]",
+                    r"|IDENTIT|NATIONAL|CARTE|CARD|REPUBLI|ARTE|^PLA|POST|^S\.?[PM]"
+                    # AFB_CNI_CONGO_NIU_V1 : libellés bilingues de la carte NIU
+                    # congolaise (personne physique / entreprise).
+                    r"|LIEU|CREATION|ACTIVITE|PRINCIPALE|RAISON|SOCIAL|JURIDIQUE|COMMERCIAL|DOMICILE|SIEGE|FORME",
                     word, flags=re.I
                 )
             )
@@ -1309,7 +1329,11 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
     # AFB_OCR_NOISY_LABELS_V1 : rejeter les valeurs qui sont en réalité des
     # résidus du libellé de la carte (« CARTE NATIONALE D'IDENTITE » collé).
     if occupation and not re.search(
-        r"IDENTIT|NATIONALE|NATIONAL\s*ID|REPUBLI", normalize_text(occupation)
+        r"IDENTIT|NATIONALE|NATIONAL\s*ID|REPUBLI"
+        # AFB_CNI_CONGO_NIU_V1 : résidus du libellé « Activité principale »,
+        # y compris coupé par l'OCR (« PRIN CIPALE »).
+        r"|ACTIVIT|PRINCIP|\bPRIN\b|CIPAL",
+        normalize_text(occupation)
     ):
         fields["profession"] = occupation
 

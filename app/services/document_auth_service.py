@@ -1006,6 +1006,14 @@ def detect_document_category_from_ocr(ocr_text: str) -> dict[str, Any]:
         "identification post",
         "taille",
         "idcmr",
+        # AFB_CNI_CONGO_NIU_V1 : carte NIU de la République du Congo.
+        "republique du congo",
+        "unite travail progres",
+        "numero d identification unique",
+        "raison sociale",
+        "forme juridique",
+        "nom commercial",
+        "signature du titulaire",
     ]
 
     address_keywords = [
@@ -1076,6 +1084,11 @@ def detect_document_category_from_ocr(ocr_text: str) -> dict[str, Any]:
     if re.search(r"(?<![0-9])20[0-9]{15}(?![0-9])", compact_text):
         identity_structural += 40
         structural_signals.append("identifiant_unique_17_chiffres")
+
+    # AFB_CNI_CONGO_NIU_V1 : NIU congolais — P suivi de 16 chiffres (P2014...).
+    if re.search(r"(?<![A-Z0-9])P20[0-9]{14}(?![0-9])", compact_text):
+        identity_structural += 40
+        structural_signals.append("niu_congo_p16")
 
     if "MBARGA NGUELE" in normalized_full:
         identity_structural += 25
