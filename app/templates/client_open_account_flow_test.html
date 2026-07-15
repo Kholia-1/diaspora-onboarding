@@ -2052,6 +2052,70 @@
 .page:not(.preinscription-ok) .actions-bottom {
   display: none !important;
 }
+
+/* Une fois la pré-inscription validée, son bloc ne s'affiche plus. */
+.page.preinscription-ok #step0-preinscription {
+  display: none !important;
+}
+
+/* AFB_DRAFT_RESUME_UI_V1 — reprise d'une demande non finalisée */
+.resume-draft-box { margin-top: 18px; grid-column: 1 / -1; }
+
+/* Une fois la pré-inscription validée, plus de reprise à proposer. */
+.page.preinscription-ok .resume-draft-box { display: none !important; }
+
+/* Desktop : l'option de reprise appartient à l'écran d'entrée — elle disparaît
+   après « Commencer ». En mobile (flow auto-démarré, intro masquée), elle reste
+   visible au-dessus de la pré-inscription. */
+@media (min-width: 769px) {
+  .page.flow-started .resume-draft-box { display: none !important; }
+}
+.resume-draft-toggle {
+  background: none;
+  border: none;
+  color: var(--red);
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px 0;
+}
+.resume-draft-panel {
+  margin-top: 12px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--red);
+  border-radius: 14px;
+  padding: 16px;
+}
+.resume-draft-panel label { font-weight: 700; font-size: 14px; display: block; margin-bottom: 8px; }
+.resume-draft-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.resume-draft-row input {
+  flex: 1 1 220px;
+  padding: 11px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+}
+#resume-draft-results { margin-top: 10px; display: grid; gap: 8px; }
+.resume-draft-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 13.5px;
+}
+.resume-draft-item:hover { border-color: var(--red); }
+#resume-draft-status { margin-top: 10px; font-weight: 700; font-size: 13.5px; }
+#resume-draft-status.ok { color: #166534; }
+#resume-draft-status.error { color: #b91c1c; }
+#resume-draft-otp { margin-top: 12px; }
 </style>
 
 </head>
@@ -2154,7 +2218,7 @@
         <div class="step">
           <div class="step-number">3</div>
           <div>
-            <strong data-i18n="steps.continue.title">Remplir les infos manquantes</strong>
+            <strong data-i18n="steps.continue.title">Remplir les informations manquantes</strong>
             <span data-i18n="steps.continue.desc">Les champs détectés seront préremplis dans votre formulaire.</span>
           </div>
         </div>
@@ -2164,7 +2228,36 @@
       <div class="start-cta">
         <button class="btn btn-primary" id="start-preinscription-btn" type="button" data-i18n="steps.start">Commencer</button>
       </div>
+
+
     </section>
+
+      <!-- AFB_DRAFT_RESUME_UI_V1 : reprise d'une demande non finalisée -->
+      <div class="resume-draft-box panel-out" id="resume-draft-box">
+        <button type="button" class="resume-draft-toggle" id="resume-draft-toggle">
+          Vous avez déjà commencé ? Reprendre ma demande →
+        </button>
+
+        <div class="resume-draft-panel" id="resume-draft-panel" style="display:none;">
+          <label for="resume-draft-query">Email ou numéro WhatsApp utilisé à la pré-inscription</label>
+          <div class="resume-draft-row">
+            <input id="resume-draft-query" type="text" placeholder="ex. nom@email.com ou +2376XXXXXXXX" autocomplete="email">
+            <button class="btn btn-primary" id="resume-draft-search" type="button">Rechercher</button>
+          </div>
+
+          <div id="resume-draft-results"></div>
+
+          <div id="resume-draft-otp" style="display:none;">
+            <p id="resume-draft-otp-help" style="margin:8px 0;color:#4b5563;font-size:13.5px;"></p>
+            <div class="resume-draft-row">
+              <input id="resume-draft-otp-code" type="text" inputmode="numeric" maxlength="6" placeholder="Code à 6 chiffres" autocomplete="one-time-code">
+              <button class="btn btn-primary" id="resume-draft-verify" type="button">Vérifier et reprendre</button>
+            </div>
+          </div>
+
+          <div id="resume-draft-status"></div>
+        </div>
+      </div>
 
     <style>
       /* Au chargement : on montre l'intro (Bienvenue + les 4 étapes) + « Commencer ».
@@ -2186,10 +2279,11 @@
            pré-inscription (CSS pur, indépendant du JS). */
         #remote-account-welcome,
         #preonboarding-intro,
-        #account-type-section,
-        #media-verification-section {
+        #account-type-section {
           display: none !important;
         }
+        /* La photo/vidéo n'est plus masquée ici : le gating l'affiche après
+           la validation de la pré-inscription (AFB_GATE_AFTER_PREINSCRIPTION_V1). */
         .page .panel.workspace {
           display: block !important;
           grid-column: 1 / -1 !important;
@@ -2530,6 +2624,27 @@
         if (isVerified()) {
           try { sessionStorage.setItem(VALIDATED_KEY, "1"); } catch (e) {}
           apply();
+
+          /* AFB_PREONBOARDING_DRAFT_RESUME_V1 : la validation crée le brouillon
+             serveur — le dossier devient retrouvable par téléphone/email même si
+             le client abandonne avant le formulaire. */
+          try {
+            var sid = localStorage.getItem("diaspora_pre_onboarding_session_id") || "";
+            if (sid) {
+              fetch("/api/pre-onboarding/draft/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  session_id: sid,
+                  account_type: localStorage.getItem("diaspora_account_type") || "PERSONAL",
+                  fields: {
+                    email: localStorage.getItem("diaspora_step0_email") || "",
+                    residence: localStorage.getItem("diaspora_step0_residence") || localStorage.getItem("diaspora_step0_country") || ""
+                  }
+                })
+              }).catch(function () {});
+            }
+          } catch (e) {}
         }
       });
     }
@@ -2540,6 +2655,233 @@
   /* Le bouton peut être (re)rendu tardivement : on re-bind et on ré-applique. */
   setInterval(function () { bindValidate(); apply(); }, 700);
   window.addEventListener("storage", apply);
+})();
+</script>
+
+<script>
+/* AFB_DRAFT_RESUME_UI_V1 : recherche du dossier par téléphone/email, OTP de
+   réappropriation (WhatsApp + email), puis reprise du formulaire pré-rempli. */
+(function () {
+  var currentDraft = null;
+
+  function el(id) { return document.getElementById(id); }
+
+  function setStatus(message, type) {
+    var status = el("resume-draft-status");
+    if (!status) return;
+    status.textContent = message || "";
+    status.className = type || "";
+  }
+
+  async function readJson(response) {
+    var raw = await response.text();
+    try { return raw ? JSON.parse(raw) : {}; }
+    catch (e) { return { detail: raw || "Réponse serveur invalide." }; }
+  }
+
+  function detailOf(data, fallback) {
+    if (!data) return fallback;
+    if (typeof data.detail === "string") return data.detail;
+    if (data.detail && data.detail.message) return data.detail.message;
+    return data.message || fallback;
+  }
+
+  async function search() {
+    var query = String((el("resume-draft-query") || {}).value || "").trim();
+    var results = el("resume-draft-results");
+    if (!results) return;
+
+    results.innerHTML = "";
+    el("resume-draft-otp").style.display = "none";
+    currentDraft = null;
+
+    if (query.length < 5) {
+      setStatus("Indiquez l'email ou le numéro WhatsApp complet utilisé à la pré-inscription.", "error");
+      return;
+    }
+
+    setStatus("Recherche en cours...", "");
+
+    try {
+      var response = await fetch("/api/pre-onboarding/draft/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query })
+      });
+      var data = await readJson(response);
+
+      if (!response.ok) {
+        setStatus(detailOf(data, "Recherche impossible."), "error");
+        return;
+      }
+
+      if (!data.drafts || !data.drafts.length) {
+        setStatus("Aucun dossier en cours trouvé pour cette coordonnée.", "error");
+        return;
+      }
+
+      setStatus(data.drafts.length + " dossier(s) trouvé(s). Cliquez pour reprendre.", "ok");
+
+      data.drafts.forEach(function (draft) {
+        var item = document.createElement("button");
+        item.type = "button";
+        item.className = "resume-draft-item";
+        var when = String(draft.updated_at || "").slice(0, 10);
+        item.innerHTML =
+          "<span><strong>" + (draft.account_type === "BUSINESS" ? "Compte entreprise" : "Compte personnel") + "</strong><br>" +
+          draft.masked_email + " · " + draft.masked_phone + "</span>" +
+          "<span style='color:#6b7280;'>" + (when ? "maj " + when : "") + " →</span>";
+        item.addEventListener("click", function () { claim(draft); });
+        results.appendChild(item);
+      });
+    } catch (e) {
+      setStatus("Erreur réseau pendant la recherche.", "error");
+    }
+  }
+
+  async function claim(draft) {
+    setStatus("Envoi du code de vérification...", "");
+    try {
+      var response = await fetch("/api/pre-onboarding/draft/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draft_id: draft.draft_id })
+      });
+      var data = await readJson(response);
+
+      if (!response.ok || !data.ok) {
+        setStatus(detailOf(data, "Impossible d'envoyer le code de vérification."), "error");
+        return;
+      }
+
+      currentDraft = data;
+      el("resume-draft-otp").style.display = "block";
+      el("resume-draft-otp-help").textContent =
+        "Un code de vérification a été envoyé à " + data.masked_phone + " (WhatsApp) et " +
+        data.masked_email + " (email). Saisissez-le pour reprendre votre dossier.";
+      setStatus("", "");
+      var codeInput = el("resume-draft-otp-code");
+      if (codeInput) { codeInput.value = ""; codeInput.focus(); }
+    } catch (e) {
+      setStatus("Erreur réseau pendant l'envoi du code.", "error");
+    }
+  }
+
+  async function verify() {
+    if (!currentDraft) return;
+    var otp = String((el("resume-draft-otp-code") || {}).value || "").replace(/\D/g, "");
+
+    if (otp.length !== 6) {
+      setStatus("Saisissez le code à 6 chiffres reçu.", "error");
+      return;
+    }
+
+    setStatus("Vérification du code...", "");
+
+    try {
+      var response = await fetch("/api/pre-onboarding/draft/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draft_id: currentDraft.draft_id, otp: otp })
+      });
+      var data = await readJson(response);
+
+      if (!response.ok || !data.ok) {
+        setStatus(detailOf(data, "Code incorrect."), "error");
+        return;
+      }
+
+      var opened = await fetch("/api/pre-onboarding/draft/open", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ draft_id: currentDraft.draft_id })
+      });
+      var draft = await readJson(opened);
+
+      if (!opened.ok || !draft.ok) {
+        setStatus(detailOf(draft, "Impossible d'ouvrir le dossier."), "error");
+        return;
+      }
+
+      setStatus("Vérification réussie. Ouverture de votre dossier...", "ok");
+
+      /* Restaure le contexte de pré-inscription validée pour le formulaire. */
+      try {
+        localStorage.setItem("diaspora_pre_onboarding_session_id", draft.session_id);
+        localStorage.setItem("diaspora_account_type", draft.account_type || "PERSONAL");
+        localStorage.setItem("diaspora_step0_email", draft.email || "");
+        localStorage.setItem("diaspora_step0_whatsapp_full", draft.phone || "");
+        localStorage.setItem("diaspora_step0_whatsapp_otp_verified", "true");
+        localStorage.setItem("diaspora_step0_whatsapp_otp_phone", draft.phone || "");
+        var residence = (draft.fields || {}).residence || "";
+        if (residence) {
+          localStorage.setItem("diaspora_step0_residence", residence);
+          localStorage.setItem("diaspora_step0_country", residence);
+        }
+        localStorage.setItem("diaspora_step0_payload", JSON.stringify({
+          pre_onboarding_session_id: draft.session_id,
+          email: draft.email || "",
+          phone: draft.phone || "",
+          whatsapp_phone_full: draft.phone || "",
+          residence: residence,
+          country_of_residence: residence,
+          whatsapp_otp_verified: true,
+          whatsapp_otp_verified_at: new Date().toISOString(),
+          saved_at: new Date().toISOString()
+        }));
+        sessionStorage.setItem("diaspora_step0_preinscription_validated", "1");
+      } catch (e) {}
+
+      var params = new URLSearchParams();
+      params.set("resume_draft", draft.draft_id);
+      params.set("pre_session", draft.session_id);
+      params.set("account_type", draft.account_type || "PERSONAL");
+      if (draft.email) params.set("step0_email", draft.email);
+      if (draft.phone) params.set("step0_phone", draft.phone);
+
+      window.location.href = "/open-account-test?" + params.toString();
+    } catch (e) {
+      setStatus("Erreur réseau pendant la vérification.", "error");
+    }
+  }
+
+  function bind() {
+    var toggle = el("resume-draft-toggle");
+    var panel = el("resume-draft-panel");
+    if (toggle && panel && toggle.dataset.bound !== "1") {
+      toggle.dataset.bound = "1";
+      toggle.addEventListener("click", function () {
+        panel.style.display = panel.style.display === "none" ? "block" : "none";
+      });
+    }
+
+    var searchBtn = el("resume-draft-search");
+    if (searchBtn && searchBtn.dataset.bound !== "1") {
+      searchBtn.dataset.bound = "1";
+      searchBtn.addEventListener("click", search);
+    }
+
+    var queryInput = el("resume-draft-query");
+    if (queryInput && queryInput.dataset.bound !== "1") {
+      queryInput.dataset.bound = "1";
+      queryInput.addEventListener("keyup", function (event) {
+        if (event.key === "Enter") search();
+      });
+    }
+
+    var verifyBtn = el("resume-draft-verify");
+    if (verifyBtn && verifyBtn.dataset.bound !== "1") {
+      verifyBtn.dataset.bound = "1";
+      verifyBtn.addEventListener("click", verify);
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bind);
+  } else {
+    bind();
+  }
+  setTimeout(bind, 800);
 })();
 </script>
 
@@ -2919,7 +3261,7 @@
           "steps.choose_account.desc": "Compte personnel ou compte entreprise.",
           "steps.upload_docs.title": "Importer vos pièces",
           "steps.upload_docs.desc": "Pièce d’identité, justificatifs, RIB ou documents entreprise.",
-          "steps.continue.title": "Remplir les infos manquantes",
+          "steps.continue.title": "Remplir les informations manquantes",
           "steps.continue.desc": "Les champs détectés seront préremplis dans votre formulaire.",
           "account_type.title": "Type de compte",
           "welcome.title": "Bienvenue dans votre parcours d’ouverture de compte à distance.",
@@ -2953,7 +3295,7 @@
           "media.video.empty": "Aucune vidéo prise",
           "summary.title": "Vérification des informations",
           "summary.empty": "Aucun document analysé pour l’instant.",
-          "summary.ocr_title": "Préchargement OCR",
+          "summary.ocr_title": "Préchargement des pièces et documents",
           "summary.detected": "Informations détectées",
           "summary.no_structured": "Aucune information structurée détectée pour l’instant.",
           "selected.label": "Type de compte sélectionné :",
@@ -3029,7 +3371,7 @@
           "media.video.empty": "No video recorded",
           "summary.title": "Information verification",
           "summary.empty": "No document analyzed yet.",
-          "summary.ocr_title": "Automatic pre-filling",
+          "summary.ocr_title": "Documents preloading",
           "summary.detected": "Detected information",
           "summary.no_structured": "No structured information detected yet.",
           "selected.label": "Selected account type:",
@@ -4269,6 +4611,23 @@
     return lang() === "en" ? en : fr;
   }
 
+  // AFB_DOC_CAMERA_FACING_BY_DEVICE_V1 : sur téléphone/tablette, la pièce se
+  // photographie avec la caméra ARRIÈRE (comportement actuel) ; sur un
+  // ordinateur, la webcam regarde le client — on demande donc la caméra
+  // côté utilisateur pour qu'il présente la carte face à l'écran.
+  function isMobileDevice() {
+    if (/Android|iPhone|iPad|iPod|Mobile|Silk/i.test(navigator.userAgent || "")) {
+      return true;
+    }
+    // iPadOS se déclare macOS : l'écran tactile le trahit.
+    return (navigator.maxTouchPoints || 0) > 1 &&
+      Math.min(window.screen.width || 0, window.screen.height || 0) < 1000;
+  }
+
+  function documentFacingMode() {
+    return isMobileDevice() ? "environment" : "user";
+  }
+
   function profileFor(mode, target) {
     const t = String(target || "").toUpperCase();
 
@@ -4289,7 +4648,7 @@
         title: text("Photographier la pièce", "Take ID document photo"),
         help: text("Placez toute la pièce dans le cadre, évitez les reflets et gardez-la stable.", "Place the entire ID document in the frame, avoid reflections and keep it steady."),
         guidance: text("Placez toute la pièce dans le cadre.", "Place the full document in the frame."),
-        facingMode: "environment",
+        facingMode: documentFacingMode(),
         fileName: String(target || "document") + ".jpg"
       };
     }
@@ -4299,7 +4658,7 @@
       title: text("Photographier le document", "Take document photo"),
       help: text("Cadrez le document complet, bien droit et bien éclairé.", "Frame the complete document, straight and well lit."),
       guidance: text("Cadrez le document complet.", "Frame the complete document."),
-      facingMode: "environment",
+      facingMode: documentFacingMode(),
       fileName: String(target || "document") + ".jpg"
     };
   }
@@ -9102,9 +9461,7 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
       notice.id = "step0-onboarding-success";
       notice.setAttribute("role", "status");
       notice.innerHTML =
-        '<div style="font-size:15px;">✅ Onboarding réalisé avec succès.</div>' +
-        '<div style="margin-top:4px;font-weight:500;color:#1b7a43;font-size:13.5px;">' +
-        'Votre numéro WhatsApp est vérifié. Vous pouvez poursuivre votre demande.</div>';
+        '<div style="font-size:15px;font-weight:700;">✅ Votre numéro WhatsApp est vérifié.</div>';
 
       const anchor = otpBox || document.getElementById("step0-preinscription");
       if (otpBox && otpBox.parentNode) {
