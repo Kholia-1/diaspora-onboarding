@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from app.database import SessionLocal
 from app.models import AccountApplication, PaymentTransaction
-from app.services.mastercard_gateway_service import public_config_status
+from app.services.public_url import to_absolute_url
 from app.services.mastercard_payment_service import create_mastercard_payment_session
 from app.services.whatsapp_notification_service import send_whatsapp_notification
 
@@ -85,24 +85,8 @@ def _can_generate_payment_link(app: AccountApplication):
 
 
 def _absolute_payment_url(relative_or_full_url: str | None) -> str | None:
-    if not relative_or_full_url:
-        return None
-
-    value = str(relative_or_full_url).strip()
-
-    if value.startswith("http://") or value.startswith("https://"):
-        return value
-
-    config = public_config_status()
-    base = (
-        config.get("merchant_url")
-        or "https://diaspora-onboarding.com"
-    ).rstrip("/")
-
-    if not value.startswith("/"):
-        value = "/" + value
-
-    return base + value
+    # Base configurable via PUBLIC_BASE_URL (cf. app/services/public_url.py).
+    return to_absolute_url(relative_or_full_url)
 
 
 def _find_existing_payment(db, app: AccountApplication):

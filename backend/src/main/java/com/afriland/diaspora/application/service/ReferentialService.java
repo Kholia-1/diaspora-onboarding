@@ -46,7 +46,19 @@ public class ReferentialService implements ManageReferentialsUseCase {
     }
 
     @Override
-    public Agency createAgency(String code, String name, String city, String country, Boolean active) {
+    @Transactional(readOnly = true)
+    public List<Agency> listAgenciesByCountry(long countryId) {
+        return agencies.searchByCountry(countryId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Agency> listActiveAgenciesByCountry(long countryId) {
+        return agencies.searchActiveByCountry(countryId);
+    }
+
+    @Override
+    public Agency createAgency(String code, String name, String city, String country, Long countryId, Boolean active) {
         String rawCode = code == null ? "" : code;
         String rawName = name == null ? "" : name;
 
@@ -62,23 +74,40 @@ public class ReferentialService implements ManageReferentialsUseCase {
                 rawCode.toUpperCase(Locale.ROOT).strip(),
                 rawName.strip(),
                 city,
-                country == null ? "Cameroun" : country,
+                resolveCountryLabel(countryId, country),
+                countryId,
                 active == null || active,
                 utcNow(),
                 null));
     }
 
     @Override
-    public Agency updateAgency(long agencyId, String code, String name, String city, String country, Boolean active) {
+    public Agency addAgencyToCountry(long countryId, String code, String name, String city, Boolean active) {
+        // Valide le pays (via resolveCountryLabel) et crée l'agence rattachée ;
+        // le libellé pays est repris de name_fr du pays.
+        return createAgency(code, name, city, null, countryId, active);
+    }
+
+    @Override
+    public Agency updateAgency(long agencyId, String code, String name, String city, String country, Long countryId,
+                               Boolean active) {
         Agency agency = agencies.findById(agencyId)
                 .orElseThrow(() -> ApiException.notFound("Agence introuvable."));
+
+        Long newCountryId = countryId != null ? countryId : agency.countryId();
+        // Si le rattachement change, le libellé pays suit name_fr du nouveau pays ;
+        // sinon on garde le texte fourni (ou l'existant).
+        String newCountry = countryId != null
+                ? resolveCountryLabel(countryId, agency.country())
+                : (country != null ? country : agency.country());
 
         Agency updated = new Agency(
                 agency.id(),
                 code != null ? code.toUpperCase(Locale.ROOT).strip() : agency.code(),
                 name != null ? name.strip() : agency.name(),
                 city != null ? city : agency.city(),
-                country != null ? country : agency.country(),
+                newCountry,
+                newCountryId,
                 active != null ? active : agency.active(),
                 agency.createdAt(),
                 utcNow());
@@ -93,7 +122,20 @@ public class ReferentialService implements ManageReferentialsUseCase {
 
         return agencies.save(new Agency(
                 agency.id(), agency.code(), agency.name(), agency.city(), agency.country(),
-                false, agency.createdAt(), utcNow()));
+                agency.countryId(), false, agency.createdAt(), utcNow()));
+    }
+
+    /**
+     * Libellé pays cohérent avec name_fr quand un countryId est fourni (source de
+     * vérité, existence validée), sinon le texte libre passé (défaut « Cameroun »).
+     */
+    private String resolveCountryLabel(Long countryId, String fallback) {
+        if (countryId != null) {
+            return countries.findById(countryId)
+                    .orElseThrow(() -> ApiException.badRequest("Pays introuvable."))
+                    .nameFr();
+        }
+        return fallback == null ? "Cameroun" : fallback;
     }
 
     // --- Nationalités ---

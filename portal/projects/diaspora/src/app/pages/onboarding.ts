@@ -4,6 +4,8 @@ import { OnbSectionCard, OnbStepNav } from '../ui/section-card';
 import { OnbFormField, OnbInput, OnbSelect } from '../ui/form-field';
 import { OnbStepperRail, StepDef } from '../ui/stepper-rail';
 import { OnbIdCapture } from '../ui/id-capture';
+import { OnbPhoneField } from '../ui/phone-field';
+import { isValidPhoneNumber } from 'libphonenumber-js';
 import { DiasporaApi, OcrExtractedFields } from '../core/diaspora-api.service';
 import { ApplicationCreate, ApplicationResponse, Country, Nationality, Agency } from '../core/application.model';
 import { ONBOARDING_STEPS } from '../core/onboarding-flow';
@@ -44,7 +46,7 @@ const LABELS: Record<string, string> = {
   activity_sector: "Secteur d'activité", activity_subsector: 'Sous-secteur',
   income_range: 'Tranche de revenus', income_currency: 'Devise', funds_origin: 'Origine des fonds',
   account_object: 'Objet du compte', account_type: 'Type de compte', preferred_branch: 'Agence',
-  account_purpose: 'Finalité du compte',
+  account_purpose: 'Finalité du compte', agency_country: "Pays de l'agence",
 };
 
 const ENUMS: Record<string, { value: string; label: string }[]> = {
@@ -68,7 +70,7 @@ const ENUMS: Record<string, { value: string; label: string }[]> = {
   selector: 'diaspora-onboarding',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [OnbSectionCard, OnbStepNav, OnbFormField, OnbInput, OnbSelect, OnbStepperRail, OnbIdCapture],
+  imports: [OnbSectionCard, OnbStepNav, OnbFormField, OnbInput, OnbSelect, OnbStepperRail, OnbIdCapture, OnbPhoneField],
   template: `
     <div style="min-height:100vh;background:#F7F2EC;font-family:'Inter',system-ui,sans-serif;">
       <div style="max-width:1040px;margin:0 auto;padding:32px 20px 60px;">
@@ -101,10 +103,12 @@ const ENUMS: Record<string, { value: string; label: string }[]> = {
               }
               <onb-section-card [section]="current()" [title]="step().title" [subtitle]="step().description">
                 <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;" class="onb-fields">
-                  @for (f of step().fields; track f) {
+                  @for (f of renderedFields(); track f) {
                     <div [style.grid-column]="isWide(f) ? '1 / -1' : 'auto'">
-                      <onb-form-field [label]="label(f)">
-                        @if (options(f); as opts) {
+                      <onb-form-field [label]="label(f)" [error]="fieldError(f)">
+                        @if (isPhone(f)) {
+                          <onb-phone-field [value]="value(f)" [changeFn]="setter(f)" [hasError]="!!fieldError(f)" />
+                        } @else if (options(f); as opts) {
                           <onb-select [value]="value(f)" [changeFn]="setter(f)">
                             <option value="">— Sélectionner —</option>
                             @for (o of opts; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
@@ -163,8 +167,26 @@ export class DiasporaOnboardingPage {
   private agencies = signal<Agency[]>([]);
   private model = signal<Partial<ApplicationCreate>>({ residency_status: 'RESIDENT', is_pep: false });
 
+  /** Champs traités comme numéros de téléphone (saisie internationale + validation par pays). */
+  private readonly phoneFieldKeys = new Set([
+    'phone', 'whatsapp_phone_full', 'contact_person_1_phone', 'contact_person_2_phone',
+  ]);
+  /** Champs téléphone dont le numéro est invalide pour le pays choisi (affichage d'erreur). */
+  private readonly invalidPhones = signal<Set<string>>(new Set());
+
   readonly step = computed(() => this.steps[this.current() - 1]);
   readonly filled = computed(() => Object.entries(this.model()).filter(([, v]) => v !== '' && v != null));
+
+  /**
+   * Champs de l'étape + champ virtuel « agency_country » inséré avant « preferred_branch » :
+   * choisir un pays filtre la liste des agences (rattachement 1..N pays → agences).
+   */
+  readonly renderedFields = computed<string[]>(() => {
+    const fields = [...this.step().fields] as string[];
+    const i = fields.indexOf('preferred_branch');
+    if (i >= 0) fields.splice(i, 0, 'agency_country');
+    return fields;
+  });
 
   constructor() {
     this.api.countries().subscribe({ next: (c) => this.countries.set(c ?? []), error: () => {} });
@@ -174,6 +196,10 @@ export class DiasporaOnboardingPage {
 
   label(f: string): string { return LABELS[f] ?? f; }
   isWide(f: string): boolean { return f === 'address_location' || f === 'email'; }
+  isPhone(f: string): boolean { return this.phoneFieldKeys.has(f); }
+  fieldError(f: string): string | undefined {
+    return this.invalidPhones().has(f) ? 'Numéro invalide pour le pays sélectionné.' : undefined;
+  }
   inputType(f: string): string {
     if (f.includes('date')) return 'date';
     if (f === 'email') return 'email';
@@ -184,13 +210,43 @@ export class DiasporaOnboardingPage {
     if (ENUMS[f]) return ENUMS[f];
     if (f === 'nationality') return this.nationalities().map((n) => ({ value: n.code, label: n.name }));
     if (f === 'residence') return this.countries().map((c) => ({ value: c.code, label: c.name }));
-    if (f === 'preferred_branch') return this.agencies().map((a) => ({ value: a.code, label: a.name }));
+    // Pays de l'agence : pays distincts présents parmi les agences (seuls ceux ayant une agence).
+    if (f === 'agency_country') {
+      const seen = new Set<string>();
+      const opts: { value: string; label: string }[] = [];
+      for (const a of this.agencies()) {
+        const key = a.country ?? '';
+        if (key && !seen.has(key)) { seen.add(key); opts.push({ value: key, label: key }); }
+      }
+      return opts;
+    }
+    // Agence : filtrée par le pays sélectionné (toutes si aucun pays choisi).
+    if (f === 'preferred_branch') {
+      const selected = this.value('agency_country');
+      const list = selected ? this.agencies().filter((a) => (a.country ?? '') === selected) : this.agencies();
+      return list.map((a) => ({ value: a.code, label: a.name }));
+    }
     return null;
   }
   value(f: string): string { return String((this.model() as Record<string, unknown>)[f] ?? ''); }
-  setter(f: string) { return (v: string) => this.set(f, v); }
+  setter(f: string) {
+    if (f === 'agency_country') return (v: string) => this.setAgencyCountry(v);
+    return (v: string) => this.set(f, v);
+  }
   setEvt(f: string, e: Event) { this.set(f, (e.target as HTMLInputElement).value); }
   set(f: string, v: unknown): void { this.model.update((m) => ({ ...m, [f]: v })); }
+
+  /** Change le pays de l'agence et réinitialise l'agence si elle n'appartient pas à ce pays. */
+  private setAgencyCountry(country: string): void {
+    this.model.update((m) => {
+      const next = { ...m, agency_country: country } as Record<string, unknown>;
+      const branch = next['preferred_branch'];
+      if (branch && !this.agencies().some((a) => a.code === branch && (a.country ?? '') === country)) {
+        next['preferred_branch'] = '';
+      }
+      return next as Partial<ApplicationCreate>;
+    });
+  }
 
   /** Type de compte courant (étape 4) — transmis à l'OCR ; vide tant que non choisi. */
   accountTypeValue(): string { return String((this.model() as Record<string, unknown>)['account_type'] ?? ''); }
@@ -225,13 +281,40 @@ export class DiasporaOnboardingPage {
     if (this.step().key === 'review') this.submit();
     else this.next();
   }
-  next(): void { if (this.current() < this.steps.length) this.current.update((v) => v + 1); }
-  prev(): void { if (this.current() > 1) this.current.update((v) => v - 1); }
+  next(): void {
+    if (!this.validatePhones()) return;
+    this.error.set(null);
+    if (this.current() < this.steps.length) this.current.update((v) => v + 1);
+  }
+  prev(): void { this.error.set(null); if (this.current() > 1) this.current.update((v) => v - 1); }
+
+  /**
+   * Vérifie la cohérence des numéros de téléphone de l'étape courante : chaque numéro
+   * non vide doit être valide (E.164) pour le pays choisi. Renseigne invalidPhones et
+   * un message d'erreur, et bloque le passage à l'étape suivante le cas échéant.
+   */
+  private validatePhones(): boolean {
+    const invalid = new Set<string>();
+    for (const f of this.renderedFields()) {
+      if (!this.isPhone(f)) continue;
+      const v = this.value(f);
+      if (v && !isValidPhoneNumber(v)) invalid.add(f);
+    }
+    this.invalidPhones.set(invalid);
+    if (invalid.size) {
+      this.error.set('Vérifiez les numéros de téléphone : format non valide pour le pays choisi.');
+      return false;
+    }
+    return true;
+  }
 
   submit(): void {
     this.submitting.set(true);
     this.error.set(null);
-    this.api.createApplication(this.model() as ApplicationCreate).subscribe({
+    // agency_country n'est qu'un filtre d'UI : on ne l'envoie pas dans le dossier.
+    const payload = { ...this.model() } as Record<string, unknown>;
+    delete payload['agency_country'];
+    this.api.createApplication(payload as unknown as ApplicationCreate).subscribe({
       next: (res) => this.afterCreate(res),
       error: (err) => { this.error.set('Échec de l’envoi. Vérifiez les champs obligatoires.'); this.submitting.set(false); console.error(err); },
     });

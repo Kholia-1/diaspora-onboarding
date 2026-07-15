@@ -4,22 +4,38 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ApiError } from '../../api/client'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
-import { Input, Toggle } from '../ui/Input'
+import { Input, Select, Toggle } from '../ui/Input'
 import { Modal } from '../ui/Modal'
 import { Table, THead, Th, TBody, Tr, Td, EmptyRow } from '../ui/Table'
+
+export interface SelectOption {
+  value: string
+  label: string
+}
 
 export interface FieldConfig<T> {
   /** Clé du champ dans le payload snake_case. */
   name: keyof T & string
   label: string
-  type?: 'text' | 'number'
+  type?: 'text' | 'number' | 'select'
   required?: boolean
   placeholder?: string
+  /** Options du menu déroulant (type 'select'). */
+  options?: SelectOption[]
+  /** Envoie la valeur en nombre (ex. clé étrangère) ; '' devient null. */
+  numeric?: boolean
 }
 
 export interface ColumnConfig<T> {
   header: string
   render: (item: T) => ReactNode
+}
+
+/** Filtre optionnel affiché au-dessus du tableau (ex. filtrer les agences par pays). */
+export interface FilterConfig<T> {
+  label: string
+  options: SelectOption[]
+  predicate: (item: T, value: string) => boolean
 }
 
 interface ReferentialCrudPageProps<T extends { id: number; active: boolean }> {
@@ -35,6 +51,7 @@ interface ReferentialCrudPageProps<T extends { id: number; active: boolean }> {
   fields: FieldConfig<Omit<T, 'id' | 'active'>>[]
   columns: ColumnConfig<T>[]
   itemLabel: (item: T) => string
+  filter?: FilterConfig<T>
 }
 
 export function ReferentialCrudPage<T extends { id: number; active: boolean }>({
@@ -45,16 +62,21 @@ export function ReferentialCrudPage<T extends { id: number; active: boolean }>({
   fields,
   columns,
   itemLabel,
+  filter,
 }: ReferentialCrudPageProps<T>) {
   const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<T | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [filterValue, setFilterValue] = useState('')
 
   const { data: items = [], isLoading, isError } = useQuery({
     queryKey: [queryKey],
     queryFn: api.list,
   })
+
+  const visibleItems =
+    filter && filterValue ? items.filter((item) => filter.predicate(item, filterValue)) : items
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [queryKey] })
   const onError = (err: unknown) =>
@@ -110,7 +132,8 @@ export function ReferentialCrudPage<T extends { id: number; active: boolean }>({
     const payload: Record<string, unknown> = { active: editing?.active ?? true }
     for (const field of fields) {
       const raw = String(form.get(field.name) ?? '').trim()
-      payload[field.name] = field.type === 'number' ? (raw === '' ? null : Number(raw)) : raw
+      payload[field.name] =
+        field.type === 'number' || field.numeric ? (raw === '' ? null : Number(raw)) : raw
     }
     saveMutation.mutate({ id: editing?.id ?? null, payload: payload as Omit<T, 'id'> })
   }
@@ -137,6 +160,23 @@ export function ReferentialCrudPage<T extends { id: number; active: boolean }>({
         </p>
       )}
 
+      {filter && (
+        <div className="w-full sm:w-72">
+          <Select
+            label={filter.label}
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
+          >
+            <option value="">— Tous —</option>
+            {filter.options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+      )}
+
       <div className="rounded-2xl bg-white p-4 shadow-card">
         <Table>
           <THead>
@@ -151,10 +191,10 @@ export function ReferentialCrudPage<T extends { id: number; active: boolean }>({
             {isError && (
               <EmptyRow colSpan={columns.length + 2} message="Impossible de charger les données." />
             )}
-            {!isLoading && !isError && items.length === 0 && (
+            {!isLoading && !isError && visibleItems.length === 0 && (
               <EmptyRow colSpan={columns.length + 2} message="Aucun élément." />
             )}
-            {items.map((item) => (
+            {visibleItems.map((item) => (
               <Tr key={item.id}>
                 {columns.map((col) => (
                   <Td key={col.header}>{col.render(item)}</Td>
@@ -197,19 +237,40 @@ export function ReferentialCrudPage<T extends { id: number; active: boolean }>({
         }}
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          {fields.map((field) => (
-            <Input
-              key={field.name}
-              label={field.label}
-              name={field.name}
-              type={field.type ?? 'text'}
-              required={field.required}
-              placeholder={field.placeholder}
-              defaultValue={
-                editing ? String((editing as Record<string, unknown>)[field.name] ?? '') : ''
-              }
-            />
-          ))}
+          {fields.map((field) => {
+            const defaultValue = editing
+              ? String((editing as Record<string, unknown>)[field.name] ?? '')
+              : ''
+            if (field.type === 'select') {
+              return (
+                <Select
+                  key={field.name}
+                  label={field.label}
+                  name={field.name}
+                  required={field.required}
+                  defaultValue={defaultValue}
+                >
+                  <option value="">— Sélectionner —</option>
+                  {(field.options ?? []).map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </Select>
+              )
+            }
+            return (
+              <Input
+                key={field.name}
+                label={field.label}
+                name={field.name}
+                type={field.type ?? 'text'}
+                required={field.required}
+                placeholder={field.placeholder}
+                defaultValue={defaultValue}
+              />
+            )
+          })}
           <div className="flex justify-end gap-3 pt-2">
             <Button
               variant="secondary"

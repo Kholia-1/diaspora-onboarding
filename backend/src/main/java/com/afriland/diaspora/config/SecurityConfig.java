@@ -53,6 +53,9 @@ public class SecurityConfig {
                         // Soumission de dossier client : publique (le client soumet avant toute auth).
                         .requestMatchers(HttpMethod.POST, "/api/applications").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/applications/*/documents").permitAll()
+                        // Lecture d'un dossier par id numérique : publique (parité FastAPI
+                        // GET /api/applications/{id}). Le contrôleur contraint {id:\\d+}.
+                        .requestMatchers(HttpMethod.GET, "/api/applications/*").permitAll()
                         // Référentiels du formulaire client : lecture publique uniquement
                         // (les écritures CRUD restent réservées au back-office, voir /api/** plus bas).
                         .requestMatchers(HttpMethod.GET,
@@ -63,7 +66,9 @@ public class SecurityConfig {
                                 "/api/packages/active",
                                 "/api/agencies/active",
                                 "/api/nationalities/active",
-                                "/api/countries/active").permitAll()
+                                "/api/countries/active",
+                                // Agences actives d'un pays : sélection d'agence côté client.
+                                "/api/countries/*/agencies/active").permitAll()
                         // Pré-onboarding client : pré-authentification, endpoints publics.
                         .requestMatchers("/api/pre-onboarding/**").permitAll()
                         // Paiements Mastercard : checkout, webhook, retour, résumé — publics

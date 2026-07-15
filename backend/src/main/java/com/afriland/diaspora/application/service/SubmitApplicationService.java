@@ -1,10 +1,12 @@
 package com.afriland.diaspora.application.service;
 
 import com.afriland.diaspora.application.exception.ApiException;
+import com.afriland.diaspora.application.port.in.PreOnboardingDraftUseCase;
 import com.afriland.diaspora.application.port.in.ScreenApplicationUseCase;
 import com.afriland.diaspora.application.port.in.SubmitApplicationUseCase;
 import com.afriland.diaspora.application.port.out.ApplicationRepositoryPort;
 import com.afriland.diaspora.application.port.out.AuditPort;
+import com.afriland.diaspora.application.port.out.EmailPort;
 import com.afriland.diaspora.application.port.out.NotificationPort;
 import com.afriland.diaspora.domain.model.ApplicationSummary;
 import com.afriland.diaspora.domain.model.NewApplication;
@@ -30,13 +32,18 @@ public class SubmitApplicationService implements SubmitApplicationUseCase {
     private final ApplicationRepositoryPort applications;
     private final ScreenApplicationUseCase screening;
     private final NotificationPort notifications;
+    private final EmailPort emails;
+    private final PreOnboardingDraftUseCase drafts;
     private final AuditPort audit;
 
     public SubmitApplicationService(ApplicationRepositoryPort applications, ScreenApplicationUseCase screening,
-                                    NotificationPort notifications, AuditPort audit) {
+                                    NotificationPort notifications, EmailPort emails,
+                                    PreOnboardingDraftUseCase drafts, AuditPort audit) {
         this.applications = applications;
         this.screening = screening;
         this.notifications = notifications;
+        this.emails = emails;
+        this.drafts = drafts;
         this.audit = audit;
     }
 
@@ -118,6 +125,34 @@ public class SubmitApplicationService implements SubmitApplicationUseCase {
             }
         } catch (Exception e) {
             log.warn("[APPLICATION_SUBMITTED] notification indisponible pour {} : {}",
+                    created.reference(), e.getMessage());
+        }
+
+        // AFB_PREONBOARDING_DRAFT_RESUME_V1 : le dossier est soumis, le brouillon
+        // de reprise ne doit plus être proposé dans la recherche.
+        try {
+            if (!isBlank(c.preOnboardingSessionId())) {
+                drafts.markSubmitted(c.preOnboardingSessionId());
+            }
+        } catch (Exception e) {
+            log.warn("[APPLICATION_SUBMITTED] marquage brouillon impossible pour {} : {}",
+                    created.reference(), e.getMessage());
+        }
+
+        // EMAIL_NOTIFY_APPLICATION_SUBMITTED_V1 — accusé de réception email, best-effort.
+        try {
+            if (!isBlank(created.email())) {
+                emails.sendEmail(
+                        created.email(),
+                        "Votre demande d'ouverture de compte - " + created.reference(),
+                        "Bonjour " + (firstName + " " + lastName).strip() + ",\n\n"
+                                + "Votre demande d'ouverture de compte Diaspora a bien été reçue.\n"
+                                + "Référence dossier : " + created.reference() + "\n\n"
+                                + "Afriland First Bank vous notifiera après analyse de votre dossier.\n\n"
+                                + "Afriland First Bank - Diaspora Onboarding");
+            }
+        } catch (Exception e) {
+            log.warn("[APPLICATION_SUBMITTED] email indisponible pour {} : {}",
                     created.reference(), e.getMessage());
         }
 

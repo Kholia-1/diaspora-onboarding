@@ -34,6 +34,18 @@ public class AgencyRepositoryAdapter implements AgencyRepositoryPort {
     }
 
     @Override
+    public List<Agency> searchByCountry(long countryId) {
+        return repository.findByCountryIdOrderByNameAsc(countryId).stream()
+                .map(AgencyRepositoryAdapter::toDomain).toList();
+    }
+
+    @Override
+    public List<Agency> searchActiveByCountry(long countryId) {
+        return repository.findByCountryIdAndActiveTrueOrderByNameAsc(countryId).stream()
+                .map(AgencyRepositoryAdapter::toDomain).toList();
+    }
+
+    @Override
     public Optional<Agency> findById(long id) {
         return repository.findById(id).map(AgencyRepositoryAdapter::toDomain);
     }
@@ -58,6 +70,7 @@ public class AgencyRepositoryAdapter implements AgencyRepositoryPort {
         entity.setName(agency.name());
         entity.setCity(agency.city());
         entity.setCountry(agency.country());
+        entity.setCountryId(agency.countryId());
         entity.setActive(agency.active());
         entity.setCreatedAt(agency.createdAt());
         entity.setUpdatedAt(agency.updatedAt());
@@ -76,6 +89,7 @@ public class AgencyRepositoryAdapter implements AgencyRepositoryPort {
                 entity.getName(),
                 entity.getCity(),
                 entity.getCountry(),
+                entity.getCountryId(),
                 Boolean.TRUE.equals(entity.getActive()),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());

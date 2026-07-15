@@ -12,6 +12,12 @@ public interface AgencyRepositoryPort {
 
     List<Agency> searchActive(String q);
 
+    /** Agences (actives ou non) rattachées à un pays, tri name asc. */
+    List<Agency> searchByCountry(long countryId);
+
+    /** Agences actives rattachées à un pays, tri name asc. */
+    List<Agency> searchActiveByCountry(long countryId);
+
     Optional<Agency> findById(long id);
 
     boolean existsByCode(String code);

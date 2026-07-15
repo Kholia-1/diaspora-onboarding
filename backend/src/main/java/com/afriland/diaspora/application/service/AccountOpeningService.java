@@ -5,6 +5,7 @@ import com.afriland.diaspora.application.port.in.OpenAccountUseCase;
 import com.afriland.diaspora.application.port.out.AccountOpeningRecordPort;
 import com.afriland.diaspora.application.port.out.ApplicationRepositoryPort;
 import com.afriland.diaspora.application.port.out.AuditPort;
+import com.afriland.diaspora.application.port.out.EmailPort;
 import com.afriland.diaspora.application.port.out.NotificationPort;
 import com.afriland.diaspora.application.port.out.PaymentRepositoryPort;
 import com.afriland.diaspora.domain.model.AccountOpeningRecord;
@@ -25,14 +26,17 @@ public class AccountOpeningService implements OpenAccountUseCase {
     private final AccountOpeningRecordPort records;
     private final PaymentRepositoryPort payments;
     private final NotificationPort notifications;
+    private final EmailPort emails;
     private final AuditPort audit;
 
     public AccountOpeningService(ApplicationRepositoryPort applications, AccountOpeningRecordPort records,
-                                 PaymentRepositoryPort payments, NotificationPort notifications, AuditPort audit) {
+                                 PaymentRepositoryPort payments, NotificationPort notifications,
+                                 EmailPort emails, AuditPort audit) {
         this.applications = applications;
         this.records = records;
         this.payments = payments;
         this.notifications = notifications;
+        this.emails = emails;
         this.audit = audit;
     }
 
@@ -119,6 +123,14 @@ public class AccountOpeningService implements OpenAccountUseCase {
             context.put("final_rib", rib);
             whatsappNotification = notifications.sendEvent(
                     application.phone() == null ? "" : application.phone(), "COMPTE_OUVERT", context);
+
+            // EMAIL_MIRROR_V1 : toute notification WhatsApp part aussi par email.
+            if (application.email() != null && !application.email().isBlank()) {
+                emails.sendEmail(
+                        application.email(),
+                        "Votre compte a été ouvert - " + application.reference(),
+                        com.afriland.diaspora.domain.service.WhatsAppMessageBuilder.build("COMPTE_OUVERT", context));
+            }
         } catch (Exception exc) {
             whatsappNotification = new LinkedHashMap<>();
             whatsappNotification.put("success", false);

@@ -83,4 +83,4 @@ export interface ApplicationResponse extends Omit<ApplicationCreate, 'is_pep'> {
 export interface Country { code: string; name: string; dial_code?: string; }
 export interface Nationality { code: string; name: string; }
 export interface Subsector { code: string; name: string; sector_code?: string; }
-export interface Agency { code: string; name: string; city?: string; }
+export interface Agency { code: string; name: string; city?: string; country?: string; country_id?: number; }

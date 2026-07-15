@@ -5,7 +5,8 @@ import json
 from fastapi import APIRouter, Query
 from app.database import SessionLocal
 from app.models import AccountApplication, PaymentTransaction
-from app.services.mastercard_gateway_service import public_config_status, retrieve_order
+from app.services.mastercard_gateway_service import retrieve_order
+from app.services.public_url import to_absolute_url
 from app.services.callbell_delivery_status_service import (
     list_callbell_messages,
     get_callbell_message_status,
@@ -20,24 +21,8 @@ OTP_STORE_PATH = Path("data/pre_onboarding_otps.json")
 
 
 def _absolute_url(path_or_url: str | None) -> str | None:
-    if not path_or_url:
-        return None
-
-    value = str(path_or_url).strip()
-
-    if value.startswith("http://") or value.startswith("https://"):
-        return value
-
-    cfg = public_config_status()
-    base = (
-        cfg.get("merchant_url")
-        or "https://diaspora-onboarding.com"
-    ).rstrip("/")
-
-    if not value.startswith("/"):
-        value = "/" + value
-
-    return base + value
+    # Base configurable via PUBLIC_BASE_URL (cf. app/services/public_url.py).
+    return to_absolute_url(path_or_url)
 
 
 def _safe_attr(obj, name: str, default=None):

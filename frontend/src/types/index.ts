@@ -318,6 +318,7 @@ export interface Agency {
   name: string
   city: string | null
   country: string | null
+  country_id: number | null
   active: boolean
 }
 

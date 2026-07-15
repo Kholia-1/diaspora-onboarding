@@ -495,6 +495,18 @@ def decide_application(
             whatsapp_result = send_whatsapp_message(application.phone, message)
             print("[WHATSAPP][BACKOFFICE_DECISION]", application.reference, decision, whatsapp_result)
 
+            # EMAIL_MIRROR_V1 : toute notification WhatsApp part aussi par email.
+            try:
+                if application.email:
+                    from app.services.notification_service import send_email_notification
+                    send_email_notification(
+                        application.email,
+                        f"Mise à jour de votre dossier - {application.reference}",
+                        message,
+                    )
+            except Exception as email_exc:
+                print("[EMAIL][BACKOFFICE_DECISION][ERROR]", application.reference, str(email_exc))
+
     except Exception as exc:
         whatsapp_result = {
             "success": False,

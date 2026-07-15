@@ -12,6 +12,10 @@ public interface AgencyJpaRepository extends JpaRepository<AgencyEntity, Long> {
 
     List<AgencyEntity> findByActiveTrueOrderByNameAsc();
 
+    List<AgencyEntity> findByCountryIdOrderByNameAsc(Long countryId);
+
+    List<AgencyEntity> findByCountryIdAndActiveTrueOrderByNameAsc(Long countryId);
+
     boolean existsByCode(String code);
 
     boolean existsByName(String name);

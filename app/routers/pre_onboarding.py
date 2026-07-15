@@ -747,6 +747,38 @@ def v2_extract_names(text: str) -> dict[str, str]:
 # Ligne 2 : AAMMJJ + clé + sexe + AAMMJJ (expiration) + clé + nationalité.
 # Exemple OCR réel : « 9911053m3511037cMR<<<<<<<<<<<7 » -> naissance 05/11/1999,
 # sexe M, expiration 03/11/2035. Source la plus fiable du verso.
+# AFB_NATIONALITY_CODE_MAP_V1 : codes ICAO -> libellés attendus par le
+# formulaire (liste des nationalités du référentiel).
+NATIONALITY_CODE_MAP = {
+    "CMR": "CAMEROUNAISE",
+    "FRA": "FRANCAISE",
+    "GAB": "GABONAISE",
+    "TCD": "TCHADIENNE",
+    "COG": "CONGOLAISE",
+    "COD": "CONGOLAISE (RDC)",
+    "CAF": "CENTRAFRICAINE",
+    "GNQ": "EQUATO-GUINEENNE",
+    "NGA": "NIGERIANE",
+    "SEN": "SENEGALAISE",
+    "CIV": "IVOIRIENNE",
+    "BEN": "BENINOISE",
+    "TGO": "TOGOLAISE",
+    "MLI": "MALIENNE",
+    "BFA": "BURKINABE",
+    "NER": "NIGERIENNE",
+    "GIN": "GUINEENNE",
+    "GHA": "GHANEENNE",
+    "BEL": "BELGE",
+    "CHE": "SUISSE",
+    "CAN": "CANADIENNE",
+    "USA": "AMERICAINE",
+    "GBR": "BRITANNIQUE",
+    "DEU": "ALLEMANDE",
+    "ITA": "ITALIENNE",
+    "ESP": "ESPAGNOLE",
+}
+
+
 def v2_parse_mrz_td1(text: str) -> dict[str, str]:
     result: dict[str, str] = {}
 
@@ -758,8 +790,12 @@ def v2_parse_mrz_td1(text: str) -> dict[str, str]:
     for raw_line in (text or "").splitlines():
         compact = re.sub(r"[^A-Z0-9<]", "", raw_line.upper())
 
-        m = re.search(r"(\d{2})(\d{2})(\d{2})\d([MF])(\d{2})(\d{2})(\d{2})\d", compact)
+        m = re.search(r"(\d{2})(\d{2})(\d{2})\d([MF])(\d{2})(\d{2})(\d{2})\d([A-Z]{3})?", compact)
         if m:
+            # AFB_CNI_CORPUS_TUNING_V3 : la nationalité (code ICAO) suit la date
+            # d'expiration sur la ligne 2 de la MRZ TD1.
+            if m.group(8) and m.group(8) in NATIONALITY_CODE_MAP:
+                result["nationality_code"] = m.group(8)
             by, bm, bd = int(m.group(1)), int(m.group(2)), int(m.group(3))
             ey, em, ed = int(m.group(5)), int(m.group(6)), int(m.group(7))
 
@@ -1029,18 +1065,34 @@ def v2_extract_simple_value(text: str, label_patterns: list[str]) -> str | None:
             # On retire les libellés (FR et EN) et les séparateurs ; le reste
             # est la valeur.
             residue = nline
-            for pattern in label_patterns:
-                residue = re.sub(pattern, " ", residue, flags=re.I)
+            for _ in range(3):
+                before_pass = residue
+                for pattern in label_patterns:
+                    residue = re.sub(pattern, " ", residue, flags=re.I)
+                if residue == before_pass:
+                    break
             residue = re.sub(r"[/|]", " ", residue)
+            # Résidus courts de libellés déchiquetés (« ION », « TION »).
+            residue = re.sub(r"\w?[TI]ON", " ", residue, flags=re.I)
             # AFB_CNI_CORPUS_TUNING_V1 : écarter les débris de libellés
             # fusionnés (« PCACEOFRRTH ») qui restent collés à la valeur.
+            # AFB_CNI_CORPUS_TUNING_V3 : filtre étendu — débris de libellés
+            # (« ARTENATIONALED IDENTITE », « PLA O BRTH », « S.P.S.M ») et mots
+            # trop courts pour être une valeur.
             residue = " ".join(
                 word for word in residue.split()
-                if not re.search(r"ACE|BIRTH|RRTH|NAISSANCE|SEX|TAILLE|HEIGHT|DATE|SIGNAT", word, flags=re.I)
+                if len(word) > 2 and not re.search(
+                    r"ACE|BIRTH|B?RTH|NAISSANCE|MAISSANCE|SEX|TAILLE|HEIGHT|DATE|SIGNAT"
+                    r"|IDENTIT|NATIONAL|CARTE|CARD|REPUBLI|ARTE|^PLA|POST|^S\.?[PM]",
+                    word, flags=re.I
+                )
             )
             residue = clean_text(residue)
 
-            if residue and 2 <= len(residue) <= 40:
+            # AFB_CNI_CORPUS_TUNING_V3 : un résidu de moins de 4 caractères est
+            # un débris de libellé (« ION », « ALE ») — on préfère alors la
+            # valeur de la ligne suivante.
+            if residue and 4 <= len(residue) <= 40:
                 return residue.upper()
 
             # Ligne suivante
@@ -1049,7 +1101,11 @@ def v2_extract_simple_value(text: str, label_patterns: list[str]) -> str | None:
                 if not value:
                     continue
                 # Ne pas prendre une ligne de libellés pour une valeur.
-                if re.search(r"SEX|TAILLE|HEIGHT|DATE|SIGNAT|PROFESS|OCCUPAT|NATIONALIT", normalize_text(value)):
+                if re.search(
+                    r"SEX|TAILLE|HEIGHT|DATE|SIGNAT|PROFESS|OCCUPAT|NATIONALIT"
+                    r"|IDENTIT|CARTE|CARD|REPUBLI|NAISSANCE|BIRTH",
+                    normalize_text(value)
+                ):
                     continue
                 # AFB_CNI_CORPUS_TUNING_V2 : ni une ligne MRZ ni un bloc
                 # numérique, ni une ligne démesurée.
@@ -1090,6 +1146,9 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
     for key in ("birth_date", "sex", "identity_expiry_date", "cni_number"):
         if mrz.get(key) and not fields.get(key):
             fields[key] = mrz[key]
+
+    if mrz.get("nationality_code") and not fields.get("nationality"):
+        fields["nationality"] = NATIONALITY_CODE_MAP[mrz["nationality_code"]]
 
     if mrz.get("cni_number"):
         fields.setdefault("identity_document_number", mrz["cni_number"])
@@ -1140,6 +1199,40 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
         ]
     )
 
+    # AFB_CNI_DATE_PLAUSIBILITY_FALLBACK_V1 : quand les libellés sont détruits
+    # par l'OCR, on classe les dates du document par plausibilité — sur une CNI,
+    # la naissance est passée (≥ 10 ans), l'expiration est future, la délivrance
+    # est récente. On ne complète un champ que si le candidat est UNIQUE.
+    from datetime import datetime as _dt_fallback
+    _now_year = _dt_fallback.now().year
+
+    def _date_year(value):
+        try:
+            return int(str(value).split("/")[-1])
+        except Exception:
+            return None
+
+    if expiry_date:
+        try:
+            _expiry_year = int(str(expiry_date).split("/")[-1])
+            from datetime import datetime as _dt_guard
+            if _expiry_year <= _dt_guard.now().year - 10:
+                expiry_date = None
+        except Exception:
+            pass
+
+    _all_dates = v2_extract_dates(ocr_text)
+    _past = sorted({d for d in _all_dates if (_date_year(d) or 0) and 1900 <= _date_year(d) <= _now_year - 10})
+    _future = sorted({d for d in _all_dates if (_date_year(d) or 0) > _now_year})
+    _recent = sorted({d for d in _all_dates if _date_year(d) and _now_year - 10 < _date_year(d) <= _now_year})
+
+    if not birth_date and len(_past) == 1:
+        birth_date = _past[0]
+    if not expiry_date and len(_future) == 1:
+        expiry_date = _future[0]
+    if not issue_date and len(_recent) == 1:
+        issue_date = _recent[0]
+
     # AFB_CNI_CORPUS_TUNING_V2 : plausibilité — une date de naissance est
     # forcément passée d'au moins ~10 ans (évite de prendre une date de
     # délivrance/expiration quand les libellés sont détruits).
@@ -1182,7 +1275,13 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
             # variante de PLACE suffit à identifier le libellé du lieu.
             r"L\w{0,2}\s*DE\s*NAISSANCE\w*[PC][CLR]?ACE",
             r"NAISSANCE\w*[PC][CLR]?ACE\w*OF",
-            r"PLACEOF\w*[BR]\w*TH"
+            r"PLACEOF\w*[BR]\w*TH",
+            # AFB_CNI_CORPUS_TUNING_V3 : M/N confondus par l'OCR
+            # (« LIE DEMAISSANCEPLA O BRTH ») et ancienne CNI bilingue
+            # (« Né le / Born on » suivi du lieu).
+            r"L\w{0,3}\s*DE\s*[NM]AISSANCE",
+            r"BORN\s*ON\b",
+            r"\bNEE?\s+A\b"
         ]
     )
 
@@ -1193,9 +1292,19 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
         ocr_text,
         [
             r"\bPROFESSION\b",
-            r"\bOCCUPATION\b"
+            r"\bOCCUPATION\b",
+            # AFB_CNI_CORPUS_TUNING_V3 : libellés déchiquetés observés dans le
+            # corpus (« ROFESSIONOCCUPATION », « Proteosine ELEVE »).
+            r"ROFESSION",
+            r"OCCUPAT",
+            r"PROTE\w*SINE"
         ]
     )
+
+    # AFB_CNI_CORPUS_TUNING_V3 : suffixe de genre imprimé sur la carte
+    # (« ETUDIANT-E- », « EMPLOYE(E) ») retiré pour matcher les listes du formulaire.
+    if occupation:
+        occupation = re.sub(r"(?:[\s\-]+E[\s\-]*|\(E\)[\s\-]*)$", "", occupation).strip()
 
     # AFB_OCR_NOISY_LABELS_V1 : rejeter les valeurs qui sont en réalité des
     # résidus du libellé de la carte (« CARTE NATIONALE D'IDENTITE » collé).
@@ -1262,7 +1371,8 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
         if mrz_fields.get("sex"):
             fields["sex"] = mrz_fields["sex"]
         if mrz_fields.get("nationality"):
-            fields["nationality"] = mrz_fields["nationality"]
+            code = str(mrz_fields["nationality"]).upper()
+            fields["nationality"] = NATIONALITY_CODE_MAP.get(code, code)
         if fields.get("last_name") and fields.get("first_name"):
             fields["full_name"] = clean_text(f"{fields['last_name']} {fields['first_name']}")
 
@@ -1274,6 +1384,38 @@ def v2_extract_identity_fields(account_type: str, document_type: str, ocr_text: 
 
     if mrz_fields.get("expiry_date"):
         fields["identity_expiry_date"] = mrz_fields["expiry_date"]
+
+    # AFB_CNI_NATIONALITY_INFERENCE_V1 : la CNI camerounaise n'imprime pas la
+    # nationalité en toutes lettres — pour une CNI du Cameroun, elle se déduit
+    # du document lui-même (seuls les nationaux en détiennent une).
+    if not fields.get("nationality"):
+        looks_cameroon = (
+            "CAMEROUN" in normalized_text
+            or "CAMEROON" in normalized_text
+            or "CMR" in normalized_text
+        )
+        looks_cni = (
+            "CNI" in normalized_doc
+            or "CARTE NATIONALE" in normalized_text
+            or "NATIONAL IDENTITY" in normalized_text
+            or "IDENTITE" in normalized_text
+        )
+        if looks_cameroon and looks_cni:
+            fields["nationality"] = "CAMEROUNAISE"
+
+    # AFB_CNI_ISSUE_PLACE_V1 : lieu de délivrance (présent sur passeport/titre
+    # de séjour et certaines CNI ; libellés FR/EN, y compris dégradés).
+    issue_place = v2_extract_simple_value(
+        ocr_text,
+        [
+            r"LIEU\s*DE\s*DELIVRANCE",
+            r"PLACE\s*OF\s*ISSUE",
+            r"DELIVREE?\s*A\b",
+            r"ISSUED\s*(?:AT|IN)\b"
+        ]
+    )
+    if issue_place and not re.search(r"IDENTIT|NATIONAL|REPUBLI|POST", normalize_text(issue_place)):
+        fields["identity_issue_place"] = issue_place
 
     return fields
 # CAMEROON_DOC_EXTRACTION_V2_END
@@ -1920,6 +2062,26 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
 
     whatsapp_sent = whatsapp_delivered
 
+    # OTP_DUAL_CHANNEL_EMAIL_V1 — le code part aussi par email quand l'adresse est
+    # fournie (parité backend Spring). Best-effort, jamais bloquant.
+    email_result = None
+    if email and "@" in email:
+        from app.services.notification_service import send_email_notification
+        try:
+            email_ok = await run_in_threadpool(
+                send_email_notification,
+                email,
+                "Votre code de vérification - Afriland First Bank",
+                otp_message,
+            )
+            email_result = {"success": bool(email_ok)}
+        except Exception as exc:
+            email_result = {"success": False, "error": str(exc)}
+            print("[PRE-ONBOARDING OTP][EMAIL][ERROR]", session_id, str(exc))
+
+    email_sent = bool(email_result and email_result.get("success"))
+    any_sent = whatsapp_sent or email_sent
+
     record["whatsapp_accepted"] = whatsapp_accepted
     record["whatsapp_sent"] = whatsapp_sent
     record["whatsapp_delivered"] = whatsapp_delivered
@@ -1934,15 +2096,27 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
         store[session_id] = record
         _save_otps(store)
 
+    # AFB_OTP_DELIVERY_CONFIRMED_ONLY_V2 + OTP_DUAL_CHANNEL_EMAIL_V1 :
+    # la livraison WhatsApp est confirmée avant d'être annoncée, et l'email
+    # complète le canal quand l'adresse est fournie.
+    if whatsapp_delivered and email_sent:
+        sent_message = "Code OTP reçu sur WhatsApp et envoyé par email."
+    elif whatsapp_delivered:
+        sent_message = "Code OTP reçu sur WhatsApp."
+    elif email_sent:
+        # AFB_OTP_EMAIL_FALLBACK_MESSAGE_V1 : WhatsApp non remis mais email parti
+        # -> orienter clairement le client vers sa boîte mail.
+        sent_message = (
+            "Le message WhatsApp n'a pas pu être remis. "
+            "Votre code vous a été envoyé par email — vérifiez votre boîte de réception."
+        )
+    else:
+        sent_message = "L'envoi du code a échoué (WhatsApp et email)."
+
     response = {
-        "ok": whatsapp_sent or OTP_DEMO_MODE,
-        # AFB_OTP_DELIVERY_CONFIRMED_ONLY_V2 : le message ne parle plus d'un envoi
-        # « en cours » quand Meta n'a jamais remis le message (statut figé à « sent »).
-        "message": (
-            "Code OTP reçu sur WhatsApp."
-            if whatsapp_delivered
-            else "WhatsApp n'a pas remis le code au client."
-        ),
+        "ok": any_sent or OTP_DEMO_MODE,
+        "message": sent_message,
+        "email_sent": email_sent,
         "phone": phone,
         "expires_at": expires_at,
         "demo_mode": OTP_DEMO_MODE,
@@ -1966,7 +2140,7 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
 
     # AFB_OTP_FALLBACK_DISPLAY_V1 : envoi WhatsApp KO -> on renvoie le code
     # pour affichage à l'écran afin de ne pas bloquer le parcours client.
-    if not whatsapp_sent and not OTP_DEMO_MODE and OTP_FALLBACK_DISPLAY:
+    if not any_sent and not OTP_DEMO_MODE and OTP_FALLBACK_DISPLAY:
         response["ok"] = True
         response["fallback_otp"] = otp
         response["fallback_display"] = True
@@ -1978,11 +2152,11 @@ async def send_pre_onboarding_otp(payload: dict = Body(...)):
         "[PRE-ONBOARDING OTP] "
         f"session={session_id} phone={phone} "
         f"otp={otp if OTP_DEMO_MODE else '******'} "
-        f"delivery={whatsapp_status} sent={whatsapp_sent} "
+        f"delivery={whatsapp_status} sent={whatsapp_sent} email_sent={email_sent} "
         f"expires_at={expires_at}"
     )
 
-    if not whatsapp_sent and not OTP_DEMO_MODE and not OTP_FALLBACK_DISPLAY:
+    if not any_sent and not OTP_DEMO_MODE and not OTP_FALLBACK_DISPLAY:
         raise HTTPException(
             status_code=502,
             detail={
@@ -2143,3 +2317,267 @@ async def get_pre_onboarding_otp_delivery_status(session_id: str):
 # AFB_PREONBOARDING_RAPIDOCR_DOC_TYPE_VALIDATION_V1
 
 # AFB_PREONBOARDING_RETURN_DOC_VALIDATION_V1
+
+# =============================================================================
+# AFB_PREONBOARDING_DRAFT_RESUME_V1 — brouillon serveur et reprise de dossier.
+#
+# Après validation de la pré-inscription (OTP vérifié), le formulaire sauvegarde
+# chaque champ rempli dans un brouillon serveur. Un client qui n'a pas finalisé
+# peut retrouver son dossier par téléphone ou email, prouver son identité par un
+# OTP (WhatsApp + email), puis reprendre le formulaire pré-rempli.
+# =============================================================================
+
+DRAFT_STORE_PATH = _Path("data/pre_onboarding_drafts.json")
+_draft_lock = FileLock(str(DRAFT_STORE_PATH) + ".lock")
+
+# Champs jamais persistés dans le brouillon (sensibles ou techniques).
+_DRAFT_EXCLUDED_FIELDS = {"password", "otp", "pre_onboarding_session_id"}
+
+
+def _ensure_draft_store():
+    DRAFT_STORE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not DRAFT_STORE_PATH.exists():
+        DRAFT_STORE_PATH.write_text("{}", encoding="utf-8")
+
+
+def _load_drafts():
+    _ensure_draft_store()
+    try:
+        return json.loads(DRAFT_STORE_PATH.read_text(encoding="utf-8") or "{}")
+    except Exception:
+        return {}
+
+
+def _save_drafts(data):
+    _ensure_draft_store()
+    DRAFT_STORE_PATH.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _mask_email(email):
+    email = str(email or "")
+    if "@" not in email:
+        return email[:2] + "***"
+    local, _, domain = email.partition("@")
+    kept = local[:2] if len(local) > 2 else local[:1]
+    return f"{kept}{'*' * max(3, len(local) - len(kept))}@{domain}"
+
+
+def _mask_phone(phone):
+    phone = str(phone or "")
+    digits = re.sub(r"\D", "", phone)
+    if len(digits) < 4:
+        return "****"
+    return f"{phone[:4]}{'*' * max(3, len(digits) - 6)}{digits[-2:]}"
+
+
+def _otp_verified_for_session(session_id):
+    record = _load_otps().get(str(session_id or ""))
+    return bool(record and record.get("verified"))
+
+
+@router.post("/draft/save")
+async def save_pre_onboarding_draft(payload: dict = Body(...)):
+    """Sauvegarde/fusionne le brouillon du formulaire (après pré-inscription validée)."""
+    session_id = str(payload.get("session_id") or "").strip()
+    fields = payload.get("fields")
+
+    if not session_id:
+        raise HTTPException(status_code=400, detail="session_id requis.")
+    if not isinstance(fields, dict):
+        raise HTTPException(status_code=400, detail="fields (objet) requis.")
+
+    # La pré-inscription doit être validée : l'OTP de la session doit être vérifié.
+    otp_record = _load_otps().get(session_id)
+    if not otp_record or not otp_record.get("verified"):
+        raise HTTPException(
+            status_code=403,
+            detail="Pré-inscription non validée : brouillon refusé."
+        )
+
+    clean_fields = {}
+    for key, value in fields.items():
+        key = str(key).strip()
+        if not key or key in _DRAFT_EXCLUDED_FIELDS:
+            continue
+        if value is None:
+            continue
+        value = str(value)
+        if len(value) > 2000:
+            value = value[:2000]
+        clean_fields[key] = value
+
+    now = _utcnow().isoformat()
+
+    with _draft_lock:
+        drafts = _load_drafts()
+        draft = drafts.get(session_id) or {
+            "draft_id": session_id,
+            "created_at": now,
+            "status": "IN_PROGRESS",
+            "fields": {},
+        }
+        draft["email"] = str(otp_record.get("email") or draft.get("email") or "").strip().lower()
+        draft["phone"] = _normalize_phone(otp_record.get("phone") or draft.get("phone") or "")
+        draft["account_type"] = str(
+            payload.get("account_type") or draft.get("account_type") or "PERSONAL"
+        )
+        draft["fields"].update(clean_fields)
+        draft["updated_at"] = now
+        drafts[session_id] = draft
+        _save_drafts(drafts)
+
+    return {
+        "ok": True,
+        "draft_id": session_id,
+        "fields_saved": len(draft["fields"]),
+        "updated_at": now,
+    }
+
+
+@router.post("/draft/search")
+async def search_pre_onboarding_drafts(payload: dict = Body(...)):
+    """Recherche les brouillons en cours par téléphone OU email (résultats masqués)."""
+    query = str(payload.get("query") or "").strip()
+
+    if len(query) < 5:
+        raise HTTPException(status_code=400, detail="Indiquez un email ou un numéro de téléphone complet.")
+
+    results = []
+    drafts = _load_drafts()
+
+    if "@" in query:
+        needle = query.lower()
+
+        def matcher(d):
+            return str(d.get("email") or "").lower() == needle
+    else:
+        needle = re.sub(r"\D", "", query)
+        if len(needle) < 8:
+            raise HTTPException(status_code=400, detail="Numéro de téléphone trop court.")
+
+        def matcher(d):
+            return re.sub(r"\D", "", str(d.get("phone") or "")).endswith(needle[-9:])
+
+    for draft in drafts.values():
+        if draft.get("status") != "IN_PROGRESS":
+            continue
+        if not matcher(draft):
+            continue
+        results.append({
+            "draft_id": draft.get("draft_id"),
+            "masked_email": _mask_email(draft.get("email")),
+            "masked_phone": _mask_phone(draft.get("phone")),
+            "account_type": draft.get("account_type") or "PERSONAL",
+            "updated_at": draft.get("updated_at"),
+            "fields_count": len(draft.get("fields") or {}),
+        })
+
+    results.sort(key=lambda item: str(item.get("updated_at") or ""), reverse=True)
+
+    return {"ok": True, "count": len(results), "drafts": results[:5]}
+
+
+@router.post("/draft/claim")
+async def claim_pre_onboarding_draft(payload: dict = Body(...)):
+    """Envoie un OTP (WhatsApp + email) au propriétaire du brouillon pour le récupérer."""
+    draft_id = str(payload.get("draft_id") or "").strip()
+    draft = _load_drafts().get(draft_id)
+
+    if not draft or draft.get("status") != "IN_PROGRESS":
+        raise HTTPException(status_code=404, detail="Dossier de pré-inscription introuvable.")
+
+    resume_session = f"resume_{draft_id}"
+
+    otp_response = await send_pre_onboarding_otp({
+        "session_id": resume_session,
+        "phone": draft.get("phone"),
+        "email": draft.get("email"),
+        "country": (draft.get("fields") or {}).get("residence") or "",
+    })
+
+    # SÉCURITÉ : ne jamais exposer le code au demandeur — la preuve de propriété
+    # passe par les canaux du titulaire (WhatsApp/email). On masque aussi le numéro.
+    for leak_key in ("fallback_otp", "fallback_display", "demo_otp"):
+        otp_response.pop(leak_key, None)
+
+    return {
+        "ok": bool(otp_response.get("whatsapp_sent") or otp_response.get("email_sent")),
+        "draft_id": draft_id,
+        "resume_session": resume_session,
+        "masked_phone": _mask_phone(draft.get("phone")),
+        "masked_email": _mask_email(draft.get("email")),
+        "whatsapp_sent": otp_response.get("whatsapp_sent"),
+        "email_sent": otp_response.get("email_sent"),
+        "message": "Un code de vérification vous a été envoyé par WhatsApp et par email.",
+    }
+
+
+@router.post("/draft/open")
+async def open_pre_onboarding_draft(payload: dict = Body(...)):
+    """Renvoie le brouillon complet après vérification de l'OTP de reprise."""
+    draft_id = str(payload.get("draft_id") or "").strip()
+    draft = _load_drafts().get(draft_id)
+
+    if not draft or draft.get("status") != "IN_PROGRESS":
+        raise HTTPException(status_code=404, detail="Dossier de pré-inscription introuvable.")
+
+    resume_session = f"resume_{draft_id}"
+    if not _otp_verified_for_session(resume_session):
+        raise HTTPException(
+            status_code=403,
+            detail="Vérification OTP requise avant d'ouvrir ce dossier."
+        )
+
+    return {
+        "ok": True,
+        "draft_id": draft_id,
+        "session_id": draft_id,
+        "email": draft.get("email"),
+        "phone": draft.get("phone"),
+        "account_type": draft.get("account_type") or "PERSONAL",
+        "fields": draft.get("fields") or {},
+        "updated_at": draft.get("updated_at"),
+    }
+
+
+@router.post("/draft/verify")
+async def verify_pre_onboarding_draft(payload: dict = Body(...)):
+    """Vérifie l'OTP de reprise : le téléphone est résolu côté serveur depuis le
+    brouillon (le demandeur ne connaît que les coordonnées masquées)."""
+    draft_id = str(payload.get("draft_id") or "").strip()
+    otp = re.sub(r"\D", "", str(payload.get("otp") or ""))
+    draft = _load_drafts().get(draft_id)
+
+    if not draft or draft.get("status") != "IN_PROGRESS":
+        raise HTTPException(status_code=404, detail="Dossier de pré-inscription introuvable.")
+
+    result = await verify_pre_onboarding_otp({
+        "session_id": f"resume_{draft_id}",
+        "phone": draft.get("phone"),
+        "otp": otp,
+    })
+
+    if not result.get("ok"):
+        return result
+
+    return {
+        "ok": True,
+        "verified": True,
+        "draft_id": draft_id,
+        "message": "Vérification réussie. Votre dossier va s'ouvrir.",
+    }
+
+
+def mark_draft_submitted(session_id):
+    """Marque le brouillon comme soumis (appelé à la création du dossier final)."""
+    session_id = str(session_id or "").strip()
+    if not session_id:
+        return
+
+    with _draft_lock:
+        drafts = _load_drafts()
+        draft = drafts.get(session_id)
+        if draft:
+            draft["status"] = "SUBMITTED"
+            draft["updated_at"] = _utcnow().isoformat()
+            _save_drafts(drafts)

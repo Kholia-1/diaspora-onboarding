@@ -766,6 +766,53 @@
     width: 100%;
 }
 
+/* Liste d'indicatifs pays cherchable (rehausse le <select> natif). */
+.searchable-country {
+    position: relative;
+}
+
+.searchable-country-native {
+    display: none !important;
+}
+
+.searchable-country-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 60;
+    max-height: 240px;
+    overflow-y: auto;
+    background: #ffffff;
+    border: 1px solid #d5d9e0;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+}
+
+.searchable-country-option {
+    padding: 9px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.searchable-country-option:hover,
+.searchable-country-option.is-active {
+    background: #eef3ff;
+}
+
+.searchable-country-option.is-selected {
+    font-weight: 700;
+}
+
+.searchable-country-empty {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #8a8f98;
+}
+
 .document-actions {
     display: flex;
     gap: 10px;

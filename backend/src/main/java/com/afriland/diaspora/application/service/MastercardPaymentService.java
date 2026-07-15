@@ -4,6 +4,7 @@ import com.afriland.diaspora.application.exception.ApiException;
 import com.afriland.diaspora.application.port.in.MastercardPaymentUseCase;
 import com.afriland.diaspora.application.port.out.ApplicationRepositoryPort;
 import com.afriland.diaspora.application.port.out.AuditPort;
+import com.afriland.diaspora.application.port.out.EmailPort;
 import com.afriland.diaspora.application.port.out.NotificationPort;
 import com.afriland.diaspora.application.port.out.PaymentPort;
 import com.afriland.diaspora.application.port.out.PaymentPort.CheckoutSession;
@@ -34,15 +35,17 @@ public class MastercardPaymentService implements MastercardPaymentUseCase {
     private final PaymentRepositoryPort payments;
     private final ApplicationRepositoryPort applications;
     private final NotificationPort notifications;
+    private final EmailPort emails;
     private final AuditPort audit;
 
     public MastercardPaymentService(PaymentPort paymentPort, PaymentRepositoryPort payments,
                                     ApplicationRepositoryPort applications, NotificationPort notifications,
-                                    AuditPort audit) {
+                                    EmailPort emails, AuditPort audit) {
         this.paymentPort = paymentPort;
         this.payments = payments;
         this.applications = applications;
         this.notifications = notifications;
+        this.emails = emails;
         this.audit = audit;
     }
 
@@ -199,6 +202,14 @@ public class MastercardPaymentService implements MastercardPaymentUseCase {
             ctx.put("currency", payment.currency());
             notifications.sendEvent(application.phone() == null ? "" : application.phone(),
                     "PAIEMENT_CONFIRME", ctx);
+
+            // EMAIL_MIRROR_V1 : toute notification WhatsApp part aussi par email.
+            if (application.email() != null && !application.email().isBlank()) {
+                emails.sendEmail(
+                        application.email(),
+                        "Confirmation de votre paiement - " + application.reference(),
+                        com.afriland.diaspora.domain.service.WhatsAppMessageBuilder.build("PAIEMENT_CONFIRME", ctx));
+            }
         } catch (Exception ignored) {
             // Best-effort : la notification ne bloque jamais la confirmation.
         }

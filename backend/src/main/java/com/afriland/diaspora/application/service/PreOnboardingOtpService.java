@@ -2,6 +2,7 @@ package com.afriland.diaspora.application.service;
 
 import com.afriland.diaspora.application.exception.ApiException;
 import com.afriland.diaspora.application.port.in.PreOnboardingOtpUseCase;
+import com.afriland.diaspora.application.port.out.EmailPort;
 import com.afriland.diaspora.application.port.out.NotificationPort;
 import com.afriland.diaspora.application.port.out.OtpStorePort;
 import com.afriland.diaspora.config.AppProperties;
@@ -10,6 +11,7 @@ import com.afriland.diaspora.domain.service.OtpCodeGenerator;
 import com.afriland.diaspora.domain.service.OtpHasher;
 import com.afriland.diaspora.domain.service.OtpVerificationPolicy;
 import com.afriland.diaspora.domain.service.OtpVerificationPolicy.Result;
+import com.afriland.diaspora.domain.service.CallbellPhoneNormalizer;
 import com.afriland.diaspora.domain.service.PhoneNormalizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,19 +32,24 @@ public class PreOnboardingOtpService implements PreOnboardingOtpUseCase {
 
     private final OtpStorePort store;
     private final NotificationPort notifications;
+    private final EmailPort emails;
     private final AppProperties.PreOnboarding.Otp otpConfig;
+    private final String defaultCountryCode;
 
-    public PreOnboardingOtpService(OtpStorePort store, NotificationPort notifications, AppProperties properties) {
+    public PreOnboardingOtpService(OtpStorePort store, NotificationPort notifications, EmailPort emails,
+                                   AppProperties properties) {
         this.store = store;
         this.notifications = notifications;
+        this.emails = emails;
         this.otpConfig = properties.preOnboarding().otp();
+        this.defaultCountryCode = properties.callbell().defaultCountryCode();
     }
 
     @Override
     @Transactional
     public Map<String, Object> sendOtp(Map<String, Object> payload) {
         String sessionId = firstNonEmpty(payload, "session_id");
-        String phone = PhoneNormalizer.normalize(firstNonEmpty(payload, "phone", "whatsapp", "whatsapp_phone"));
+        String phone = normalizePhone(firstNonEmpty(payload, "phone", "whatsapp", "whatsapp_phone"));
 
         if (sessionId.isEmpty()) {
             throw ApiException.badRequest("session_id requis.");
@@ -75,6 +82,30 @@ public class PreOnboardingOtpService implements PreOnboardingOtpUseCase {
         String whatsappStatus = String.valueOf(
                 whatsappResult.getOrDefault("status", "UNKNOWN")).toUpperCase(Locale.ROOT);
 
+        // OTP_DUAL_CHANNEL_EMAIL_V1 — le code part aussi par email quand l'adresse est
+        // fournie par le pré-onboarding. Best-effort, jamais bloquant.
+        String email = firstNonEmpty(payload, "email");
+        Map<String, Object> emailResult = null;
+        if (email.contains("@")) {
+            try {
+                emailResult = emails.sendEmail(
+                        email,
+                        "Votre code de vérification - Afriland First Bank",
+                        otpMessage);
+            } catch (Exception exc) {
+                emailResult = new LinkedHashMap<>();
+                emailResult.put("success", false);
+                emailResult.put("status", "EMAIL_EXCEPTION");
+                emailResult.put("error", String.valueOf(exc.getMessage()));
+            }
+        }
+
+        boolean emailSent = emailResult != null && Boolean.TRUE.equals(emailResult.get("success"));
+        String emailStatus = emailResult == null
+                ? "NOT_ATTEMPTED"
+                : String.valueOf(emailResult.getOrDefault("status", "UNKNOWN")).toUpperCase(Locale.ROOT);
+        boolean anySent = whatsappSent || emailSent;
+
         store.save(new PreOnboardingOtpSession(
                 null,
                 sessionId,
@@ -99,23 +130,37 @@ public class PreOnboardingOtpService implements PreOnboardingOtpUseCase {
         delivery.put("callbell_message_uuid", null);
         delivery.put("callbell_message_status", null);
 
+        String sentMessage;
+        if (whatsappSent && emailSent) {
+            sentMessage = "Code OTP envoyé par WhatsApp et par email.";
+        } else if (whatsappSent) {
+            sentMessage = "Code OTP en cours d'envoi via WhatsApp.";
+        } else if (emailSent) {
+            // AFB_OTP_EMAIL_FALLBACK_MESSAGE_V1 : WhatsApp non remis mais email
+            // parti -> orienter clairement le client vers sa boîte mail.
+            sentMessage = "Le message WhatsApp n'a pas pu être remis. "
+                    + "Votre code vous a été envoyé par email — vérifiez votre boîte de réception.";
+        } else {
+            sentMessage = "L'envoi du code a échoué (WhatsApp et email).";
+        }
+
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("ok", whatsappSent || demoMode);
-        response.put("message", whatsappSent
-                ? "Code OTP en cours d'envoi via WhatsApp."
-                : "Code OTP généré mais non envoyé par WhatsApp.");
+        response.put("ok", anySent || demoMode);
+        response.put("message", sentMessage);
         response.put("phone", phone);
         response.put("expires_at", expiresAt);
         response.put("demo_mode", demoMode);
         response.put("whatsapp_sent", whatsappSent);
         response.put("whatsapp_delivery_status", whatsappStatus);
+        response.put("email_sent", emailSent);
+        response.put("email_delivery_status", emailStatus);
         response.put("delivery", delivery);
 
         if (demoMode) {
             response.put("demo_otp", otp);
         }
 
-        if (!whatsappSent && !demoMode && fallbackDisplay) {
+        if (!anySent && !demoMode && fallbackDisplay) {
             response.put("ok", true);
             response.put("fallback_otp", otp);
             response.put("fallback_display", true);
@@ -123,12 +168,12 @@ public class PreOnboardingOtpService implements PreOnboardingOtpUseCase {
                     "Envoi WhatsApp indisponible. Utilisez le code affiché à l'écran pour continuer.");
         }
 
-        log.info("[PRE-ONBOARDING OTP] session={} phone={} otp={} delivery={} sent={} expires_at={}",
-                sessionId, phone, demoMode ? otp : "******", whatsappStatus, whatsappSent, expiresAt);
+        log.info("[PRE-ONBOARDING OTP] session={} phone={} otp={} delivery={} sent={} email={} expires_at={}",
+                sessionId, phone, demoMode ? otp : "******", whatsappStatus, whatsappSent, emailStatus, expiresAt);
 
-        if (!whatsappSent && !demoMode && !fallbackDisplay) {
+        if (!anySent && !demoMode && !fallbackDisplay) {
             Map<String, Object> detail = new LinkedHashMap<>();
-            detail.put("message", "Impossible d'envoyer le code OTP par WhatsApp.");
+            detail.put("message", "Impossible d'envoyer le code OTP par WhatsApp ou par email.");
             detail.put("phone", phone);
             detail.put("delivery_status", whatsappStatus);
             detail.put("http_status", whatsappResult.get("http_status"));
@@ -142,7 +187,7 @@ public class PreOnboardingOtpService implements PreOnboardingOtpUseCase {
     @Transactional
     public Map<String, Object> verifyOtp(Map<String, Object> payload) {
         String sessionId = firstNonEmpty(payload, "session_id");
-        String phone = PhoneNormalizer.normalize(firstNonEmpty(payload, "phone", "whatsapp", "whatsapp_phone"));
+        String phone = normalizePhone(firstNonEmpty(payload, "phone", "whatsapp", "whatsapp_phone"));
         String otp = digitsOnly(firstNonEmpty(payload, "otp"));
 
         if (sessionId.isEmpty()) {
@@ -244,6 +289,20 @@ public class PreOnboardingOtpService implements PreOnboardingOtpUseCase {
         response.put("callbell_live_errors", new ArrayList<>());
         response.put("live", null);
         return response;
+    }
+
+    /**
+     * Normalisation pays-consciente du numéro WhatsApp : applique d'abord la même
+     * logique que l'envoi Callbell (indicatif pays par défaut pour un numéro local,
+     * gestion de « + » / « 00 » / « 237 »), puis garantit un préfixe « + » si aucune
+     * règle n'a permis de déduire l'indicatif. Corrige le cas où un local camerounais
+     * « 699000000 » donnait « +699000000 » (237 manquant) — la couche Callbell voyait
+     * alors un « + » et ne complétait plus l'indicatif. Divergence assumée avec le
+     * legacy FastAPI (_normalize_phone), qui garde ce bug.
+     */
+    private String normalizePhone(String raw) {
+        String normalized = CallbellPhoneNormalizer.normalize(raw, defaultCountryCode);
+        return normalized.startsWith("+") ? normalized : PhoneNormalizer.normalize(normalized);
     }
 
     /** Premier champ non vide parmi une liste de clés (parité `a or b or c`). */

@@ -9973,16 +9973,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let filled = false;
 
-        if (setInputV2("nationality", normalized, { nationality: true, force: true })) {
-            filled = true;
-        }
-
+        // AFB_OCR_NATIONALITY_ORDER_V2 : renseigner le champ de recherche SANS
+        // simuler de saisie (l'événement input réinitialise la sélection), puis
+        // poser la valeur cachée en dernier.
         const search = document.getElementById("nationalitySearch");
         if (search && (!search.value || search.value.trim() === "")) {
             search.value = normalized;
-            search.dispatchEvent(new Event("input", { bubbles: true }));
-            search.dispatchEvent(new Event("change", { bubbles: true }));
             markOcrFieldV2(search);
+            filled = true;
+        }
+
+        const hidden = document.getElementById("nationality") || document.querySelector('[name="nationality"]');
+        if (hidden && (!hidden.value || hidden.value.trim() === "" || hidden.value !== normalized)) {
+            hidden.value = normalized;
+            markOcrFieldV2(hidden);
             filled = true;
         }
 

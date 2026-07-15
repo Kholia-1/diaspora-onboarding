@@ -1,5 +1,4 @@
 import json
-import os
 
 from app.models import PaymentTransaction
 from app.services.mastercard_payment_service import (
@@ -7,10 +6,8 @@ from app.services.mastercard_payment_service import (
     calculate_package_amount,
     create_mastercard_payment_session,
 )
+from app.services.public_url import public_base_url
 from app.services.whatsapp_notification_service import send_whatsapp_notification
-
-
-PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "https://diaspora-onboarding.com")
 
 
 def payment_to_payload(payment: PaymentTransaction):
@@ -85,7 +82,7 @@ def absolute_payment_url(payment_url: str):
     if payment_url.startswith("http://") or payment_url.startswith("https://"):
         return payment_url
 
-    return PUBLIC_BASE_URL.rstrip("/") + "/" + payment_url.lstrip("/")
+    return public_base_url() + "/" + payment_url.lstrip("/")
 
 
 def notify_payment_link_whatsapp(application, payment: PaymentTransaction):

@@ -24,9 +24,9 @@
       "webhook_url": "",
       "callback_url": "",
       "notes": "Canal Callbell actif. Blocage Meta 131042 sur les templates : envoi en texte libre (use_template=false).",
-      "access_token": "",
       "password": "",
-      "private_key": ""
+      "private_key": "",
+      "access_token": ""
     },
     {
       "code": "MASTERCARD",
@@ -52,9 +52,9 @@
       "webhook_url": "https://onboarding.afb-firstagent.com/api/payments/mastercard/webhook",
       "callback_url": "https://onboarding.afb-firstagent.com/api/payments/mastercard/return",
       "notes": "Ne jamais stocker ni manipuler les numéros de carte dans l’application.",
-      "access_token": "",
       "password": "",
-      "private_key": ""
+      "private_key": "",
+      "access_token": ""
     },
     {
       "code": "BLACKMODULE",
@@ -80,9 +80,9 @@
       "webhook_url": "",
       "callback_url": "",
       "notes": "Intégration avec le moteur de filtrage conformité.",
-      "access_token": "",
       "password": "",
-      "private_key": ""
+      "private_key": "",
+      "access_token": ""
     }
   ]
 }

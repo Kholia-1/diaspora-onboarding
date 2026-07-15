@@ -25,7 +25,7 @@ from app.services.document_auth_service import (
 )
 
 
-from app.services.notification_service import notify_application_submitted
+from app.services.notification_service import notify_application_submitted, send_email_notification
 from app.services.whatsapp_service import send_whatsapp_message
 
 router = APIRouter(
@@ -290,29 +290,20 @@ def create_application(payload: ApplicationCreate, request: Request, db: Session
     db.commit()
     db.refresh(application)
 
-    # WHATSAPP_NOTIFY_APPLICATION_SUBMITTED_V1
-    whatsapp_submit_result = None
-    try:
-        if application.phone:
-            whatsapp_submit_result = send_whatsapp_message(
-                application.phone,
-                f"Bonjour {application.first_name}, votre demande d'ouverture de compte Diaspora a bien ete recue. Reference dossier : {application.reference}. Afriland First Bank vous notifiera apres analyse de votre dossier."
-            )
-            print("[WHATSAPP][APPLICATION_SUBMITTED]", application.reference, whatsapp_submit_result)
-    except Exception as exc:
-        whatsapp_submit_result = {
-            "success": False,
-            "status": "WHATSAPP_EXCEPTION",
-            "error": str(exc)
-        }
-        print("[WHATSAPP][APPLICATION_SUBMITTED][ERROR]", application.reference, str(exc))
-
     # APPLICATION_CREATE_ATTACH_PRE_ONBOARDING_CALL_V1
     pre_session_id = getattr(payload, "pre_onboarding_session_id", None)
     if pre_session_id:
         _attach_pre_onboarding_files(application, pre_session_id, db)
         db.commit()
         db.refresh(application)
+
+        # AFB_PREONBOARDING_DRAFT_RESUME_V1 : le dossier est soumis, le brouillon
+        # de reprise ne doit plus être proposé dans la recherche.
+        try:
+            from app.routers.pre_onboarding import mark_draft_submitted
+            mark_draft_submitted(pre_session_id)
+        except Exception as exc:
+            print("[DRAFT][MARK_SUBMITTED][ERROR]", pre_session_id, str(exc))
 
     log_action(
         db,
@@ -328,17 +319,29 @@ def create_application(payload: ApplicationCreate, request: Request, db: Session
     )
 
     # WHATSAPP_NOTIFY_APPLICATION_SUBMITTED_V1 — accusé de réception via Callbell
+    submitted_message = (
+        f"Bonjour {application.first_name}, votre demande d'ouverture de compte Diaspora "
+        f"a bien été reçue. Référence dossier : {application.reference}. "
+        f"Afriland First Bank vous notifiera après analyse de votre dossier."
+    )
+
     try:
         if application.phone:
-            whatsapp_submit_result = send_whatsapp_message(
-                application.phone,
-                f"Bonjour {application.first_name}, votre demande d'ouverture de compte Diaspora "
-                f"a bien été reçue. Référence dossier : {application.reference}. "
-                f"Afriland First Bank vous notifiera après analyse de votre dossier."
-            )
+            whatsapp_submit_result = send_whatsapp_message(application.phone, submitted_message)
             print("[WHATSAPP][APPLICATION_SUBMITTED]", application.reference, whatsapp_submit_result)
     except Exception as exc:
         print("[WHATSAPP][APPLICATION_SUBMITTED][ERROR]", application.reference, str(exc))
+
+    # EMAIL_MIRROR_V1 : toute notification WhatsApp part aussi par email.
+    try:
+        if application.email:
+            send_email_notification(
+                application.email,
+                f"Votre demande d'ouverture de compte - {application.reference}",
+                submitted_message,
+            )
+    except Exception as exc:
+        print("[EMAIL][APPLICATION_SUBMITTED][ERROR]", application.reference, str(exc))
 
     return application
 

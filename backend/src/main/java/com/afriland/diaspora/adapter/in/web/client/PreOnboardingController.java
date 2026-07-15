@@ -1,6 +1,7 @@
 package com.afriland.diaspora.adapter.in.web.client;
 
 import com.afriland.diaspora.application.exception.ApiException;
+import com.afriland.diaspora.application.port.in.PreOnboardingDraftUseCase;
 import com.afriland.diaspora.application.port.in.PreOnboardingOcrUseCase;
 import com.afriland.diaspora.application.port.in.PreOnboardingOtpUseCase;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,10 +26,40 @@ public class PreOnboardingController {
 
     private final PreOnboardingOcrUseCase ocr;
     private final PreOnboardingOtpUseCase otp;
+    private final PreOnboardingDraftUseCase drafts;
 
-    public PreOnboardingController(PreOnboardingOcrUseCase ocr, PreOnboardingOtpUseCase otp) {
+    public PreOnboardingController(PreOnboardingOcrUseCase ocr, PreOnboardingOtpUseCase otp,
+                                   PreOnboardingDraftUseCase drafts) {
         this.ocr = ocr;
         this.otp = otp;
+        this.drafts = drafts;
+    }
+
+    // AFB_PREONBOARDING_DRAFT_RESUME_V1 — brouillon serveur et reprise de dossier.
+
+    @PostMapping("/draft/save")
+    public Map<String, Object> saveDraft(@RequestBody(required = false) Map<String, Object> payload) {
+        return drafts.saveDraft(payload == null ? Map.of() : payload);
+    }
+
+    @PostMapping("/draft/search")
+    public Map<String, Object> searchDrafts(@RequestBody(required = false) Map<String, Object> payload) {
+        return drafts.searchDrafts(payload == null ? Map.of() : payload);
+    }
+
+    @PostMapping("/draft/claim")
+    public Map<String, Object> claimDraft(@RequestBody(required = false) Map<String, Object> payload) {
+        return drafts.claimDraft(payload == null ? Map.of() : payload);
+    }
+
+    @PostMapping("/draft/verify")
+    public Map<String, Object> verifyDraft(@RequestBody(required = false) Map<String, Object> payload) {
+        return drafts.verifyDraft(payload == null ? Map.of() : payload);
+    }
+
+    @PostMapping("/draft/open")
+    public Map<String, Object> openDraft(@RequestBody(required = false) Map<String, Object> payload) {
+        return drafts.openDraft(payload == null ? Map.of() : payload);
     }
 
     @PostMapping("/ocr")

@@ -29,6 +29,9 @@ public class AgencyEntity {
     @Column(length = 100)
     private String country;
 
+    @Column(name = "country_id")
+    private Long countryId;
+
     private Boolean active;
 
     @Column(name = "created_at")
@@ -78,6 +81,14 @@ public class AgencyEntity {
 
     public void setCountry(String country) {
         this.country = country;
+    }
+
+    public Long getCountryId() {
+        return countryId;
+    }
+
+    public void setCountryId(Long countryId) {
+        this.countryId = countryId;
     }
 
     public Boolean getActive() {

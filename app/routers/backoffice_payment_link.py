@@ -7,8 +7,8 @@ from pydantic import BaseModel
 
 from app.database import SessionLocal
 from app.models import AccountApplication, PaymentTransaction
-from app.services.mastercard_gateway_service import public_config_status
 from app.services.mastercard_payment_service import create_mastercard_payment_session
+from app.services.public_url import to_absolute_url
 from app.services.whatsapp_notification_service import send_whatsapp_notification
 
 router = APIRouter(
@@ -23,21 +23,8 @@ class GeneratePaymentLinkPayload(BaseModel):
 
 
 def absolute_url(path_or_url):
-    if not path_or_url:
-        return None
-
-    value = str(path_or_url).strip()
-
-    if value.startswith("http://") or value.startswith("https://"):
-        return value
-
-    config = public_config_status()
-    base = (config.get("merchant_url") or "https://diaspora-onboarding.com").rstrip("/")
-
-    if not value.startswith("/"):
-        value = "/" + value
-
-    return base + value
+    # Base configurable via PUBLIC_BASE_URL (cf. app/services/public_url.py).
+    return to_absolute_url(path_or_url)
 
 
 def payment_confirmed(app, payment=None):

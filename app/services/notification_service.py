@@ -42,6 +42,57 @@ def _log_notification(channel, recipient, subject, message, status, detail=None)
     logger.info("Notification %s vers %s : %s", channel, recipient, status)
 
 
+# EMAIL_BRANDED_HTML_V1 — logo Afriland intégré (image inline CID) + mise en forme.
+EMAIL_LOGO_PATH = Path("app/static/afriland-logo.png")
+
+
+def _escape_html(value):
+    return (
+        _safe(value)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
+def _build_branded_html(message, logo_cid):
+    paragraphs = "".join(
+        f'<p style="margin:0 0 14px;color:#1f2937;font-size:15px;line-height:1.65;">{_escape_html(p)}</p>'
+        for p in _safe(message).split("\n") if p.strip()
+    )
+
+    logo_html = ""
+    if logo_cid:
+        logo_html = (
+            f'<img src="cid:{logo_cid}" alt="Afriland First Bank" '
+            'style="max-width:200px;height:auto;display:block;">'
+        )
+
+    return f"""\
+<!DOCTYPE html>
+<html lang="fr">
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:620px;margin:0 auto;padding:24px 16px;">
+    <div style="background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e5e7eb;">
+      <div style="padding:20px 26px;background:#ffffff;border-bottom:4px solid #C90000;">
+        {logo_html}
+      </div>
+      <div style="padding:26px;">
+        {paragraphs}
+      </div>
+      <div style="padding:16px 26px;background:#f4f6f9;border-top:1px solid #e5e7eb;">
+        <p style="margin:0;color:#6b7280;font-size:12px;">
+          Afriland First Bank — Portail digital Diaspora Onboarding.<br>
+          Ce message est envoyé automatiquement, merci de ne pas y répondre.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+"""
+
+
 def send_email_notification(to_email, subject, message):
     to_email = _safe(to_email)
 
@@ -73,6 +124,24 @@ def send_email_notification(to_email, subject, message):
         email["To"] = to_email
         email["Subject"] = subject
         email.set_content(message)
+
+        # EMAIL_BRANDED_HTML_V1 : version HTML avec le logo de la banque en image
+        # inline (CID). Le texte brut ci-dessus reste le repli des clients mail.
+        logo_cid = None
+        logo_bytes = None
+        if EMAIL_LOGO_PATH.exists():
+            logo_bytes = EMAIL_LOGO_PATH.read_bytes()
+            logo_cid = "afriland-logo"
+
+        email.add_alternative(_build_branded_html(message, logo_cid), subtype="html")
+
+        if logo_bytes:
+            email.get_payload()[-1].add_related(
+                logo_bytes,
+                maintype="image",
+                subtype="png",
+                cid=f"<{logo_cid}>",
+            )
 
         if smtp_tls:
             context = ssl.create_default_context()

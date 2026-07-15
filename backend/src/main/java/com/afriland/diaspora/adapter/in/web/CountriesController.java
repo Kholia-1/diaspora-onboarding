@@ -64,6 +64,33 @@ public class CountriesController {
         return new DeleteResponse("Pays désactivé avec succès.", country.id());
     }
 
+    // --- Agences d'un pays (relation 1..N) ---
+
+    /** Agences (actives ou non) rattachées au pays — back-office. */
+    @GetMapping("/{countryId}/agencies")
+    public List<AgenciesController.AgencyDto> listCountryAgencies(@PathVariable long countryId) {
+        return referentials.listAgenciesByCountry(countryId).stream()
+                .map(AgenciesController.AgencyDto::from).toList();
+    }
+
+    /** Agences actives rattachées au pays — formulaire client (lecture publique). */
+    @GetMapping("/{countryId}/agencies/active")
+    public List<AgenciesController.AgencyDto> listActiveCountryAgencies(@PathVariable long countryId) {
+        return referentials.listActiveAgenciesByCountry(countryId).stream()
+                .map(AgenciesController.AgencyDto::from).toList();
+    }
+
+    /** Rattache une nouvelle agence au pays — back-office. */
+    @PostMapping("/{countryId}/agencies")
+    public AgenciesController.AgencyDto addCountryAgency(@PathVariable long countryId,
+                                                        @RequestBody CountryAgencyRequest payload) {
+        return AgenciesController.AgencyDto.from(referentials.addAgencyToCountry(
+                countryId, payload.code(), payload.name(), payload.city(), payload.active()));
+    }
+
+    public record CountryAgencyRequest(String code, String name, String city, Boolean active) {
+    }
+
     public record CountryCreateRequest(String isoCode, String flag, String nameFr, String callingCode,
                                        Boolean active, Integer displayOrder) {
     }

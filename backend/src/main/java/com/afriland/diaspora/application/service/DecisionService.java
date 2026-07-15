@@ -4,6 +4,7 @@ import com.afriland.diaspora.application.exception.ApiException;
 import com.afriland.diaspora.application.port.in.DecideApplicationUseCase;
 import com.afriland.diaspora.application.port.out.ApplicationRepositoryPort;
 import com.afriland.diaspora.application.port.out.AuditPort;
+import com.afriland.diaspora.application.port.out.EmailPort;
 import com.afriland.diaspora.application.port.out.NotificationPort;
 import com.afriland.diaspora.application.port.out.PaymentRepositoryPort;
 import com.afriland.diaspora.domain.model.ApplicationDetail;
@@ -23,13 +24,15 @@ public class DecisionService implements DecideApplicationUseCase {
     private final ApplicationRepositoryPort applications;
     private final PaymentRepositoryPort payments;
     private final NotificationPort notifications;
+    private final EmailPort emails;
     private final AuditPort audit;
 
     public DecisionService(ApplicationRepositoryPort applications, PaymentRepositoryPort payments,
-                           NotificationPort notifications, AuditPort audit) {
+                           NotificationPort notifications, EmailPort emails, AuditPort audit) {
         this.applications = applications;
         this.payments = payments;
         this.notifications = notifications;
+        this.emails = emails;
         this.audit = audit;
     }
 
@@ -86,23 +89,41 @@ public class DecisionService implements DecideApplicationUseCase {
 
         // WHATSAPP_NOTIFY_BACKOFFICE_DECISION_V1 — best-effort, jamais bloquant.
         Map<String, Object> whatsappResult = null;
-        if (application.phone() != null && !application.phone().isEmpty()) {
+        String clientMessage = null;
+        try {
+            clientMessage = DecisionRules.buildClientMessage(
+                    decision,
+                    application.firstName(),
+                    application.reference(),
+                    application.packagePaymentUrl(),
+                    command.clientMessage(),
+                    command.comment(),
+                    command.accountNumber(),
+                    command.finalRib());
+        } catch (Exception ignored) {
+            // le message client est best-effort ; sans lui, pas de notification.
+        }
+
+        if (clientMessage != null && application.phone() != null && !application.phone().isEmpty()) {
             try {
-                String message = DecisionRules.buildClientMessage(
-                        decision,
-                        application.firstName(),
-                        application.reference(),
-                        application.packagePaymentUrl(),
-                        command.clientMessage(),
-                        command.comment(),
-                        command.accountNumber(),
-                        command.finalRib());
-                whatsappResult = notifications.sendMessage(application.phone(), message);
+                whatsappResult = notifications.sendMessage(application.phone(), clientMessage);
             } catch (Exception exc) {
                 whatsappResult = new LinkedHashMap<>();
                 whatsappResult.put("success", false);
                 whatsappResult.put("status", "WHATSAPP_EXCEPTION");
                 whatsappResult.put("error", String.valueOf(exc.getMessage()));
+            }
+        }
+
+        // EMAIL_NOTIFY_BACKOFFICE_DECISION_V1 — même message que WhatsApp, best-effort.
+        if (clientMessage != null && application.email() != null && !application.email().isEmpty()) {
+            try {
+                emails.sendEmail(
+                        application.email(),
+                        "Mise à jour de votre dossier - " + application.reference(),
+                        clientMessage + "\n\nAfriland First Bank - Diaspora Onboarding");
+            } catch (Exception ignored) {
+                // best-effort : l'adaptateur loggue déjà l'échec.
             }
         }
 

@@ -41,14 +41,16 @@ public class AgenciesController {
                 payload.code(),
                 payload.name(),
                 payload.city(),
-                payload.country() == null ? "Cameroun" : payload.country(),
+                payload.countryId() == null && payload.country() == null ? "Cameroun" : payload.country(),
+                payload.countryId(),
                 payload.active()));
     }
 
     @PutMapping("/{agencyId}")
     public AgencyDto updateAgency(@PathVariable long agencyId, @RequestBody AgencyUpdateRequest payload) {
         return AgencyDto.from(referentials.updateAgency(
-                agencyId, payload.code(), payload.name(), payload.city(), payload.country(), payload.active()));
+                agencyId, payload.code(), payload.name(), payload.city(), payload.country(), payload.countryId(),
+                payload.active()));
     }
 
     @DeleteMapping("/{agencyId}")
@@ -57,17 +59,20 @@ public class AgenciesController {
         return new DeleteResponse("Agence désactivée avec succès.", agency.id());
     }
 
-    public record AgencyCreateRequest(String code, String name, String city, String country, Boolean active) {
+    public record AgencyCreateRequest(String code, String name, String city, String country,
+                                      Long countryId, Boolean active) {
     }
 
-    public record AgencyUpdateRequest(String code, String name, String city, String country, Boolean active) {
+    public record AgencyUpdateRequest(String code, String name, String city, String country,
+                                      Long countryId, Boolean active) {
     }
 
-    public record AgencyDto(long id, String code, String name, String city, String country, boolean active) {
+    public record AgencyDto(long id, String code, String name, String city, String country,
+                            Long countryId, boolean active) {
 
         static AgencyDto from(Agency agency) {
             return new AgencyDto(agency.id(), agency.code(), agency.name(), agency.city(), agency.country(),
-                    agency.active());
+                    agency.countryId(), agency.active());
         }
     }
 

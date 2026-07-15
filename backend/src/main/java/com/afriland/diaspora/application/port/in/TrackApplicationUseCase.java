@@ -1,6 +1,7 @@
 package com.afriland.diaspora.application.port.in;
 
 import com.afriland.diaspora.domain.model.ApplicationStatusView;
+import com.afriland.diaspora.domain.model.ApplicationSummary;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +17,9 @@ public interface TrackApplicationUseCase {
 
     /** Statut d'un dossier par référence, email optionnel de contrôle (403 si différent). */
     ApplicationStatusView statusByReference(String reference, String email);
+
+    /** Dossier complet par id numérique (404 si introuvable) — parité GET /api/applications/{id}. */
+    ApplicationSummary applicationById(long id);
 
     /** Informations de compte ouvert côté client, protégées par email. */
     OpenedAccountPublic openedAccountPublic(String applicationReference, String email);

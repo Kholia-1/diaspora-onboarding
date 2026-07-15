@@ -8,6 +8,7 @@ public record Agency(
         String name,
         String city,
         String country,
+        Long countryId,
         boolean active,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {

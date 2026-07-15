@@ -2,8 +2,10 @@ package com.afriland.diaspora.application.service;
 
 import com.afriland.diaspora.application.exception.ApiException;
 import com.afriland.diaspora.application.port.in.GeneratePaymentLinkUseCase;
+import com.afriland.diaspora.application.port.in.PackagePaymentUseCase;
 import com.afriland.diaspora.application.port.out.ApplicationRepositoryPort;
 import com.afriland.diaspora.application.port.out.AuditPort;
+import com.afriland.diaspora.application.port.out.EmailPort;
 import com.afriland.diaspora.application.port.out.NotificationPort;
 import com.afriland.diaspora.application.port.out.PaymentPort;
 import com.afriland.diaspora.application.port.out.PaymentPort.CheckoutSession;
@@ -24,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
-public class PaymentLinkService implements GeneratePaymentLinkUseCase {
+public class PaymentLinkService implements GeneratePaymentLinkUseCase, PackagePaymentUseCase {
 
     private static final Set<String> CLIENT_ELIGIBLE_STATUSES =
             Set.of("APPROVED", "APPROVED_PENDING_PAYMENT", "PAYMENT_PENDING");
@@ -37,16 +39,18 @@ public class PaymentLinkService implements GeneratePaymentLinkUseCase {
     private final PaymentRepositoryPort payments;
     private final PaymentPort paymentPort;
     private final NotificationPort notifications;
+    private final EmailPort emails;
     private final AuditPort audit;
     private final String publicBaseUrl;
 
     public PaymentLinkService(ApplicationRepositoryPort applications, PaymentRepositoryPort payments,
-                             PaymentPort paymentPort, NotificationPort notifications, AuditPort audit,
-                             AppProperties properties) {
+                             PaymentPort paymentPort, NotificationPort notifications, EmailPort emails,
+                             AuditPort audit, AppProperties properties) {
         this.applications = applications;
         this.payments = payments;
         this.paymentPort = paymentPort;
         this.notifications = notifications;
+        this.emails = emails;
         this.audit = audit;
         this.publicBaseUrl = properties.publicBaseUrl() == null || properties.publicBaseUrl().isBlank()
                 ? "https://diaspora-onboarding.com" : properties.publicBaseUrl();
@@ -130,6 +134,88 @@ public class PaymentLinkService implements GeneratePaymentLinkUseCase {
                 actorUsername, ipAddress, userAgent);
     }
 
+    // ---- PackagePaymentUseCase (parité app/routers/payments.py) ----
+
+    @Override
+    @Transactional
+    public Map<String, Object> initiate(String applicationReference) {
+        ApplicationDetail app = applications.findByReference(strip(applicationReference))
+                .orElseThrow(() -> ApiException.notFound("Dossier introuvable."));
+
+        // Parité is_payment_allowed_after_approval : dossier approuvé (statut OU décision).
+        String status = upper(app.status());
+        String decision = upper(app.reviewDecision());
+        boolean allowed = "APPROVED".equals(decision) || "ACCOUNT_APPROVED".equals(decision)
+                || Set.of("APPROVED", "APPROVED_PENDING_PAYMENT", "PAYMENT_PENDING", "PAYMENT_CONFIRMED")
+                        .contains(status);
+        if (!allowed) {
+            throw ApiException.forbidden(
+                    "Le paiement sera disponible après validation du dossier par la banque.");
+        }
+
+        double amount = firstPositive(
+                app.selectedPackageOpeningFee(), app.selectedPackageSubscriptionFee(),
+                app.selectedPackageMonthlyFee(), app.packagePaymentAmount());
+        String currency = firstNonBlank(app.selectedPackageCurrency(), app.packagePaymentCurrency(), "XAF");
+
+        boolean paymentRequired = Boolean.TRUE.equals(app.selectedPackagePaymentRequired()) || amount > 0;
+        if (!paymentRequired) {
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("message", "Aucun paiement requis pour ce package.");
+            response.put("payment_required", false);
+            response.put("application_reference", app.reference());
+            response.put("package_code", app.selectedPackageCode());
+            response.put("package_name", app.selectedPackageName());
+            return response;
+        }
+        if (amount <= 0) {
+            throw ApiException.badRequest(
+                    "Le package est marqué comme payant, mais le montant à payer est nul.");
+        }
+
+        PaymentTransaction existing = findExistingPayment(app);
+        Map<String, Object> link = finalizeLink(app, existing, amount, currency, false, false, null, null, null);
+        if (!Boolean.TRUE.equals(link.get("success"))) {
+            // NOT_ELIGIBLE / PAYMENT_LINK_NOT_CREATED : on remonte la réponse informative.
+            return link;
+        }
+
+        PaymentTransaction payment = findExistingPayment(app);
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("message", existing != null ? "Paiement déjà initié." : "Paiement package initié.");
+        response.put("payment_required", true);
+        response.put("payment", payment != null ? paymentPayload(payment) : link.get("payment"));
+        return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getPayment(String paymentReference) {
+        PaymentTransaction payment = payments.findByPaymentReference(strip(paymentReference))
+                .orElseThrow(() -> ApiException.notFound("Paiement introuvable."));
+        return paymentPayload(payment);
+    }
+
+    /** Payload de paiement (clés snake_case) — parité payment_payload (payments.py:24). */
+    private static Map<String, Object> paymentPayload(PaymentTransaction p) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("payment_reference", p.paymentReference());
+        map.put("application_reference", p.applicationReference());
+        map.put("client_email", p.clientEmail());
+        map.put("package_code", p.packageCode());
+        map.put("package_name", p.packageName());
+        map.put("amount", p.amount());
+        map.put("currency", p.currency());
+        map.put("provider", p.provider());
+        map.put("provider_transaction_id", p.providerTransactionId());
+        map.put("status", p.status());
+        map.put("payment_url", p.paymentUrl());
+        map.put("created_at", p.createdAt());
+        map.put("paid_at", p.paidAt());
+        map.put("failed_at", p.failedAt());
+        return map;
+    }
+
     /** Coeur commun : crée/réutilise le paiement, la session Mastercard, synchronise et notifie. */
     private Map<String, Object> finalizeLink(ApplicationDetail app, PaymentTransaction existing, double amount,
                                              String currency, boolean sendWhatsapp, boolean backoffice,
@@ -209,7 +295,17 @@ public class PaymentLinkService implements GeneratePaymentLinkUseCase {
             ctx.put("amount", payment.amount());
             ctx.put("currency", payment.currency());
             ctx.put("payment_url", fullPaymentUrl);
-            return notifications.sendEvent(app.phone() == null ? "" : app.phone(), "LIEN_PAIEMENT", ctx);
+            Map<String, Object> whatsapp =
+                    notifications.sendEvent(app.phone() == null ? "" : app.phone(), "LIEN_PAIEMENT", ctx);
+
+            // EMAIL_MIRROR_V1 : toute notification WhatsApp part aussi par email.
+            if (app.email() != null && !app.email().isBlank()) {
+                emails.sendEmail(
+                        app.email(),
+                        "Votre lien de paiement - " + app.reference(),
+                        com.afriland.diaspora.domain.service.WhatsAppMessageBuilder.build("LIEN_PAIEMENT", ctx));
+            }
+            return whatsapp;
         } catch (Exception e) {
             Map<String, Object> failed = new LinkedHashMap<>();
             failed.put("sent", false);

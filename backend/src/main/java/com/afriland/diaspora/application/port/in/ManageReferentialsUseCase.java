@@ -13,9 +13,19 @@ public interface ManageReferentialsUseCase {
 
     List<Agency> listActiveAgencies(String q);
 
-    Agency createAgency(String code, String name, String city, String country, Boolean active);
+    /** Agences (actives ou non) rattachées à un pays. */
+    List<Agency> listAgenciesByCountry(long countryId);
 
-    Agency updateAgency(long agencyId, String code, String name, String city, String country, Boolean active);
+    /** Agences actives rattachées à un pays (formulaire client). */
+    List<Agency> listActiveAgenciesByCountry(long countryId);
+
+    Agency createAgency(String code, String name, String city, String country, Long countryId, Boolean active);
+
+    /** Crée une agence rattachée au pays donné (le libellé pays est repris de name_fr). */
+    Agency addAgencyToCountry(long countryId, String code, String name, String city, Boolean active);
+
+    Agency updateAgency(long agencyId, String code, String name, String city, String country, Long countryId,
+                        Boolean active);
 
     /** Désactivation logique. Retourne l'agence désactivée. */
     Agency deleteAgency(long agencyId);

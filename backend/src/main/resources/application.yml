@@ -33,6 +33,22 @@ spring:
       max-file-size: 64MB
       max-request-size: 64MB
 
+  mail:
+    # Compte de la banque via Office 365 : la boîte agent_dri_03 est hébergée sur
+    # Exchange Online (smtp.office365.com), PAS sur l'Exchange interne yde-exc01
+    # (qui refuse son auth en 535). Auth + envoi externe testés OK le 2026-07-14.
+    host: "${SMTP_HOST:smtp.office365.com}"
+    port: "${SMTP_PORT:587}"
+    username: "${SMTP_USER:agent_dri_03@afrilandfirstbank.com}"
+    password: "${SMTP_PASSWORD:KSGFMapuss@PASSE03}"
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 15000
+      mail.smtp.writetimeout: 15000
+
 server:
   port: 8080
   servlet:
@@ -73,6 +89,12 @@ app:
   # Dossier de stockage des documents chiffrés (.enc) de dossier (résolu contre storage.base-dir
   # s'il est relatif). Parité UPLOAD_DIR="uploads" du monolithe.
   application-upload-dir: "${APPLICATION_UPLOAD_DIR:uploads}"
+  mail:
+    # Notifications email (spring.mail ci-dessus). Canal réel actif par défaut depuis le
+    # 2026-07-14 (mot de passe d'application Gmail validé, envoi testé SENT). Mettre
+    # SMTP_ENABLED=false pour revenir à l'adapter NoOp (log sans envoi).
+    enabled: "${SMTP_ENABLED:true}"
+    from: "${SMTP_FROM:agent_dri_03@afrilandfirstbank.com}"
   callbell:
     # Notifications WhatsApp via Callbell. Désactivé par défaut en dev → l'adapter NoOp
     # reste actif (aucun message envoyé). Passer CALLBELL_ENABLED=true pour le canal réel.

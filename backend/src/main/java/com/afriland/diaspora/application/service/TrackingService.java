@@ -6,6 +6,7 @@ import com.afriland.diaspora.application.port.out.AccountOpeningRecordPort;
 import com.afriland.diaspora.application.port.out.ApplicationRepositoryPort;
 import com.afriland.diaspora.domain.model.AccountOpeningRecord;
 import com.afriland.diaspora.domain.model.ApplicationStatusView;
+import com.afriland.diaspora.domain.model.ApplicationSummary;
 import com.afriland.diaspora.domain.service.PhoneMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,6 +87,12 @@ public class TrackingService implements TrackApplicationUseCase {
         }
 
         return application;
+    }
+
+    @Override
+    public ApplicationSummary applicationById(long id) {
+        return applications.findSummaryById(id)
+                .orElseThrow(() -> ApiException.notFound("Demande introuvable"));
     }
 
     @Override

@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import {
   Agency,
   ApplicationCreate,
@@ -119,11 +119,30 @@ export class DiasporaApi {
   }
 
   // ---- Référentiels ----
+  // L'API (Spring et FastAPI) renvoie iso_code/name_fr/calling_code (pays) et
+  // code/label (nationalités). On mappe vers le contrat { code, name, dial_code }
+  // attendu par l'UI. Fallbacks défensifs : marche aussi si l'API renvoyait déjà
+  // code/name.
   countries(): Observable<Country[]> {
-    return this.http.get<Country[]>(`${this.base}/countries/active`);
+    return this.http.get<Array<Record<string, unknown>>>(`${this.base}/countries/active`).pipe(
+      map((rows) =>
+        (rows ?? []).map((c) => ({
+          code: String(c['iso_code'] ?? c['code'] ?? ''),
+          name: String(c['name_fr'] ?? c['name'] ?? ''),
+          dial_code: (c['calling_code'] ?? c['dial_code']) as string | undefined,
+        })),
+      ),
+    );
   }
   nationalities(): Observable<Nationality[]> {
-    return this.http.get<Nationality[]>(`${this.base}/nationalities/active`);
+    return this.http.get<Array<Record<string, unknown>>>(`${this.base}/nationalities/active`).pipe(
+      map((rows) =>
+        (rows ?? []).map((n) => ({
+          code: String(n['code'] ?? ''),
+          name: String(n['label'] ?? n['name'] ?? ''),
+        })),
+      ),
+    );
   }
   agencies(): Observable<Agency[]> {
     return this.http.get<Agency[]>(`${this.base}/agencies/active`);

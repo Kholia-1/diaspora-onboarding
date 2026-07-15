@@ -1,5 +1,6 @@
 package com.afriland.diaspora.adapter.in.web;
 
+import com.afriland.diaspora.adapter.in.web.backoffice.ApplicationSummaryDto;
 import com.afriland.diaspora.application.port.in.TrackApplicationUseCase;
 import com.afriland.diaspora.application.port.in.TrackApplicationUseCase.OpenedAccountPublic;
 import com.afriland.diaspora.application.port.in.TrackApplicationUseCase.StatusList;
@@ -44,6 +45,15 @@ public class TrackApplicationsController {
     public StatusByReferenceDto statusByReference(@PathVariable String reference,
                                                   @RequestParam(required = false) String email) {
         return StatusByReferenceDto.from(tracking.statusByReference(reference, email));
+    }
+
+    /**
+     * Dossier complet par id numérique — parité GET /api/applications/{id} (app/routers/applications.py:583).
+     * Contrainte {id:\\d+} : ne capte pas les chemins littéraux (status-by-email, status/…).
+     */
+    @GetMapping("/{applicationId:\\d+}")
+    public ApplicationSummaryDto getById(@PathVariable long applicationId) {
+        return ApplicationSummaryDto.from(tracking.applicationById(applicationId));
     }
 
     @GetMapping("/{applicationReference}/opened-account-public")
