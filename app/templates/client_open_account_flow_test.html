@@ -9419,16 +9419,27 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
       ].indexOf(String(delivery).toUpperCase()) >= 0;
 
       // AFB_OTP_STATUS_SINGLE_V1 : un seul message (zone OTP), pas de statut technique.
+      // AFB_OTP_EMAIL_FALLBACK_MESSAGE_V1 : si WhatsApp n'a pas remis le code mais
+      // que l'email est parti, on oriente le client vers sa boîte mail — on ne
+      // parle d'échec que si les DEUX canaux ont échoué.
+      const whatsappOk = data.whatsapp_delivered === true ||
+        (data.whatsapp_delivered === undefined && !deliveryFailed);
+      const emailOk = data.email_sent === true;
+
       if (data.fallback_otp) {
         if (demo) {
           demo.textContent = "Votre code de vérification : " + data.fallback_otp;
           demo.classList.add("show");
         }
-        setOtpStatus("L'envoi WhatsApp n'a pas abouti. Utilisez le code affiché ci-dessous.", "warning");
-      } else if (deliveryFailed) {
-        setOtpStatus("L'envoi WhatsApp n'a pas abouti. Vérifiez le numéro et réessayez.", "error");
-      } else {
+        setOtpStatus("L'envoi du code n'a pas abouti. Utilisez le code affiché ci-dessous.", "warning");
+      } else if (whatsappOk && emailOk) {
+        setOtpStatus("Code OTP envoyé. Vérifiez votre WhatsApp ou votre boîte mail.", "ok");
+      } else if (whatsappOk) {
         setOtpStatus("Code OTP envoyé. Vérifiez votre WhatsApp.", "ok");
+      } else if (emailOk) {
+        setOtpStatus("Le message WhatsApp n'a pas pu être remis. Votre code vous a été envoyé par EMAIL — vérifiez votre boîte mail (et le dossier spam).", "ok");
+      } else {
+        setOtpStatus("L'envoi du code a échoué (WhatsApp et email). Vérifiez vos coordonnées et réessayez.", "error");
       }
       setMainStatus("", true);
       return false;
@@ -9626,6 +9637,86 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
         if (dots.parentNode) dots.parentNode.removeChild(dots);
       }, 1000);
     }, true);
+  })();
+</script>
+
+<!-- AFB_STEP0_PREINSCRIPTION_DRAFT_V1 : tant que la pré-inscription n'est pas validée,
+     on sauvegarde les champs saisis dans le localStorage pour résister au rechargement de
+     la page ou à une coupure réseau (ex. 502 sur le tunnel). Restauration au chargement. -->
+<script>
+  (function () {
+    var DRAFT_KEY = "diaspora_step0_preinscription_draft";
+    var VALIDATED_KEY = "diaspora_step0_preinscription_validated"; // posé en sessionStorage à la validation
+    var FIELD_IDS = ["step0-email", "step0-whatsapp", "step0-country"];
+
+    function isValidated() {
+      try { return sessionStorage.getItem(VALIDATED_KEY) === "1"; }
+      catch (e) { return false; }
+    }
+    function clearDraft() {
+      try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+    }
+    function readDraft() {
+      try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}") || {}; }
+      catch (e) { return {}; }
+    }
+    function saveDraft() {
+      // La pré-inscription validée : plus besoin du brouillon.
+      if (isValidated()) { clearDraft(); return; }
+      var draft = {};
+      var hasValue = false;
+      FIELD_IDS.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var v = (el.value || "").trim();
+        draft[id] = v;
+        if (v) hasValue = true;
+      });
+      try {
+        if (hasValue) localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+        else clearDraft();
+      } catch (e) {}
+    }
+    function restoreDraft() {
+      if (isValidated()) { clearDraft(); return; }
+      var draft = readDraft();
+      FIELD_IDS.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var saved = draft[id];
+        if (!saved) return;
+        // On ne remplit que les champs vides : ne jamais écraser une valeur déjà présente.
+        if ((el.value || "").trim()) return;
+        el.value = saved;
+        // Rejoue le formatage/logique associée (dial WhatsApp, pays…).
+        try {
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        } catch (e) {}
+      });
+    }
+    function bind() {
+      FIELD_IDS.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el || el.dataset.afbDraftBound === "1") return;
+        el.dataset.afbDraftBound = "1";
+        el.addEventListener("input", saveDraft);
+        el.addEventListener("change", saveDraft);
+      });
+      restoreDraft();
+      var validateBtn = document.getElementById("step0-validate-btn");
+      if (validateBtn && validateBtn.dataset.afbDraftClearBound !== "1") {
+        validateBtn.dataset.afbDraftClearBound = "1";
+        // La validation est asynchrone (OTP) : on re-teste peu après pour purger le brouillon.
+        validateBtn.addEventListener("click", function () {
+          setTimeout(function () { if (isValidated()) clearDraft(); }, 1500);
+        });
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", bind);
+    // Repli idempotent si le DOM est déjà prêt (les gardes dataset évitent le double-binding).
+    setTimeout(bind, 400);
   })();
 </script>
 
