@@ -76,13 +76,22 @@ public class PreOnboardingDraftService implements PreOnboardingDraftUseCase {
 
         PreOnboardingDraft draft = drafts.findByDraftId(sessionId).orElseGet(() ->
                 new PreOnboardingDraft(null, sessionId, null, null, "PERSONAL",
-                        PreOnboardingDraft.STATUS_IN_PROGRESS, Map.of(), now, now));
+                        PreOnboardingDraft.STATUS_IN_PROGRESS, PreOnboardingDraft.STAGE_DOCUMENTS,
+                        Map.of(), now, now));
 
         String email = firstNonBlank(str(payload.get("email")), draft.email()).toLowerCase();
         String phone = PhoneNormalizer.normalize(firstNonBlank(otpRecord.phone(), draft.phone()));
         String accountType = firstNonBlank(str(payload.get("account_type")), draft.accountType(), "PERSONAL");
 
-        draft = draft.withContact(email, phone, accountType).withMergedFields(cleanFields, now);
+        // AFB_DRAFT_STAGE_MARKER_V1 : marqueur de progression (jamais retrograde).
+        String stage = str(payload.get("stage")).toUpperCase();
+        if (!PreOnboardingDraft.STAGE_DOCUMENTS.equals(stage) && !PreOnboardingDraft.STAGE_FORM.equals(stage)) {
+            stage = "";
+        }
+
+        draft = draft.withContact(email, phone, accountType)
+                .withStage(stage)
+                .withMergedFields(cleanFields, now);
         PreOnboardingDraft saved = drafts.save(draft);
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -119,6 +128,7 @@ public class PreOnboardingDraftService implements PreOnboardingDraftUseCase {
             item.put("masked_email", maskEmail(draft.email()));
             item.put("masked_phone", maskPhone(draft.phone()));
             item.put("account_type", firstNonBlank(draft.accountType(), "PERSONAL"));
+            item.put("stage", firstNonBlank(draft.stage(), PreOnboardingDraft.STAGE_DOCUMENTS));
             item.put("updated_at", draft.updatedAt());
             item.put("fields_count", draft.fields() == null ? 0 : draft.fields().size());
             return item;
@@ -207,6 +217,7 @@ public class PreOnboardingDraftService implements PreOnboardingDraftUseCase {
         response.put("email", draft.email());
         response.put("phone", draft.phone());
         response.put("account_type", firstNonBlank(draft.accountType(), "PERSONAL"));
+        response.put("stage", firstNonBlank(draft.stage(), PreOnboardingDraft.STAGE_DOCUMENTS));
         response.put("fields", draft.fields());
         response.put("updated_at", draft.updatedAt());
         return response;

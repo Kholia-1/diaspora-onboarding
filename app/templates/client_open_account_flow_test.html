@@ -2310,6 +2310,18 @@
               page.classList.add('flow-started');
             }
           } catch (e) {}
+
+          // AFB_DRAFT_STAGE_MARKER_V1 : pré-inscription déjà validée (reprise de
+          // dossier ou rechargement) -> on saute l'intro et le client retrouve
+          // directement l'étape 0 (documents), comme un marque-page.
+          try {
+            if (
+              sessionStorage.getItem('diaspora_step0_preinscription_validated') === '1' &&
+              localStorage.getItem('diaspora_step0_whatsapp_otp_verified') === 'true'
+            ) {
+              page.classList.add('flow-started');
+            }
+          } catch (e) {}
           if (startBtn) {
             startBtn.addEventListener('click', function () {
               page.classList.add('flow-started');
@@ -2545,7 +2557,7 @@
 
       <div class="section-box" id="documents-section">
         <h4 data-i18n="docs.title">Étape 0 — Documents à fournir</h4>
-        <p data-i18n="docs.desc">Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préchargées vers le formulaire.</p>
+        <p data-i18n="docs.desc">Charger les autres pièces suivant les instructions affichées. Les données exploitables seront préchargées vers le formulaire.</p>
         <div class="doc-list" id="doc-list"></div>
       </div>
 
@@ -2637,6 +2649,7 @@
                 body: JSON.stringify({
                   session_id: sid,
                   account_type: localStorage.getItem("diaspora_account_type") || "PERSONAL",
+                  stage: "DOCUMENTS",
                   fields: {
                     email: localStorage.getItem("diaspora_step0_email") || "",
                     residence: localStorage.getItem("diaspora_step0_residence") || localStorage.getItem("diaspora_step0_country") || ""
@@ -2831,6 +2844,16 @@
         }));
         sessionStorage.setItem("diaspora_step0_preinscription_validated", "1");
       } catch (e) {}
+
+      /* AFB_DRAFT_STAGE_MARKER_V1 : le client revient LÀ OÙ il s'était arrêté.
+         stage DOCUMENTS -> étape 0 (chargement des pièces) sur cette page ;
+         stage FORM      -> formulaire, champs préremplis depuis le brouillon. */
+      try { localStorage.setItem("diaspora_resume_draft_id", draft.draft_id); } catch (e) {}
+
+      if (String(draft.stage || "DOCUMENTS").toUpperCase() !== "FORM") {
+        window.location.href = "/open-account-flow-test";
+        return;
+      }
 
       var params = new URLSearchParams();
       params.set("resume_draft", draft.draft_id);
@@ -3280,7 +3303,7 @@
           "identity.residence_permit": "Titre de séjour",
           "identity.consular_card": "Carte consulaire",
           "docs.title": "Étape 0 — Documents à fournir",
-          "docs.desc": "Photographiez les pièces d’identité. Les autres justificatifs peuvent être ajoutés selon les instructions affichées. Les données exploitables seront préchargées vers le formulaire.",
+          "docs.desc": "Charger les autres pièces suivant les instructions affichées. Les données exploitables seront préchargées vers le formulaire.",
           "docs.no_account.title": "Type de compte non sélectionné",
           "docs.no_account.desc": "Choisissez compte personnel ou entreprise pour afficher les documents requis.",
           "media.title": "Photo / vidéo de vérification",
@@ -3356,7 +3379,7 @@
           "identity.residence_permit": "Residence permit",
           "identity.consular_card": "Consular card",
           "docs.title": "Step 0 — Required documents",
-          "docs.desc": "Upload or photograph the documents. Usable data will be pre-filled into the form.",
+          "docs.desc": "Upload the other documents according to the displayed instructions. Usable data will be pre-filled into the form.",
           "docs.no_account.title": "Account type not selected",
           "docs.no_account.desc": "Choose personal or business account to display the required documents.",
           "media.title": "Your verification photo / video",
@@ -7302,7 +7325,10 @@ window.__AFB_STEP0_COMPACT_COUNTRY_PHONE_V3 = true;
     const full = buildFullWhatsapp();
     const verifiedPhone = localStorage.getItem(OTP_PHONE_KEY);
 
-    if (verifiedPhone && verifiedPhone !== full) {
+    // AFB_DRAFT_STAGE_MARKER_V1 : un champ VIDE (rechargement, reprise de
+    // dossier) n'est pas un changement de numéro — on ne purge la vérification
+    // que si un numéro réellement différent est saisi.
+    if (verifiedPhone && full && verifiedPhone !== full) {
       localStorage.removeItem(OTP_VERIFIED_KEY);
       localStorage.removeItem(OTP_PHONE_KEY);
       localStorage.removeItem(OTP_SESSION_KEY);

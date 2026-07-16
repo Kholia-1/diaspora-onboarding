@@ -36,6 +36,8 @@ public class DraftStoreAdapter implements DraftStorePort {
         entity.setPhone(draft.phone());
         entity.setAccountType(draft.accountType());
         entity.setStatus(draft.status());
+        entity.setStage(draft.stage() == null || draft.stage().isBlank()
+                ? PreOnboardingDraft.STAGE_DOCUMENTS : draft.stage());
         entity.setFieldsJson(writeFields(draft.fields()));
         entity.setCreatedAt(draft.createdAt());
         entity.setUpdatedAt(draft.updatedAt());
@@ -70,6 +72,7 @@ public class DraftStoreAdapter implements DraftStorePort {
                 entity.getPhone(),
                 entity.getAccountType(),
                 entity.getStatus(),
+                entity.getStage() == null ? PreOnboardingDraft.STAGE_DOCUMENTS : entity.getStage(),
                 readFields(entity.getFieldsJson()),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());

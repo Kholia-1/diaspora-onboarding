@@ -14561,6 +14561,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 body: JSON.stringify({
                     session_id: sid,
                     account_type: localStorage.getItem("diaspora_account_type") || "PERSONAL",
+                    stage: "FORM",
                     fields: fields
                 })
             }).catch(function () {});
@@ -14645,6 +14646,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function prefillFromDraft() {
         var params = new URLSearchParams(window.location.search);
         var draftId = params.get("resume_draft");
+        if (!draftId) {
+            try { draftId = localStorage.getItem("diaspora_resume_draft_id") || ""; } catch (e) {}
+        }
         if (!draftId) return;
 
         fetch("/api/pre-onboarding/draft/open", {
@@ -14669,9 +14673,29 @@ document.addEventListener("DOMContentLoaded", function () {
         }).catch(function () {});
     }
 
+    function markFormStage() {
+        var sid = draftSessionId();
+        if (!sid) return;
+        try {
+            fetch("/api/pre-onboarding/draft/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    session_id: sid,
+                    account_type: localStorage.getItem("diaspora_account_type") || "PERSONAL",
+                    stage: "FORM",
+                    fields: {}
+                })
+            }).catch(function () {});
+        } catch (e) {}
+    }
+
     function init() {
         bindAutosave();
         prefillFromDraft();
+        // AFB_DRAFT_STAGE_MARKER_V1 : l'arrivée sur le formulaire fait avancer le
+        // marqueur (léger différé : le champ session peut être posé par un autre module).
+        setTimeout(markFormStage, 2500);
     }
 
     if (document.readyState === "loading") {

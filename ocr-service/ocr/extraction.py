@@ -416,8 +416,11 @@ def v2_clean_name(value: str | None) -> str | None:
 
     value = normalize_text(value)
 
+    # Supprimer libellés normaux et variantes OCR
+    # ([PR]RENOMS : RENOMS = PRENOMS avec P perdu ; GIVEM/G1VEN/GLVEN : déformations
+    # fréquentes de GIVEN ; NAMES seul aussi).
     value = re.sub(
-        r"\b(NOMS?|SURNAME|SURNAMES|SURAAWE|SURAWE|SURNARNE|PRENOMS?|PRENOM|(?:GIVEN|GIVEM|G1VEN|GLVEN)\s*NAMES?|NAMES|FIRST NAME|FORENAMES?)\b",
+        r"\b(NOMS?|SURNAME|SURNAMES|SURAAWE|SURAWE|SURNARNE|[PR]RENOMS?|RENOMS?|PRENOM|(?:GIVEN|GIVEM|G1VEN|GLVEN)\s*NAMES?|NAMES|FIRST NAME|FORENAMES?)\b",
         " ",
         value,
         flags=re.I,
@@ -455,6 +458,13 @@ def v2_clean_name(value: str | None) -> str | None:
         if len(word) < 3:
             continue
 
+        # AFB_CNI_CORPUS_TUNING_V1 : débris de libellés fusionnés par l'OCR
+        # (« DATEDENAISSANCHARATEOFBIRTH ») — jamais de vrais noms.
+        if len(word) > 14:
+            continue
+        if re.search(r"NAISSANCE|BIRTH|EXPIR|SIGNAT|IDENTIT|REPUBL|DELIVR|OCCUPAT|PROFESS|CAMEROUN|CAMEROON|NATIONAL", word):
+            continue
+
         vowels = sum(1 for c in word if c in "AEIOUY")
         if len(word) >= 5 and vowels == 0:
             continue
@@ -486,6 +496,22 @@ def v2_extract_label_value(lines: list[str], label_patterns: list[str], max_next
         parts = re.split(r"[:：\-]", line, maxsplit=1)
         if len(parts) == 2:
             candidate = v2_clean_name(parts[1])
+            if candidate:
+                return candidate
+
+        # AFB_OCR_VALUE_ADJACENT_LABEL_V1 : RapidOCR fusionne souvent plusieurs
+        # zones en une seule grande ligne, avec la valeur juste AVANT son libellé
+        # (sur la CNI 2024 la valeur est imprimée au-dessus du libellé). On ne
+        # garde que les mots immédiatement adjacents.
+        m = re.search(matched, nline, flags=re.I)
+        if m:
+            before_words = nline[:m.start()].split()[-3:]
+            candidate = v2_clean_name(" ".join(before_words))
+            if candidate:
+                return candidate
+
+            after_words = nline[m.end():].split()[:3]
+            candidate = v2_clean_name(" ".join(after_words))
             if candidate:
                 return candidate
 
@@ -541,11 +567,35 @@ def v2_parse_name_from_mrz(text: str) -> dict[str, str]:
         if "<<" not in candidate:
             continue
 
-        left, right = candidate.split("<<", 1)
+        # AFB_CNI_MRZ_FUSED_LINES_V1 : RapidOCR fusionne souvent les 3 lignes MRZ
+        # en une seule. Le segment des noms est celui dont la partie gauche ne
+        # contient AUCUN chiffre : on le choisit plutôt que le premier « << ».
+        left = None
+        right = None
+        for m in re.finditer(r"([A-Z][A-Z<]{2,}?)<<([A-Z][A-Z<]*)", candidate):
+            left_candidate = m.group(1)
+            if re.search(r"\d", left_candidate):
+                continue
+            left = left_candidate
+            right = m.group(2)
+
+        if left is None:
+            left, right = candidate.split("<<", 1)
 
         left = re.sub(r"^(IDCMR|CMR|I?DCMR|P<CMR|POCMR)", "", left)
         left = re.sub(r"[^A-Z<]", "", left).replace("<", " ")
-        right = re.sub(r"[^A-Z<]", "", right).replace("<", " ")
+
+        # AFB_CNI_CORPUS_TUNING_V2 : la partie droite s'arrête au premier segment
+        # contenant des chiffres (lignes MRZ suivantes fusionnées) ; « CMR » écarté.
+        right_tokens = []
+        for token in right.replace("<", " ").split():
+            if re.search(r"\d", token):
+                break
+            token = re.sub(r"[^A-Z]", "", token)
+            if not token or "CMR" in token:
+                continue
+            right_tokens.append(token)
+        right = " ".join(right_tokens)
 
         last_name = v2_clean_name(left)
         first_name = v2_clean_name(right)
@@ -582,7 +632,9 @@ def v2_extract_names(text: str) -> dict[str, str]:
             lines,
             [
                 r"\bNOM\s*/?\s*SURNAME\b",
-                r"\bNOMS?\b",
+                # AFB_CNI_SIDE_AWARE_V1 : ne pas confondre le NOM du titulaire
+                # avec « NOM DU PERE » / « NOM DE LA MERE » du verso.
+                r"\bNOMS?\b(?!\s*(?:DU\s*PERE|DE\s*LA\s*MERE|DU|DE\s*LA)\b)",
                 r"\bSURNAME\b",
                 r"\bSURNAMES\b",
                 r"\bSURAAWE\b",
@@ -604,6 +656,10 @@ def v2_extract_names(text: str) -> dict[str, str]:
                 r"\bGIVEN\s+NAMES?\b",
                 r"\bFIRST\s+NAME\b",
                 r"\bFORENAMES?\b",
+                # AFB_CNI_CORPUS_TUNING_V1 : variantes OCR — « RENOMS/GIVEN NAMES »
+                # (P perdu), « JYIN NAMI » (GIVEN NAMES très dégradé).
+                r"\bRENOMS?\b",
+                r"\b[GJ][A-Z]{0,3}N\s+NAM[EI]S?\w*\b",
             ],
         )
 

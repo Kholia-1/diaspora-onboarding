@@ -1,5 +1,53 @@
 [
   {
+    "file": "CNI_RECTO_05abb3ad5654457594974f948ba4dc65.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 166641,
+    "text_length": 264,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "RECTO",
+    "side_scores": {
+      "recto": 55,
+      "verso": 0
+    },
+    "fields_found": {
+      "first_name": "SHEILA",
+      "birth_date": "10/07/2005",
+      "cni_number": "101336935",
+      "identity_expiry_date": "13/01/2036"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "13/01/2036",
+        "10/07/2005"
+      ],
+      "first_name": "SHEILA",
+      "given_names": "SHEILA",
+      "full_name": "SHEILA",
+      "birth_date": "10/07/2005",
+      "identity_expiry_date": "13/01/2036",
+      "cni_number": "101336935",
+      "identity_document_number": "101336935",
+      "nationality": "CAMEROUNAISE"
+    }
+  },
+  {
+    "file": "CNI_RECTO_1d0a2d16388a47a3beb5fda2b4114a21.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 89555,
+    "text_length": 224,
+    "type_validation": "DOCUMENT_TYPE_MISMATCH",
+    "detected_category": "RIB",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {}
+  },
+  {
     "file": "CNI_RECTO_1d20d5486ffc472abbc248934cffdf0f.jpg",
     "document_type": "CNI_RECTO",
     "size_bytes": 197965,
@@ -36,6 +84,81 @@
     "all_fields": {}
   },
   {
+    "file": "CNI_RECTO_2224fcc18ea9462bb6bf2132ef1e2f3d.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 91761,
+    "text_length": 40,
+    "type_validation": "TYPE_UNCERTAIN",
+    "detected_category": "UNKNOWN",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {}
+  },
+  {
+    "file": "CNI_RECTO_230d383c7e7e45329ee1a4dbc2c18321.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 206041,
+    "text_length": 68,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "RECTO",
+    "side_scores": {
+      "recto": 25,
+      "verso": 0
+    },
+    "fields_found": {
+      "last_name": "DZANGUE",
+      "first_name": "DANIEL LANDRY"
+    },
+    "all_fields": {
+      "last_name": "DZANGUE",
+      "surname": "DZANGUE",
+      "first_name": "DANIEL LANDRY",
+      "given_names": "DANIEL LANDRY",
+      "full_name": "DZANGUE DANIEL LANDRY"
+    }
+  },
+  {
+    "file": "CNI_RECTO_250255ae6cf943209d9954a97fd65de7.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 89358,
+    "text_length": 276,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "RECTO",
+    "side_scores": {
+      "recto": 80,
+      "verso": 0
+    },
+    "fields_found": {
+      "last_name": "DZANGUE",
+      "first_name": "DANIELLANDRY",
+      "birth_date": "17/06/1997",
+      "cni_number": "100766173",
+      "identity_expiry_date": "28/08/2035"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "28/08/2035",
+        "17/06/1997"
+      ],
+      "last_name": "DZANGUE",
+      "surname": "DZANGUE",
+      "first_name": "DANIELLANDRY",
+      "given_names": "DANIELLANDRY",
+      "full_name": "DZANGUE DANIELLANDRY",
+      "birth_date": "17/06/1997",
+      "identity_expiry_date": "28/08/2035",
+      "cni_number": "100766173",
+      "identity_document_number": "100766173",
+      "nationality": "CAMEROUNAISE"
+    }
+  },
+  {
     "file": "CNI_RECTO_2a2924c6fee043a2b29d04dea74ad06a.jpg",
     "document_type": "CNI_RECTO",
     "size_bytes": 181329,
@@ -50,7 +173,9 @@
     "fields_found": {
       "last_name": "KEVIN KAMDEM FAHA",
       "first_name": "KEVIN KAMDEM FAHA",
-      "cni_number": "100384267"
+      "birth_date": "20/02/1992",
+      "cni_number": "100384267",
+      "identity_expiry_date": "19/06/2035"
     },
     "all_fields": {
       "possible_dates": [
@@ -62,8 +187,11 @@
       "first_name": "KEVIN KAMDEM FAHA",
       "given_names": "KEVIN KAMDEM FAHA",
       "full_name": "KEVIN KAMDEM FAHA KEVIN KAMDEM FAHA",
+      "birth_date": "20/02/1992",
+      "identity_expiry_date": "19/06/2035",
       "cni_number": "100384267",
-      "identity_document_number": "100384267"
+      "identity_document_number": "100384267",
+      "nationality": "CAMEROUNAISE"
     }
   },
   {
@@ -82,6 +210,23 @@
     "all_fields": {}
   },
   {
+    "file": "CNI_RECTO_2d631479d91c4309a86990790de48a1d.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 50677,
+    "text_length": 80,
+    "type_validation": "TYPE_UNCERTAIN",
+    "detected_category": "UNKNOWN",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {
+      "nationality": "CAMEROUNAISE"
+    }
+  },
+  {
     "file": "CNI_RECTO_3813fa21bfbf45a89644383e6e1537b1.jpg",
     "document_type": "CNI_RECTO",
     "size_bytes": 258862,
@@ -96,6 +241,7 @@
     "fields_found": {
       "last_name": "DZANGUE",
       "first_name": "DANIELLANDRY",
+      "birth_date": "17/06/1997",
       "cni_number": "100766173",
       "identity_expiry_date": "28/08/2035"
     },
@@ -109,9 +255,28 @@
       "first_name": "DANIELLANDRY",
       "given_names": "DANIELLANDRY",
       "full_name": "DZANGUE DANIELLANDRY",
+      "birth_date": "17/06/1997",
       "identity_expiry_date": "28/08/2035",
       "cni_number": "100766173",
-      "identity_document_number": "100766173"
+      "identity_document_number": "100766173",
+      "nationality": "CAMEROUNAISE"
+    }
+  },
+  {
+    "file": "CNI_RECTO_3a9ee3414f9d4f3caab4a14f9cad5a66.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 113905,
+    "text_length": 174,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {
+      "nationality": "CAMEROUNAISE"
     }
   },
   {
@@ -128,6 +293,39 @@
     },
     "fields_found": {},
     "all_fields": {}
+  },
+  {
+    "file": "CNI_RECTO_52e83342623f496394c2156f3bc3aa9a.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 199486,
+    "text_length": 249,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "RECTO",
+    "side_scores": {
+      "recto": 80,
+      "verso": 0
+    },
+    "fields_found": {
+      "last_name": "SHEILA",
+      "birth_date": "10/07/2005",
+      "cni_number": "101336935",
+      "identity_expiry_date": "13/01/2036"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "13/01/2036",
+        "10/07/2005"
+      ],
+      "last_name": "SHEILA",
+      "surname": "SHEILA",
+      "full_name": "SHEILA",
+      "birth_date": "10/07/2005",
+      "identity_expiry_date": "13/01/2036",
+      "cni_number": "101336935",
+      "identity_document_number": "101336935",
+      "nationality": "CAMEROUNAISE"
+    }
   },
   {
     "file": "CNI_RECTO_5735abc081f24495bd1f0f81dd0534b2.png",
@@ -176,7 +374,8 @@
       "birth_date": "05/11/1999",
       "identity_expiry_date": "03/11/2035",
       "cni_number": "101041933",
-      "identity_document_number": "101041933"
+      "identity_document_number": "101041933",
+      "nationality": "CAMEROUNAISE"
     }
   },
   {
@@ -192,7 +391,9 @@
       "verso": 0
     },
     "fields_found": {
-      "first_name": "CTIENNEKHOLIA"
+      "first_name": "CTIENNEKHOLIA",
+      "birth_date": "31/07/1996",
+      "place_of_birth": "YAOUNDE"
     },
     "all_fields": {
       "possible_dates": [
@@ -200,7 +401,57 @@
       ],
       "first_name": "CTIENNEKHOLIA",
       "given_names": "CTIENNEKHOLIA",
-      "full_name": "CTIENNEKHOLIA"
+      "full_name": "CTIENNEKHOLIA",
+      "birth_date": "31/07/1996",
+      "place_of_birth": "YAOUNDE",
+      "profession": "ELEVE"
+    }
+  },
+  {
+    "file": "CNI_RECTO_6c5356a01ee74bcf8c4253a8062a5796.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 67102,
+    "text_length": 2,
+    "type_validation": "TYPE_UNCERTAIN",
+    "detected_category": "UNKNOWN",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {}
+  },
+  {
+    "file": "CNI_RECTO_70b1af21f42e4000aee3ba3a9b5cfd79.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 88490,
+    "text_length": 218,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "RECTO",
+    "side_scores": {
+      "recto": 70,
+      "verso": 0
+    },
+    "fields_found": {
+      "last_name": "GIYENNAMES",
+      "first_name": "GIYENNAMES",
+      "birth_date": "31/07/1996",
+      "place_of_birth": "ESANCE"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "31/07/1996"
+      ],
+      "last_name": "GIYENNAMES",
+      "surname": "GIYENNAMES",
+      "first_name": "GIYENNAMES",
+      "given_names": "GIYENNAMES",
+      "full_name": "GIYENNAMES GIYENNAMES",
+      "birth_date": "31/07/1996",
+      "place_of_birth": "ESANCE",
+      "profession": "ETUDIANT"
     }
   },
   {
@@ -219,7 +470,7 @@
       "last_name": "DZANGUE",
       "first_name": "DZANGUE",
       "birth_date": "17/06/1997",
-      "identity_expiry_date": "17/06/1997"
+      "identity_expiry_date": "28/08/2035"
     },
     "all_fields": {
       "possible_dates": [
@@ -232,7 +483,73 @@
       "given_names": "DZANGUE",
       "full_name": "DZANGUE DZANGUE",
       "birth_date": "17/06/1997",
-      "identity_expiry_date": "17/06/1997"
+      "identity_expiry_date": "28/08/2035",
+      "nationality": "CAMEROUNAISE"
+    }
+  },
+  {
+    "file": "CNI_RECTO_7f1252b8a8eb4a48b553cb6f7e7e3afd.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 5550,
+    "text_length": 0,
+    "type_validation": "OCR_TEXT_INSUFFICIENT",
+    "detected_category": "UNKNOWN",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {}
+  },
+  {
+    "file": "CNI_RECTO_8e297e333d894a068f484665895e7ecb.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 79566,
+    "text_length": 232,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "RECTO",
+    "side_scores": {
+      "recto": 45,
+      "verso": 0
+    },
+    "fields_found": {
+      "first_name": "ETIENNE KHOLIA",
+      "birth_date": "31/07/1996"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "31/07/1996"
+      ],
+      "first_name": "ETIENNE KHOLIA",
+      "given_names": "ETIENNE KHOLIA",
+      "full_name": "ETIENNE KHOLIA",
+      "birth_date": "31/07/1996",
+      "profession": "PROFESSIOR"
+    }
+  },
+  {
+    "file": "CNI_RECTO_90593de3eb1241af8ca8aa7b16e67084.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 82640,
+    "text_length": 189,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 10,
+      "verso": 0
+    },
+    "fields_found": {
+      "birth_date": "31/07/1996"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "31/07/1996"
+      ],
+      "birth_date": "31/07/1996",
+      "nationality": "CAMEROUNAISE"
     }
   },
   {
@@ -263,6 +580,7 @@
       "given_names": "ETIENNEKHOLIA",
       "full_name": "BELLO ETIENNEKHOLIA",
       "birth_date": "31/07/1996",
+      "profession": "ETUDIANT",
       "sex": "M"
     }
   },
@@ -306,7 +624,9 @@
       "given_names": "ETIENNE KHOLIA",
       "full_name": "ETIENNE KHOLIA",
       "birth_date": "31/07/1995",
-      "place_of_birth": "YAOUNDEY"
+      "place_of_birth": "YAOUNDEY",
+      "profession": "ETUDIANT",
+      "nationality": "CAMEROUNAISE"
     }
   },
   {
@@ -340,6 +660,7 @@
       "last_name": "IYCARD BELLO",
       "first_name": "ETIENNEKHOLIA",
       "birth_date": "31/07/1996",
+      "place_of_birth": "YAOUNDEY",
       "sex": "M"
     },
     "all_fields": {
@@ -352,7 +673,42 @@
       "given_names": "ETIENNEKHOLIA",
       "full_name": "IYCARD BELLO ETIENNEKHOLIA",
       "birth_date": "31/07/1996",
-      "sex": "M"
+      "place_of_birth": "YAOUNDEY",
+      "profession": "ETUDIANT",
+      "sex": "M",
+      "nationality": "CAMEROUNAISE"
+    }
+  },
+  {
+    "file": "CNI_RECTO_e82d46a4300a41d8a80aca57bb07004d.jpg",
+    "document_type": "CNI_RECTO",
+    "size_bytes": 93205,
+    "text_length": 233,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "RECTO",
+    "side_scores": {
+      "recto": 60,
+      "verso": 0
+    },
+    "fields_found": {
+      "last_name": "BELLO",
+      "first_name": "ETIENNE KHOLIA",
+      "birth_date": "31/07/1996",
+      "place_of_birth": "YAOUNDEY"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "31/07/1996"
+      ],
+      "last_name": "BELLO",
+      "surname": "BELLO",
+      "first_name": "ETIENNE KHOLIA",
+      "given_names": "ETIENNE KHOLIA",
+      "full_name": "BELLO ETIENNE KHOLIA",
+      "birth_date": "31/07/1996",
+      "place_of_birth": "YAOUNDEY",
+      "profession": "PROFESSIOM"
     }
   },
   {
@@ -412,6 +768,82 @@
     }
   },
   {
+    "file": "CNI_VERSO_0b0a1b34d33746a8bf46d5f8fab7dbb9.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 209167,
+    "text_length": 395,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "VERSO",
+    "side_scores": {
+      "recto": 0,
+      "verso": 120
+    },
+    "fields_found": {
+      "last_name": "CMRAB",
+      "birth_date": "10/07/2005",
+      "cni_number": "101336935",
+      "identity_issue_date": "13/01/2026",
+      "identity_expiry_date": "13/01/2036",
+      "sex": "F",
+      "father_full_name": "'SNAM",
+      "mother_full_name": "YAOUNDE IEUDE"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "13/01/2026"
+      ],
+      "last_name": "CMRAB",
+      "surname": "CMRAB",
+      "full_name": "CMRAB",
+      "birth_date": "10/07/2005",
+      "sex": "F",
+      "identity_expiry_date": "13/01/2036",
+      "cni_number": "101336935",
+      "nationality": "CAMEROUNAISE",
+      "identity_document_number": "101336935",
+      "mother_full_name": "YAOUNDE IEUDE",
+      "father_full_name": "'SNAM",
+      "identity_issue_date": "13/01/2026",
+      "profession": "E. PROFESSION/OCCUPATION YAOUNDE IEUDE NGUEKAMYOUDJEULISETTEAIMEE NOMDE LA MERE NGALANDEUKWEMOJEAN CLAUDE OMDU PERE"
+    }
+  },
+  {
+    "file": "CNI_VERSO_2652989d35bb4eaaa3ebda615372fa82.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 5550,
+    "text_length": 0,
+    "type_validation": "OCR_TEXT_INSUFFICIENT",
+    "detected_category": "UNKNOWN",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {}
+  },
+  {
+    "file": "CNI_VERSO_372056d923564886b9cbfc9a46a09625.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 74598,
+    "text_length": 38,
+    "type_validation": "TYPE_UNCERTAIN",
+    "detected_category": "UNKNOWN",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {
+      "cni_number": "500072293"
+    },
+    "all_fields": {
+      "cni_number": "500072293",
+      "identity_document_number": "500072293"
+    }
+  },
+  {
     "file": "CNI_VERSO_4fda8c6f2eac4eca86afea8d30f7b81a.jpg",
     "document_type": "CNI_VERSO",
     "size_bytes": 281413,
@@ -445,6 +877,7 @@
       "sex": "M",
       "identity_expiry_date": "28/08/2035",
       "cni_number": "100766173",
+      "nationality": "CAMEROUNAISE",
       "identity_document_number": "100766173",
       "identity_issue_date": "28/08/2025"
     }
@@ -463,6 +896,46 @@
     },
     "fields_found": {},
     "all_fields": {}
+  },
+  {
+    "file": "CNI_VERSO_57355b09cafa4ddfab4cb89a2efcc3e7.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 207914,
+    "text_length": 295,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "VERSO",
+    "side_scores": {
+      "recto": 0,
+      "verso": 90
+    },
+    "fields_found": {
+      "last_name": "NGALANDEU KWEMO",
+      "first_name": "SHEILA",
+      "birth_date": "10/07/2005",
+      "cni_number": "101336935",
+      "identity_issue_date": "13/01/2026",
+      "identity_expiry_date": "13/01/2036",
+      "sex": "F"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "13/01/2026"
+      ],
+      "last_name": "NGALANDEU KWEMO",
+      "surname": "NGALANDEU KWEMO",
+      "first_name": "SHEILA",
+      "given_names": "SHEILA",
+      "full_name": "NGALANDEU KWEMO SHEILA",
+      "birth_date": "10/07/2005",
+      "sex": "F",
+      "identity_expiry_date": "13/01/2036",
+      "cni_number": "101336935",
+      "nationality": "CAMEROUNAISE",
+      "identity_document_number": "101336935",
+      "identity_issue_date": "13/01/2026",
+      "profession": "E. SIGN/OCCUPATIO YAOUNDE EUDENAIBSANCEIPLACE OF BIRTH GUEKAM"
+    }
   },
   {
     "file": "CNI_VERSO_5a3e90c83ffc4036aeb21294a060d5c6.jpg",
@@ -488,8 +961,24 @@
       "given_names": "EAPR",
       "full_name": "DRIC KEVIN KAMDEMFAHA EAPR",
       "cni_number": "100384267",
-      "identity_document_number": "100384267"
+      "identity_document_number": "100384267",
+      "nationality": "CAMEROUNAISE"
     }
+  },
+  {
+    "file": "CNI_VERSO_659843fbe04e4efaa678fc7f6600391c.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 95648,
+    "text_length": 293,
+    "type_validation": "DOCUMENT_TYPE_MISMATCH",
+    "detected_category": "RIB",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {}
   },
   {
     "file": "CNI_VERSO_6a171bb3dbbb418ba0ca8c406e476c8a.png",
@@ -542,10 +1031,54 @@
       "sex": "M",
       "identity_expiry_date": "03/11/2035",
       "cni_number": "101041933",
+      "nationality": "CAMEROUNAISE",
       "identity_document_number": "101041933",
       "mother_full_name": "YEDNA ADELE MARIE SOLANGE",
       "father_full_name": "NZOGUE",
       "identity_issue_date": "03/11/2025"
+    }
+  },
+  {
+    "file": "CNI_VERSO_70a333d0019e43f48bc17dff3af2abb3.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 106784,
+    "text_length": 376,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "VERSO",
+    "side_scores": {
+      "recto": 0,
+      "verso": 120
+    },
+    "fields_found": {
+      "last_name": "DZANGUE",
+      "first_name": "DANIEL LANDRY",
+      "birth_date": "17/06/1997",
+      "cni_number": "100766173",
+      "identity_issue_date": "28/08/2025",
+      "identity_expiry_date": "28/08/2035",
+      "sex": "M",
+      "father_full_name": "SONNA KENMAYO ISAAC",
+      "mother_full_name": "MALAC DELPHINE"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "28/08/2025"
+      ],
+      "last_name": "DZANGUE",
+      "surname": "DZANGUE",
+      "first_name": "DANIEL LANDRY",
+      "given_names": "DANIEL LANDRY",
+      "full_name": "DZANGUE DANIEL LANDRY",
+      "birth_date": "17/06/1997",
+      "sex": "M",
+      "identity_expiry_date": "28/08/2035",
+      "cni_number": "100766173",
+      "nationality": "CAMEROUNAISE",
+      "identity_document_number": "100766173",
+      "mother_full_name": "MALAC DELPHINE",
+      "father_full_name": "SONNA KENMAYO ISAAC",
+      "identity_issue_date": "28/08/2025"
     }
   },
   {
@@ -590,8 +1123,24 @@
       "identity_expiry_date": "2022-08-09",
       "cni_number": "115967269",
       "identity_document_number": "115967269",
-      "identity_issue_date": "09/08/2012"
+      "identity_issue_date": "09/08/2012",
+      "nationality": "CAMEROUNAISE"
     }
+  },
+  {
+    "file": "CNI_VERSO_894d0077d22740338c9d1fcab1e7c594.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 96382,
+    "text_length": 49,
+    "type_validation": "TYPE_UNCERTAIN",
+    "detected_category": "UNKNOWN",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {}
   },
   {
     "file": "CNI_VERSO_8c8d636ed0da46fdbe0aa39a5180af66.jpg",
@@ -648,6 +1197,49 @@
       "cni_number": "20240019849910220",
       "identity_document_number": "20240019849910220"
     }
+  },
+  {
+    "file": "CNI_VERSO_994d85e3c2154be58d65a54092482056.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 72248,
+    "text_length": 260,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "VERSO",
+    "side_scores": {
+      "recto": 0,
+      "verso": 60
+    },
+    "fields_found": {
+      "cni_number": "20240019849910220",
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "05/02/2024",
+        "05/02/2034"
+      ],
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034",
+      "cni_number": "20240019849910220",
+      "identity_document_number": "20240019849910220"
+    }
+  },
+  {
+    "file": "CNI_VERSO_9e54cbec0915430983f3c88d8ba314f6.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 71656,
+    "text_length": 0,
+    "type_validation": "OCR_TEXT_INSUFFICIENT",
+    "detected_category": "UNKNOWN",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {}
   },
   {
     "file": "CNI_VERSO_a3f0fc8920b242acada147d3a23d1bfd.jpg",
@@ -708,6 +1300,7 @@
       "sex": "M",
       "identity_expiry_date": "28/08/2035",
       "cni_number": "AA14533820",
+      "nationality": "CAMEROUNAISE",
       "identity_document_number": "AA14533820",
       "father_full_name": "FATHER'S NAME SONNA KENMAYOISAAC",
       "identity_issue_date": "28/08/2025"
@@ -755,7 +1348,8 @@
     },
     "fields_found": {
       "cni_number": "20240019849910220",
-      "identity_issue_date": "05/02/2024"
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034"
     },
     "all_fields": {
       "possible_dates": [
@@ -763,9 +1357,25 @@
         "05/02/2034"
       ],
       "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034",
       "cni_number": "20240019849910220",
       "identity_document_number": "20240019849910220"
     }
+  },
+  {
+    "file": "CNI_VERSO_d7c01fac75864983a850814f22b968c2.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 42555,
+    "text_length": 33,
+    "type_validation": "TYPE_UNCERTAIN",
+    "detected_category": "UNKNOWN",
+    "detected_side": "UNKNOWN",
+    "side_scores": {
+      "recto": 0,
+      "verso": 0
+    },
+    "fields_found": {},
+    "all_fields": {}
   },
   {
     "file": "CNI_VERSO_dc7870adc8634a619de345bc64f6ee95.jpg",
@@ -781,6 +1391,90 @@
     },
     "fields_found": {},
     "all_fields": {}
+  },
+  {
+    "file": "CNI_VERSO_e063533372f14bb797df110394967c19.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 89534,
+    "text_length": 285,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "VERSO",
+    "side_scores": {
+      "recto": 0,
+      "verso": 60
+    },
+    "fields_found": {
+      "cni_number": "20240019849910220",
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "05/02/2024",
+        "05/02/2034"
+      ],
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034",
+      "cni_number": "20240019849910220",
+      "identity_document_number": "20240019849910220"
+    }
+  },
+  {
+    "file": "CNI_VERSO_e31d01fc0fa54719aa9d6ea9b0ac607b.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 185969,
+    "text_length": 191,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "RECTO",
+    "side_scores": {
+      "recto": 70,
+      "verso": 0
+    },
+    "fields_found": {
+      "last_name": "DRIC KEVIN KAMDEMFAHA",
+      "first_name": "EAPR",
+      "cni_number": "100384267"
+    },
+    "all_fields": {
+      "last_name": "DRIC KEVIN KAMDEMFAHA",
+      "surname": "DRIC KEVIN KAMDEMFAHA",
+      "first_name": "EAPR",
+      "given_names": "EAPR",
+      "full_name": "DRIC KEVIN KAMDEMFAHA EAPR",
+      "cni_number": "100384267",
+      "identity_document_number": "100384267",
+      "nationality": "CAMEROUNAISE"
+    }
+  },
+  {
+    "file": "CNI_VERSO_e3934330be6f4b6a984eb14f25f67b83.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 66583,
+    "text_length": 211,
+    "type_validation": "DOCUMENT_TYPE_MATCH",
+    "detected_category": "IDENTITY",
+    "detected_side": "VERSO",
+    "side_scores": {
+      "recto": 0,
+      "verso": 50
+    },
+    "fields_found": {
+      "cni_number": "20240019849910220",
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "05/02/2024",
+        "05/02/2034"
+      ],
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034",
+      "cni_number": "20240019849910220",
+      "identity_document_number": "20240019849910220"
+    }
   },
   {
     "file": "CNI_VERSO_f2638799379b4ec5971e96fd28d22651.jpg",
@@ -818,10 +1512,39 @@
       "sex": "M",
       "identity_expiry_date": "19/06/2035",
       "cni_number": "100384267",
+      "nationality": "CAMEROUNAISE",
       "identity_document_number": "100384267",
       "mother_full_name": "NGO BAYEMI ESTHER",
       "father_full_name": "FAHABERNARD",
       "identity_issue_date": "19/06/2025"
+    }
+  },
+  {
+    "file": "CNI_VERSO_f86e7fb0dd024aff8f09e2d304cf615a.jpg",
+    "document_type": "CNI_VERSO",
+    "size_bytes": 69451,
+    "text_length": 123,
+    "type_validation": "DOCUMENT_TYPE_MISMATCH",
+    "detected_category": "RIB",
+    "detected_side": "VERSO",
+    "side_scores": {
+      "recto": 0,
+      "verso": 20
+    },
+    "fields_found": {
+      "cni_number": "20240019849910220",
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034"
+    },
+    "all_fields": {
+      "possible_dates": [
+        "05/02/2024",
+        "05/02/2034"
+      ],
+      "identity_issue_date": "05/02/2024",
+      "identity_expiry_date": "05/02/2034",
+      "cni_number": "20240019849910220",
+      "identity_document_number": "20240019849910220"
     }
   }
 ]

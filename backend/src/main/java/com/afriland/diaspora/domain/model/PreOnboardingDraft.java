@@ -15,6 +15,7 @@ public record PreOnboardingDraft(
         String phone,
         String accountType,
         String status,
+        String stage,
         Map<String, String> fields,
         LocalDateTime createdAt,
         LocalDateTime updatedAt) {
@@ -22,21 +23,35 @@ public record PreOnboardingDraft(
     public static final String STATUS_IN_PROGRESS = "IN_PROGRESS";
     public static final String STATUS_SUBMITTED = "SUBMITTED";
 
+    /** Marqueur de progression : étape 0 (pièces) ou formulaire atteint. */
+    public static final String STAGE_DOCUMENTS = "DOCUMENTS";
+    public static final String STAGE_FORM = "FORM";
+
     public PreOnboardingDraft withMergedFields(Map<String, String> extra, LocalDateTime now) {
         Map<String, String> merged = new LinkedHashMap<>(fields == null ? Map.of() : fields);
         if (extra != null) {
             merged.putAll(extra);
         }
-        return new PreOnboardingDraft(id, draftId, email, phone, accountType, status, merged, createdAt, now);
+        return new PreOnboardingDraft(id, draftId, email, phone, accountType, status, stage, merged, createdAt, now);
     }
 
     public PreOnboardingDraft withContact(String newEmail, String newPhone, String newAccountType) {
-        return new PreOnboardingDraft(id, draftId, newEmail, newPhone, newAccountType, status,
+        return new PreOnboardingDraft(id, draftId, newEmail, newPhone, newAccountType, status, stage,
                 fields, createdAt, updatedAt);
     }
 
     public PreOnboardingDraft withStatus(String newStatus, LocalDateTime now) {
-        return new PreOnboardingDraft(id, draftId, email, phone, accountType, newStatus,
+        return new PreOnboardingDraft(id, draftId, email, phone, accountType, newStatus, stage,
                 fields, createdAt, now);
+    }
+
+    /** Le marqueur ne recule jamais : FORM ne redevient pas DOCUMENTS. */
+    public PreOnboardingDraft withStage(String newStage) {
+        if (newStage == null || newStage.isBlank()
+                || (STAGE_DOCUMENTS.equals(newStage) && STAGE_FORM.equals(stage))) {
+            return this;
+        }
+        return new PreOnboardingDraft(id, draftId, email, phone, accountType, status, newStage,
+                fields, createdAt, updatedAt);
     }
 }

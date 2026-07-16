@@ -69,6 +69,29 @@ switch ($Service) {
             }
         }
     }
+    "promote" {
+        # Backend promoteApp (souscription produit + recharge de carte) sur :8390,
+        # en profil dev (H2 en mémoire + stockage mémoire) : AUCUN Docker/Postgres/
+        # MinIO requis. Dépôt SÉPARÉ, cloné à côté (..\promoteApp). Sert /promote-api
+        # du gateway (le remote Angular « promote » l'appelle).
+        # Build (pas de mvnw dans promoteApp) : depuis ce repo,
+        #   .\backend\mvnw.cmd -DskipTests -f ..\..\promoteApp\backend\pom.xml package
+        $PromoteJar = "$Root\..\promoteApp\backend\target\promote-backend-1.0.0.jar"
+        if (-not (Test-Path $PromoteJar)) {
+            Write-Warning "Jar promoteApp absent : $PromoteJar. Cf. commande de build en commentaire."
+            break
+        }
+        $env:JAVA_HOME = $Jdk21
+        $env:SPRING_PROFILES_ACTIVE = "dev"
+        $env:SERVER_PORT = "8390"
+        $env:JWT_SECRET = "dev-local-promote-secret-key-at-least-32-bytes-long-000"
+        $env:ADMIN_EMAIL = "admin.promote@afrilandfirstbank.com"; $env:ADMIN_PASSWORD = "Promote@Admin1"; $env:ADMIN_NAME = "Administrateur Promote"
+        $env:PRINT_EMAIL = "imprimeur.promote@afrilandfirstbank.com"; $env:PRINT_PASSWORD = "Promote@Print1"; $env:PRINT_NAME = "Point d'impression"
+        $env:CASHIER_EMAIL = "caissier.promote@afrilandfirstbank.com"; $env:CASHIER_PASSWORD = "Promote@Cash1"; $env:CASHIER_NAME = "Caissier Promote"
+        $env:SEED_TEST_AGENT = "true"
+        Set-Location "$Root\..\promoteApp\backend"
+        & "$Jdk21\bin\java.exe" -jar $PromoteJar
+    }
     "newstack" {
         # Lance TOUTE la nouvelle stack sur l'hôte, chacun dans sa fenêtre :
         #   PostgreSQL(:5432) + OCR(:8020) + Spring(:8080) + Gateway Angular(:8090).
@@ -121,6 +144,6 @@ switch ($Service) {
         Write-Output "  Tunnel          : gere par cloudflared (run firstagent) - separe"
     }
     default {
-        "Usage : .\dev.ps1 [pg|backend|frontend|ocr|legacy|buildfront|newstack]"
+        "Usage : .\dev.ps1 [pg|backend|frontend|ocr|legacy|buildfront|promote|newstack]"
     }
 }

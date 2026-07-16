@@ -2432,12 +2432,20 @@ async def save_pre_onboarding_draft(payload: dict = Body(...)):
 
     now = _utcnow().isoformat()
 
+    # AFB_DRAFT_STAGE_MARKER_V1 : marqueur de progression — DOCUMENTS (étape 0,
+    # pièces à charger) ou FORM (formulaire atteint). La reprise ramène le client
+    # exactement là où il s'était arrêté.
+    stage = str(payload.get("stage") or "").strip().upper()
+    if stage not in ("DOCUMENTS", "FORM"):
+        stage = ""
+
     with _draft_lock:
         drafts = _load_drafts()
         draft = drafts.get(session_id) or {
             "draft_id": session_id,
             "created_at": now,
             "status": "IN_PROGRESS",
+            "stage": "DOCUMENTS",
             "fields": {},
         }
         draft["email"] = str(otp_record.get("email") or draft.get("email") or "").strip().lower()
@@ -2445,6 +2453,12 @@ async def save_pre_onboarding_draft(payload: dict = Body(...)):
         draft["account_type"] = str(
             payload.get("account_type") or draft.get("account_type") or "PERSONAL"
         )
+        if stage:
+            # Le marqueur ne recule jamais : une fois le formulaire atteint, une
+            # sauvegarde tardive de l'étape 0 ne doit pas rétrograder la reprise.
+            if not (stage == "DOCUMENTS" and draft.get("stage") == "FORM"):
+                draft["stage"] = stage
+        draft.setdefault("stage", "DOCUMENTS")
         draft["fields"].update(clean_fields)
         draft["updated_at"] = now
         drafts[session_id] = draft
@@ -2492,6 +2506,7 @@ async def search_pre_onboarding_drafts(payload: dict = Body(...)):
             "masked_email": _mask_email(draft.get("email")),
             "masked_phone": _mask_phone(draft.get("phone")),
             "account_type": draft.get("account_type") or "PERSONAL",
+            "stage": draft.get("stage") or "DOCUMENTS",
             "updated_at": draft.get("updated_at"),
             "fields_count": len(draft.get("fields") or {}),
         })
@@ -2559,6 +2574,7 @@ async def open_pre_onboarding_draft(payload: dict = Body(...)):
         "email": draft.get("email"),
         "phone": draft.get("phone"),
         "account_type": draft.get("account_type") or "PERSONAL",
+        "stage": draft.get("stage") or "DOCUMENTS",
         "fields": draft.get("fields") or {},
         "updated_at": draft.get("updated_at"),
     }

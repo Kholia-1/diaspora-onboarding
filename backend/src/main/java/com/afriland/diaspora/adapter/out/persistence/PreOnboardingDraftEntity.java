@@ -36,6 +36,9 @@ public class PreOnboardingDraftEntity {
     @Column(nullable = false, length = 30)
     private String status;
 
+    @Column(length = 20)
+    private String stage;
+
     @Column(name = "fields_json", columnDefinition = "TEXT")
     private String fieldsJson;
 
@@ -62,6 +65,9 @@ public class PreOnboardingDraftEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public String getStage() { return stage; }
+    public void setStage(String stage) { this.stage = stage; }
 
     public String getFieldsJson() { return fieldsJson; }
     public void setFieldsJson(String fieldsJson) { this.fieldsJson = fieldsJson; }
